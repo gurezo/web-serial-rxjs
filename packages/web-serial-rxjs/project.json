@@ -1,0 +1,21 @@
+{
+  "name": "web-serial-rxjs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/web-serial-rxjs/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/web-serial-rxjs",
+        "main": "packages/web-serial-rxjs/src/index.ts",
+        "tsConfig": "packages/web-serial-rxjs/tsconfig.lib.json",
+        "assets": ["packages/web-serial-rxjs/*.md"],
+        "format": ["cjs"],
+        "generatePackageJson": true
+      }
+    }
+  }
+}
