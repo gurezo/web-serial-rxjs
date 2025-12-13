@@ -60,3 +60,7 @@ lerna-debug.log*
 # OS
 Thumbs.db
 
+
+.nx/installation
+
+vitest.config.*.timestamp*
