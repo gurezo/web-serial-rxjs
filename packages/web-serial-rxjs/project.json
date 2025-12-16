@@ -16,6 +16,9 @@
         "format": ["cjs"],
         "generatePackageJson": true
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
     }
   }
 }

@@ -197,7 +197,16 @@ export class SerialClientImpl {
 
     return new Observable<void>((subscriber) => {
       // The subscription is already active, we just need to track completion
-      const originalUnsubscribe = this.writeSubscription!.unsubscribe;
+      if (!this.writeSubscription) {
+        subscriber.error(
+          new SerialError(
+            SerialErrorCode.WRITE_FAILED,
+            'Write subscription is not available'
+          )
+        );
+        return;
+      }
+      const originalUnsubscribe = this.writeSubscription.unsubscribe;
 
       this.writeSubscription = {
         unsubscribe: () => {

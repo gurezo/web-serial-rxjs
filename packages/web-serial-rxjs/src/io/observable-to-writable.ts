@@ -38,7 +38,7 @@ export function observableToWritable(
           if (writer) {
             try {
               await writer.abort(error);
-            } catch (abortError) {
+            } catch {
               // Ignore abort errors
             } finally {
               writer.releaseLock();
@@ -50,7 +50,7 @@ export function observableToWritable(
           if (writer) {
             try {
               await writer.close();
-            } catch (error) {
+            } catch {
               // Ignore close errors
             } finally {
               writer.releaseLock();
@@ -108,7 +108,7 @@ export function subscribeToWritable(
     error: async (error) => {
       try {
         await writer.abort(error);
-      } catch (abortError) {
+      } catch {
         // Ignore abort errors
       } finally {
         writer.releaseLock();
@@ -117,7 +117,7 @@ export function subscribeToWritable(
     complete: async () => {
       try {
         await writer.close();
-      } catch (error) {
+      } catch {
         // Ignore close errors
       } finally {
         writer.releaseLock();
