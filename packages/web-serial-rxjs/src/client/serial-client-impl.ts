@@ -201,8 +201,8 @@ export class SerialClientImpl {
         subscriber.error(
           new SerialError(
             SerialErrorCode.WRITE_FAILED,
-            'Write subscription is not available'
-          )
+            'Write subscription is not available',
+          ),
         );
         return;
       }
