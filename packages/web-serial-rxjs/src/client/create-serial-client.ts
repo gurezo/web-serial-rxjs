@@ -1,5 +1,4 @@
 import { Observable } from 'rxjs';
-import { SerialPort } from '@types/w3c-web-serial';
 import { SerialClientOptions } from '../types/options';
 import { SerialClientImpl } from './serial-client-impl';
 
@@ -69,7 +68,7 @@ export interface SerialClient {
  * @returns A new SerialClient instance
  */
 export function createSerialClient(
-  options?: SerialClientOptions
+  options?: SerialClientOptions,
 ): SerialClient {
   return new SerialClientImpl(options);
 }

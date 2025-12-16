@@ -1,6 +1,5 @@
-import { SerialPortFilter } from '@types/w3c-web-serial';
-import { SerialClientOptions } from '../types/options';
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
+import { SerialClientOptions } from '../types/options';
 
 /**
  * Build SerialPortRequestOptions from SerialClientOptions
@@ -8,7 +7,7 @@ import { SerialError, SerialErrorCode } from '../errors/serial-error';
  * @returns SerialPortRequestOptions for navigator.serial.requestPort()
  */
 export function buildRequestOptions(
-  options?: SerialClientOptions
+  options?: SerialClientOptions,
 ): SerialPortRequestOptions | undefined {
   if (!options || !options.filters || options.filters.length === 0) {
     return undefined;
@@ -19,7 +18,7 @@ export function buildRequestOptions(
     if (!filter.usbVendorId && !filter.usbProductId) {
       throw new SerialError(
         SerialErrorCode.INVALID_FILTER_OPTIONS,
-        'Filter must have at least usbVendorId or usbProductId'
+        'Filter must have at least usbVendorId or usbProductId',
       );
     }
 
@@ -31,7 +30,7 @@ export function buildRequestOptions(
       ) {
         throw new SerialError(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
-          `Invalid usbVendorId: ${filter.usbVendorId}. Must be an integer between 0 and 65535.`
+          `Invalid usbVendorId: ${filter.usbVendorId}. Must be an integer between 0 and 65535.`,
         );
       }
     }
@@ -44,13 +43,13 @@ export function buildRequestOptions(
       ) {
         throw new SerialError(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
-          `Invalid usbProductId: ${filter.usbProductId}. Must be an integer between 0 and 65535.`
+          `Invalid usbProductId: ${filter.usbProductId}. Must be an integer between 0 and 65535.`,
         );
       }
     }
   }
 
   return {
-    filters: options.filters as SerialPortFilter[],
+    filters: options.filters,
   };
 }

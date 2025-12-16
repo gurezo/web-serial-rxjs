@@ -1,12 +1,13 @@
-import { Observable, Subject, from, of } from 'rxjs';
-import { map, catchError, finalize } from 'rxjs/operators';
-import { SerialPort } from '@types/w3c-web-serial';
-import { SerialClientOptions, DEFAULT_SERIAL_CLIENT_OPTIONS } from '../types/options';
-import { SerialError, SerialErrorCode } from '../errors/serial-error';
+import { Observable } from 'rxjs';
 import { checkBrowserSupport } from '../browser/browser-support';
-import { readableToObservable } from '../io/readable-to-observable';
-import { subscribeToWritable } from '../io/observable-to-writable';
+import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { buildRequestOptions } from '../filters/build-request-options';
+import { subscribeToWritable } from '../io/observable-to-writable';
+import { readableToObservable } from '../io/readable-to-observable';
+import {
+  DEFAULT_SERIAL_CLIENT_OPTIONS,
+  SerialClientOptions,
+} from '../types/options';
 
 /**
  * Internal implementation of SerialClient
@@ -45,13 +46,13 @@ export class SerialClientImpl {
         throw new SerialError(
           SerialErrorCode.OPERATION_CANCELLED,
           'Port selection was cancelled by the user',
-          error
+          error,
         );
       }
       throw new SerialError(
         SerialErrorCode.PORT_NOT_AVAILABLE,
         `Failed to request port: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -69,7 +70,7 @@ export class SerialClientImpl {
       throw new SerialError(
         SerialErrorCode.PORT_NOT_AVAILABLE,
         `Failed to get ports: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -85,7 +86,7 @@ export class SerialClientImpl {
     if (this.isOpen) {
       throw new SerialError(
         SerialErrorCode.PORT_ALREADY_OPEN,
-        'Port is already open'
+        'Port is already open',
       );
     }
 
@@ -117,7 +118,7 @@ export class SerialClientImpl {
       throw new SerialError(
         SerialErrorCode.PORT_OPEN_FAILED,
         `Failed to open port: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -154,7 +155,7 @@ export class SerialClientImpl {
       throw new SerialError(
         SerialErrorCode.CONNECTION_LOST,
         `Failed to close port: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -167,7 +168,7 @@ export class SerialClientImpl {
     if (!this.isOpen || !this.port || !this.port.readable) {
       throw new SerialError(
         SerialErrorCode.PORT_NOT_OPEN,
-        'Port is not open or readable stream is not available'
+        'Port is not open or readable stream is not available',
       );
     }
 
@@ -183,7 +184,7 @@ export class SerialClientImpl {
     if (!this.isOpen || !this.port || !this.port.writable) {
       throw new SerialError(
         SerialErrorCode.PORT_NOT_OPEN,
-        'Port is not open or writable stream is not available'
+        'Port is not open or writable stream is not available',
       );
     }
 
@@ -234,7 +235,7 @@ export class SerialClientImpl {
     if (!this.isOpen || !this.port || !this.port.writable) {
       throw new SerialError(
         SerialErrorCode.PORT_NOT_OPEN,
-        'Port is not open or writable stream is not available'
+        'Port is not open or writable stream is not available',
       );
     }
 
@@ -249,7 +250,7 @@ export class SerialClientImpl {
       throw new SerialError(
         SerialErrorCode.WRITE_FAILED,
         `Failed to write data: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }

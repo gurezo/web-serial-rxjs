@@ -1,9 +1,9 @@
-import {
-  hasWebSerialSupport,
-  detectBrowserType,
-  BrowserType,
-} from './browser-detection';
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
+import {
+  BrowserType,
+  detectBrowserType,
+  hasWebSerialSupport,
+} from './browser-detection';
 
 /**
  * Check if the browser supports Web Serial API
@@ -19,7 +19,7 @@ export function checkBrowserSupport(): void {
 
     throw new SerialError(
       SerialErrorCode.BROWSER_NOT_SUPPORTED,
-      `Web Serial API is not supported in ${browserName}. Please use a Chromium-based browser (Chrome, Edge, or Opera).`
+      `Web Serial API is not supported in ${browserName}. Please use a Chromium-based browser (Chrome, Edge, or Opera).`,
     );
   }
 }

@@ -1,5 +1,3 @@
-import { SerialPortFilter } from '@types/w3c-web-serial';
-
 /**
  * Options for creating a SerialClient instance
  */
@@ -11,10 +9,10 @@ export interface SerialClientOptions {
   baudRate?: number;
 
   /**
-   * Data bits (5, 6, 7, or 8)
+   * Data bits (7 or 8)
    * @default 8
    */
-  dataBits?: 5 | 6 | 7 | 8;
+  dataBits?: 7 | 8;
 
   /**
    * Stop bits (1 or 2)

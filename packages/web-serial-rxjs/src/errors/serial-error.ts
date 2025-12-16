@@ -1,5 +1,8 @@
 import { SerialErrorCode } from './serial-error-code';
 
+// Re-export SerialErrorCode for convenience
+export { SerialErrorCode };
+
 /**
  * Custom error class for serial port operations
  */
@@ -7,11 +10,7 @@ export class SerialError extends Error {
   public readonly code: SerialErrorCode;
   public readonly originalError?: Error;
 
-  constructor(
-    code: SerialErrorCode,
-    message: string,
-    originalError?: Error
-  ) {
+  constructor(code: SerialErrorCode, message: string, originalError?: Error) {
     super(message);
     this.name = 'SerialError';
     this.code = code;
