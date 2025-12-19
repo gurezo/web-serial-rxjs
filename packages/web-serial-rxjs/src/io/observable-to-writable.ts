@@ -91,6 +91,17 @@ export function subscribeToWritable(
 ): { unsubscribe: () => void } {
   const writer = stream.getWriter();
 
+  // Define error handler separately so we can call it directly
+  const errorHandler = async (error: unknown) => {
+    try {
+      await writer.abort(error);
+    } catch {
+      // Ignore abort errors
+    } finally {
+      writer.releaseLock();
+    }
+  };
+
   const subscription = observable.subscribe({
     next: async (chunk) => {
       try {
@@ -98,22 +109,17 @@ export function subscribeToWritable(
       } catch (error) {
         subscription.unsubscribe();
         writer.releaseLock();
-        throw new SerialError(
+        // Convert write error to SerialError and pass to error handler
+        const serialError = new SerialError(
           SerialErrorCode.WRITE_FAILED,
           `Failed to write to stream: ${error instanceof Error ? error.message : String(error)}`,
           error instanceof Error ? error : new Error(String(error)),
         );
+        // Manually trigger error handler to avoid unhandled rejection
+        await errorHandler(serialError);
       }
     },
-    error: async (error) => {
-      try {
-        await writer.abort(error);
-      } catch {
-        // Ignore abort errors
-      } finally {
-        writer.releaseLock();
-      }
-    },
+    error: errorHandler,
     complete: async () => {
       try {
         await writer.close();
