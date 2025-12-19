@@ -3,8 +3,27 @@
   "version": "0.0.1",
   "private": true,
   "type": "commonjs",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run build:types && npm run build:bundle",
+    "build:types": "tsc --project tsconfig.lib.json",
+    "build:bundle": "node esbuild.config.mjs",
+    "clean": "rm -rf dist"
+  },
   "dependencies": {},
   "peerDependencies": {
     "rxjs": "^7.8.0"
