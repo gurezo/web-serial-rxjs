@@ -16,7 +16,8 @@ export function hasWebSerialSupport(): boolean {
   return (
     typeof navigator !== 'undefined' &&
     'serial' in navigator &&
-    navigator.serial !== undefined
+    navigator.serial !== undefined &&
+    navigator.serial !== null
   );
 }
 
