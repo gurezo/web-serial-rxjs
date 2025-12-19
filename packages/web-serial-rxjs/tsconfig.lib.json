@@ -1,8 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
     "types": ["node", "@types/w3c-web-serial"]
   },
   "include": ["src/**/*.ts"],
