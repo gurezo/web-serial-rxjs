@@ -107,9 +107,8 @@ describe('App', () => {
   });
 
   it('should check browser support on initialization', async () => {
-    const { isBrowserSupported } = await import(
-      '@web-serial-rxjs/web-serial-rxjs'
-    );
+    const { isBrowserSupported } =
+      await import('@web-serial-rxjs/web-serial-rxjs');
     app = new App();
     // Give time for the async initialization to complete
     await new Promise((resolve) => setTimeout(resolve, 10));
