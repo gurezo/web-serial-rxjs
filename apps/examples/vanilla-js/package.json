@@ -1,0 +1,13 @@
+{
+  "name": "@web-serial-rxjs/vanilla-js-example",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@web-serial-rxjs/web-serial-rxjs": "*",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
