@@ -1,6 +1,12 @@
 /// <reference types='vitest' />
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const workspaceRoot = resolve(__dirname, '../../../');
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -8,7 +14,12 @@ export default defineConfig(() => ({
   plugins: [nxViteTsPaths()],
   server: {
     port: 4200,
-    host: 'localhost',
+    host: true,
+    strictPort: false,
+    fs: {
+      // Allow serving files from workspace root for monorepo setup
+      allow: [workspaceRoot],
+    },
   },
   preview: {
     port: 4300,
