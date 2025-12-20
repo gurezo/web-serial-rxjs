@@ -8,28 +8,28 @@ import { SerialClientImpl } from './serial-client-impl';
 export interface SerialClient {
   /**
    * Request a serial port from the user
-   * @returns Promise that resolves to the selected SerialPort
+   * @returns Observable that emits the selected SerialPort
    */
-  requestPort(): Promise<SerialPort>;
+  requestPort(): Observable<SerialPort>;
 
   /**
    * Get available serial ports
-   * @returns Promise that resolves to an array of available SerialPorts
+   * @returns Observable that emits an array of available SerialPorts
    */
-  getPorts(): Promise<SerialPort[]>;
+  getPorts(): Observable<SerialPort[]>;
 
   /**
    * Connect to a serial port
    * @param port Optional SerialPort to connect to. If not provided, will request one.
-   * @returns Promise that resolves when the port is opened
+   * @returns Observable that completes when the port is opened
    */
-  connect(port?: SerialPort): Promise<void>;
+  connect(port?: SerialPort): Observable<void>;
 
   /**
    * Disconnect from the serial port
-   * @returns Promise that resolves when the port is closed
+   * @returns Observable that completes when the port is closed
    */
-  disconnect(): Promise<void>;
+  disconnect(): Observable<void>;
 
   /**
    * Get an Observable that emits data read from the serial port
@@ -47,9 +47,9 @@ export interface SerialClient {
   /**
    * Write a single chunk of data to the serial port
    * @param data Data to write
-   * @returns Promise that resolves when the data is written
+   * @returns Observable that completes when the data is written
    */
-  write(data: Uint8Array): Promise<void>;
+  write(data: Uint8Array): Observable<void>;
 
   /**
    * Check if the port is currently open
