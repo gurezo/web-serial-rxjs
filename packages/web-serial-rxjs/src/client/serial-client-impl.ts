@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, defer, switchMap } from 'rxjs';
 import { checkBrowserSupport } from '../browser/browser-support';
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { buildRequestOptions } from '../filters/build-request-options';
@@ -32,107 +32,121 @@ export class SerialClientImpl {
 
   /**
    * Request a serial port from the user
-   * @returns Promise that resolves to the selected SerialPort
+   * @returns Observable that emits the selected SerialPort
    */
-  async requestPort(): Promise<SerialPort> {
-    checkBrowserSupport();
+  requestPort(): Observable<SerialPort> {
+    return defer(() => {
+      checkBrowserSupport();
 
-    try {
-      const requestOptions = buildRequestOptions(this.options);
-      const port = await navigator.serial.requestPort(requestOptions);
-      return port;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'NotFoundError') {
-        throw new SerialError(
-          SerialErrorCode.OPERATION_CANCELLED,
-          'Port selection was cancelled by the user',
-          error,
-        );
-      }
-      throw new SerialError(
-        SerialErrorCode.PORT_NOT_AVAILABLE,
-        `Failed to request port: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    }
+      return navigator.serial
+        .requestPort(buildRequestOptions(this.options))
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === 'NotFoundError') {
+            throw new SerialError(
+              SerialErrorCode.OPERATION_CANCELLED,
+              'Port selection was cancelled by the user',
+              error,
+            );
+          }
+          throw new SerialError(
+            SerialErrorCode.PORT_NOT_AVAILABLE,
+            `Failed to request port: ${error instanceof Error ? error.message : String(error)}`,
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        });
+    });
   }
 
   /**
    * Get available serial ports
-   * @returns Promise that resolves to an array of available SerialPorts
+   * @returns Observable that emits an array of available SerialPorts
    */
-  async getPorts(): Promise<SerialPort[]> {
-    checkBrowserSupport();
+  getPorts(): Observable<SerialPort[]> {
+    return defer(() => {
+      checkBrowserSupport();
 
-    try {
-      return await navigator.serial.getPorts();
-    } catch (error) {
-      throw new SerialError(
-        SerialErrorCode.PORT_NOT_AVAILABLE,
-        `Failed to get ports: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    }
+      return navigator.serial.getPorts().catch((error) => {
+        throw new SerialError(
+          SerialErrorCode.PORT_NOT_AVAILABLE,
+          `Failed to get ports: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error : new Error(String(error)),
+        );
+      });
+    });
   }
 
   /**
    * Connect to a serial port
    * @param port Optional SerialPort to connect to. If not provided, will request one.
-   * @returns Promise that resolves when the port is opened
+   * @returns Observable that completes when the port is opened
    */
-  async connect(port?: SerialPort): Promise<void> {
+  connect(port?: SerialPort): Observable<void> {
     checkBrowserSupport();
 
     if (this.isOpen) {
-      throw new SerialError(
-        SerialErrorCode.PORT_ALREADY_OPEN,
-        'Port is already open',
-      );
-    }
-
-    try {
-      if (!port) {
-        port = await this.requestPort();
-      }
-
-      this.port = port;
-
-      await this.port.open({
-        baudRate: this.options.baudRate,
-        dataBits: this.options.dataBits,
-        stopBits: this.options.stopBits,
-        parity: this.options.parity,
-        bufferSize: this.options.bufferSize,
-        flowControl: this.options.flowControl,
+      return new Observable<void>((subscriber) => {
+        subscriber.error(
+          new SerialError(
+            SerialErrorCode.PORT_ALREADY_OPEN,
+            'Port is already open',
+          ),
+        );
       });
-
-      this.isOpen = true;
-    } catch (error) {
-      this.port = null;
-      this.isOpen = false;
-
-      if (error instanceof SerialError) {
-        throw error;
-      }
-
-      throw new SerialError(
-        SerialErrorCode.PORT_OPEN_FAILED,
-        `Failed to open port: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error)),
-      );
     }
+
+    const port$ = port
+      ? new Observable<SerialPort>((subscriber) => {
+          subscriber.next(port);
+          subscriber.complete();
+        })
+      : this.requestPort();
+
+    return port$.pipe(
+      switchMap((selectedPort) => {
+        return defer(() => {
+          this.port = selectedPort;
+
+          return this.port
+            .open({
+              baudRate: this.options.baudRate,
+              dataBits: this.options.dataBits,
+              stopBits: this.options.stopBits,
+              parity: this.options.parity,
+              bufferSize: this.options.bufferSize,
+              flowControl: this.options.flowControl,
+            })
+            .then(() => {
+              this.isOpen = true;
+            })
+            .catch((error) => {
+              this.port = null;
+              this.isOpen = false;
+
+              if (error instanceof SerialError) {
+                throw error;
+              }
+
+              throw new SerialError(
+                SerialErrorCode.PORT_OPEN_FAILED,
+                `Failed to open port: ${error instanceof Error ? error.message : String(error)}`,
+                error instanceof Error ? error : new Error(String(error)),
+              );
+            });
+        });
+      }),
+    );
   }
 
   /**
    * Disconnect from the serial port
-   * @returns Promise that resolves when the port is closed
+   * @returns Observable that completes when the port is closed
    */
-  async disconnect(): Promise<void> {
-    if (!this.isOpen || !this.port) {
-      return;
-    }
+  disconnect(): Observable<void> {
+    return defer(() => {
+      if (!this.isOpen || !this.port) {
+        return Promise.resolve();
+      }
 
-    try {
       // Unsubscribe from read/write streams
       if (this.readSubscription) {
         this.readSubscription.unsubscribe();
@@ -145,19 +159,23 @@ export class SerialClientImpl {
       }
 
       // Close the port
-      await this.port.close();
-      this.port = null;
-      this.isOpen = false;
-    } catch (error) {
-      this.port = null;
-      this.isOpen = false;
+      return this.port
+        .close()
+        .then(() => {
+          this.port = null;
+          this.isOpen = false;
+        })
+        .catch((error) => {
+          this.port = null;
+          this.isOpen = false;
 
-      throw new SerialError(
-        SerialErrorCode.CONNECTION_LOST,
-        `Failed to close port: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    }
+          throw new SerialError(
+            SerialErrorCode.CONNECTION_LOST,
+            `Failed to close port: ${error instanceof Error ? error.message : String(error)}`,
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        });
+    });
   }
 
   /**
@@ -238,30 +256,32 @@ export class SerialClientImpl {
   /**
    * Write a single chunk of data to the serial port
    * @param data Data to write
-   * @returns Promise that resolves when the data is written
+   * @returns Observable that completes when the data is written
    */
-  async write(data: Uint8Array): Promise<void> {
-    if (!this.isOpen || !this.port || !this.port.writable) {
-      throw new SerialError(
-        SerialErrorCode.PORT_NOT_OPEN,
-        'Port is not open or writable stream is not available',
-      );
-    }
-
-    try {
-      const writer = this.port.writable.getWriter();
-      try {
-        await writer.write(data);
-      } finally {
-        writer.releaseLock();
+  write(data: Uint8Array): Observable<void> {
+    return defer(() => {
+      if (!this.isOpen || !this.port || !this.port.writable) {
+        throw new SerialError(
+          SerialErrorCode.PORT_NOT_OPEN,
+          'Port is not open or writable stream is not available',
+        );
       }
-    } catch (error) {
-      throw new SerialError(
-        SerialErrorCode.WRITE_FAILED,
-        `Failed to write data: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    }
+
+      const writer = this.port.writable.getWriter();
+      return writer
+        .write(data)
+        .then(() => {
+          writer.releaseLock();
+        })
+        .catch((error) => {
+          writer.releaseLock();
+          throw new SerialError(
+            SerialErrorCode.WRITE_FAILED,
+            `Failed to write data: ${error instanceof Error ? error.message : String(error)}`,
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        });
+    });
   }
 
   /**
