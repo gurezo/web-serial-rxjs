@@ -35,6 +35,7 @@
     "esbuild": "^0.19.12",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.0.0",
+    "jsdom": "^24.1.3",
     "nx": "22.2.3",
     "prettier": "^3.7.4",
     "tslib": "^2.3.0",
