@@ -1,8 +1,8 @@
 // Main exports
-export {
-  createSerialClient,
-  SerialClient,
-} from './client/create-serial-client';
+export { createSerialClient } from './client/create-serial-client';
+
+// Type exports
+export type { SerialClient } from './client/create-serial-client';
 
 // Error exports
 export { SerialError } from './errors/serial-error';
