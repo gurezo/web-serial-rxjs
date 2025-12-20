@@ -1,3 +1,6 @@
+// Static imports are correct for application code.
+// Test files use vi.mock which causes false positives for lazy-load detection.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   createSerialClient,
   isBrowserSupported,
