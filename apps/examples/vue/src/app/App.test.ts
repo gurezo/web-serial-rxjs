@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils';
+// @ts-expect-error - Mocked module, types not needed at runtime
 import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
 import type { Observable } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
 
 // Mock the web-serial-rxjs library
@@ -114,9 +116,9 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
   };
 
   return {
-    createSerialClient: vi.fn(() => mockClient) as unknown as (
-      options?: { baudRate?: number },
-    ) => SerialClient,
+    createSerialClient: vi.fn(() => mockClient) as unknown as (options?: {
+      baudRate?: number;
+    }) => SerialClient,
     isBrowserSupported: vi.fn(() => true),
     SerialError: class MockSerialError extends Error {
       constructor(message: string) {
@@ -179,7 +181,7 @@ describe('App', () => {
     const wrapper = mount(App);
     // Wait for onMounted to execute
     await new Promise((resolve) => setTimeout(resolve, 10));
-    
+
     const connectButtons = wrapper.findAll('.btn-primary');
     const connectButton = connectButtons[0]; // First primary button is connect
 

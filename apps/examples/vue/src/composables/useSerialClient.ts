@@ -4,8 +4,8 @@ import {
   SerialClient,
   SerialError,
 } from '@web-serial-rxjs/web-serial-rxjs';
-import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import type { Subscription } from 'rxjs';
+import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 
 /**
  * SerialClient の接続状態を表す型
@@ -49,9 +49,7 @@ export interface UseSerialClientReturn {
  * @param initialBaudRate - 初期ボーレート（デフォルト: 9600）
  * @returns SerialClient の操作と状態を提供するオブジェクト
  */
-export function useSerialClient(
-  initialBaudRate = 9600,
-): UseSerialClientReturn {
+export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
   const browserSupported = ref(false);
   const connectionState = ref<SerialConnectionState>({
     connected: false,
