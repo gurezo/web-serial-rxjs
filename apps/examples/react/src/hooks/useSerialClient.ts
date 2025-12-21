@@ -49,9 +49,7 @@ export interface UseSerialClientReturn {
  * @param initialBaudRate - 初期ボーレート（デフォルト: 9600）
  * @returns SerialClient の操作と状態を提供するオブジェクト
  */
-export function useSerialClient(
-  initialBaudRate = 9600,
-): UseSerialClientReturn {
+export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
   const [browserSupported, setBrowserSupported] = useState(false);
   const [connectionState, setConnectionState] = useState<SerialConnectionState>(
     {

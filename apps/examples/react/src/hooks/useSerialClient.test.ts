@@ -1,9 +1,9 @@
+import { renderHook, waitFor } from '@testing-library/react';
 import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import * as webSerialRxjs from '@web-serial-rxjs/web-serial-rxjs';
 import type { Observable, Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
 import { useSerialClient } from './useSerialClient';
-import * as webSerialRxjs from '@web-serial-rxjs/web-serial-rxjs';
 
 // Mock the web-serial-rxjs library
 vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
@@ -115,9 +115,9 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
   };
 
   return {
-    createSerialClient: vi.fn(() => mockClient) as unknown as (
-      options?: { baudRate?: number },
-    ) => SerialClient,
+    createSerialClient: vi.fn(() => mockClient) as unknown as (options?: {
+      baudRate?: number;
+    }) => SerialClient,
     isBrowserSupported: vi.fn(() => true),
     SerialError: class MockSerialError extends Error {
       constructor(message: string) {

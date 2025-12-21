@@ -1,8 +1,8 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
 import type { Observable, Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { App } from './App';
 
 // Mock the web-serial-rxjs library
