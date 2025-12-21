@@ -4,9 +4,9 @@ import {
   SerialClient,
   SerialError,
 } from '@web-serial-rxjs/web-serial-rxjs';
+import type { Subscription } from 'rxjs';
 import { onDestroy } from 'svelte';
 import { writable, type Writable } from 'svelte/store';
-import type { Subscription } from 'rxjs';
 
 /**
  * SerialClient の接続状態を表す型
@@ -50,9 +50,7 @@ export interface UseSerialClientReturn {
  * @param initialBaudRate - 初期ボーレート（デフォルト: 9600）
  * @returns SerialClient の操作と状態を提供するオブジェクト
  */
-export function useSerialClient(
-  initialBaudRate = 9600,
-): UseSerialClientReturn {
+export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
   const browserSupported = writable(false);
   const connectionState = writable<SerialConnectionState>({
     connected: false,

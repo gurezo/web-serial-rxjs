@@ -1,9 +1,21 @@
 import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
 import * as webSerialRxjs from '@web-serial-rxjs/web-serial-rxjs';
 import type { Observable } from 'rxjs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
+
+// Mock onDestroy for testing
+vi.mock('svelte', async () => {
+  const actual = await vi.importActual('svelte');
+  return {
+    ...actual,
+    onDestroy: vi.fn((fn: () => void) => {
+      // Store cleanup function for manual cleanup in tests
+      (globalThis as any).__svelteCleanup = fn;
+    }),
+  };
+});
 
 // Mock the web-serial-rxjs library
 vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
@@ -131,9 +143,16 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
 describe('useSerialClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear cleanup function
+    (globalThis as any).__svelteCleanup = undefined;
   });
 
   afterEach(() => {
+    // Call cleanup if it exists
+    if ((globalThis as any).__svelteCleanup) {
+      (globalThis as any).__svelteCleanup();
+      (globalThis as any).__svelteCleanup = undefined;
+    }
     vi.restoreAllMocks();
   });
 
@@ -221,7 +240,9 @@ describe('useSerialClient', () => {
   it('should handle connection errors', async () => {
     const mockClient = vi.mocked(webSerialRxjs.createSerialClient)({
       baudRate: 9600,
-    }) as any;
+    }) as SerialClient & {
+      connect: ReturnType<typeof vi.fn>;
+    };
 
     // Mock connect to throw an error
     mockClient.connect = vi.fn(() => ({

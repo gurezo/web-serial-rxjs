@@ -1,20 +1,28 @@
-const { FlatCompat } = require('@eslint/eslintrc');
 const baseConfig = require('../../../eslint.config.cjs');
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: baseConfig,
-});
-
 module.exports = [
-  ...compat.extends('plugin:@nx/typescript', '../../../eslint.config.cjs'),
+  ...baseConfig,
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.svelte'],
-    rules: {},
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {},
+    files: ['**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      // Allow static imports of web-serial-rxjs library
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
+            '@web-serial-rxjs/web-serial-rxjs',
+          ],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     files: ['**/*.svelte'],
@@ -22,6 +30,12 @@ module.exports = [
       svelte: require('eslint-plugin-svelte'),
     },
     processor: 'svelte/svelte',
+    languageOptions: {
+      parser: require('svelte-eslint-parser'),
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
+    },
     rules: {},
   },
 ];
