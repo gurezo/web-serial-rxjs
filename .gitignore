@@ -64,3 +64,6 @@ Thumbs.db
 .nx/installation
 
 vitest.config.*.timestamp*graph.json
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
