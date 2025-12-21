@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Serial RxJS - Vanilla JS Example</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Web Serial RxJS Example</h1>
+        <p class="subtitle">Vanilla JavaScript サンプルアプリケーション</p>
+      </header>
+
+      <main>
+        <!-- Browser Support Check -->
+        <section id="browser-support-section" class="section">
+          <h2>ブラウザサポート</h2>
+          <div id="browser-support-status" class="status-message"></div>
+        </section>
+
+        <!-- Connection Section -->
+        <section id="connection-section" class="section">
+          <h2>シリアルポート接続</h2>
+          <div class="button-group">
+            <button id="connect-btn" class="btn btn-primary" disabled>
+              接続
+            </button>
+            <button id="disconnect-btn" class="btn btn-secondary" disabled>
+              切断
+            </button>
+            <button id="request-port-btn" class="btn btn-outline">
+              ポート選択
+            </button>
+          </div>
+          <div id="connection-status" class="status-message"></div>
+        </section>
+
+        <!-- Configuration Section -->
+        <section id="config-section" class="section">
+          <h2>接続設定</h2>
+          <div class="form-group">
+            <label for="baud-rate">ボーレート:</label>
+            <select id="baud-rate" class="form-control">
+              <option value="9600">9600</option>
+              <option value="19200">19200</option>
+              <option value="38400">38400</option>
+              <option value="57600">57600</option>
+              <option value="115200" selected>115200</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Send Data Section -->
+        <section id="send-section" class="section">
+          <h2>データ送信</h2>
+          <div class="form-group">
+            <label for="send-input">送信データ:</label>
+            <div class="input-group">
+              <input
+                type="text"
+                id="send-input"
+                class="form-control"
+                placeholder="送信するテキストを入力..."
+                disabled
+              />
+              <button id="send-btn" class="btn btn-primary" disabled>
+                送信
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Receive Data Section -->
+        <section id="receive-section" class="section">
+          <h2>受信データ</h2>
+          <div class="form-group">
+            <div class="button-group">
+              <button id="clear-receive-btn" class="btn btn-outline">
+                クリア
+              </button>
+            </div>
+            <textarea
+              id="receive-output"
+              class="form-control receive-output"
+              readonly
+              placeholder="受信データがここに表示されます..."
+            ></textarea>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
