@@ -3,23 +3,30 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const workspaceRoot = resolve(__dirname, '../../../');
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/apps/examples/vue',
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   server: {
-    port: 4200,
-    host: 'localhost',
+    port: 4203,
+    host: true,
+    strictPort: false,
+    fs: {
+      // Allow serving files from workspace root for monorepo setup
+      allow: [workspaceRoot],
+    },
   },
   preview: {
-    port: 4300,
+    port: 4303,
     host: 'localhost',
   },
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
-  // },
   build: {
     outDir: '../../../dist/apps/examples/vue',
     emptyOutDir: true,
@@ -27,5 +34,18 @@ export default defineConfig(() => ({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+  },
+  test: {
+    name: 'vue',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../../coverage/apps/examples/vue',
+      provider: 'v8' as const,
+    },
+    setupFiles: ['./src/test-setup.ts'],
   },
 }));
