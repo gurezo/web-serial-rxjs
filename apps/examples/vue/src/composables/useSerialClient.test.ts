@@ -5,6 +5,22 @@ import type { Observable } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
 
+// Test component to use the composable
+const TestComponent = {
+  setup() {
+    const serialClient = useSerialClient(9600);
+    // Expose all properties for testing by using them in template
+    return {
+      ...serialClient,
+      // Also expose as methods for easier access
+      getBrowserSupported: () => serialClient.browserSupported.value,
+      getConnectionState: () => serialClient.connectionState.value,
+      getReceivedData: () => serialClient.receivedData.value,
+    };
+  },
+  template: '<div>{{ browserSupported }} {{ connectionState.connected }} {{ receivedData }}</div>',
+};
+
 // Mock the web-serial-rxjs library
 vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
   let isConnected = false;
@@ -128,14 +144,6 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
   };
 });
 
-// Test component to use the composable
-const TestComponent = {
-  setup() {
-    return useSerialClient(9600);
-  },
-  template: '<div></div>',
-};
-
 describe('useSerialClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -145,90 +153,95 @@ describe('useSerialClient', () => {
     vi.restoreAllMocks();
   });
 
-  it('should initialize with default values', () => {
+  it('should initialize with default values', async () => {
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.browserSupported.value).toBe(true);
-    expect(vm.connectionState.value.connected).toBe(false);
-    expect(vm.connectionState.value.connecting).toBe(false);
-    expect(vm.connectionState.value.disconnecting).toBe(false);
-    expect(vm.connectionState.value.error).toBe(null);
-    expect(vm.receivedData.value).toBe('');
+    expect(wrapper.vm.getBrowserSupported()).toBe(true);
+    expect(wrapper.vm.getConnectionState().connected).toBe(false);
+    expect(wrapper.vm.getConnectionState().connecting).toBe(false);
+    expect(wrapper.vm.getConnectionState().disconnecting).toBe(false);
+    expect(wrapper.vm.getConnectionState().error).toBe(null);
+    expect(wrapper.vm.getReceivedData()).toBe('');
   });
 
-  it('should check browser support on mount', () => {
+  it('should check browser support on mount', async () => {
     mount(TestComponent);
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(vi.mocked(webSerialRxjs.isBrowserSupported)).toHaveBeenCalled();
   });
 
   it('should connect to serial port', async () => {
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
-
-    expect(vm.connectionState.value.connected).toBe(false);
-
-    await vm.connect();
-
-    // Wait for async state update
+    await wrapper.vm.$nextTick();
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.connectionState.value.connected).toBe(true);
-    expect(vm.connectionState.value.connecting).toBe(false);
+    expect(wrapper.vm.getConnectionState().connected).toBe(false);
+
+    await wrapper.vm.connect();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(wrapper.vm.getConnectionState().connected).toBe(true);
+    expect(wrapper.vm.getConnectionState().connecting).toBe(false);
   });
 
   it('should disconnect from serial port', async () => {
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // First connect
-    await vm.connect();
+    await wrapper.vm.connect();
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.connectionState.value.connected).toBe(true);
+    expect(wrapper.vm.getConnectionState().connected).toBe(true);
 
     // Then disconnect
-    await vm.disconnect();
+    await wrapper.vm.disconnect();
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.connectionState.value.connected).toBe(false);
-    expect(vm.connectionState.value.disconnecting).toBe(false);
+    expect(wrapper.vm.getConnectionState().connected).toBe(false);
+    expect(wrapper.vm.getConnectionState().disconnecting).toBe(false);
   });
 
   it('should request port', async () => {
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
-
-    await vm.requestPort();
+    await wrapper.vm.$nextTick();
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.connectionState.value.error).toBe(null);
+    await wrapper.vm.requestPort();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(wrapper.vm.getConnectionState().error).toBe(null);
   });
 
   it('should send data when connected', async () => {
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
-
-    // Connect first
-    await vm.connect();
+    await wrapper.vm.$nextTick();
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.connectionState.value.connected).toBe(true);
+    // Connect first
+    await wrapper.vm.connect();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(wrapper.vm.getConnectionState().connected).toBe(true);
 
     // Send data
-    await vm.send('test data');
+    await wrapper.vm.send('test data');
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     // No error should occur
-    expect(vm.connectionState.value.error).toBe(null);
+    expect(wrapper.vm.getConnectionState().error).toBe(null);
   });
 
-  it('should clear received data', () => {
+  it('should clear received data', async () => {
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    vm.clearReceivedData();
-    expect(vm.receivedData.value).toBe('');
+    wrapper.vm.clearReceivedData();
+    expect(wrapper.vm.getReceivedData()).toBe('');
   });
 
   it('should handle connection errors', async () => {
@@ -254,17 +267,18 @@ describe('useSerialClient', () => {
     })) as unknown as () => Observable<void>;
 
     const wrapper = mount(TestComponent);
-    const vm = wrapper.vm as ReturnType<typeof useSerialClient>;
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     try {
-      await vm.connect();
+      await wrapper.vm.connect();
     } catch {
       // Expected to throw
     }
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(vm.connectionState.value.error).toBeTruthy();
-    expect(vm.connectionState.value.connected).toBe(false);
+    expect(wrapper.vm.getConnectionState().error).toBeTruthy();
+    expect(wrapper.vm.getConnectionState().connected).toBe(false);
   });
 });

@@ -144,8 +144,10 @@ describe('App', () => {
     );
   });
 
-  it('should display browser support status', () => {
+  it('should display browser support status', async () => {
     const wrapper = mount(App);
+    // Wait for onMounted to execute
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(wrapper.text()).toContain(
       'ブラウザは Web Serial API をサポートしています。',
     );
@@ -175,49 +177,59 @@ describe('App', () => {
 
   it('should connect when connect button is clicked', async () => {
     const wrapper = mount(App);
-    const connectButton = wrapper.find('.btn-primary');
+    // Wait for onMounted to execute
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    
+    const connectButtons = wrapper.findAll('.btn-primary');
+    const connectButton = connectButtons[0]; // First primary button is connect
 
     await connectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(wrapper.text()).toContain('シリアルポートに接続しました。');
   });
 
   it('should disconnect when disconnect button is clicked', async () => {
     const wrapper = mount(App);
+    // Wait for onMounted to execute
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // First connect
-    const connectButton = wrapper.findAll('.btn-primary')[0];
+    const connectButtons = wrapper.findAll('.btn-primary');
+    const connectButton = connectButtons[0];
     await connectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(wrapper.text()).toContain('シリアルポートに接続しました。');
 
     // Then disconnect
     const disconnectButton = wrapper.find('.btn-secondary');
     await disconnectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(wrapper.text()).toContain('シリアルポートに接続していません。');
   });
 
   it('should send data when send button is clicked', async () => {
     const wrapper = mount(App);
+    // Wait for onMounted to execute
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Connect first
-    const connectButton = wrapper.findAll('.btn-primary')[0];
+    const connectButtons = wrapper.findAll('.btn-primary');
+    const connectButton = connectButtons[0];
     await connectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(wrapper.text()).toContain('シリアルポートに接続しました。');
 
     // Enter data and send
     const sendInput = wrapper.find('#send-input');
-    const sendButton = wrapper.findAll('.btn-primary')[1];
+    const sendButton = connectButtons[1]; // Second primary button is send
 
     await sendInput.setValue('test message');
     await sendButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Input should be cleared after sending
     expect((sendInput.element as HTMLInputElement).value).toBe('');
