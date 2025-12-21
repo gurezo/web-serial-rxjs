@@ -89,7 +89,10 @@ This example uses RxJS observables to handle serial port communication reactivel
 ## Example Usage in Code
 
 ```typescript
-import { createSerialClient, SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import {
+  createSerialClient,
+  SerialClient,
+} from '@web-serial-rxjs/web-serial-rxjs';
 
 // Create a serial client
 const client: SerialClient = createSerialClient({ baudRate: 115200 });
