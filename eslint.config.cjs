@@ -40,4 +40,10 @@ module.exports = [
   {
     ignores: ['**/vitest.config.*.timestamp*'],
   },
+  {
+    ignores: ['**/vite.config.*.timestamp*'],
+  },
+  {
+    ignores: ['**/vitest.config.*.timestamp*'],
+  },
 ];

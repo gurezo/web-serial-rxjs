@@ -1,0 +1,12 @@
+{
+  "name": "@web-serial-rxjs/react-example",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@web-serial-rxjs/web-serial-rxjs": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rxjs": "^7.8.2"
+  }
+}
