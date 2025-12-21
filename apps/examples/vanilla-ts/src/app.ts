@@ -1,6 +1,5 @@
 // Static imports are correct for application code.
 // Test files use vi.mock which causes false positives for lazy-load detection.
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   createSerialClient,
   isBrowserSupported,
@@ -19,24 +18,24 @@ export class App {
   private readSubscription: Subscription | null = null;
 
   // Browser support
-  private browserSupportStatus: HTMLElement;
+  private browserSupportStatus!: HTMLElement;
 
   // Connection
-  private connectBtn: HTMLButtonElement;
-  private disconnectBtn: HTMLButtonElement;
-  private requestPortBtn: HTMLButtonElement;
-  private connectionStatus: HTMLElement;
+  private connectBtn!: HTMLButtonElement;
+  private disconnectBtn!: HTMLButtonElement;
+  private requestPortBtn!: HTMLButtonElement;
+  private connectionStatus!: HTMLElement;
 
   // Configuration
-  private baudRateSelect: HTMLSelectElement;
+  private baudRateSelect!: HTMLSelectElement;
 
   // Send data
-  private sendInput: HTMLInputElement;
-  private sendBtn: HTMLButtonElement;
+  private sendInput!: HTMLInputElement;
+  private sendBtn!: HTMLButtonElement;
 
   // Receive data
-  private receiveOutput: HTMLTextAreaElement;
-  private clearReceiveBtn: HTMLButtonElement;
+  private receiveOutput!: HTMLTextAreaElement;
+  private clearReceiveBtn!: HTMLButtonElement;
 
   constructor() {
     // Initialize UI elements

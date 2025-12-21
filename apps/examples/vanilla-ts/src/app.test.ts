@@ -1,50 +1,59 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { App } from './app.js';
 import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
 import type { Observable, Subscription } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { App } from './app.js';
 
 // Mock the web-serial-rxjs library
 vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
-  const mockClient: SerialClient = {
-    connected: false,
+  let isConnected = false;
+  const mockClient = {
+    get connected() {
+      return isConnected;
+    },
     currentPort: null,
     connect: vi.fn(() => ({
-      subscribe: vi.fn((observer: {
-        next?: () => void;
-        error?: (error: unknown) => void;
-        complete?: () => void;
-      }) => {
-        setTimeout(() => {
-          mockClient.connected = true;
-          observer.next?.();
-          observer.complete?.();
-        }, 0);
-      }),
+      subscribe: vi.fn(
+        (observer: {
+          next?: () => void;
+          error?: (error: unknown) => void;
+          complete?: () => void;
+        }) => {
+          setTimeout(() => {
+            isConnected = true;
+            observer.next?.();
+            observer.complete?.();
+          }, 0);
+        },
+      ),
     })) as unknown as () => Observable<void>,
     disconnect: vi.fn(() => ({
-      subscribe: vi.fn((observer: {
-        next?: () => void;
-        error?: (error: unknown) => void;
-        complete?: () => void;
-      }) => {
-        setTimeout(() => {
-          mockClient.connected = false;
-          observer.next?.();
-          observer.complete?.();
-        }, 0);
-      }),
+      subscribe: vi.fn(
+        (observer: {
+          next?: () => void;
+          error?: (error: unknown) => void;
+          complete?: () => void;
+        }) => {
+          setTimeout(() => {
+            isConnected = false;
+            observer.next?.();
+            observer.complete?.();
+          }, 0);
+        },
+      ),
     })) as unknown as () => Observable<void>,
     requestPort: vi.fn(() => ({
-      subscribe: vi.fn((observer: {
-        next?: (port: SerialPort) => void;
-        error?: (error: unknown) => void;
-        complete?: () => void;
-      }) => {
-        setTimeout(() => {
-          observer.next?.({} as SerialPort);
-          observer.complete?.();
-        }, 0);
-      }),
+      subscribe: vi.fn(
+        (observer: {
+          next?: (port: SerialPort) => void;
+          error?: (error: unknown) => void;
+          complete?: () => void;
+        }) => {
+          setTimeout(() => {
+            observer.next?.({} as SerialPort);
+            observer.complete?.();
+          }, 0);
+        },
+      ),
     })) as unknown as () => Observable<SerialPort>,
     getReadStream: vi.fn(() => ({
       subscribe: vi.fn(() => ({
@@ -56,16 +65,18 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
       }) => Subscription,
     })) as unknown as () => Observable<Uint8Array>,
     write: vi.fn(() => ({
-      subscribe: vi.fn((observer: {
-        next?: () => void;
-        error?: (error: unknown) => void;
-        complete?: () => void;
-      }) => {
-        setTimeout(() => {
-          observer.next?.();
-          observer.complete?.();
-        }, 0);
-      }),
+      subscribe: vi.fn(
+        (observer: {
+          next?: () => void;
+          error?: (error: unknown) => void;
+          complete?: () => void;
+        }) => {
+          setTimeout(() => {
+            observer.next?.();
+            observer.complete?.();
+          }, 0);
+        },
+      ),
     })) as unknown as (data: Uint8Array) => Observable<void>,
     getPorts: vi.fn(() => ({
       subscribe: vi.fn(),
@@ -73,7 +84,7 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
     writeStream: vi.fn(() => ({
       subscribe: vi.fn(),
     })) as unknown as (data$: Observable<Uint8Array>) => Observable<void>,
-  };
+  } as SerialClient;
 
   return {
     createSerialClient: vi.fn(() => mockClient),
