@@ -54,9 +54,9 @@ describe('SerialClientService', () => {
   let service: SerialClientService;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     TestBed.configureTestingModule({});
     service = TestBed.inject(SerialClientService);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
