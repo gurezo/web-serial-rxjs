@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
-import type { SerialConnectionState } from './services/serial-client.service';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { SerialClientService } from './services/serial-client.service';
 import { Observable, map } from 'rxjs';
+import type { SerialConnectionState } from './services/serial-client.service';
+import { SerialClientService } from './services/serial-client.service';
 
 @Component({
   imports: [CommonModule, FormsModule, RouterModule],
@@ -16,13 +16,16 @@ export class App {
   baudRate = 9600;
   sendInput = '';
 
+  private readonly serialService = inject(SerialClientService);
+
   browserSupported$: Observable<boolean>;
-  connectionState$: Observable<import('./services/serial-client.service').SerialConnectionState>;
+  connectionState$: Observable<
+    import('./services/serial-client.service').SerialConnectionState
+  >;
   receivedData$: Observable<string>;
   status$: Observable<{ type: string; message: string }>;
 
-  // eslint-disable-next-line @angular-eslint/prefer-inject
-  constructor(private serialService: SerialClientService) {
+  constructor() {
     this.browserSupported$ = this.serialService.browserSupported;
     this.connectionState$ = this.serialService.connectionState;
     this.receivedData$ = this.serialService.receivedData;
@@ -46,7 +49,6 @@ export class App {
       }),
     );
   }
-
 
   /**
    * 接続ボタンのハンドラ
