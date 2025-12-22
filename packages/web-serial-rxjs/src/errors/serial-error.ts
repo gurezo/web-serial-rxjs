@@ -17,8 +17,10 @@ export class SerialError extends Error {
     this.originalError = originalError;
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, SerialError);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((Error as any).captureStackTrace) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (Error as any).captureStackTrace(this, SerialError);
     }
   }
 
