@@ -5,7 +5,12 @@ import {
   SerialClient,
   SerialError,
 } from '@web-serial-rxjs/web-serial-rxjs';
-import { BehaviorSubject, Observable, Subscription, firstValueFrom } from 'rxjs';
+import {
+  BehaviorSubject,
+  firstValueFrom,
+  Observable,
+  Subscription,
+} from 'rxjs';
 
 /**
  * SerialClient の接続状態を表す型
@@ -31,12 +36,13 @@ export class SerialClientService implements OnDestroy {
   private baudRate = 9600;
 
   private readonly browserSupported$ = new BehaviorSubject<boolean>(false);
-  private readonly connectionState$ = new BehaviorSubject<SerialConnectionState>({
-    connected: false,
-    connecting: false,
-    disconnecting: false,
-    error: null,
-  });
+  private readonly connectionState$ =
+    new BehaviorSubject<SerialConnectionState>({
+      connected: false,
+      connecting: false,
+      disconnecting: false,
+      error: null,
+    });
   private readonly receivedData$ = new BehaviorSubject<string>('');
 
   /**

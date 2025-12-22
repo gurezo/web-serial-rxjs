@@ -1,9 +1,7 @@
 <div class="container">
   <header>
     <h1>Web Serial RxJS - Angular Example</h1>
-    <p class="subtitle">
-      Angular Service を使用した Web Serial API のサンプル
-    </p>
+    <p class="subtitle">Angular Service を使用した Web Serial API のサンプル</p>
   </header>
 
   <main>
@@ -14,11 +12,10 @@
         class="status-message"
         [ngClass]="(browserSupported$ | async) ? 'success' : 'error'"
       >
-        {{
-          (browserSupported$ | async)
-            ? 'ブラウザは Web Serial API をサポートしています。'
-            : 'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。'
-        }}
+        {{ (browserSupported$ | async) ? 'ブラウザは Web Serial API
+        をサポートしています。' : 'このブラウザは Web Serial API
+        をサポートしていません。Chrome、Edge、Opera などの Chromium
+        ベースのブラウザをご使用ください。' }}
       </div>
     </section>
 

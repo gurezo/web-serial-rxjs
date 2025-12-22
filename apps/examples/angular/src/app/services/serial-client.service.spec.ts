@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { firstValueFrom, of, throwError } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
 import * as webSerialRxjs from '@web-serial-rxjs/web-serial-rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialClientService } from './serial-client.service';
 
 // Mock the web-serial-rxjs library
@@ -28,9 +28,9 @@ vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
         }),
       ),
     ),
-    requestPort: vi.fn(() => of({} as SerialPort)),
-    getReadStream: vi.fn(() =>
-      of(new Uint8Array([72, 101, 108, 108, 111])), // "Hello"
+    requestPort: vi.fn(() => of({} as unknown as SerialPort)),
+    getReadStream: vi.fn(
+      () => of(new Uint8Array([72, 101, 108, 108, 111])), // "Hello"
     ),
     write: vi.fn(() => of(undefined)),
     getPorts: vi.fn(() => of([])),
@@ -146,7 +146,7 @@ describe('SerialClientService', () => {
   it('should handle connection errors', async () => {
     // Create a new service instance to test error handling
     const errorService = new SerialClientService();
-    
+
     // Mock createSerialClient to return a client that throws on connect
     const errorClient = {
       get connected() {

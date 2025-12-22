@@ -134,7 +134,8 @@ export class AppComponent {
 ```html
 <button
   [disabled]="!getConnected(connectionState$ | async)"
-  (click)="connect()">
+  (click)="connect()"
+>
   Connect
 </button>
 
@@ -149,7 +150,10 @@ export class AppComponent {
 
 ```typescript
 import { Injectable } from '@angular/core';
-import { createSerialClient, SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import {
+  createSerialClient,
+  SerialClient,
+} from '@web-serial-rxjs/web-serial-rxjs';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
