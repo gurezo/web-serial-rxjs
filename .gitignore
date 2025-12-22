@@ -67,3 +67,6 @@ vitest.config.*.timestamp*graph.json
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+.angular
+
+__screenshots__/
