@@ -67,18 +67,15 @@ describe('SerialClientService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should initialize with default values', (done) => {
-    service.browserSupported.subscribe((supported) => {
-      expect(supported).toBe(true);
-    });
+  it('should initialize with default values', async () => {
+    const browserSupported = await firstValueFrom(service.browserSupported);
+    expect(browserSupported).toBe(true);
 
-    service.connectionState.subscribe((state) => {
-      expect(state.connected).toBe(false);
-      expect(state.connecting).toBe(false);
-      expect(state.disconnecting).toBe(false);
-      expect(state.error).toBe(null);
-      done();
-    });
+    const connectionState = await firstValueFrom(service.connectionState);
+    expect(connectionState.connected).toBe(false);
+    expect(connectionState.connecting).toBe(false);
+    expect(connectionState.disconnecting).toBe(false);
+    expect(connectionState.error).toBe(null);
   });
 
   it('should check browser support on initialization', () => {
@@ -86,22 +83,17 @@ describe('SerialClientService', () => {
   });
 
   it('should connect to serial port', async () => {
-    let connectionState: any;
-    service.connectionState.subscribe((state) => {
-      connectionState = state;
-    });
-
-    expect(connectionState.connected).toBe(false);
+    const initialState = await firstValueFrom(service.connectionState);
+    expect(initialState.connected).toBe(false);
 
     await firstValueFrom(service.connect());
 
     // Wait a bit for state updates
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    service.connectionState.subscribe((state) => {
-      expect(state.connected).toBe(true);
-      expect(state.connecting).toBe(false);
-    });
+    const newState = await firstValueFrom(service.connectionState);
+    expect(newState.connected).toBe(true);
+    expect(newState.connecting).toBe(false);
   });
 
   it('should disconnect from serial port', async () => {
@@ -109,29 +101,23 @@ describe('SerialClientService', () => {
     await firstValueFrom(service.connect());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    let connectionState: any;
-    service.connectionState.subscribe((state) => {
-      connectionState = state;
-    });
-
-    expect(connectionState.connected).toBe(true);
+    const connectedState = await firstValueFrom(service.connectionState);
+    expect(connectedState.connected).toBe(true);
 
     // Then disconnect
     await firstValueFrom(service.disconnect());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    service.connectionState.subscribe((state) => {
-      expect(state.connected).toBe(false);
-      expect(state.disconnecting).toBe(false);
-    });
+    const disconnectedState = await firstValueFrom(service.connectionState);
+    expect(disconnectedState.connected).toBe(false);
+    expect(disconnectedState.disconnecting).toBe(false);
   });
 
   it('should request port', async () => {
     await firstValueFrom(service.requestPort());
 
-    service.connectionState.subscribe((state) => {
-      expect(state.error).toBe(null);
-    });
+    const connectionState = await firstValueFrom(service.connectionState);
+    expect(connectionState.error).toBe(null);
   });
 
   it('should send data when connected', async () => {
@@ -139,29 +125,22 @@ describe('SerialClientService', () => {
     await firstValueFrom(service.connect());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    let connectionState: any;
-    service.connectionState.subscribe((state) => {
-      connectionState = state;
-    });
-
-    expect(connectionState.connected).toBe(true);
+    const connectedState = await firstValueFrom(service.connectionState);
+    expect(connectedState.connected).toBe(true);
 
     // Send data
     await firstValueFrom(service.send('test data'));
 
     // No error should occur
-    service.connectionState.subscribe((state) => {
-      expect(state.error).toBe(null);
-    });
+    const finalState = await firstValueFrom(service.connectionState);
+    expect(finalState.error).toBe(null);
   });
 
-  it('should clear received data', (done) => {
+  it('should clear received data', async () => {
     service.clearReceivedData();
 
-    service.receivedData.subscribe((data) => {
-      expect(data).toBe('');
-      done();
-    });
+    const receivedData = await firstValueFrom(service.receivedData);
+    expect(receivedData).toBe('');
   });
 
   it('should handle connection errors', async () => {
@@ -176,13 +155,15 @@ describe('SerialClientService', () => {
       currentPort: null,
       connect: vi.fn(() => throwError(() => new Error('Connection failed'))),
       disconnect: vi.fn(() => of(undefined)),
-      requestPort: vi.fn(() => of({} as SerialPort)),
+      requestPort: vi.fn(() => of({} as unknown as SerialPort)),
       getReadStream: vi.fn(() => of(new Uint8Array())),
       write: vi.fn(() => of(undefined)),
       getPorts: vi.fn(() => of([])),
     };
 
-    vi.mocked(webSerialRxjs.createSerialClient).mockReturnValueOnce(errorClient as any);
+    vi.mocked(webSerialRxjs.createSerialClient).mockReturnValueOnce(
+      errorClient as unknown as SerialClient,
+    );
 
     try {
       await firstValueFrom(errorService.connect());
@@ -192,10 +173,9 @@ describe('SerialClientService', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    errorService.connectionState.subscribe((state) => {
-      expect(state.error).toBeTruthy();
-      expect(state.connected).toBe(false);
-    });
+    const errorState = await firstValueFrom(errorService.connectionState);
+    expect(errorState.error).toBeTruthy();
+    expect(errorState.connected).toBe(false);
   });
 
   it('should provide async methods', async () => {
@@ -203,20 +183,15 @@ describe('SerialClientService', () => {
     await service.connectAsync(9600);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    let connectionState: any;
-    service.connectionState.subscribe((state) => {
-      connectionState = state;
-    });
-
-    expect(connectionState.connected).toBe(true);
+    const connectedState = await firstValueFrom(service.connectionState);
+    expect(connectedState.connected).toBe(true);
 
     // Test disconnectAsync
     await service.disconnectAsync();
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    service.connectionState.subscribe((state) => {
-      expect(state.connected).toBe(false);
-    });
+    const disconnectedState = await firstValueFrom(service.connectionState);
+    expect(disconnectedState.connected).toBe(false);
 
     // Test requestPortAsync
     await service.requestPortAsync();

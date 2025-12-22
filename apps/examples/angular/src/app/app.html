@@ -31,7 +31,7 @@
           id="baud-rate"
           class="form-control"
           [(ngModel)]="baudRate"
-          [disabled]="(connectionState$ | async)?.connected"
+          [disabled]="getConnected(connectionState$ | async)"
         >
           <option [value]="9600">9600</option>
           <option [value]="19200">19200</option>
@@ -45,9 +45,9 @@
           class="btn btn-outline"
           (click)="handleRequestPort()"
           [disabled]="
-            !(browserSupported$ | async) ||
-            (connectionState$ | async)?.connected ||
-            (connectionState$ | async)?.connecting
+            !getBrowserSupported(browserSupported$ | async) ||
+            getConnected(connectionState$ | async) ||
+            getConnecting(connectionState$ | async)
           "
         >
           ポートを選択
@@ -56,9 +56,9 @@
           class="btn btn-primary"
           (click)="handleConnect()"
           [disabled]="
-            !(browserSupported$ | async) ||
-            (connectionState$ | async)?.connected ||
-            (connectionState$ | async)?.connecting
+            !getBrowserSupported(browserSupported$ | async) ||
+            getConnected(connectionState$ | async) ||
+            getConnecting(connectionState$ | async)
           "
         >
           接続
@@ -67,8 +67,8 @@
           class="btn btn-secondary"
           (click)="handleDisconnect()"
           [disabled]="
-            !(connectionState$ | async)?.connected ||
-            (connectionState$ | async)?.disconnecting
+            !getConnected(connectionState$ | async) ||
+            getDisconnecting(connectionState$ | async)
           "
         >
           切断
@@ -91,14 +91,14 @@
             class="form-control"
             [(ngModel)]="sendInput"
             (keydown)="handleKeyDown($event)"
-            [disabled]="!(connectionState$ | async)?.connected"
+            [disabled]="!getConnected(connectionState$ | async)"
             placeholder="送信するテキストを入力..."
           />
           <button
             class="btn btn-primary"
             (click)="handleSend()"
             [disabled]="
-              !(connectionState$ | async)?.connected || !sendInput.trim()
+              !getConnected(connectionState$ | async) || !sendInput.trim()
             "
           >
             送信
@@ -124,7 +124,7 @@
         <button
           class="btn btn-secondary"
           (click)="clearReceivedData()"
-          [disabled]="!(receivedData$ | async)"
+          [disabled]="!hasReceivedData(receivedData$ | async)"
         >
           クリア
         </button>

@@ -1,9 +1,10 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
+import type { SerialConnectionState } from './services/serial-client.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SerialClientService } from './services/serial-client.service';
-import { Observable, combineLatest, map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 @Component({
   imports: [CommonModule, FormsModule, RouterModule],
@@ -11,7 +12,7 @@ import { Observable, combineLatest, map } from 'rxjs';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App implements OnDestroy {
+export class App {
   baudRate = 9600;
   sendInput = '';
 
@@ -20,6 +21,7 @@ export class App implements OnDestroy {
   receivedData$: Observable<string>;
   status$: Observable<{ type: string; message: string }>;
 
+  // eslint-disable-next-line @angular-eslint/prefer-inject
   constructor(private serialService: SerialClientService) {
     this.browserSupported$ = this.serialService.browserSupported;
     this.connectionState$ = this.serialService.connectionState;
@@ -45,9 +47,6 @@ export class App implements OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {
-    // Service のクリーンアップは Service 自体で行われる
-  }
 
   /**
    * 接続ボタンのハンドラ
@@ -116,5 +115,40 @@ export class App implements OnDestroy {
    */
   clearReceivedData(): void {
     this.serialService.clearReceivedData();
+  }
+
+  /**
+   * ヘルパーメソッド: ブラウザサポート状態を取得
+   */
+  getBrowserSupported(bs: boolean | null | undefined): boolean {
+    return bs ?? false;
+  }
+
+  /**
+   * ヘルパーメソッド: 接続状態を取得
+   */
+  getConnected(state: SerialConnectionState | null | undefined): boolean {
+    return state?.connected ?? false;
+  }
+
+  /**
+   * ヘルパーメソッド: 接続中状態を取得
+   */
+  getConnecting(state: SerialConnectionState | null | undefined): boolean {
+    return state?.connecting ?? false;
+  }
+
+  /**
+   * ヘルパーメソッド: 切断中状態を取得
+   */
+  getDisconnecting(state: SerialConnectionState | null | undefined): boolean {
+    return state?.disconnecting ?? false;
+  }
+
+  /**
+   * ヘルパーメソッド: 受信データが空でないか
+   */
+  hasReceivedData(data: string | null | undefined): boolean {
+    return !!data;
   }
 }
