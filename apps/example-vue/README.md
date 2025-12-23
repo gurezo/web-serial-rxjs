@@ -24,7 +24,7 @@ This is a Vue example application demonstrating how to use the `@web-serial-rxjs
 Make sure all dependencies are installed:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve example-vue
+pnpm exec nx serve example-vue
 ```
 
 The application will be available at `http://localhost:4203`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4203`
 Build the application for production:
 
 ```bash
-npx nx build example-vue
+pnpm exec nx build example-vue
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build example-vue
 Run tests:
 
 ```bash
-npx nx test example-vue
+pnpm exec nx test example-vue
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test example-vue
 Run linting:
 
 ```bash
-npx nx lint example-vue
+pnpm exec nx lint example-vue
 ```
 
 ## How It Works

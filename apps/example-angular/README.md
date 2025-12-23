@@ -24,7 +24,7 @@ This is an Angular example application demonstrating how to use the `@web-serial
 Make sure all dependencies are installed:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve example-angular
+pnpm exec nx serve example-angular
 ```
 
 The application will be available at `http://localhost:4200`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4200`
 Build the application for production:
 
 ```bash
-npx nx build example-angular
+pnpm exec nx build example-angular
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build example-angular
 Run tests:
 
 ```bash
-npx nx test example-angular
+pnpm exec nx test example-angular
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test example-angular
 Run linting:
 
 ```bash
-npx nx lint example-angular
+pnpm exec nx lint example-angular
 ```
 
 ## How It Works
