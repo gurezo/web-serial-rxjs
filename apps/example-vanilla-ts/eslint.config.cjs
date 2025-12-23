@@ -5,7 +5,23 @@ module.exports = [
   {
     files: ['**/*.ts'],
     rules: {
-      // Add any specific rules for vanilla-ts example here
+      // Allow static imports of web-serial-rxjs library
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
+            '@web-serial-rxjs/web-serial-rxjs',
+          ],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
     },
   },
 ];
