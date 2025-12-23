@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve angular
+npx nx serve example-angular
 ```
 
 The application will be available at `http://localhost:4200`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4200`
 Build the application for production:
 
 ```bash
-npx nx build angular
+npx nx build example-angular
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build angular
 Run tests:
 
 ```bash
-npx nx test angular
+npx nx test example-angular
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test angular
 Run linting:
 
 ```bash
-npx nx lint angular
+npx nx lint example-angular
 ```
 
 ## How It Works

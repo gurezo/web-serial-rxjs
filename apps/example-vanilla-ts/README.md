@@ -33,7 +33,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve vanilla-ts
+npx nx serve example-vanilla-ts
 ```
 
 The application will be available at `http://localhost:4201`
@@ -43,7 +43,7 @@ The application will be available at `http://localhost:4201`
 Build the application for production:
 
 ```bash
-npx nx build vanilla-ts
+npx nx build example-vanilla-ts
 ```
 
 ### Test
@@ -51,7 +51,7 @@ npx nx build vanilla-ts
 Run tests:
 
 ```bash
-npx nx test vanilla-ts
+npx nx test example-vanilla-ts
 ```
 
 ### Lint
@@ -59,7 +59,7 @@ npx nx test vanilla-ts
 Run linting:
 
 ```bash
-npx nx lint vanilla-ts
+npx nx lint example-vanilla-ts
 ```
 
 ## How It Works

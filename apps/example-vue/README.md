@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve vue
+npx nx serve example-vue
 ```
 
 The application will be available at `http://localhost:4203`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4203`
 Build the application for production:
 
 ```bash
-npx nx build vue
+npx nx build example-vue
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build vue
 Run tests:
 
 ```bash
-npx nx test vue
+npx nx test example-vue
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test vue
 Run linting:
 
 ```bash
-npx nx lint vue
+npx nx lint example-vue
 ```
 
 ## How It Works

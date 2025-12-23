@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve react
+npx nx serve example-react
 ```
 
 The application will be available at `http://localhost:4202`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4202`
 Build the application for production:
 
 ```bash
-npx nx build react
+npx nx build example-react
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build react
 Run tests:
 
 ```bash
-npx nx test react
+npx nx test example-react
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test react
 Run linting:
 
 ```bash
-npx nx lint react
+npx nx lint example-react
 ```
 
 ## How It Works

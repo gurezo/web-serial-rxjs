@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve svelte
+npx nx serve example-svelte
 ```
 
 The application will be available at `http://localhost:4204`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4204`
 Build the application for production:
 
 ```bash
-npx nx build svelte
+npx nx build example-svelte
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build svelte
 Run tests:
 
 ```bash
-npx nx test svelte
+npx nx test example-svelte
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test svelte
 Run linting:
 
 ```bash
-npx nx lint svelte
+npx nx lint example-svelte
 ```
 
 ## How It Works
