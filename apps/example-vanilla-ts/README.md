@@ -23,7 +23,7 @@ This is a vanilla TypeScript example application demonstrating how to use the `@
 Make sure all dependencies are installed:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Usage
@@ -33,7 +33,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve example-vanilla-ts
+pnpm exec nx serve example-vanilla-ts
 ```
 
 The application will be available at `http://localhost:4201`
@@ -43,7 +43,7 @@ The application will be available at `http://localhost:4201`
 Build the application for production:
 
 ```bash
-npx nx build example-vanilla-ts
+pnpm exec nx build example-vanilla-ts
 ```
 
 ### Test
@@ -51,7 +51,7 @@ npx nx build example-vanilla-ts
 Run tests:
 
 ```bash
-npx nx test example-vanilla-ts
+pnpm exec nx test example-vanilla-ts
 ```
 
 ### Lint
@@ -59,7 +59,7 @@ npx nx test example-vanilla-ts
 Run linting:
 
 ```bash
-npx nx lint example-vanilla-ts
+pnpm exec nx lint example-vanilla-ts
 ```
 
 ## How It Works

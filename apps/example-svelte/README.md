@@ -24,7 +24,7 @@ This is a Svelte example application demonstrating how to use the `@web-serial-r
 Make sure all dependencies are installed:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve example-svelte
+pnpm exec nx serve example-svelte
 ```
 
 The application will be available at `http://localhost:4204`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4204`
 Build the application for production:
 
 ```bash
-npx nx build example-svelte
+pnpm exec nx build example-svelte
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build example-svelte
 Run tests:
 
 ```bash
-npx nx test example-svelte
+pnpm exec nx test example-svelte
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test example-svelte
 Run linting:
 
 ```bash
-npx nx lint example-svelte
+pnpm exec nx lint example-svelte
 ```
 
 ## How It Works

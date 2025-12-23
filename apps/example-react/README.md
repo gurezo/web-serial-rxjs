@@ -24,7 +24,7 @@ This is a React example application demonstrating how to use the `@web-serial-rx
 Make sure all dependencies are installed:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npx nx serve example-react
+pnpm exec nx serve example-react
 ```
 
 The application will be available at `http://localhost:4202`
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:4202`
 Build the application for production:
 
 ```bash
-npx nx build example-react
+pnpm exec nx build example-react
 ```
 
 ### Test
@@ -52,7 +52,7 @@ npx nx build example-react
 Run tests:
 
 ```bash
-npx nx test example-react
+pnpm exec nx test example-react
 ```
 
 ### Lint
@@ -60,7 +60,7 @@ npx nx test example-react
 Run linting:
 
 ```bash
-npx nx lint example-react
+pnpm exec nx lint example-react
 ```
 
 ## How It Works
