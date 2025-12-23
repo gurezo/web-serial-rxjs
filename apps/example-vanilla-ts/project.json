@@ -1,0 +1,68 @@
+{
+  "name": "example-vanilla-ts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/example-vanilla-ts/src",
+  "projectType": "application",
+  "tags": ["type:app", "scope:examples"],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/example-vanilla-ts",
+        "configFile": "apps/example-vanilla-ts/vite.config.ts",
+        "skipTypeCheck": true
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "example-vanilla-ts:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "example-vanilla-ts:build:development",
+          "hmr": true
+        },
+        "production": {
+          "buildTarget": "example-vanilla-ts:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "example-vanilla-ts:build:production"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "example-vanilla-ts:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{workspaceRoot}/coverage/apps/example-vanilla-ts"],
+      "options": {
+        "passWithNoTests": true,
+        "reportsDirectory": "../../../coverage/apps/example-vanilla-ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}
