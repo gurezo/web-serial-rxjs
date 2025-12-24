@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "nx run-many --target=test --all --exclude=@web-serial-rxjs/workspace"
+    "test": "nx run-many --target=test --all --exclude=@web-serial-rxjs/workspace",
+    "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json",
+    "docs:clean": "rm -rf docs",
+    "docs": "pnpm run docs:clean && pnpm run docs:generate"
   },
   "repository": {
     "type": "git",
@@ -76,6 +79,7 @@
     "tslib": "^2.3.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.13.0",
+    "typedoc": "^0.26.0",
     "vite": "^7.2.7",
     "vitest": "^4.0.15",
     "vue-tsc": "^2.2.8"
