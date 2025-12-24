@@ -33,6 +33,7 @@ web-serial-rxjs への貢献にご関心をお持ちいただき、ありがと�
 ### 質問がある場合
 
 質問やサポートが必要な場合は、以下を行ってください：
+
 - [GitHub Issues](https://github.com/gurezo/web-serial-rxjs/issues)でイシューを開く
 - 新しいイシューを作成する前に、既存のイシューやディスカッションを確認する
 
@@ -77,6 +78,7 @@ pnpm test
 - `build/scope-description` - ビルドシステムまたは外部依存関係の変更
 
 **例:**
+
 - `feat/web-serial-rxjs/add-filter-function`
 - `fix/example-angular/test-errors`
 - `docs/workspace/update-readme`
@@ -85,6 +87,7 @@ pnpm test
 ### ワークフローの手順
 
 1. **mainブランチから機能ブランチを作成**：
+
    ```bash
    git checkout main
    git pull upstream main
@@ -94,6 +97,7 @@ pnpm test
 2. **変更を加えてコミット**（[コミットメッセージガイドライン](#コミットメッセージガイドライン）に従う）
 
 3. **ブランチをフォークにプッシュ**：
+
    ```bash
    git push origin feat/your-feature-name
    ```
@@ -401,4 +405,3 @@ nx graph
 - **GitHubリポジトリ**: [web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
 
 web-serial-rxjs への貢献ありがとうございます！🎉
-
