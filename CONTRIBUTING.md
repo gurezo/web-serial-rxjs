@@ -33,6 +33,7 @@ Before you begin, ensure you have the following installed:
 ### Questions?
 
 If you have questions or need help, please:
+
 - Open an issue on [GitHub Issues](https://github.com/gurezo/web-serial-rxjs/issues)
 - Check existing issues and discussions before creating a new one
 
@@ -77,6 +78,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) naming co
 - `build/scope-description` - Build system or external dependencies changes
 
 **Examples:**
+
 - `feat/web-serial-rxjs/add-filter-function`
 - `fix/example-angular/test-errors`
 - `docs/workspace/update-readme`
@@ -85,6 +87,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) naming co
 ### Workflow Steps
 
 1. **Create a feature branch** from the main branch:
+
    ```bash
    git checkout main
    git pull upstream main
@@ -94,6 +97,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) naming co
 2. **Make your changes** and commit them following our [commit message guidelines](#commit-message-guidelines)
 
 3. **Push your branch** to your fork:
+
    ```bash
    git push origin feat/your-feature-name
    ```
@@ -401,4 +405,3 @@ nx graph
 - **GitHub Repository**: [web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
 
 Thank you for contributing to web-serial-rxjs! 🎉
-
