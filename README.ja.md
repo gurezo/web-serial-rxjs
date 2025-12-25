@@ -39,9 +39,9 @@ Web Serial API は現在、Chromium ベースのブラウザでのみサポー�
 npm または pnpm を使用してパッケージをインストールします：
 
 ```bash
-npm install @web-serial-rxjs
+npm install @gurezo/web-serial-rxjs
 # または
-pnpm add @web-serial-rxjs
+pnpm add @gurezo/web-serial-rxjs
 ```
 
 ### ピア依存関係
@@ -64,7 +64,7 @@ pnpm add rxjs
 import {
   createSerialClient,
   isBrowserSupported,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 
 // ブラウザサポートをチェック
 if (!isBrowserSupported()) {
@@ -111,7 +111,7 @@ client.connect().subscribe({
 ### 基本的な接続
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs';
+import { createSerialClient } from '@gurezo/web-serial-rxjs';
 
 const client = createSerialClient({
   baudRate: 115200,
@@ -130,7 +130,7 @@ client.connect().subscribe({
 ### データの読み取り
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs';
+import { createSerialClient } from '@gurezo/web-serial-rxjs';
 import { map } from 'rxjs/operators';
 
 const client = createSerialClient({ baudRate: 9600 });
@@ -157,7 +157,7 @@ client.connect().subscribe({
 ### データの書き込み
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs';
+import { createSerialClient } from '@gurezo/web-serial-rxjs';
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -193,7 +193,7 @@ import {
   createSerialClient,
   SerialError,
   SerialErrorCode,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 
 const client = createSerialClient({ baudRate: 9600 });
 
@@ -224,7 +224,7 @@ client.connect().subscribe({
 ### ポートフィルタリング
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs';
+import { createSerialClient } from '@gurezo/web-serial-rxjs';
 
 // USB ベンダー ID でポートをフィルタリング
 const client = createSerialClient({

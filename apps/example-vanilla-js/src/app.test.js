@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './app.js';
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs', () => {
+vi.mock('@gurezo/web-serial-rxjs', () => {
   const mockClient = {
     connected: false,
     currentPort: null,
@@ -108,7 +108,7 @@ describe('App', () => {
 
   it('should check browser support on initialization', async () => {
     const { isBrowserSupported } =
-      await import('@web-serial-rxjs');
+      await import('@gurezo/web-serial-rxjs');
     app = new App();
     // Give time for the async initialization to complete
     await new Promise((resolve) => setTimeout(resolve, 10));

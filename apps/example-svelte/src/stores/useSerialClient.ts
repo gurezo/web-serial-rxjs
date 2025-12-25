@@ -3,7 +3,7 @@ import {
   isBrowserSupported,
   SerialClient,
   SerialError,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 import type { Subscription } from 'rxjs';
 import { onDestroy } from 'svelte';
 import { writable, type Writable } from 'svelte/store';

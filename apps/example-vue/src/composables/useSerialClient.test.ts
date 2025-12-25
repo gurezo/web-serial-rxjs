@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 // @ts-expect-error - Mocked module, types not needed at runtime
-import type { SerialClient } from '@web-serial-rxjs';
+import type { SerialClient } from '@gurezo/web-serial-rxjs';
 // @ts-expect-error - Mocked module, types not needed at runtime
-import * as webSerialRxjs from '@web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import type { Observable } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
@@ -25,7 +25,7 @@ const TestComponent = {
 } as any;
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs', () => {
+vi.mock('@gurezo/web-serial-rxjs', () => {
   let isConnected = false;
   const mockClient = {
     get connected() {

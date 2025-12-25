@@ -378,7 +378,7 @@ web-serial-rxjs/
 
 ### Key Packages
 
-- **`@web-serial-rxjs`**: Main library providing RxJS-based Web Serial API functionality
+- **`@gurezo/web-serial-rxjs`**: Main library providing RxJS-based Web Serial API functionality
 
 ### Nx Commands
 

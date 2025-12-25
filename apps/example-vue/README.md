@@ -1,6 +1,6 @@
 # Vue Example
 
-This is a Vue example application demonstrating how to use the `@web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Vue 3 Composition API and Composable functions to encapsulate serial port communication logic.
+This is a Vue example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Vue 3 Composition API and Composable functions to encapsulate serial port communication logic.
 
 ## Features
 
@@ -152,7 +152,7 @@ const handleSend = async () => {
 import {
   createSerialClient,
   SerialClient,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 export function useSerialClient(baudRate = 9600) {

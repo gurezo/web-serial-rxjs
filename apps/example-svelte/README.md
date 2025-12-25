@@ -1,6 +1,6 @@
 # Svelte Example
 
-This is a Svelte example application demonstrating how to use the `@web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Svelte stores to encapsulate serial port communication logic.
+This is a Svelte example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Svelte stores to encapsulate serial port communication logic.
 
 ## Features
 
@@ -159,7 +159,7 @@ const handleSend = async () => {
 import {
   createSerialClient,
   SerialClient,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 import { writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 

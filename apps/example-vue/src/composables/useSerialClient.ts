@@ -3,7 +3,7 @@ import {
   isBrowserSupported,
   SerialClient,
   SerialError,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 import type { Subscription } from 'rxjs';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 

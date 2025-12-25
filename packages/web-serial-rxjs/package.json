@@ -1,5 +1,5 @@
 {
-  "name": "@web-serial-rxjs",
+  "name": "@gurezo/web-serial-rxjs",
   "version": "0.0.1",
   "private": true,
   "type": "commonjs",

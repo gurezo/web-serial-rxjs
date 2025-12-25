@@ -4,7 +4,7 @@ import {
   isBrowserSupported,
   SerialClient,
   SerialError,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 import {
   BehaviorSubject,
   firstValueFrom,
