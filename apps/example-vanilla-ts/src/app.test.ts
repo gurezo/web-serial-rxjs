@@ -1,10 +1,10 @@
-import type { SerialClient } from '@web-serial-rxjs';
+import type { SerialClient } from '@gurezo/web-serial-rxjs';
 import type { Observable, Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './app.js';
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs', () => {
+vi.mock('@gurezo/web-serial-rxjs', () => {
   let isConnected = false;
   const mockClient = {
     get connected() {
@@ -151,7 +151,7 @@ describe('App', () => {
 
   it('should check browser support on initialization', async () => {
     const { isBrowserSupported } =
-      await import('@web-serial-rxjs');
+      await import('@gurezo/web-serial-rxjs');
     app = new App();
     // Give time for the async initialization to complete
     await new Promise((resolve) => setTimeout(resolve, 10));

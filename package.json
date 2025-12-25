@@ -1,10 +1,10 @@
 {
-  "name": "@web-serial-rxjs/workspace",
+  "name": "@gurezo/web-serial-rxjs/workspace",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "nx run-many --target=test --all --exclude=@web-serial-rxjs/workspace",
+    "test": "nx run-many --target=test --all --exclude=@gurezo/web-serial-rxjs/workspace",
     "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json",
     "docs:clean": "rm -rf docs",
     "docs": "pnpm run docs:clean && pnpm run docs:generate"

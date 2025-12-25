@@ -1,10 +1,10 @@
 {
-  "name": "@web-serial-rxjs/angular-example",
+  "name": "@gurezo/web-serial-rxjs/angular-example",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@web-serial-rxjs": "*",
+    "@gurezo/web-serial-rxjs": "*",
     "rxjs": "^7.8.2"
   }
 }

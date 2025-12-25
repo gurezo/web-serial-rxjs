@@ -1,12 +1,12 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import type { SerialClient } from '@web-serial-rxjs';
-import * as webSerialRxjs from '@web-serial-rxjs';
+import type { SerialClient } from '@gurezo/web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import type { Observable, Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs', () => {
+vi.mock('@gurezo/web-serial-rxjs', () => {
   let isConnected = false;
   const mockClient = {
     get connected() {

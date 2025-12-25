@@ -5,7 +5,7 @@ import {
   createSerialClient,
   isBrowserSupported,
   SerialError,
-} from '@web-serial-rxjs';
+} from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 

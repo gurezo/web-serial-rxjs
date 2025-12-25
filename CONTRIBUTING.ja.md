@@ -378,7 +378,7 @@ web-serial-rxjs/
 
 ### 主要パッケージ
 
-- **`@web-serial-rxjs`**: RxJSベースのWeb Serial API機能を提供するメインライブラリ
+- **`@gurezo/web-serial-rxjs`**: RxJSベースのWeb Serial API機能を提供するメインライブラリ
 
 ### Nxコマンド
 
