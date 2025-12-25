@@ -1,6 +1,6 @@
 # React Example
 
-This is a React example application demonstrating how to use the `@web-serial-rxjs/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses React custom hooks to encapsulate serial port communication logic.
+This is a React example application demonstrating how to use the `@web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses React custom hooks to encapsulate serial port communication logic.
 
 ## Features
 
@@ -147,7 +147,7 @@ function MyComponent() {
 import {
   createSerialClient,
   SerialClient,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
 
 function useSerialClient(baudRate = 9600) {

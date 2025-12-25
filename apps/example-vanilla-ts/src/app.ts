@@ -5,7 +5,7 @@ import {
   isBrowserSupported,
   SerialClient,
   SerialError,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 import type { Subscription } from 'rxjs';
 import { fromEvent } from 'rxjs';
 import { filter, map } from 'rxjs/operators';

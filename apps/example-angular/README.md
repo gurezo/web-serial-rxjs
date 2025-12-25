@@ -1,6 +1,6 @@
 # Angular Example
 
-This is an Angular example application demonstrating how to use the `@web-serial-rxjs/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Angular Services to encapsulate serial port communication logic.
+This is an Angular example application demonstrating how to use the `@web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Angular Services to encapsulate serial port communication logic.
 
 ## Features
 
@@ -153,7 +153,7 @@ import { Injectable } from '@angular/core';
 import {
   createSerialClient,
   SerialClient,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })

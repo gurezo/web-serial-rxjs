@@ -39,9 +39,9 @@ The library includes built-in browser detection utilities to check for Web Seria
 Install the package using npm or pnpm:
 
 ```bash
-npm install @web-serial-rxjs/web-serial-rxjs
+npm install @web-serial-rxjs
 # or
-pnpm add @web-serial-rxjs/web-serial-rxjs
+pnpm add @web-serial-rxjs
 ```
 
 ### Peer Dependencies
@@ -64,7 +64,7 @@ Here's a simple example to get you started:
 import {
   createSerialClient,
   isBrowserSupported,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 
 // Check browser support
 if (!isBrowserSupported()) {
@@ -111,7 +111,7 @@ client.connect().subscribe({
 ### Basic Connection
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import { createSerialClient } from '@web-serial-rxjs';
 
 const client = createSerialClient({
   baudRate: 115200,
@@ -130,7 +130,7 @@ client.connect().subscribe({
 ### Reading Data
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import { createSerialClient } from '@web-serial-rxjs';
 import { map } from 'rxjs/operators';
 
 const client = createSerialClient({ baudRate: 9600 });
@@ -157,7 +157,7 @@ client.connect().subscribe({
 ### Writing Data
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import { createSerialClient } from '@web-serial-rxjs';
 import { from } from 'rxjs';
 
 const client = createSerialClient({ baudRate: 9600 });
@@ -192,7 +192,7 @@ import {
   createSerialClient,
   SerialError,
   SerialErrorCode,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 
 const client = createSerialClient({ baudRate: 9600 });
 
@@ -223,7 +223,7 @@ client.connect().subscribe({
 ### Port Filtering
 
 ```typescript
-import { createSerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import { createSerialClient } from '@web-serial-rxjs';
 
 // Filter ports by USB vendor ID
 const client = createSerialClient({

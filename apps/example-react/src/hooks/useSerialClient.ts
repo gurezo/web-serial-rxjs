@@ -3,7 +3,7 @@ import {
   isBrowserSupported,
   SerialClient,
   SerialError,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
 import type { Subscription } from 'rxjs';
 

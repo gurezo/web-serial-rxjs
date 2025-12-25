@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@web-serial-rxjs/web-serial-rxjs": [
+      "@web-serial-rxjs": [
         "packages/web-serial-rxjs/src/index.ts"
       ]
     }

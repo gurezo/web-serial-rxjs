@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
-import * as webSerialRxjs from '@web-serial-rxjs/web-serial-rxjs';
+import type { SerialClient } from '@web-serial-rxjs';
+import * as webSerialRxjs from '@web-serial-rxjs';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialClientService } from './serial-client.service';
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
+vi.mock('@web-serial-rxjs', () => {
   let isConnected = false;
   const mockClient = {
     get connected() {
