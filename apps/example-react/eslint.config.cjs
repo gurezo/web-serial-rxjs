@@ -12,7 +12,7 @@ module.exports = [
           enforceBuildableLibDependency: true,
           allow: [
             '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
-            '@web-serial-rxjs/web-serial-rxjs',
+            '@web-serial-rxjs',
           ],
           depConstraints: [
             {

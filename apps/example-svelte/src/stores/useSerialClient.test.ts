@@ -1,5 +1,5 @@
-import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
-import * as webSerialRxjs from '@web-serial-rxjs/web-serial-rxjs';
+import type { SerialClient } from '@web-serial-rxjs';
+import * as webSerialRxjs from '@web-serial-rxjs';
 import type { Observable } from 'rxjs';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,7 +18,7 @@ vi.mock('svelte', async () => {
 });
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
+vi.mock('@web-serial-rxjs', () => {
   let isConnected = false;
   const mockClient = {
     get connected() {

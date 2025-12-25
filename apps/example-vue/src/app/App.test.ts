@@ -1,13 +1,13 @@
 import { mount } from '@vue/test-utils';
 // @ts-expect-error - Mocked module, types not needed at runtime
-import type { SerialClient } from '@web-serial-rxjs/web-serial-rxjs';
+import type { SerialClient } from '@web-serial-rxjs';
 import type { Observable } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
 
 // Mock the web-serial-rxjs library
-vi.mock('@web-serial-rxjs/web-serial-rxjs', () => {
+vi.mock('@web-serial-rxjs', () => {
   let isConnected = false;
   const mockClient = {
     get connected() {

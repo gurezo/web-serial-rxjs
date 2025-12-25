@@ -1,6 +1,6 @@
 # Vanilla TypeScript Example
 
-This is a vanilla TypeScript example application demonstrating how to use the `@web-serial-rxjs/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API.
+This is a vanilla TypeScript example application demonstrating how to use the `@web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API.
 
 ## Features
 
@@ -92,7 +92,7 @@ This example uses RxJS observables to handle serial port communication reactivel
 import {
   createSerialClient,
   SerialClient,
-} from '@web-serial-rxjs/web-serial-rxjs';
+} from '@web-serial-rxjs';
 
 // Create a serial client
 const client: SerialClient = createSerialClient({ baudRate: 115200 });
