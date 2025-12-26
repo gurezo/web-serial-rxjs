@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions / Q&A (Discussions)
+    url: https://github.com/gurezo/web-serial-rxjs/discussions
+    about: Please use Discussions for questions and usage help (バグ報告・機能要望以外の質問は Discussions へ)
+  - name: 💬 質問 / Q&A (Discussions)
+    url: https://github.com/gurezo/web-serial-rxjs/discussions
+    about: バグ報告・機能要望以外（質問、使い方相談）は Discussions へお願いします
+  - name: 📖 README / Docs
+    url: https://github.com/gurezo/web-serial-rxjs#readme
+    about: Please check the README first (使い方、前提条件、ブラウザ対応を確認してください)
+  - name: 📖 README / ドキュメント
+    url: https://github.com/gurezo/web-serial-rxjs#readme
+    about: まずは README（使い方、前提条件、ブラウザ対応）をご確認ください

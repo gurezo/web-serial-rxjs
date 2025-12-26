@@ -1,0 +1,126 @@
+name: 🐛 Bug Report
+description: Report a bug in web-serial-rxjs
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting! Reproducible information helps us investigate faster.
+        ⚠️ **Note**: Web Serial API is only supported in Chromium-based browsers (Chrome/Edge/Opera).
+
+  - type: input
+    id: package_version
+    attributes:
+      label: web-serial-rxjs version
+      description: "Example: @gurezo/web-serial-rxjs@0.1.0"
+      placeholder: "@gurezo/web-serial-rxjs@x.y.z"
+    validations:
+      required: true
+
+  - type: input
+    id: rxjs_version
+    attributes:
+      label: RxJS version
+      description: "Example: rxjs@7.8.1 (peer dependency, minimum ^7.8.0)"
+      placeholder: "rxjs@7.x / 8.x"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Browser (Web App)
+        - Electron
+        - Tauri
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / Version
+      description: "Example: Chrome 120 / Edge 120 / Opera 105 (Chromium-based is required)"
+      placeholder: "Chrome xx / Edge xx / Opera xx"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "macOS / Windows / Linux"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Framework
+      options:
+        - Vanilla JS/TS
+        - Angular
+        - React
+        - Vue
+        - Svelte
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: bundler
+    attributes:
+      label: Bundler / Build tool
+      description: "Example: Vite / Webpack / Rspack / Nx / etc."
+      placeholder: "Vite / Webpack / Nx / ..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What actually happened (error message or behavior)
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce (numbered list)
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error stack
+      description: Console logs, stack traces, screenshots (if available)
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I tested with a Chromium-based browser (Web Serial API supported browser)
+          required: true
+        - label: I checked the README Quick Start
+          required: false
