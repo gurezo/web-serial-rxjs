@@ -63,6 +63,18 @@ pnpm install
 pnpm test
 ```
 
+### 4. Git Hooks Setup
+
+This project uses Husky to automatically validate commit messages. When you install dependencies, the `prepare` script will automatically run and set up Git hooks.
+
+If you need to set up Git hooks manually or if they are not configured correctly, run:
+
+```bash
+pnpm run prepare
+```
+
+This will ensure that commit messages are automatically checked for Conventional Commits compliance when you commit.
+
 ## Development Workflow
 
 ### Branch Naming Conventions
@@ -109,6 +121,15 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) naming co
 ## Commit Message Guidelines
 
 We strictly follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This helps automate versioning, changelog generation, and makes the git history more readable.
+
+### Automatic Validation
+
+This project automatically checks if commit messages follow the Conventional Commits specification:
+
+- **Local validation**: Uses Husky and commitlint to automatically validate messages when you commit. Commits that don't comply will be rejected.
+- **Pull request validation**: Uses GitHub Actions to validate all commit messages in a PR. If any commit doesn't comply, the CI will fail.
+
+If your commit message is rejected, check the error message and fix it to follow the correct format.
 
 ### Commit Message Format
 
