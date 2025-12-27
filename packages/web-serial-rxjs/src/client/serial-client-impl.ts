@@ -10,17 +10,35 @@ import {
 } from '../types/options';
 
 /**
- * Internal implementation of SerialClient
+ * Internal implementation of SerialClient interface.
+ *
+ * This class implements the {@link SerialClient} interface and provides the actual
+ * functionality for serial port communication. Users should not instantiate this class
+ * directly; instead, use {@link createSerialClient} to create a SerialClient instance.
+ *
+ * @internal
  */
 export class SerialClientImpl {
+  /** @internal */
   private port: SerialPort | null = null;
+  /** @internal */
   private isOpen = false;
+  /** @internal */
   private readSubscription: { unsubscribe: () => void } | null = null;
+  /** @internal */
   private writeSubscription: { unsubscribe: () => void } | null = null;
+  /** @internal */
   private readonly options: Required<Omit<SerialClientOptions, 'filters'>> & {
     filters?: SerialClientOptions['filters'];
   };
 
+  /**
+   * Creates a new SerialClientImpl instance.
+   *
+   * @param options - Optional configuration options for the serial port connection
+   * @throws {@link SerialError} with code {@link SerialErrorCode.BROWSER_NOT_SUPPORTED} if the browser doesn't support Web Serial API
+   * @internal
+   */
   constructor(options?: SerialClientOptions) {
     checkBrowserSupport();
     this.options = {
@@ -31,8 +49,10 @@ export class SerialClientImpl {
   }
 
   /**
-   * Request a serial port from the user
+   * Request a serial port from the user.
+   *
    * @returns Observable that emits the selected SerialPort
+   * @internal
    */
   requestPort(): Observable<SerialPort> {
     return defer(() => {
@@ -58,8 +78,10 @@ export class SerialClientImpl {
   }
 
   /**
-   * Get available serial ports
+   * Get available serial ports.
+   *
    * @returns Observable that emits an array of available SerialPorts
+   * @internal
    */
   getPorts(): Observable<SerialPort[]> {
     return defer(() => {
@@ -76,9 +98,11 @@ export class SerialClientImpl {
   }
 
   /**
-   * Connect to a serial port
-   * @param port Optional SerialPort to connect to. If not provided, will request one.
+   * Connect to a serial port.
+   *
+   * @param port - Optional SerialPort to connect to. If not provided, will request one.
    * @returns Observable that completes when the port is opened
+   * @internal
    */
   connect(port?: SerialPort): Observable<void> {
     checkBrowserSupport();
@@ -138,8 +162,10 @@ export class SerialClientImpl {
   }
 
   /**
-   * Disconnect from the serial port
+   * Disconnect from the serial port.
+   *
    * @returns Observable that completes when the port is closed
+   * @internal
    */
   disconnect(): Observable<void> {
     return defer(() => {
@@ -179,8 +205,10 @@ export class SerialClientImpl {
   }
 
   /**
-   * Get an Observable that emits data read from the serial port
+   * Get an Observable that emits data read from the serial port.
+   *
    * @returns Observable that emits Uint8Array chunks
+   * @internal
    */
   getReadStream(): Observable<Uint8Array> {
     if (!this.isOpen || !this.port || !this.port.readable) {
@@ -194,9 +222,11 @@ export class SerialClientImpl {
   }
 
   /**
-   * Write data to the serial port from an Observable
-   * @param data$ Observable that emits Uint8Array chunks to write
+   * Write data to the serial port from an Observable.
+   *
+   * @param data$ - Observable that emits Uint8Array chunks to write
    * @returns Observable that completes when writing is finished
+   * @internal
    */
   writeStream(data$: Observable<Uint8Array>): Observable<void> {
     if (!this.isOpen || !this.port || !this.port.writable) {
@@ -254,9 +284,11 @@ export class SerialClientImpl {
   }
 
   /**
-   * Write a single chunk of data to the serial port
-   * @param data Data to write
+   * Write a single chunk of data to the serial port.
+   *
+   * @param data - Data to write
    * @returns Observable that completes when the data is written
+   * @internal
    */
   write(data: Uint8Array): Observable<void> {
     return defer(() => {
@@ -285,14 +317,20 @@ export class SerialClientImpl {
   }
 
   /**
-   * Check if the port is currently open
+   * Check if the port is currently open.
+   *
+   * @returns `true` if a port is currently open, `false` otherwise
+   * @internal
    */
   get connected(): boolean {
     return this.isOpen;
   }
 
   /**
-   * Get the current SerialPort instance
+   * Get the current SerialPort instance.
+   *
+   * @returns The current SerialPort instance, or `null` if no port is open
+   * @internal
    */
   get currentPort(): SerialPort | null {
     return this.port;
