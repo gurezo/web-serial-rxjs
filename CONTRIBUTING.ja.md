@@ -75,11 +75,64 @@ pnpm run prepare
 
 これにより、コミット時に Conventional Commits に準拠しているかが自動的にチェックされます。
 
+## ブランチ戦略
+
+このプロジェクトは、npmライブラリプロジェクトに適した**trunk-based開発**アプローチに従います。
+
+### Trunk-based開発
+
+- **`main`ブランチ**: 常にリリース可能な状態（Green）を維持
+- **短命ブランチ**: すべての開発作業は一時的なブランチ（`feature/*`, `fix/*`, `docs/*`など）で行う
+- **ワークフロー**: ブランチ作成 → 変更 → PR作成 → CI通過 → `main`にマージ（squash mergeまたはrebase merge）
+
+このアプローチにより、リポジトリをシンプルに保ち、ブランチの増殖を避け、メンテナンスとリリースを容易にします。
+
+### ブランチの種類
+
+- **`main`**: メインの開発ブランチ、常にリリース可能な状態
+- **`feature/*`**, **`fix/*`**, **`docs/*`**, **`chore/*`**, **`ci/*`**: プルリクエスト用の短命ブランチ
+- **`release/v*`**: 古いメジャーバージョンの保守用ブランチ（必要な場合のみ追加）
+
+**ブランチ名の例:**
+
+- `feat/observable-read-loop`
+- `fix/disconnect-cleanup`
+- `docs/usage-examples`
+- `chore/deps-bump`
+- `ci/publish-workflow`
+
+### リリース管理
+
+リリースは**ブランチではなくGitタグ**で管理します：
+
+- バージョンタグ: `v0.1.0`, `v1.0.0`, `v2.0.0` など
+- リリース準備ができたら、`main`ブランチにタグを作成
+- `CHANGELOG.md`を更新（手動または自動）
+- npm publishはタグによってトリガーされる（手動またはCI経由）
+
+このアプローチは、バージョン番号が主要な識別子であるnpmパッケージのバージョニングとよく一致します。
+
+### メジャーバージョン保守
+
+複数のメジャーバージョンを保守する必要がある場合（例: `v2`を開発しながら`v1`を保守する場合）：
+
+- **`main`**: 次期バージョンの開発（例：v2.x）
+- **`release/v1`**: v1.xの保守ブランチ（バグ修正のみ）
+
+**Hotfixワークフロー:**
+
+1. `release/v1`ブランチにPRを作成
+2. マージ後、タグを作成（例: `v1.0.1`）
+3. npmに公開
+4. 必要に応じて、修正を`main`ブランチにcherry-pick
+
+**注意**: 保守ブランチは実際に必要な場合のみ追加してください。ほとんどの小規模から中規模のライブラリでは、タグベースのtrunk-based開発で十分です。
+
 ## 開発ワークフロー
 
 ### ブランチ命名規則
 
-ブランチ名には[Conventional Commits](https://www.conventionalcommits.org/)の命名規則に従います：
+ブランチ名には[Conventional Commits](https://www.conventionalcommits.org/)の命名規則に従います。すべてのブランチは短命で、`main`から作成されます：
 
 - `feat/scope-description` - 新機能
 - `fix/scope-description` - バグ修正
@@ -88,6 +141,7 @@ pnpm run prepare
 - `test/scope-description` - テストの追加または更新
 - `chore/scope-description` - メンテナンス作業（依存関係、ツーリングなど）
 - `build/scope-description` - ビルドシステムまたは外部依存関係の変更
+- `ci/scope-description` - CI/CDワークフローの変更
 
 **例:**
 
@@ -95,6 +149,11 @@ pnpm run prepare
 - `fix/example-angular/test-errors`
 - `docs/workspace/update-readme`
 - `refactor/apps/restructure-directories`
+- `feat/observable-read-loop`
+- `fix/disconnect-cleanup`
+- `docs/usage-examples`
+- `chore/deps-bump`
+- `ci/publish-workflow`
 
 ### ワークフローの手順
 
@@ -331,6 +390,26 @@ nx lint web-serial-rxjs
 
 すべてのコードはリントチェックを通過する必要があります。
 
+## Pull Requestガイドライン
+
+### PRの原則
+
+- **PRは小さく**: 1つのPRは1つの特定の目的やイシューに対応すべき
+- **`main`ブランチの保護**: `main`ブランチは保護されています：
+  - `main`への直接pushは許可されていません
+  - すべてのPRはCIチェックを通過する必要があります
+  - マージ前にコードレビューが必要です
+- **コミットメッセージ**: すべてのコミットは[Conventional Commits](#コミットメッセージガイドライン）仕様に従う必要があります
+
+### マージ戦略
+
+PRは通常、以下のいずれかの方法でマージされます：
+
+- **Squash merge**: ほとんどのPRに推奨 - すべてのコミットを1つのコミットに結合
+- **Rebase merge**: 個々のコミットを線形履歴で保持
+
+メンテナがPRに基づいて適切なマージ戦略を選択します。
+
 ## Pull Requestプロセス
 
 ### 提出前
@@ -370,6 +449,89 @@ git fetch upstream
 git rebase upstream/main
 git push --force-with-lease origin feat/your-feature-name
 ```
+
+## リリースプロセス
+
+リリースは`main`ブランチのGitタグで管理されます。このセクションでは、手動と自動の両方のリリースプロセスについて説明します。
+
+### 手動リリース手順
+
+1. **`main`が最新であることを確認**:
+
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **バージョン番号を決定**:
+   - [Semantic Versioning](https://semver.org/)に従う（MAJOR.MINOR.PATCH）
+   - `MAJOR`: 破壊的変更
+   - `MINOR`: 新機能（後方互換性あり）
+   - `PATCH`: バグ修正（後方互換性あり）
+
+3. **CHANGELOG.mdを更新**（該当する場合）:
+   - このリリースの変更を文書化
+   - 手動または自動ツールで実行可能
+
+4. **Gitタグを作成してpush**:
+
+   ```bash
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   git push origin v1.0.0
+   ```
+
+5. **npmに公開**:
+   ```bash
+   npm publish
+   # または
+   pnpm publish
+   ```
+
+### 自動リリース（将来）
+
+将来的には、GitHub Actionsを使用してリリースプロセスを自動化する可能性があります：
+
+- `v*.*.*`に一致するタグがpushされたときに自動的に：
+  1. パッケージをビルド
+  2. テストを実行
+  3. npmに公開
+  4. GitHubリリースを作成
+
+これにより、手動のnpm publishステップが不要になります。
+
+### 保守ブランチからのリリース
+
+複数のメジャーバージョンを保守している場合（例: `release/v1`）：
+
+1. **保守ブランチからhotfixブランチを作成**:
+
+   ```bash
+   git checkout release/v1
+   git pull origin release/v1
+   git checkout -b fix/critical-bug
+   ```
+
+2. **修正を行い、`release/v1`にPRを作成**
+
+3. **マージ後、タグを作成**:
+
+   ```bash
+   git checkout release/v1
+   git tag -a v1.0.1 -m "Release v1.0.1 - Critical bug fix"
+   git push origin v1.0.1
+   ```
+
+4. **npmに公開**:
+
+   ```bash
+   npm publish
+   ```
+
+5. **`main`にcherry-pick**（修正が次期バージョンにも必要な場合）:
+   ```bash
+   git checkout main
+   git cherry-pick <commit-hash>
+   ```
 
 ## プロジェクト構造
 

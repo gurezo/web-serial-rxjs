@@ -75,11 +75,62 @@ pnpm run prepare
 
 This will ensure that commit messages are automatically checked for Conventional Commits compliance when you commit.
 
+## Branch Strategy
+
+This project follows a **trunk-based development** approach, which is well-suited for npm library projects.
+
+### Trunk-based Development
+
+- **`main` branch**: Always kept in a release-ready state (Green)
+- **Short-lived branches**: All development work happens in temporary branches (`feature/*`, `fix/*`, `docs/*`, etc.)
+- **Workflow**: Create branch → Make changes → Open PR → CI passes → Merge to `main` (squash merge or rebase merge)
+
+This approach keeps the repository simple and avoids branch proliferation, making it easier to maintain and release.
+
+### Branch Types
+
+- **`main`**: The main development branch, always in a release-ready state
+- **`feature/*`**, **`fix/*`**, **`docs/*`**, **`chore/*`**, **`ci/*`**: Short-lived branches for pull requests
+- **`release/v*`**: Maintenance branches for older major versions (only added when needed)
+
+**Examples of branch names:**
+- `feat/observable-read-loop`
+- `fix/disconnect-cleanup`
+- `docs/usage-examples`
+- `chore/deps-bump`
+- `ci/publish-workflow`
+
+### Release Management
+
+Releases are managed via **Git tags**, not branches:
+
+- Version tags: `v0.1.0`, `v1.0.0`, `v2.0.0`, etc.
+- When ready to release, create a tag on `main` branch
+- `CHANGELOG.md` should be updated (manually or automatically)
+- npm publish is triggered by the tag (manually or via CI)
+
+This approach aligns well with npm package versioning, where the version number is the primary identifier.
+
+### Major Version Maintenance
+
+When you need to maintain multiple major versions (e.g., `v1` while developing `v2`):
+
+- **`main`**: Next version development (e.g., v2.x)
+- **`release/v1`**: Maintenance branch for v1.x (bug fixes only)
+
+**Hotfix workflow:**
+1. Create PR to `release/v1` branch
+2. After merge, create tag (e.g., `v1.0.1`)
+3. Publish to npm
+4. If needed, cherry-pick the fix to `main` branch
+
+**Note**: Only add maintenance branches when actually needed. For most small-to-medium libraries, trunk-based development with tags is sufficient.
+
 ## Development Workflow
 
 ### Branch Naming Conventions
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/) naming conventions for branches:
+We follow [Conventional Commits](https://www.conventionalcommits.org/) naming conventions for branches. All branches are short-lived and created from `main`:
 
 - `feat/scope-description` - New features
 - `fix/scope-description` - Bug fixes
@@ -88,6 +139,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) naming co
 - `test/scope-description` - Test additions or updates
 - `chore/scope-description` - Maintenance tasks (dependencies, tooling, etc.)
 - `build/scope-description` - Build system or external dependencies changes
+- `ci/scope-description` - CI/CD workflow changes
 
 **Examples:**
 
@@ -95,6 +147,11 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) naming co
 - `fix/example-angular/test-errors`
 - `docs/workspace/update-readme`
 - `refactor/apps/restructure-directories`
+- `feat/observable-read-loop`
+- `fix/disconnect-cleanup`
+- `docs/usage-examples`
+- `chore/deps-bump`
+- `ci/publish-workflow`
 
 ### Workflow Steps
 
@@ -331,6 +388,26 @@ nx lint web-serial-rxjs
 
 All code must pass linting checks.
 
+## Pull Request Guidelines
+
+### PR Principles
+
+- **Keep PRs small**: One PR should address one specific goal or issue
+- **`main` branch protection**: The `main` branch is protected:
+  - Direct pushes to `main` are not allowed
+  - All PRs must pass CI checks
+  - Code review is required before merging
+- **Commit messages**: All commits must follow [Conventional Commits](#commit-message-guidelines) specification
+
+### Merge Strategy
+
+PRs are typically merged using one of the following methods:
+
+- **Squash merge**: Recommended for most PRs - combines all commits into a single commit
+- **Rebase merge**: Preserves individual commits with a linear history
+
+The maintainer will choose the appropriate merge strategy based on the PR.
+
 ## Pull Request Process
 
 ### Before Submitting
@@ -370,6 +447,84 @@ git fetch upstream
 git rebase upstream/main
 git push --force-with-lease origin feat/your-feature-name
 ```
+
+## Release Process
+
+Releases are managed via Git tags on the `main` branch. This section describes both manual and automated release processes.
+
+### Manual Release Steps
+
+1. **Ensure `main` is up to date**:
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Determine the version number**:
+   - Follow [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
+   - `MAJOR`: Breaking changes
+   - `MINOR`: New features (backward compatible)
+   - `PATCH`: Bug fixes (backward compatible)
+
+3. **Update CHANGELOG.md** (if applicable):
+   - Document the changes in this release
+   - Can be done manually or via automated tools
+
+4. **Create and push the Git tag**:
+   ```bash
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   git push origin v1.0.0
+   ```
+
+5. **Publish to npm**:
+   ```bash
+   npm publish
+   # or
+   pnpm publish
+   ```
+
+### Automated Release (Future)
+
+In the future, we may set up GitHub Actions to automate the release process:
+
+- When a tag matching `v*.*.*` is pushed, automatically:
+  1. Build the package
+  2. Run tests
+  3. Publish to npm
+  4. Create a GitHub release
+
+This would eliminate the need for manual npm publish steps.
+
+### Release from Maintenance Branches
+
+When maintaining multiple major versions (e.g., `release/v1`):
+
+1. **Create a hotfix branch** from the maintenance branch:
+   ```bash
+   git checkout release/v1
+   git pull origin release/v1
+   git checkout -b fix/critical-bug
+   ```
+
+2. **Make the fix and create a PR** to `release/v1`
+
+3. **After merge, create a tag**:
+   ```bash
+   git checkout release/v1
+   git tag -a v1.0.1 -m "Release v1.0.1 - Critical bug fix"
+   git push origin v1.0.1
+   ```
+
+4. **Publish to npm**:
+   ```bash
+   npm publish
+   ```
+
+5. **Cherry-pick to `main`** (if the fix is also needed in the next version):
+   ```bash
+   git checkout main
+   git cherry-pick <commit-hash>
+   ```
 
 ## Project Structure
 

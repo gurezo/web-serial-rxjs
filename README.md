@@ -565,6 +565,17 @@ client
   });
 ```
 
+## Development and Release Strategy
+
+This project follows a **trunk-based development** approach:
+
+- **`main` branch**: Always in a release-ready state
+- **Short-lived branches**: `feature/*`, `fix/*`, `docs/*` for pull requests
+- **Releases**: Managed via Git tags (e.g., `v1.0.0`), not branches
+- **Version maintenance**: `release/v*` branches are added only when needed for maintaining multiple major versions
+
+For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
