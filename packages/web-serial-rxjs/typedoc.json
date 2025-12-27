@@ -19,5 +19,6 @@
   "readme": "none",
   "name": "web-serial-rxjs API Documentation",
   "includeVersion": false,
-  "gitRevision": "main"
+  "gitRevision": "main",
+  "plugin": ["typedoc-rhineai-theme"]
 }
