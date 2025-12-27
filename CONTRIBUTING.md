@@ -161,7 +161,6 @@ The scope should be the name of the package or area affected:
 - `web-serial-rxjs` - Changes to the main library package
 - `example-angular`, `example-react`, `example-vue`, `example-svelte`, `example-vanilla-js`, `example-vanilla-ts` - Changes to example applications
 - `workspace` - Changes to workspace configuration, root-level files
-- `example-angular-e2e`, `example-react-e2e`, etc. - Changes to E2E tests
 
 If multiple scopes are affected, you can omit the scope or use a broader scope like `workspace`.
 
@@ -288,9 +287,6 @@ nx test example-react
 
 # Run tests in watch mode
 nx test web-serial-rxjs --watch
-
-# Run E2E tests
-nx e2e example-angular-e2e
 ```
 
 ### Writing Tests
@@ -298,9 +294,6 @@ nx e2e example-angular-e2e
 - **Unit Tests**: Use Vitest for unit testing
   - Place test files next to source files: `myfile.ts` → `myfile.test.ts`
   - Or in a `tests` directory: `src/lib/myfile.ts` → `tests/lib/myfile.test.ts`
-
-- **E2E Tests**: Use Playwright for end-to-end testing
-  - E2E tests are in separate projects: `apps/example-*-e2e`
 
 - **Test Coverage**: Aim for good test coverage, especially for the library package
 
@@ -392,8 +385,7 @@ web-serial-rxjs/
 │   ├── example-vue/            # Vue example app
 │   ├── example-svelte/         # Svelte example app
 │   ├── example-vanilla-js/     # Vanilla JavaScript example
-│   ├── example-vanilla-ts/     # Vanilla TypeScript example
-│   └── example-*-e2e/          # E2E test projects
+│   └── example-vanilla-ts/     # Vanilla TypeScript example
 └── tools/                      # Build and development tools
 ```
 

@@ -161,7 +161,6 @@ pnpm run prepare
 - `web-serial-rxjs` - メインライブラリパッケージの変更
 - `example-angular`, `example-react`, `example-vue`, `example-svelte`, `example-vanilla-js`, `example-vanilla-ts` - サンプルアプリケーションの変更
 - `workspace` - ワークスペース設定、ルートレベルのファイルの変更
-- `example-angular-e2e`, `example-react-e2e` など - E2Eテストの変更
 
 複数のスコープが影響を受ける場合は、スコープを省略するか、`workspace`などのより広いスコープを使用できます。
 
@@ -288,9 +287,6 @@ nx test example-react
 
 # ウォッチモードでテストを実行
 nx test web-serial-rxjs --watch
-
-# E2Eテストを実行
-nx e2e example-angular-e2e
 ```
 
 ### テストの作成
@@ -298,9 +294,6 @@ nx e2e example-angular-e2e
 - **ユニットテスト**: ユニットテストにはVitestを使用
   - テストファイルをソースファイルの隣に配置：`myfile.ts` → `myfile.test.ts`
   - または`tests`ディレクトリに：`src/lib/myfile.ts` → `tests/lib/myfile.test.ts`
-
-- **E2Eテスト**: エンドツーエンドテストにはPlaywrightを使用
-  - E2Eテストは別のプロジェクトに：`apps/example-*-e2e`
 
 - **テストカバレッジ**: 特にライブラリパッケージでは、良いテストカバレッジを目指す
 
@@ -392,8 +385,7 @@ web-serial-rxjs/
 │   ├── example-vue/            # Vueサンプルアプリ
 │   ├── example-svelte/         # Svelteサンプルアプリ
 │   ├── example-vanilla-js/     # バニラJavaScriptサンプル
-│   ├── example-vanilla-ts/     # バニラTypeScriptサンプル
-│   └── example-*-e2e/          # E2Eテストプロジェクト
+│   └── example-vanilla-ts/     # バニラTypeScriptサンプル
 └── tools/                      # ビルドおよび開発ツール
 ```
 
