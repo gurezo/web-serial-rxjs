@@ -2,15 +2,12 @@
   "name": "@gurezo/web-serial-rxjs",
   "version": "0.0.1",
   "private": true,
-  "type": "commonjs",
-  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     },
     "./package.json": "./package.json"
   },
