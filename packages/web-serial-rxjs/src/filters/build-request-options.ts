@@ -2,9 +2,43 @@ import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { SerialClientOptions } from '../types/options';
 
 /**
- * Build SerialPortRequestOptions from SerialClientOptions
- * @param options SerialClientOptions
- * @returns SerialPortRequestOptions for navigator.serial.requestPort()
+ * Build SerialPortRequestOptions from SerialClientOptions.
+ *
+ * This utility function converts filter options from {@link SerialClientOptions} into
+ * the format expected by the Web Serial API's `navigator.serial.requestPort()` method.
+ * It validates the filter options to ensure they are valid before returning them.
+ *
+ * If no filters are provided in the options, this function returns `undefined`, which
+ * allows the port selection dialog to show all available ports.
+ *
+ * @param options - Optional SerialClientOptions containing filter configuration
+ * @returns SerialPortRequestOptions object with validated filters, or `undefined` if no filters are provided
+ * @throws {@link SerialError} with code {@link SerialErrorCode.INVALID_FILTER_OPTIONS} if filter validation fails
+ *
+ * @example
+ * ```typescript
+ * // With filters
+ * const options = {
+ *   baudRate: 9600,
+ *   filters: [
+ *     { usbVendorId: 0x1234 },
+ *     { usbVendorId: 0x5678, usbProductId: 0x9abc },
+ *   ],
+ * };
+ * const requestOptions = buildRequestOptions(options);
+ * // Returns: { filters: [...] }
+ *
+ * // Without filters
+ * const requestOptions = buildRequestOptions({ baudRate: 9600 });
+ * // Returns: undefined
+ *
+ * // Invalid filter (will throw)
+ * try {
+ *   buildRequestOptions({ filters: [{ usbVendorId: -1 }] });
+ * } catch (error) {
+ *   // SerialError with code INVALID_FILTER_OPTIONS
+ * }
+ * ```
  */
 export function buildRequestOptions(
   options?: SerialClientOptions,
