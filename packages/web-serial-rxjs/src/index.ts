@@ -43,10 +43,10 @@
  */
 
 // Main exports
-export { createSerialClient } from './client/create-serial-client';
+export { createSerialClient } from './client';
 
 // Type exports
-export type { SerialClient } from './client/create-serial-client';
+export type { SerialClient } from './client';
 
 // Error exports
 export { SerialError } from './errors/serial-error';

@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { SerialClientOptions } from '../types/options';
-import { SerialClientImpl } from './serial-client-impl';
+import { SerialClientImpl } from './serial-client';
 
 /**
  * SerialClient interface for interacting with serial ports using RxJS Observables.
