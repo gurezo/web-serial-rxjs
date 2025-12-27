@@ -1,6 +1,6 @@
 {
   "name": "@gurezo/web-serial-rxjs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
