@@ -9,7 +9,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/web-serial-rxjs",
+        "outputPath": "packages/web-serial-rxjs/dist",
         "main": "packages/web-serial-rxjs/src/index.ts",
         "tsConfig": "packages/web-serial-rxjs/tsconfig.lib.json",
         "assets": ["packages/web-serial-rxjs/*.md"],
