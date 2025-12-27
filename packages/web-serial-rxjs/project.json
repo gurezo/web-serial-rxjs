@@ -13,7 +13,7 @@
         "main": "packages/web-serial-rxjs/src/index.ts",
         "tsConfig": "packages/web-serial-rxjs/tsconfig.lib.json",
         "assets": ["packages/web-serial-rxjs/*.md"],
-        "format": ["cjs"],
+        "format": ["esm"],
         "generatePackageJson": true
       }
     },
