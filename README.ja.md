@@ -575,7 +575,7 @@ client
 - **リリース**: ブランチではなくGitタグ（例: `v1.0.0`）で管理
 - **バージョン保守**: 複数のメジャーバージョンを保守する必要がある場合のみ `release/v*` ブランチを追加
 
-詳細な貢献ガイドラインについては、[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md)を参照してください。
+詳細な貢献ガイドラインについては、[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
 
 ## 貢献
 
