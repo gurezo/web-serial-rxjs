@@ -14,13 +14,16 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "README.md"
+    "dist/**",
+    "README.md",
+    "README.ja.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "pnpm run build:types && pnpm run build:bundle",
+    "build": "pnpm run build:types && pnpm run build:bundle && pnpm run build:copy-files",
     "build:types": "tsc --project tsconfig.lib.json",
     "build:bundle": "node esbuild.config.mjs",
+    "build:copy-files": "cp ../../LICENSE . 2>/dev/null || true",
     "clean": "rm -rf dist"
   },
   "dependencies": {},
