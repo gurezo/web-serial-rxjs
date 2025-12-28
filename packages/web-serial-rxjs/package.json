@@ -1,7 +1,9 @@
 {
   "name": "@gurezo/web-serial-rxjs",
   "version": "0.1.0",
-  "private": true,
+  "description": "A TypeScript library that provides a reactive RxJS-based wrapper for the Web Serial API, enabling easy serial port communication in web applications.",
+  "author": "Akihiko Kigure <akihiko.kigure@gmail.com>",
+  "license": "MIT",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -24,5 +26,26 @@
   "dependencies": {},
   "peerDependencies": {
     "rxjs": "^7.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gurezo/web-serial-rxjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gurezo/web-serial-rxjs/issues"
+  },
+  "homepage": "https://github.com/gurezo/web-serial-rxjs#readme",
+  "keywords": [
+    "rxjs",
+    "serial",
+    "web-serial",
+    "serial-port",
+    "reactive",
+    "observable",
+    "typescript",
+    "web-serial-api"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
