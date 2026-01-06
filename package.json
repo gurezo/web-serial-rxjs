@@ -9,7 +9,8 @@
     "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json",
     "docs:clean": "rm -rf docs",
     "docs": "pnpm run docs:clean && pnpm run docs:generate",
-    "publish:test": "pnpm publish --dry-run --no-git-checks --filter @gurezo/web-serial-rxjs"
+    "publish:test": "pnpm publish --dry-run --no-git-checks --filter @gurezo/web-serial-rxjs",
+    "publish": "pnpm publish --filter @gurezo/web-serial-rxjs"
   },
   "repository": {
     "type": "git",
