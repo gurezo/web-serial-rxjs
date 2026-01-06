@@ -20,11 +20,13 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "pnpm run build:types && pnpm run build:bundle && pnpm run build:copy-files",
-    "build:types": "tsc --project tsconfig.lib.json",
+    "build": "pnpm run build:types && pnpm run build:bundle && pnpm run build:copy-files && pnpm run build:cleanup",
+    "build:types": "pnpm exec tsc --project tsconfig.lib.json",
     "build:bundle": "node esbuild.config.mjs",
     "build:copy-files": "cp ../../LICENSE . 2>/dev/null || true",
-    "clean": "rm -rf dist"
+    "build:cleanup": "rm -rf dist/packages dist/package.json 2>/dev/null || true",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {},
   "peerDependencies": {
