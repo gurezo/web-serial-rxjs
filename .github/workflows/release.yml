@@ -28,15 +28,20 @@ jobs:
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
 
-      # 念のため：token系npmrcを消してOIDC一本化
+      # ルートnpmrcは残す。認証系だけ消す
       - name: Force OIDC only
         run: |
-          rm -f .npmrc
           rm -f ~/.npmrc
           rm -f packages/web-serial-rxjs/.npmrc
 
+      - name: Find built package.json
+        run: |
+          ls -la dist || true
+          find dist -maxdepth 5 -name package.json -print -exec node -p "require('./{}').name + '@' + require('./{}').version" \;
+
+      # ↑の出力を見てパスを確定させる。まずは典型パスで試す
       - name: Publish to npm (OIDC Trusted Publishing)
-        run: npm publish ./packages/web-serial-rxjs --access public --provenance
+        run: npm publish dist/packages/web-serial-rxjs --access public --provenance
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
