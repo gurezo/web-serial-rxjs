@@ -28,20 +28,41 @@ jobs:
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
 
-      # ルートnpmrcは残す。認証系だけ消す
+      # 追加①: ビルド成果物の場所を確認（dist がリポジトリ直下に無い前提）
+      - name: Show build output
+        shell: bash
+        run: |
+          echo "== packages/web-serial-rxjs =="
+          ls -la packages/web-serial-rxjs
+          echo "== packages/web-serial-rxjs/dist =="
+          ls -la packages/web-serial-rxjs/dist || true
+
+      # 既存: token系npmrcを消してOIDC一本化（※ルート .npmrc は pnpm 用なので消さない方が安全）
       - name: Force OIDC only
+        shell: bash
         run: |
           rm -f ~/.npmrc
           rm -f packages/web-serial-rxjs/.npmrc
 
-      - name: Find built package.json
+      # 追加②: どこかから注入される NODE_AUTH_TOKEN を強制無効化し、
+      # setup-node が使う NPM_CONFIG_USERCONFIG を token無しで上書き
+      - name: Force OIDC only (hard)
+        shell: bash
         run: |
-          ls -la dist || true
-          find dist -maxdepth 5 -name package.json -print -exec node -p "require('./{}').name + '@' + require('./{}').version" \;
+          echo "Before unset: NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+SET}"
+          unset NODE_AUTH_TOKEN
+          echo "After unset: NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+SET}"
 
-      # ↑の出力を見てパスを確定させる。まずは典型パスで試す
+          echo "NPM_CONFIG_USERCONFIG=${NPM_CONFIG_USERCONFIG}"
+          # setup-node が指定している npmrc を token無しで上書き
+          echo "registry=https://registry.npmjs.org/" > "${NPM_CONFIG_USERCONFIG}"
+          echo "always-auth=false" >> "${NPM_CONFIG_USERCONFIG}"
+
+          echo "== Effective npmrc =="
+          cat "${NPM_CONFIG_USERCONFIG}"
+
       - name: Publish to npm (OIDC Trusted Publishing)
-        run: npm publish dist/packages/web-serial-rxjs --access public --provenance
+        run: npm publish ./packages/web-serial-rxjs --access public --provenance
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
