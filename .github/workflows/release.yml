@@ -10,86 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write   # ★ OIDC必須
+      id-token: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org/'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCOUNT }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - name: Get pnpm store directory
-        shell: bash
-        id: pnpm-cache
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
+      - uses: actions/setup-node@v4
         with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm exec nx build web-serial-rxjs
 
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build package
-        run: pnpm exec nx build web-serial-rxjs
-
-      - name: Extract tag version
-        id: tag-version
-        shell: bash
-        run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "VERSION=$TAG_VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version from tag: $TAG_VERSION"
-
-      - name: Validate version match
-        shell: bash
-        run: |
-          TAG_VERSION="${{ steps.tag-version.outputs.VERSION }}"
-          PACKAGE_VERSION=$(node -p "require('./packages/web-serial-rxjs/package.json').version")
-          echo "Tag version: $TAG_VERSION"
-          echo "Package version: $PACKAGE_VERSION"
-          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
-            echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
-            exit 1
-          fi
-          echo "Version validation passed"
-
-      # ★★★ ここが肝：pnpm publish をやめて npm publish にする（OIDC）
       - name: Publish to npm (OIDC Trusted Publishing)
-        id: publish-npm
-        continue-on-error: true
-        shell: bash
-        run: |
-          # workspace の package を publish
-          # ここは packages/web-serial-rxjs のままでOK（ログを見る限りこの構造）
-          npm publish ./packages/web-serial-rxjs --access public --provenance || \
-            echo "::warning::npm publish failed, but continuing with release creation"
-
-      - name: Create GitHub Release
-        if: always()
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ steps.tag-version.outputs.VERSION }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish ./packages/web-serial-rxjs --access public --provenance
