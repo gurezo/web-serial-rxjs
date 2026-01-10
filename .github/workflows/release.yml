@@ -52,6 +52,8 @@ jobs:
           echo "npm registry=$(npm config get registry)"
 
       - name: Publish to npm (OIDC Trusted Publishing)
+        env:
+          NODE_AUTH_TOKEN: ""
         run: npm publish ./packages/web-serial-rxjs --access public --provenance
 
       - name: Create GitHub Release
