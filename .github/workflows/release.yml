@@ -35,6 +35,19 @@ jobs:
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
 
+      # リリース添付用の zip を作る（パッケージ単位）
+      - name: Create release zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          ZIP_NAME="web-serial-rxjs-${VERSION}.zip"
+          cd packages/web-serial-rxjs
+          zip -r "../../${ZIP_NAME}" . \
+            -x "node_modules/*" \
+               ".git/*" \
+               ".DS_Store"
+
       # publish は token を使わず、OIDC のみで実施（設定を隔離）
       - name: Publish to npm (Trusted Publishing / OIDC)
         shell: bash
@@ -49,15 +62,8 @@ jobs:
           echo "registry=https://registry.npmjs.org/" > "${NPM_CONFIG_USERCONFIG}"
           echo "always-auth=false" >> "${NPM_CONFIG_USERCONFIG}"
 
-          echo "== DEBUG =="
-          echo "npm=$(npm -v)"
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+SET}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+SET}"
-          echo "NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+SET}"
-          echo "npm userconfig=$(npm config get userconfig)"
-          echo "npm registry=$(npm config get registry)"
-          echo "--- npmrc-ci ---"
-          cat "${NPM_CONFIG_USERCONFIG}"
+          npm config delete //registry.npmjs.org/:_authToken || true
+          npm config delete _authToken || true
 
           npm publish ./packages/web-serial-rxjs --access public --provenance
 
@@ -67,5 +73,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
+          files: |
+            web-serial-rxjs-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
