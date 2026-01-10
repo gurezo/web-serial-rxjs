@@ -70,12 +70,15 @@ jobs:
           echo "Version validation passed"
 
       - name: Publish to npm
-        run: pnpm publish --filter @gurezo/web-serial-rxjs --access public --no-git-checks
+        id: publish-npm
+        continue-on-error: true
+        run: |
+          pnpm publish --filter @gurezo/web-serial-rxjs --access public --no-git-checks || echo "::warning::npm publish failed, but continuing with release creation"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Create GitHub Release
+        if: always()
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
