@@ -452,52 +452,17 @@ git push --force-with-lease origin feat/your-feature-name
 
 ## リリースプロセス
 
-リリースは`main`ブランチのGitタグで管理されます。このセクションでは、手動と自動の両方のリリースプロセスについて説明します。
+リリースは`main`ブランチのGitタグで管理され、GitHub Actionsにより**完全に自動化**されています。
 
-### 手動リリース手順
+詳細なリリース手順については、**[RELEASING.ja.md](RELEASING.ja.md)** を参照してください。
 
-1. **`main`が最新であることを確認**:
+**簡単な概要**:
+1. PR経由で`package.json`のバージョンを更新（必要な場合）
+2. `main`にマージ
+3. バージョンタグを作成してプッシュ: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`
+4. GitHub Actionsが自動的にビルド、テスト、npm公開、GitHubリリース作成を実行
 
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
-
-2. **バージョン番号を決定**:
-   - [Semantic Versioning](https://semver.org/)に従う（MAJOR.MINOR.PATCH）
-   - `MAJOR`: 破壊的変更
-   - `MINOR`: 新機能（後方互換性あり）
-   - `PATCH`: バグ修正（後方互換性あり）
-
-3. **CHANGELOG.mdを更新**（該当する場合）:
-   - このリリースの変更を文書化
-   - 手動または自動ツールで実行可能
-
-4. **Gitタグを作成してpush**:
-
-   ```bash
-   git tag -a v1.0.0 -m "Release v1.0.0"
-   git push origin v1.0.0
-   ```
-
-5. **npmに公開**:
-   ```bash
-   npm publish
-   # または
-   pnpm publish
-   ```
-
-### 自動リリース（将来）
-
-将来的には、GitHub Actionsを使用してリリースプロセスを自動化する可能性があります：
-
-- `v*.*.*`に一致するタグがpushされたときに自動的に：
-  1. パッケージをビルド
-  2. テストを実行
-  3. npmに公開
-  4. GitHubリリースを作成
-
-これにより、手動のnpm publishステップが不要になります。
+手動の`npm publish`は不要です - プロセス全体が自動化されています！
 
 ### 保守ブランチからのリリース
 
