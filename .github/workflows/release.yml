@@ -12,6 +12,11 @@ jobs:
       contents: write
       id-token: write
 
+    # ★ tokenがどこから来ても publish で使わせない
+    env:
+      NODE_AUTH_TOKEN: ""
+      NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc-ci
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,42 +29,27 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Prepare npmrc (no token)
+        shell: bash
+        run: |
+          echo "registry=https://registry.npmjs.org/" > "${NPM_CONFIG_USERCONFIG}"
+          echo "always-auth=false" >> "${NPM_CONFIG_USERCONFIG}"
+          echo "== npmrc =="
+          cat "${NPM_CONFIG_USERCONFIG}"
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
 
-      # 追加①: ビルド成果物の場所を確認（dist がリポジトリ直下に無い前提）
-      - name: Show build output
+      # ★ ここで OIDC が出ているかを確定
+      - name: Debug OIDC availability
         shell: bash
         run: |
-          echo "== packages/web-serial-rxjs =="
-          ls -la packages/web-serial-rxjs
-          echo "== packages/web-serial-rxjs/dist =="
-          ls -la packages/web-serial-rxjs/dist || true
-
-      # 既存: token系npmrcを消してOIDC一本化（※ルート .npmrc は pnpm 用なので消さない方が安全）
-      - name: Force OIDC only
-        shell: bash
-        run: |
-          rm -f ~/.npmrc
-          rm -f packages/web-serial-rxjs/.npmrc
-
-      # 追加②: どこかから注入される NODE_AUTH_TOKEN を強制無効化し、
-      # setup-node が使う NPM_CONFIG_USERCONFIG を token無しで上書き
-      - name: Force OIDC only (hard)
-        shell: bash
-        run: |
-          echo "Before unset: NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+SET}"
-          unset NODE_AUTH_TOKEN
-          echo "After unset: NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+SET}"
-
-          echo "NPM_CONFIG_USERCONFIG=${NPM_CONFIG_USERCONFIG}"
-          # setup-node が指定している npmrc を token無しで上書き
-          echo "registry=https://registry.npmjs.org/" > "${NPM_CONFIG_USERCONFIG}"
-          echo "always-auth=false" >> "${NPM_CONFIG_USERCONFIG}"
-
-          echo "== Effective npmrc =="
-          cat "${NPM_CONFIG_USERCONFIG}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+SET}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+SET}"
+          echo "NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+SET}"
+          echo "npm userconfig=$(npm config get userconfig)"
+          echo "npm registry=$(npm config get registry)"
 
       - name: Publish to npm (OIDC Trusted Publishing)
         run: npm publish ./packages/web-serial-rxjs --access public --provenance
