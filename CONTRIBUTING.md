@@ -450,50 +450,17 @@ git push --force-with-lease origin feat/your-feature-name
 
 ## Release Process
 
-Releases are managed via Git tags on the `main` branch. This section describes both manual and automated release processes.
+Releases are managed via Git tags on the `main` branch and are **fully automated** via GitHub Actions.
 
-### Manual Release Steps
+For detailed release instructions, see **[RELEASING.md](RELEASING.md)**.
 
-1. **Ensure `main` is up to date**:
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
+**Quick summary**:
+1. Update version in `package.json` (if needed) via PR
+2. Merge to `main`
+3. Create and push a version tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`
+4. GitHub Actions automatically builds, tests, publishes to npm, and creates a GitHub release
 
-2. **Determine the version number**:
-   - Follow [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
-   - `MAJOR`: Breaking changes
-   - `MINOR`: New features (backward compatible)
-   - `PATCH`: Bug fixes (backward compatible)
-
-3. **Update CHANGELOG.md** (if applicable):
-   - Document the changes in this release
-   - Can be done manually or via automated tools
-
-4. **Create and push the Git tag**:
-   ```bash
-   git tag -a v1.0.0 -m "Release v1.0.0"
-   git push origin v1.0.0
-   ```
-
-5. **Publish to npm**:
-   ```bash
-   npm publish
-   # or
-   pnpm publish
-   ```
-
-### Automated Release (Future)
-
-In the future, we may set up GitHub Actions to automate the release process:
-
-- When a tag matching `v*.*.*` is pushed, automatically:
-  1. Build the package
-  2. Run tests
-  3. Publish to npm
-  4. Create a GitHub release
-
-This would eliminate the need for manual npm publish steps.
+No manual `npm publish` is required - the entire process is automated!
 
 ### Release from Maintenance Branches
 

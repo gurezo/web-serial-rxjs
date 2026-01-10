@@ -577,6 +577,8 @@ client
 
 詳細な貢献ガイドラインについては、[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
 
+詳細なリリース手順については、[RELEASING.ja.md](RELEASING.ja.md) を参照してください。
+
 ## 貢献
 
 貢献を歓迎します！詳細については、[貢献ガイド](CONTRIBUTING.ja.md)を参照してください：
@@ -585,8 +587,11 @@ client
 - コードスタイルガイドライン
 - コミットメッセージの規約
 - プルリクエストのプロセス
+- リリースプロセス
 
 英語版の貢献ガイドは [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+
+リリース手順については、[RELEASING.ja.md](RELEASING.ja.md)（または英語版は [RELEASING.md](RELEASING.md)）を参照してください。
 
 ## ライセンス
 

@@ -576,6 +576,8 @@ This project follows a **trunk-based development** approach:
 
 For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+For detailed release instructions, see [RELEASING.md](RELEASING.md).
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
@@ -584,8 +586,11 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 - Code style guidelines
 - Commit message conventions
 - Pull request process
+- Release process
 
 For Japanese contributors, please see [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md).
+
+For release instructions, see [RELEASING.md](RELEASING.md) (or [RELEASING.ja.md](RELEASING.ja.md) for Japanese).
 
 ## License
 
