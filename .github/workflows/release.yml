@@ -28,10 +28,8 @@ jobs:
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
 
-      - name: Publish to npm
+      - name: Publish to npm (Trusted Publishing / OIDC)
         run: npm publish ./packages/web-serial-rxjs --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
