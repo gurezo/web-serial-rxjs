@@ -30,3 +30,10 @@ jobs:
 
       - name: Publish to npm (OIDC Trusted Publishing)
         run: npm publish ./packages/web-serial-rxjs --access public --provenance
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
