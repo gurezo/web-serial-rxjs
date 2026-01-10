@@ -73,6 +73,7 @@ jobs:
         run: pnpm publish --filter @gurezo/web-serial-rxjs --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
