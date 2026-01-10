@@ -10,22 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write  # ★ Trusted Publishing(OIDC)に必須
+      id-token: write   # ★ OIDC必須
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org/'
+        # ★ env: NODE_AUTH_TOKEN は不要なので削除
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Get pnpm store directory
         shell: bash
@@ -71,21 +72,16 @@ jobs:
           fi
           echo "Version validation passed"
 
-      # ★★★ ここが肝：Trusted Publishing(OIDC)で publish（トークン不要）
-      - name: Publish to npm (Trusted Publishing / OIDC)
+      # ★★★ ここが肝：pnpm publish をやめて npm publish にする（OIDC）
+      - name: Publish to npm (OIDC Trusted Publishing)
         id: publish-npm
         continue-on-error: true
         shell: bash
         run: |
-          # Nx の出力先に合わせて調整してください
-          PKG_DIR="dist/packages/web-serial-rxjs"
-
-          if [ ! -f "$PKG_DIR/package.json" ]; then
-            echo "::error::package.json not found in $PKG_DIR. Please confirm Nx output path."
-            exit 1
-          fi
-
-          npm publish "$PKG_DIR" --access public || echo "::warning::npm publish failed, but continuing with release creation"
+          # workspace の package を publish
+          # ここは packages/web-serial-rxjs のままでOK（ログを見る限りこの構造）
+          npm publish ./packages/web-serial-rxjs --access public --provenance || \
+            echo "::warning::npm publish failed, but continuing with release creation"
 
       - name: Create GitHub Release
         if: always()
