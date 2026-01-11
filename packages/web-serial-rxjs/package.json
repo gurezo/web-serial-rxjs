@@ -39,7 +39,7 @@
   "bugs": {
     "url": "https://github.com/gurezo/web-serial-rxjs/issues"
   },
-  "homepage": "https://github.com/gurezo/web-serial-rxjs#readme",
+  "homepage": "https://github.com/gurezo/web-serial-rxjs",
   "keywords": [
     "rxjs",
     "serial",
