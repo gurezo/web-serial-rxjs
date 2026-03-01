@@ -75,6 +75,10 @@ pnpm run prepare
 
 This will ensure that commit messages are automatically checked for Conventional Commits compliance when you commit.
 
+### 5. AI Assistant (MCP) - Optional
+
+This project includes MCP (Model Context Protocol) server configuration for AI-assisted development. See the [AI Assistant (MCP)](README.md#ai-assistant-mcp) section in the README for available servers (Nx, Angular CLI, Svelte) and configuration details.
+
 ## Branch Strategy
 
 This project follows a **trunk-based development** approach, which is well-suited for npm library projects.

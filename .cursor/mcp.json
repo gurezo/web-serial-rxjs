@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "nx-mcp": {
+      "command": "npx",
+      "args": ["nx", "mcp"]
+    },
+    "angular-cli": {
+      "command": "npx",
+      "args": ["-y", "@angular/cli", "mcp"]
+    },
+    "svelte": {
+      "command": "npx",
+      "args": ["-y", "@sveltejs/mcp"]
+    }
+  }
+}

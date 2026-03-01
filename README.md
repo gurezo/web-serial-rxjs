@@ -9,6 +9,7 @@ A TypeScript library that provides a reactive RxJS-based wrapper for the Web Ser
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [Framework Examples](#framework-examples)
+- [AI Assistant (MCP)](#ai-assistant-mcp)
 - [Contributing](#contributing)
 - [License](#license)
 - [Links](#links)
@@ -71,6 +72,23 @@ This repository includes example applications demonstrating how to use web-seria
 - **[Angular](apps/example-angular/)** - Angular example using a Service
 
 Each example includes a README with setup and usage instructions.
+
+## AI Assistant (MCP)
+
+This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
+
+| Server | Purpose |
+|--------|---------|
+| **nx-mcp** | Nx workspace analysis, project graph, CI monitoring, and documentation |
+| **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
+| **svelte** | Svelte/SvelteKit documentation and code analysis for example-svelte |
+
+**Configuration files:**
+
+- `.mcp.json` - Standard MCP configuration (Cursor, VS Code, Claude, etc.)
+- `.cursor/mcp.json` - Cursor-specific configuration
+
+To use MCP servers in Cursor, the configuration is automatically loaded from `.cursor/mcp.json`. For VS Code, add the MCP extension and configure it to use `.mcp.json`, or add the server definitions to your MCP settings.
 
 ## Development and Release Strategy
 
