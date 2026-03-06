@@ -1,7 +1,7 @@
 # web-serial-rxjs
 
 <p align="center">
-  <img src="./web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
+  <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/packages/web-serial-rxjs/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
 A TypeScript library that provides a reactive RxJS-based wrapper for the Web Serial API, enabling easy serial port communication in web applications.

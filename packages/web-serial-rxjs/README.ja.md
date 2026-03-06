@@ -1,7 +1,7 @@
 # web-serial-rxjs
 
 <p align="center">
-  <img src="./web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
+  <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/packages/web-serial-rxjs/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
 Web Serial API を RxJS ベースのリアクティブなラッパーで提供する TypeScript ライブラリです。Web アプリケーションでシリアルポート通信を簡単に実現できます。
