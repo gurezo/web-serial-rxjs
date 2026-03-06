@@ -1,14 +1,20 @@
 # web-serial-rxjs
 
+<p align="center">
+  <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="128" />
+</p>
+
 A TypeScript library that provides a reactive RxJS-based wrapper for the Web Serial API, enabling easy serial port communication in web applications.
 
 ## Table of Contents
 
 - [Features](#features)
+- [Framework Support](#framework-support)
 - [Browser Support](#browser-support)
 - [Installation](#installation)
 - [Documentation](#documentation)
-- [Framework Examples](#framework-examples)
+- [Examples](#examples)
+- [Project Icon](#project-icon)
 - [AI Assistant (MCP)](#ai-assistant-mcp)
 - [Contributing](#contributing)
 - [License](#license)
@@ -21,6 +27,15 @@ A TypeScript library that provides a reactive RxJS-based wrapper for the Web Ser
 - **Browser detection**: Built-in browser support detection and error handling
 - **Error handling**: Comprehensive error handling with custom error classes and error codes
 - **Framework agnostic**: Works with any JavaScript/TypeScript framework or vanilla JavaScript
+
+## Framework Support
+
+This library is framework-agnostic and can be used with:
+
+- Angular
+- React
+- Svelte
+- Vanilla JavaScript / TypeScript
 
 ## Browser Support
 
@@ -60,9 +75,9 @@ pnpm add rxjs
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
 - **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
 
-## Framework Examples
+## Examples
 
-This repository includes example applications demonstrating how to use web-serial-rxjs with different frameworks:
+Examples are available for the following environments:
 
 - **[Vanilla JavaScript](apps/example-vanilla-js/)** - Basic usage with vanilla JavaScript
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
@@ -73,15 +88,26 @@ This repository includes example applications demonstrating how to use web-seria
 
 Each example includes a README with setup and usage instructions.
 
+## Project Icon
+
+The project icon includes a modified design inspired by the [RxJS](https://rxjs.dev/) logo,
+combined with a serial connector motif to represent Web Serial communication.
+
+The icon is used only to indicate that this library provides
+RxJS-based abstractions for the Web Serial API.
+
+This project is an independent open source project and is **not affiliated with,
+endorsed by, or sponsored by the [ReactiveX](http://reactivex.io/) or [RxJS](https://rxjs.dev/) project**.
+
 ## AI Assistant (MCP)
 
 This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
 
-| Server | Purpose |
-|--------|---------|
-| **nx-mcp** | Nx workspace analysis, project graph, CI monitoring, and documentation |
+| Server          | Purpose                                                                                |
+| --------------- | -------------------------------------------------------------------------------------- |
+| **nx-mcp**      | Nx workspace analysis, project graph, CI monitoring, and documentation                 |
 | **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
-| **svelte** | Svelte/SvelteKit documentation and code analysis for example-svelte |
+| **svelte**      | Svelte/SvelteKit documentation and code analysis for example-svelte                    |
 
 **Configuration files:**
 
