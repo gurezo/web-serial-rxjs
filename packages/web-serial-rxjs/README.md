@@ -1,7 +1,7 @@
 # web-serial-rxjs
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/packages/web-serial-rxjs/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
+  <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
 A TypeScript library that provides a reactive RxJS-based wrapper for the Web Serial API, enabling easy serial port communication in web applications.
@@ -9,10 +9,14 @@ A TypeScript library that provides a reactive RxJS-based wrapper for the Web Ser
 ## Table of Contents
 
 - [Features](#features)
+- [Framework Support](#framework-support)
 - [Browser Support](#browser-support)
 - [Installation](#installation)
 - [Documentation](#documentation)
-- [Framework Examples](#framework-examples)
+- [Examples](#examples)
+- [Project Icon](#project-icon)
+- [AI Assistant (MCP)](#ai-assistant-mcp)
+- [Development and Release Strategy](#development-and-release-strategy)
 - [Contributing](#contributing)
 - [License](#license)
 - [Links](#links)
@@ -24,6 +28,15 @@ A TypeScript library that provides a reactive RxJS-based wrapper for the Web Ser
 - **Browser detection**: Built-in browser support detection and error handling
 - **Error handling**: Comprehensive error handling with custom error classes and error codes
 - **Framework agnostic**: Works with any JavaScript/TypeScript framework or vanilla JavaScript
+
+## Framework Support
+
+This library is framework-agnostic and can be used with:
+
+- Angular
+- React
+- Svelte
+- Vanilla JavaScript / TypeScript
 
 ## Browser Support
 
@@ -63,9 +76,9 @@ pnpm add rxjs
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
 - **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
 
-## Framework Examples
+## Examples
 
-This repository includes example applications demonstrating how to use web-serial-rxjs with different frameworks:
+Examples are available for the following environments:
 
 - **[Vanilla JavaScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-js)** - Basic usage with vanilla JavaScript
 - **[Vanilla TypeScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-ts)** - TypeScript example with RxJS
@@ -76,6 +89,47 @@ This repository includes example applications demonstrating how to use web-seria
 
 Each example includes a README with setup and usage instructions.
 
+## Project Icon
+
+The project icon includes a modified design inspired by the [RxJS](https://rxjs.dev/) logo,
+combined with a serial connector motif to represent Web Serial communication.
+
+The icon is used only to indicate that this library provides
+RxJS-based abstractions for the Web Serial API.
+
+This project is an independent open source project and is **not affiliated with,
+endorsed by, or sponsored by the [ReactiveX](http://reactivex.io/) or [RxJS](https://rxjs.dev/) project**.
+
+## AI Assistant (MCP)
+
+This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
+
+| Server          | Purpose                                                                                |
+| --------------- | -------------------------------------------------------------------------------------- |
+| **nx-mcp**      | Nx workspace analysis, project graph, CI monitoring, and documentation                 |
+| **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
+| **svelte**      | Svelte/SvelteKit documentation and code analysis for example-svelte                    |
+
+**Configuration files:**
+
+- `.mcp.json` - Standard MCP configuration (Cursor, VS Code, Claude, etc.)
+- `.cursor/mcp.json` - Cursor-specific configuration
+
+To use MCP servers in Cursor, the configuration is automatically loaded from `.cursor/mcp.json`. For VS Code, add the MCP extension and configure it to use `.mcp.json`, or add the server definitions to your MCP settings.
+
+## Development and Release Strategy
+
+This project follows a **trunk-based development** approach:
+
+- **`main` branch**: Always in a release-ready state
+- **Short-lived branches**: `feature/*`, `fix/*`, `docs/*` for pull requests
+- **Releases**: Managed via Git tags (e.g., `v1.0.0`), not branches
+- **Version maintenance**: `release/v*` branches are added only when needed for maintaining multiple major versions
+
+For detailed contribution guidelines, see [CONTRIBUTING.md](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.md).
+
+For detailed release instructions, see [RELEASING.md](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.md).
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.md) for details on:
@@ -84,8 +138,11 @@ We welcome contributions! Please see our [Contributing Guide](https://github.com
 - Code style guidelines
 - Commit message conventions
 - Pull request process
+- Release process
 
 For Japanese contributors, please see [CONTRIBUTING.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.ja.md).
+
+For release instructions, see [RELEASING.md](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.md) (or [RELEASING.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.ja.md) for Japanese).
 
 ## License
 
