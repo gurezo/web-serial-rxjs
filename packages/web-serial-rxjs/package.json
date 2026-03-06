@@ -17,7 +17,8 @@
     "dist/**",
     "README.md",
     "README.ja.md",
-    "LICENSE"
+    "LICENSE",
+    "web-serial-rxjs-icon.png"
   ],
   "scripts": {
     "build": "pnpm run build:types && pnpm run build:bundle && pnpm run build:copy-files && pnpm run build:cleanup",
