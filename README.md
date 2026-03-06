@@ -90,24 +90,24 @@ Each example includes a README with setup and usage instructions.
 
 ## Project Icon
 
-The project icon includes a modified design inspired by the RxJS logo,
+The project icon includes a modified design inspired by the [RxJS](https://rxjs.dev/) logo,
 combined with a serial connector motif to represent Web Serial communication.
 
 The icon is used only to indicate that this library provides
 RxJS-based abstractions for the Web Serial API.
 
 This project is an independent open source project and is **not affiliated with,
-endorsed by, or sponsored by the ReactiveX or RxJS project**.
+endorsed by, or sponsored by the [ReactiveX](http://reactivex.io/) or [RxJS](https://rxjs.dev/) project**.
 
 ## AI Assistant (MCP)
 
 This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
 
-| Server | Purpose |
-|--------|---------|
-| **nx-mcp** | Nx workspace analysis, project graph, CI monitoring, and documentation |
+| Server          | Purpose                                                                                |
+| --------------- | -------------------------------------------------------------------------------------- |
+| **nx-mcp**      | Nx workspace analysis, project graph, CI monitoring, and documentation                 |
 | **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
-| **svelte** | Svelte/SvelteKit documentation and code analysis for example-svelte |
+| **svelte**      | Svelte/SvelteKit documentation and code analysis for example-svelte                    |
 
 **Configuration files:**
 
