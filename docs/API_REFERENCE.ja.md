@@ -210,8 +210,3 @@ Observable を購読し、その値を WritableStream に書き込みます。
 - `stream`: `WritableStream<Uint8Array>` - 書き込むストリーム
 
 **戻り値:** `unsubscribe()` メソッドを持つ購読オブジェクト
-
-## 関連ドキュメント
-
-- [クイックスタートガイド](./QUICK_START.ja.md) - 基本的な例で始める
-- [高度な使用方法](./ADVANCED_USAGE.ja.md) - 高度なパターンとテクニックを学ぶ

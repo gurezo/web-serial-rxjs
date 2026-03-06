@@ -91,8 +91,3 @@ client
     },
   });
 ```
-
-## 関連ドキュメント
-
-- [クイックスタートガイド](./QUICK_START.ja.md) - 基本的な例で始める
-- [API リファレンス](./API_REFERENCE.ja.md) - 詳細な API ドキュメント
