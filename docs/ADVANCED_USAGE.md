@@ -91,8 +91,3 @@ client
     },
   });
 ```
-
-## Related Documentation
-
-- [Quick Start Guide](./QUICK_START.md) - Get started with basic examples
-- [API Reference](./API_REFERENCE.md) - Detailed API documentation
