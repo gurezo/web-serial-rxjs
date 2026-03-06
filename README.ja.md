@@ -78,11 +78,6 @@ pnpm add rxjs
 
 以下の環境向けのサンプルを用意しています。
 
-- Angular
-- React
-- Svelte
-- Vanilla JavaScript / TypeScript
-
 - **[Vanilla JavaScript](apps/example-vanilla-js/)** - バニラ JavaScript での基本的な使用方法
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - RxJS を使用した TypeScript の例
 - **[React](apps/example-react/)** - カスタムフック（`useSerialClient`）を使用した React の例

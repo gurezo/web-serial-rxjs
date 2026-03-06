@@ -79,11 +79,6 @@ pnpm add rxjs
 
 Examples are available for the following environments:
 
-- Angular
-- React
-- Svelte
-- Vanilla JavaScript / TypeScript
-
 - **[Vanilla JavaScript](apps/example-vanilla-js/)** - Basic usage with vanilla JavaScript
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
 - **[React](apps/example-react/)** - React example with custom hook (`useSerialClient`)
