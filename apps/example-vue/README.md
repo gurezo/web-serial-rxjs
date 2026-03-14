@@ -37,7 +37,7 @@ Start the development server:
 pnpm exec nx serve example-vue
 ```
 
-The application will be available at `http://localhost:4203`
+The application will be available at `http://localhost:4250`
 
 ### Build
 

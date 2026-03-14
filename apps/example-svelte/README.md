@@ -37,7 +37,7 @@ Start the development server:
 pnpm exec nx serve example-svelte
 ```
 
-The application will be available at `http://localhost:4204`
+The application will be available at `http://localhost:4220`
 
 ### Build
 
