@@ -37,7 +37,7 @@ Start the development server:
 pnpm exec nx serve example-react
 ```
 
-The application will be available at `http://localhost:4202`
+The application will be available at `http://localhost:4210`
 
 ### Build
 

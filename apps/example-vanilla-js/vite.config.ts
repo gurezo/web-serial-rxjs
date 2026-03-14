@@ -13,7 +13,7 @@ export default defineConfig(() => ({
   cacheDir: '../../../node_modules/.vite/apps/example-vanilla-js',
   plugins: [nxViteTsPaths()],
   server: {
-    port: 4200,
+    port: 4230,
     host: true,
     strictPort: false,
     fs: {
@@ -22,7 +22,7 @@ export default defineConfig(() => ({
     },
   },
   preview: {
-    port: 4300,
+    port: 4330,
     host: 'localhost',
   },
   build: {

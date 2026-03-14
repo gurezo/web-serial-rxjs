@@ -80,12 +80,12 @@ pnpm add rxjs
 
 Examples are available for the following environments:
 
+- **[Angular](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-angular)** - Angular example using a Service
+- **[React](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-react)** - React example with custom hook (`useSerialClient`)
+- **[Svelte](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-svelte)** - Svelte example using Svelte Store
 - **[Vanilla JavaScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-js)** - Basic usage with vanilla JavaScript
 - **[Vanilla TypeScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-ts)** - TypeScript example with RxJS
-- **[React](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-react)** - React example with custom hook (`useSerialClient`)
 - **[Vue](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vue)** - Vue 3 example using Composition API
-- **[Svelte](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-svelte)** - Svelte example using Svelte Store
-- **[Angular](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-angular)** - Angular example using a Service
 
 Each example includes a README with setup and usage instructions.
 

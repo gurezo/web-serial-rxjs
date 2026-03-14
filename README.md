@@ -79,12 +79,12 @@ pnpm add rxjs
 
 Examples are available for the following environments:
 
+- **[Angular](apps/example-angular/)** - Angular example using a Service
+- **[React](apps/example-react/)** - React example with custom hook (`useSerialClient`)
+- **[Svelte](apps/example-svelte/)** - Svelte example using Svelte Store
 - **[Vanilla JavaScript](apps/example-vanilla-js/)** - Basic usage with vanilla JavaScript
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
-- **[React](apps/example-react/)** - React example with custom hook (`useSerialClient`)
 - **[Vue](apps/example-vue/)** - Vue 3 example using Composition API
-- **[Svelte](apps/example-svelte/)** - Svelte example using Svelte Store
-- **[Angular](apps/example-angular/)** - Angular example using a Service
 
 Each example includes a README with setup and usage instructions.
 

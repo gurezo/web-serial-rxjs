@@ -35,7 +35,7 @@ Start the development server:
 pnpm exec nx serve example-vanilla-js
 ```
 
-The application will be available at `http://localhost:4200`
+The application will be available at `http://localhost:4230`
 
 ### Build
 

@@ -79,12 +79,12 @@ pnpm add rxjs
 
 以下の環境向けのサンプルを用意しています。
 
+- **[Angular](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-angular)** - Service を使用した Angular の例
+- **[React](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-react)** - カスタムフック（`useSerialClient`）を使用した React の例
+- **[Svelte](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-svelte)** - Svelte Store を使用した Svelte の例
 - **[Vanilla JavaScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-js)** - バニラ JavaScript での基本的な使用方法
 - **[Vanilla TypeScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-ts)** - RxJS を使用した TypeScript の例
-- **[React](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-react)** - カスタムフック（`useSerialClient`）を使用した React の例
 - **[Vue](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vue)** - Composition API を使用した Vue 3 の例
-- **[Svelte](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-svelte)** - Svelte Store を使用した Svelte の例
-- **[Angular](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-angular)** - Service を使用した Angular の例
 
 各例には、セットアップと使用方法の説明を含む README が含まれています。
 
