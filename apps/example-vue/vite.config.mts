@@ -15,7 +15,7 @@ export default defineConfig(() => ({
   cacheDir: '../../../node_modules/.vite/apps/example-vue',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   server: {
-    port: 4203,
+    port: 4250,
     host: true,
     strictPort: false,
     fs: {
@@ -24,7 +24,7 @@ export default defineConfig(() => ({
     },
   },
   preview: {
-    port: 4303,
+    port: 4350,
     host: 'localhost',
   },
   build: {

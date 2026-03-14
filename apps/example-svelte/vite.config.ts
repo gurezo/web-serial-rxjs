@@ -14,7 +14,7 @@ export default defineConfig(() => ({
   cacheDir: '../../../node_modules/.vite/apps/example-svelte',
   plugins: [svelte(), nxViteTsPaths()],
   server: {
-    port: 4204,
+    port: 4220,
     host: true,
     strictPort: false,
     fs: {
@@ -23,7 +23,7 @@ export default defineConfig(() => ({
     },
   },
   preview: {
-    port: 4304,
+    port: 4320,
     host: 'localhost',
   },
   build: {

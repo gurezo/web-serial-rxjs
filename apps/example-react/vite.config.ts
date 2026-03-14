@@ -14,7 +14,7 @@ export default defineConfig(() => ({
   cacheDir: '../../../node_modules/.vite/apps/example-react',
   plugins: [react(), nxViteTsPaths()],
   server: {
-    port: 4202,
+    port: 4210,
     host: true,
     strictPort: false,
     fs: {
@@ -23,7 +23,7 @@ export default defineConfig(() => ({
     },
   },
   preview: {
-    port: 4302,
+    port: 4310,
     host: 'localhost',
   },
   build: {
