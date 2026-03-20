@@ -3,11 +3,16 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/example-react/src",
   "projectType": "application",
-  "tags": ["type:app", "scope:examples"],
+  "tags": [
+    "type:app",
+    "scope:examples"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/example-react",
@@ -54,15 +59,19 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
-      "outputs": ["{workspaceRoot}/coverage/apps/example-react"],
+      "outputs": [
+        "{workspaceRoot}/coverage/apps/example-react"
+      ],
       "options": {
         "passWithNoTests": true,
-        "reportsDirectory": "../../../coverage/apps/example-react"
+        "reportsDirectory": "{projectRoot}/../../../coverage/apps/example-react"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     }
   }
 }

@@ -71,3 +71,6 @@ vitest.config.*.timestamp*
 .angular
 
 __screenshots__/
+
+.claude/worktrees
+.claude/settings.local.json
