@@ -3,11 +3,16 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/example-vanilla-ts/src",
   "projectType": "application",
-  "tags": ["type:app", "scope:examples"],
+  "tags": [
+    "type:app",
+    "scope:examples"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/example-vanilla-ts",
@@ -54,15 +59,19 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
-      "outputs": ["{workspaceRoot}/coverage/apps/example-vanilla-ts"],
+      "outputs": [
+        "{workspaceRoot}/coverage/apps/example-vanilla-ts"
+      ],
       "options": {
         "passWithNoTests": true,
-        "reportsDirectory": "../../../coverage/apps/example-vanilla-ts"
+        "reportsDirectory": "{projectRoot}/../../../coverage/apps/example-vanilla-ts"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     }
   }
 }
