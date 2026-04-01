@@ -34,6 +34,25 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
+      - name: Verify npm package includes README files
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACK_RESULT="$(npm pack --dry-run --json ./packages/web-serial-rxjs)"
+
+          node -e '
+            const result = JSON.parse(process.argv[1]);
+            const files = (result[0]?.files ?? []).map((file) => file.path);
+            const required = ["README.md", "README.ja.md"];
+            const missing = required.filter((path) => !files.includes(path));
+
+            if (missing.length > 0) {
+              console.error(`Missing files in npm pack output: ${missing.join(", ")}`);
+              process.exit(1);
+            }
+
+            console.log("Verified npm pack includes README files.");
+          ' "$PACK_RESULT"
 
       # リリース添付用の zip を作る（パッケージ単位）
       - name: Create release zip
@@ -65,7 +84,8 @@ jobs:
           npm config delete //registry.npmjs.org/:_authToken || true
           npm config delete _authToken || true
 
-          npm publish ./packages/web-serial-rxjs --access public --provenance
+          cd packages/web-serial-rxjs
+          npm publish --access public --provenance
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
