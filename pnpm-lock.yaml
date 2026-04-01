@@ -235,6 +235,12 @@ importers:
         specifier: 3.2.6
         version: 3.2.6(typescript@5.9.3)
 
+  packages/web-serial-rxjs:
+    dependencies:
+      rxjs:
+        specifier: ^7.8.0
+        version: 7.8.2
+
 packages:
 
   '@adobe/css-tools@4.4.4':
