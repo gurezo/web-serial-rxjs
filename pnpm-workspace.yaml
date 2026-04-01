@@ -1,0 +1,8 @@
+packages:
+  - 'packages/*'
+
+# Malicious releases are often detected and removed within a week.
+# config = 7 day x 24h x 60 min
+minimumReleaseAge: 10080
+
+shamefullyHoist: true
