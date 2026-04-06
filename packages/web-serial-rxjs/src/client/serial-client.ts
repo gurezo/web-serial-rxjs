@@ -1,4 +1,12 @@
-import { Observable, defer, switchMap } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  defer,
+  map,
+  share,
+  switchMap,
+} from 'rxjs';
 import { checkBrowserSupport } from '../browser/browser-support';
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { buildRequestOptions } from '../filters/build-request-options';
@@ -27,6 +35,18 @@ export class SerialClientImpl {
   private readSubscription: { unsubscribe: () => void } | null = null;
   /** @internal */
   private writeSubscription: { unsubscribe: () => void } | null = null;
+  /** @internal */
+  private sharedReadStream$: Observable<Uint8Array> | null = null;
+  /** @internal */
+  private textEncoder = new TextEncoder();
+  /** @internal */
+  private textDecoder = new TextDecoder();
+  /** @internal */
+  private readonly connectedState$ = new BehaviorSubject<boolean>(false);
+  /** @internal */
+  private readonly connectionEventsSubject$ = new Subject<
+    'connected' | 'disconnected'
+  >();
   /** @internal */
   private readonly options: Required<Omit<SerialClientOptions, 'filters'>> & {
     filters?: SerialClientOptions['filters'];
@@ -141,6 +161,8 @@ export class SerialClientImpl {
             })
             .then(() => {
               this.isOpen = true;
+              this.connectedState$.next(true);
+              this.connectionEventsSubject$.next('connected');
             })
             .catch((error) => {
               this.port = null;
@@ -178,6 +200,8 @@ export class SerialClientImpl {
         this.readSubscription.unsubscribe();
         this.readSubscription = null;
       }
+      this.sharedReadStream$ = null;
+      this.textDecoder = new TextDecoder();
 
       if (this.writeSubscription) {
         this.writeSubscription.unsubscribe();
@@ -190,10 +214,14 @@ export class SerialClientImpl {
         .then(() => {
           this.port = null;
           this.isOpen = false;
+          this.connectedState$.next(false);
+          this.connectionEventsSubject$.next('disconnected');
         })
         .catch((error) => {
           this.port = null;
           this.isOpen = false;
+          this.connectedState$.next(false);
+          this.connectionEventsSubject$.next('disconnected');
 
           throw new SerialError(
             SerialErrorCode.CONNECTION_LOST,
@@ -218,7 +246,29 @@ export class SerialClientImpl {
       );
     }
 
-    return readableToObservable(this.port.readable);
+    if (!this.sharedReadStream$) {
+      this.sharedReadStream$ = readableToObservable(this.port.readable).pipe(
+        share({
+          resetOnError: true,
+          resetOnComplete: true,
+          resetOnRefCountZero: true,
+        }),
+      );
+    }
+
+    return this.sharedReadStream$;
+  }
+
+  /**
+   * Get an Observable that emits decoded text from the serial port.
+   *
+   * @returns Observable that emits text chunks
+   * @internal
+   */
+  getReadStreamAsText(): Observable<string> {
+    return this.getReadStream().pipe(
+      map((chunk) => this.textDecoder.decode(chunk, { stream: true })),
+    );
   }
 
   /**
@@ -317,6 +367,17 @@ export class SerialClientImpl {
   }
 
   /**
+   * Write text data to the serial port.
+   *
+   * @param data - Text data to write
+   * @returns Observable that completes when the data is written
+   * @internal
+   */
+  writeText(data: string): Observable<void> {
+    return this.write(this.textEncoder.encode(data));
+  }
+
+  /**
    * Check if the port is currently open.
    *
    * @returns `true` if a port is currently open, `false` otherwise
@@ -324,6 +385,26 @@ export class SerialClientImpl {
    */
   get connected(): boolean {
     return this.isOpen;
+  }
+
+  /**
+   * Get an Observable that emits connection state changes.
+   *
+   * @returns Observable that emits `true` when connected and `false` when disconnected
+   * @internal
+   */
+  get connected$(): Observable<boolean> {
+    return this.connectedState$.asObservable();
+  }
+
+  /**
+   * Get an Observable that emits connection lifecycle events.
+   *
+   * @returns Observable that emits 'connected' or 'disconnected'
+   * @internal
+   */
+  get connectionEvents$(): Observable<'connected' | 'disconnected'> {
+    return this.connectionEventsSubject$.asObservable();
   }
 
   /**
