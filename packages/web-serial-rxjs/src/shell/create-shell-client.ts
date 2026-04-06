@@ -35,7 +35,7 @@ class ShellClientImpl implements ShellClient {
   private readonly prompt: string | RegExp;
   private readonly promptRegex: RegExp | null;
   private readonly bufferTick$ = new Subject<void>();
-  private readonly read$ = this.client.getReadStreamAsText().pipe(shareReplay(1));
+  private readonly read$: Observable<string>;
   private queueChain: Promise<void> = Promise.resolve();
   private readBuffer = '';
 
@@ -49,6 +49,7 @@ class ShellClientImpl implements ShellClient {
     this.lineEnding = options.lineEnding ?? DEFAULT_LINE_ENDING;
     this.promptRegex =
       this.prompt instanceof RegExp ? this.createAnchoredRegex(this.prompt) : null;
+    this.read$ = this.client.getReadStreamAsText().pipe(shareReplay(1));
 
     this.read$.subscribe({
       next: (chunk) => {
@@ -197,7 +198,7 @@ class ShellClientImpl implements ShellClient {
   }
 
   private createAnchoredRegex(source: RegExp): RegExp {
-    const flags = source.flags.replaceAll('g', '');
+    const flags = source.flags.replace(/g/g, '');
     return new RegExp(`(?:${source.source})$`, flags);
   }
 
