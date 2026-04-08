@@ -153,6 +153,17 @@ export interface SerialClient {
   getReadStream(): Observable<Uint8Array>;
 
   /**
+   * Get an Observable that emits text read from the serial port.
+   *
+   * This is a convenience API on top of {@link getReadStream} that decodes bytes
+   * with TextDecoder and emits text chunks.
+   *
+   * @returns An Observable that emits decoded text chunks
+   * @throws {@link SerialError} with code {@link SerialErrorCode.PORT_NOT_OPEN} if the port is not open
+   */
+  getReadStreamAsText(): Observable<string>;
+
+  /**
    * Write data to the serial port from an Observable.
    *
    * Writes data from an Observable stream to the serial port. The Observable should
@@ -205,11 +216,37 @@ export interface SerialClient {
   write(data: Uint8Array): Observable<void>;
 
   /**
+   * Write text data to the serial port.
+   *
+   * This is a convenience API on top of {@link write} that encodes text with TextEncoder.
+   *
+   * @param data - Text data to write to the serial port
+   * @returns An Observable that completes when the data has been written
+   * @throws {@link SerialError} with code {@link SerialErrorCode.PORT_NOT_OPEN} if the port is not open
+   * @throws {@link SerialError} with code {@link SerialErrorCode.WRITE_FAILED} if writing fails
+   */
+  writeText(data: string): Observable<void>;
+
+  /**
    * Check if the port is currently open and connected.
    *
    * @returns `true` if a port is currently open, `false` otherwise
    */
   readonly connected: boolean;
+
+  /**
+   * Reactive connection state stream.
+   *
+   * Emits `true` when connected and `false` when disconnected.
+   */
+  readonly connected$: Observable<boolean>;
+
+  /**
+   * Reactive connection event stream.
+   *
+   * Emits `'connected'` on successful connection and `'disconnected'` on disconnection.
+   */
+  readonly connectionEvents$: Observable<'connected' | 'disconnected'>;
 
   /**
    * Get the current SerialPort instance.

@@ -44,9 +44,11 @@
 
 // Main exports
 export { createSerialClient } from './client';
+export { createShellClient } from './shell';
 
 // Type exports
 export type { SerialClient } from './client';
+export type { ShellClient, ShellClientOptions, ShellExecResult } from './shell';
 
 // Error exports
 export { SerialError } from './errors/serial-error';
