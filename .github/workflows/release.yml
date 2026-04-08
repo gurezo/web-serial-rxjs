@@ -23,13 +23,9 @@ jobs:
         with:
           node-version: "22"
 
-      # ★ここが肝：Trusted Publishing(OIDC)に必要な npm 11.5.1+ に上げる
-      - name: Upgrade npm for Trusted Publishing
+      - name: Show bundled npm version
         shell: bash
-        run: |
-          npm -v
-          npm i -g npm@^11.5.1
-          npm -v
+        run: npm -v
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
@@ -85,7 +81,7 @@ jobs:
           npm config delete _authToken || true
 
           cd packages/web-serial-rxjs
-          npm publish --access public --provenance
+          pnpm dlx npm@11.5.1 publish --access public --provenance
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
