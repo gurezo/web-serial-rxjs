@@ -61,6 +61,14 @@ Gets an Observable that emits data read from the serial port.
 
 **Returns:** `Observable<Uint8Array>` - Emits `Uint8Array` chunks as data is received
 
+#### `getReadStreamAsText(): Observable<string>`
+
+Gets an Observable that emits decoded text from the serial port.
+
+The stream is decoded with `TextDecoder` internally so consumers do not need to decode chunks manually.
+
+**Returns:** `Observable<string>` - Emits text chunks as data is received
+
 #### `writeStream(data$: Observable<Uint8Array>): Observable<void>`
 
 Writes data to the serial port from an Observable stream.
@@ -81,10 +89,55 @@ Writes a single chunk of data to the serial port.
 
 **Returns:** `Observable<void>` - Completes when the data is written
 
+#### `writeText(data: string): Observable<void>`
+
+Writes a text payload to the serial port.
+
+The text is encoded with `TextEncoder` internally.
+
+**Parameters:**
+
+- `data`: `string` - Text data to write
+
+**Returns:** `Observable<void>` - Completes when the data is written
+
 ### Properties
 
 - `connected: boolean` - Read-only property indicating if the port is currently open
+- `connected$: Observable<boolean>` - Reactive connection state stream (`true` when connected, `false` when disconnected)
+- `connectionEvents$: Observable<'connected' | 'disconnected'>` - Reactive lifecycle events for connect/disconnect
 - `currentPort: SerialPort | null` - Read-only property with the current `SerialPort` instance, or `null` if not connected
+
+## `createShellClient(client, options)`
+
+Creates a high-level shell utility on top of `SerialClient`.
+
+The shell client writes commands, waits for prompts, and serializes concurrent calls with an internal queue.
+
+**Parameters:**
+
+- `client`: `SerialClient` - Connected serial client
+- `options`: `ShellClientOptions` - Shell behavior options
+
+**Returns:** `ShellClient`
+
+### `ShellClientOptions`
+
+```typescript
+interface ShellClientOptions {
+  prompt: string | RegExp; // Prompt matcher
+  timeout?: number; // Default: 10000
+  retry?: number; // Default: 0
+  lineEnding?: string; // Default: '\r\n'
+}
+```
+
+### `ShellClient`
+
+- `exec$(command: string): Observable<{ stdout: string }>`
+  - Writes `command + lineEnding`, waits until prompt, then emits `stdout`.
+- `readUntilPrompt$(): Observable<string>`
+  - Waits until prompt and emits buffered output before the prompt.
 
 ## `SerialClientOptions` Interface
 
