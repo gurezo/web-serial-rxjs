@@ -27,6 +27,12 @@ const client = createSerialClient({
 
 ### メソッド
 
+#### `support(): SerialSupport`
+
+Web Serial API のブラウザ対応状況を、例外を投げずに返します。
+
+**戻り値:** `SerialSupport` - ブラウザ種別と、未対応時の理由を含むサポート結果
+
 #### `requestPort(): Observable<SerialPort>`
 
 ユーザーからシリアルポートをリクエストします。ポート選択のためのブラウザダイアログを開きます。
@@ -84,6 +90,9 @@ Observable ストリームからシリアルポートにデータを書き込み
 ### プロパティ
 
 - `connected: boolean` - ポートが現在開いているかどうかを示す読み取り専用プロパティ
+- `connected$: Observable<boolean>` - リアクティブな接続状態ストリーム（接続中は `true`、切断中は `false`）
+- `state$: Observable<SerialState>` - 詳細なライフサイクル状態ストリーム（`idle` / `unsupported` / `connecting` / `connected` / `disconnecting` / `error`）
+- `errors$: Observable<SerialError>` - クライアント内部で集約されるエラーストリーム
 - `currentPort: SerialPort | null` - 現在の `SerialPort` インスタンス、または接続されていない場合は `null` の読み取り専用プロパティ
 
 ## `SerialClientOptions` インターフェース
