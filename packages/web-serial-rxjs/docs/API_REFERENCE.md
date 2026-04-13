@@ -27,6 +27,12 @@ The main interface for interacting with serial ports.
 
 ### Methods
 
+#### `support(): SerialSupport`
+
+Returns browser support information for Web Serial API without throwing.
+
+**Returns:** `SerialSupport` - Support result with browser type and reason when unsupported
+
 #### `requestPort(): Observable<SerialPort>`
 
 Requests a serial port from the user. Opens a browser dialog for port selection.
@@ -105,6 +111,8 @@ The text is encoded with `TextEncoder` internally.
 
 - `connected: boolean` - Read-only property indicating if the port is currently open
 - `connected$: Observable<boolean>` - Reactive connection state stream (`true` when connected, `false` when disconnected)
+- `state$: Observable<SerialState>` - Detailed lifecycle state stream (`idle`, `unsupported`, `connecting`, `connected`, `disconnecting`, `error`)
+- `errors$: Observable<SerialError>` - Aggregated error stream emitted by the client
 - `connectionEvents$: Observable<'connected' | 'disconnected'>` - Reactive lifecycle events for connect/disconnect
 - `currentPort: SerialPort | null` - Read-only property with the current `SerialPort` instance, or `null` if not connected
 
