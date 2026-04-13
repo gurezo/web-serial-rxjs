@@ -69,15 +69,15 @@ The stream is decoded with `TextDecoder` internally so consumers do not need to 
 
 **Returns:** `Observable<string>` - Emits text chunks as data is received
 
-#### `writeStream(data$: Observable<Uint8Array>): Observable<void>`
+#### `send$(data: string | Uint8Array): Observable<void>`
 
-Writes data to the serial port from an Observable stream.
+Enqueues data for ordered writes to the serial port.
 
 **Parameters:**
 
-- `data$`: `Observable<Uint8Array>` - Observable that emits `Uint8Array` chunks to write
+- `data`: `string | Uint8Array` - Text or bytes to write
 
-**Returns:** `Observable<void>` - Completes when writing is finished
+**Returns:** `Observable<void>` - Completes when the queued payload is written
 
 #### `write(data: Uint8Array): Observable<void>`
 

@@ -114,14 +114,13 @@ client.connect().subscribe({
       error: (error) => console.error('Write error:', error),
     });
 
-    // Write from an Observable stream
+    // Queue multiple writes in order
     const messages = ['Message 1\n', 'Message 2\n', 'Message 3\n'];
-    const dataStream$ = from(messages).pipe(
-      map((msg) => new TextEncoder().encode(msg)),
-    );
-    client.writeStream(dataStream$).subscribe({
-      next: () => console.log('All messages written'),
-      error: (error) => console.error('Stream write error:', error),
+    from(messages).subscribe((msg) => {
+      client.send$(msg).subscribe({
+        next: () => console.log('Message written'),
+        error: (error) => console.error('Queued write error:', error),
+      });
     });
   },
 });

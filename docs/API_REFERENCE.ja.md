@@ -61,15 +61,15 @@ const client = createSerialClient({
 
 **戻り値:** `Observable<Uint8Array>` - データが受信されると `Uint8Array` チャンクを発行
 
-#### `writeStream(data$: Observable<Uint8Array>): Observable<void>`
+#### `send$(data: string | Uint8Array): Observable<void>`
 
-Observable ストリームからシリアルポートにデータを書き込みます。
+シリアルポートへの送信をキューに追加し、順序を保って書き込みます。
 
 **パラメータ:**
 
-- `data$`: `Observable<Uint8Array>` - 書き込む `Uint8Array` チャンクを発行する Observable
+- `data`: `string | Uint8Array` - 書き込む文字列またはバイナリデータ
 
-**戻り値:** `Observable<void>` - 書き込みが完了したときに完了
+**戻り値:** `Observable<void>` - キューに入った送信が完了したときに完了
 
 #### `write(data: Uint8Array): Observable<void>`
 

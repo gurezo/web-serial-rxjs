@@ -115,14 +115,13 @@ client.connect().subscribe({
       error: (error) => console.error('書き込みエラー:', error),
     });
 
-    // Observable ストリームから書き込む
+    // 複数送信を順序付きでキュー投入する
     const messages = ['メッセージ 1\n', 'メッセージ 2\n', 'メッセージ 3\n'];
-    const dataStream$ = from(messages).pipe(
-      map((msg) => new TextEncoder().encode(msg)),
-    );
-    client.writeStream(dataStream$).subscribe({
-      next: () => console.log('すべてのメッセージを書き込みました'),
-      error: (error) => console.error('ストリーム書き込みエラー:', error),
+    from(messages).subscribe((msg) => {
+      client.send$(msg).subscribe({
+        next: () => console.log('メッセージを書き込みました'),
+        error: (error) => console.error('キュー書き込みエラー:', error),
+      });
     });
   },
 });
