@@ -168,38 +168,23 @@ export interface SerialClient {
   readonly lines$: Observable<string>;
 
   /**
-   * Write data to the serial port from an Observable.
+   * Enqueue serial data for ordered writes.
    *
-   * Writes data from an Observable stream to the serial port. The Observable should
-   * emit Uint8Array chunks that will be written sequentially to the port. If a previous
-   * write stream is active, it will be cancelled before starting the new one.
+   * This API serializes all send operations internally so that concurrent calls
+   * are written to the port one-by-one in call order.
    *
-   * @param data$ - Observable that emits Uint8Array chunks to write to the serial port
-   * @returns An Observable that completes when all data has been written and the stream completes
+   * @param data - Text or bytes to write to the serial port
+   * @returns An Observable that completes when the enqueued payload is written
    * @throws {@link SerialError} with code {@link SerialErrorCode.PORT_NOT_OPEN} if the port is not open
    * @throws {@link SerialError} with code {@link SerialErrorCode.WRITE_FAILED} if writing fails
-   *
-   * @example
-   * ```typescript
-   * const data$ = from([
-   *   new TextEncoder().encode('Hello'),
-   *   new TextEncoder().encode('World'),
-   * ]);
-   *
-   * client.writeStream(data$).subscribe({
-   *   next: () => console.log('Writing...'),
-   *   complete: () => console.log('All data written'),
-   *   error: (error) => console.error('Write error:', error),
-   * });
-   * ```
    */
-  writeStream(data$: Observable<Uint8Array>): Observable<void>;
+  send$(data: string | Uint8Array): Observable<void>;
 
   /**
    * Write a single chunk of data to the serial port.
    *
-   * Writes a single Uint8Array chunk to the serial port. For writing multiple chunks,
-   * consider using {@link writeStream} with an Observable instead.
+   * Writes a single Uint8Array chunk to the serial port immediately.
+   * For queued ordering semantics, prefer {@link send$}.
    *
    * @param data - Uint8Array data to write to the serial port
    * @returns An Observable that completes when the data has been written
@@ -222,7 +207,7 @@ export interface SerialClient {
   /**
    * Write text data to the serial port.
    *
-   * This is a convenience API on top of {@link write} that encodes text with TextEncoder.
+   * This is a convenience API on top of {@link send$}.
    *
    * @param data - Text data to write to the serial port
    * @returns An Observable that completes when the data has been written

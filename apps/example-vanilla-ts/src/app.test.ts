@@ -81,9 +81,9 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
     getPorts: vi.fn(() => ({
       subscribe: vi.fn(),
     })) as unknown as () => Observable<SerialPort[]>,
-    writeStream: vi.fn(() => ({
+    send$: vi.fn(() => ({
       subscribe: vi.fn(),
-    })) as unknown as (data$: Observable<Uint8Array>) => Observable<void>,
+    })) as unknown as (data: string | Uint8Array) => Observable<void>,
   } as SerialClient;
 
   return {
