@@ -175,6 +175,33 @@ export interface SerialClient {
   getReadStreamAsText(): Observable<string>;
 
   /**
+   * Get an Observable that emits received byte chunks.
+   *
+   * This stream is driven by an internal read pump and becomes active after connect.
+   *
+   * @returns An Observable that emits Uint8Array chunks from the serial port
+   */
+  readonly bytes$: Observable<Uint8Array>;
+
+  /**
+   * Get an Observable that emits decoded text chunks.
+   *
+   * This stream decodes bytes with TextDecoder in streaming mode.
+   *
+   * @returns An Observable that emits decoded text chunks
+   */
+  readonly text$: Observable<string>;
+
+  /**
+   * Get an Observable that emits newline-delimited text lines.
+   *
+   * Lines are emitted without trailing newline characters.
+   *
+   * @returns An Observable that emits parsed line strings
+   */
+  readonly lines$: Observable<string>;
+
+  /**
    * Write data to the serial port from an Observable.
    *
    * Writes data from an Observable stream to the serial port. The Observable should

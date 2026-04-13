@@ -50,6 +50,14 @@ export class SerialClientImpl {
   /** @internal */
   private textDecoder = new TextDecoder();
   /** @internal */
+  private lineBuffer = '';
+  /** @internal */
+  private readonly bytesSubject$ = new Subject<Uint8Array>();
+  /** @internal */
+  private readonly textSubject$ = new Subject<string>();
+  /** @internal */
+  private readonly linesSubject$ = new Subject<string>();
+  /** @internal */
   private readonly stateSubject$: BehaviorSubject<SerialState>;
   /** @internal */
   private readonly errorsSubject$ = new Subject<SerialError>();
@@ -184,6 +192,7 @@ export class SerialClientImpl {
             })
             .then(() => {
               this.isOpen = true;
+              this.startReadPump();
               this.stateSubject$.next({ kind: 'connected' });
               this.connectionEventsSubject$.next('connected');
             })
@@ -228,8 +237,7 @@ export class SerialClientImpl {
         this.readSubscription.unsubscribe();
         this.readSubscription = null;
       }
-      this.sharedReadStream$ = null;
-      this.textDecoder = new TextDecoder();
+      this.resetReceiveState();
 
       if (this.writeSubscription) {
         this.writeSubscription.unsubscribe();
@@ -275,17 +283,7 @@ export class SerialClientImpl {
       );
     }
 
-    if (!this.sharedReadStream$) {
-      this.sharedReadStream$ = readableToObservable(this.port.readable).pipe(
-        share({
-          resetOnError: true,
-          resetOnComplete: true,
-          resetOnRefCountZero: true,
-        }),
-      );
-    }
-
-    return this.sharedReadStream$;
+    return this.bytes$;
   }
 
   /**
@@ -295,9 +293,7 @@ export class SerialClientImpl {
    * @internal
    */
   getReadStreamAsText(): Observable<string> {
-    return this.getReadStream().pipe(
-      map((chunk) => this.textDecoder.decode(chunk, { stream: true })),
-    );
+    return this.text$;
   }
 
   /**
@@ -432,6 +428,36 @@ export class SerialClientImpl {
   }
 
   /**
+   * Get a reactive byte stream from the serial port.
+   *
+   * @returns Observable that emits received byte chunks while connected
+   * @internal
+   */
+  get bytes$(): Observable<Uint8Array> {
+    return this.bytesSubject$.asObservable();
+  }
+
+  /**
+   * Get a reactive decoded text stream from the serial port.
+   *
+   * @returns Observable that emits decoded text chunks while connected
+   * @internal
+   */
+  get text$(): Observable<string> {
+    return this.textSubject$.asObservable();
+  }
+
+  /**
+   * Get a reactive line-based stream from the serial port.
+   *
+   * @returns Observable that emits each completed line without trailing newline
+   * @internal
+   */
+  get lines$(): Observable<string> {
+    return this.linesSubject$.asObservable();
+  }
+
+  /**
    * Get detailed serial lifecycle states.
    *
    * @returns Observable of serial state machine events
@@ -516,5 +542,46 @@ export class SerialClientImpl {
     const browserName =
       browser === BrowserType.UNKNOWN ? 'your browser' : browser.toUpperCase();
     return `Web Serial API is not supported in ${browserName}. Please use a Chromium-based browser (Chrome, Edge, or Opera).`;
+  }
+
+  private startReadPump(): void {
+    if (!this.port?.readable) {
+      return;
+    }
+    this.readSubscription?.unsubscribe();
+    this.readSubscription = readableToObservable(this.port.readable).subscribe({
+      next: (chunk) => this.handleIncomingChunk(chunk),
+      error: (error) => {
+        const serialError =
+          error instanceof SerialError
+            ? error
+            : new SerialError(
+                SerialErrorCode.CONNECTION_LOST,
+                `Read stream failed: ${error instanceof Error ? error.message : String(error)}`,
+                error instanceof Error ? error : new Error(String(error)),
+              );
+        this.errorsSubject$.next(serialError);
+        this.stateSubject$.next({ kind: 'error', error: serialError });
+      },
+    });
+  }
+
+  private handleIncomingChunk(chunk: Uint8Array): void {
+    this.bytesSubject$.next(chunk);
+    const decodedText = this.textDecoder.decode(chunk, { stream: true });
+    this.textSubject$.next(decodedText);
+
+    const merged = `${this.lineBuffer}${decodedText}`.replace(/\r\n/g, '\n');
+    const parts = merged.split('\n');
+    this.lineBuffer = parts.pop() ?? '';
+    for (const line of parts) {
+      this.linesSubject$.next(line);
+    }
+  }
+
+  private resetReceiveState(): void {
+    this.sharedReadStream$ = null;
+    this.textDecoder = new TextDecoder();
+    this.lineBuffer = '';
   }
 }
