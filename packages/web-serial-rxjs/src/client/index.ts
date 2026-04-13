@@ -1,6 +1,8 @@
 import { Observable } from 'rxjs';
+import { SerialError } from '../errors/serial-error';
 import { SerialClientOptions } from '../types/options';
 import { SerialClientImpl } from './serial-client';
+import { SerialState, SerialSupport } from './serial-state';
 
 /**
  * SerialClient interface for interacting with serial ports using RxJS Observables.
@@ -31,6 +33,15 @@ import { SerialClientImpl } from './serial-client';
  * ```
  */
 export interface SerialClient {
+  /**
+   * Get the browser support information for Web Serial API.
+   *
+   * This method never throws. Use it to branch UI behavior before calling connect.
+   *
+   * @returns Browser support information
+   */
+  support(): SerialSupport;
+
   /**
    * Request a serial port from the user.
    *
@@ -242,6 +253,20 @@ export interface SerialClient {
   readonly connected$: Observable<boolean>;
 
   /**
+   * Reactive serial state stream.
+   *
+   * Emits detailed connection lifecycle and error states.
+   */
+  readonly state$: Observable<SerialState>;
+
+  /**
+   * Reactive error stream.
+   *
+   * Emits all {@link SerialError} instances produced by this client.
+   */
+  readonly errors$: Observable<SerialError>;
+
+  /**
    * Reactive connection event stream.
    *
    * Emits `'connected'` on successful connection and `'disconnected'` on disconnection.
@@ -258,6 +283,11 @@ export interface SerialClient {
    */
   readonly currentPort: SerialPort | null;
 }
+
+/**
+ * Browser support information for Web Serial API.
+ */
+export type { SerialState, SerialSupport };
 
 /**
  * Create a new SerialClient instance for interacting with serial ports.

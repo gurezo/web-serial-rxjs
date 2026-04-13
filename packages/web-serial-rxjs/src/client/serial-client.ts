@@ -3,11 +3,18 @@ import {
   Observable,
   Subject,
   defer,
+  distinctUntilChanged,
   map,
+  of,
   share,
   switchMap,
+  throwError,
 } from 'rxjs';
-import { checkBrowserSupport } from '../browser/browser-support';
+import {
+  BrowserType,
+  detectBrowserType,
+  hasWebSerialSupport,
+} from '../browser/browser-detection';
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { buildRequestOptions } from '../filters/build-request-options';
 import { subscribeToWritable } from '../io/observable-to-writable';
@@ -16,6 +23,7 @@ import {
   DEFAULT_SERIAL_CLIENT_OPTIONS,
   SerialClientOptions,
 } from '../types/options';
+import type { SerialState, SerialSupport } from './serial-state';
 
 /**
  * Internal implementation of SerialClient interface.
@@ -42,7 +50,9 @@ export class SerialClientImpl {
   /** @internal */
   private textDecoder = new TextDecoder();
   /** @internal */
-  private readonly connectedState$ = new BehaviorSubject<boolean>(false);
+  private readonly stateSubject$: BehaviorSubject<SerialState>;
+  /** @internal */
+  private readonly errorsSubject$ = new Subject<SerialError>();
   /** @internal */
   private readonly connectionEventsSubject$ = new Subject<
     'connected' | 'disconnected'
@@ -60,12 +70,12 @@ export class SerialClientImpl {
    * @internal
    */
   constructor(options?: SerialClientOptions) {
-    checkBrowserSupport();
     this.options = {
       ...DEFAULT_SERIAL_CLIENT_OPTIONS,
       ...options,
       filters: options?.filters,
     };
+    this.stateSubject$ = new BehaviorSubject<SerialState>(this.getInitialState());
   }
 
   /**
@@ -76,7 +86,13 @@ export class SerialClientImpl {
    */
   requestPort(): Observable<SerialPort> {
     return defer(() => {
-      checkBrowserSupport();
+      const support = this.support();
+      if (!support.supported) {
+        const error = this.createUnsupportedError(support);
+        this.setUnsupportedState(support);
+        this.errorsSubject$.next(error);
+        throw error;
+      }
 
       return navigator.serial
         .requestPort(buildRequestOptions(this.options))
@@ -105,7 +121,13 @@ export class SerialClientImpl {
    */
   getPorts(): Observable<SerialPort[]> {
     return defer(() => {
-      checkBrowserSupport();
+      const support = this.support();
+      if (!support.supported) {
+        const error = this.createUnsupportedError(support);
+        this.setUnsupportedState(support);
+        this.errorsSubject$.next(error);
+        throw error;
+      }
 
       return navigator.serial.getPorts().catch((error) => {
         throw new SerialError(
@@ -125,25 +147,26 @@ export class SerialClientImpl {
    * @internal
    */
   connect(port?: SerialPort): Observable<void> {
-    checkBrowserSupport();
-
-    if (this.isOpen) {
-      return new Observable<void>((subscriber) => {
-        subscriber.error(
-          new SerialError(
-            SerialErrorCode.PORT_ALREADY_OPEN,
-            'Port is already open',
-          ),
-        );
-      });
+    const support = this.support();
+    if (!support.supported) {
+      this.setUnsupportedState(support);
+      const error = this.createUnsupportedError(support);
+      this.errorsSubject$.next(error);
+      return throwError(() => error);
     }
 
-    const port$ = port
-      ? new Observable<SerialPort>((subscriber) => {
-          subscriber.next(port);
-          subscriber.complete();
-        })
-      : this.requestPort();
+    if (this.isOpen) {
+      const error = new SerialError(
+        SerialErrorCode.PORT_ALREADY_OPEN,
+        'Port is already open',
+      );
+      this.errorsSubject$.next(error);
+      this.stateSubject$.next({ kind: 'error', error });
+      return throwError(() => error);
+    }
+    this.stateSubject$.next({ kind: 'connecting' });
+
+    const port$ = port ? of(port) : this.requestPort();
 
     return port$.pipe(
       switchMap((selectedPort) => {
@@ -161,7 +184,7 @@ export class SerialClientImpl {
             })
             .then(() => {
               this.isOpen = true;
-              this.connectedState$.next(true);
+              this.stateSubject$.next({ kind: 'connected' });
               this.connectionEventsSubject$.next('connected');
             })
             .catch((error) => {
@@ -172,11 +195,14 @@ export class SerialClientImpl {
                 throw error;
               }
 
-              throw new SerialError(
+              const serialError = new SerialError(
                 SerialErrorCode.PORT_OPEN_FAILED,
                 `Failed to open port: ${error instanceof Error ? error.message : String(error)}`,
                 error instanceof Error ? error : new Error(String(error)),
               );
+              this.errorsSubject$.next(serialError);
+              this.stateSubject$.next({ kind: 'error', error: serialError });
+              throw serialError;
             });
         });
       }),
@@ -192,8 +218,10 @@ export class SerialClientImpl {
   disconnect(): Observable<void> {
     return defer(() => {
       if (!this.isOpen || !this.port) {
+        this.stateSubject$.next({ kind: 'idle' });
         return Promise.resolve();
       }
+      this.stateSubject$.next({ kind: 'disconnecting' });
 
       // Unsubscribe from read/write streams
       if (this.readSubscription) {
@@ -214,20 +242,21 @@ export class SerialClientImpl {
         .then(() => {
           this.port = null;
           this.isOpen = false;
-          this.connectedState$.next(false);
+          this.stateSubject$.next({ kind: 'idle' });
           this.connectionEventsSubject$.next('disconnected');
         })
         .catch((error) => {
           this.port = null;
           this.isOpen = false;
-          this.connectedState$.next(false);
-          this.connectionEventsSubject$.next('disconnected');
-
-          throw new SerialError(
+          const serialError = new SerialError(
             SerialErrorCode.CONNECTION_LOST,
             `Failed to close port: ${error instanceof Error ? error.message : String(error)}`,
             error instanceof Error ? error : new Error(String(error)),
           );
+          this.errorsSubject$.next(serialError);
+          this.stateSubject$.next({ kind: 'error', error: serialError });
+
+          throw serialError;
         });
     });
   }
@@ -394,7 +423,32 @@ export class SerialClientImpl {
    * @internal
    */
   get connected$(): Observable<boolean> {
-    return this.connectedState$.asObservable();
+    return this.stateSubject$
+      .asObservable()
+      .pipe(
+        map((state) => state.kind === 'connected'),
+        distinctUntilChanged(),
+      );
+  }
+
+  /**
+   * Get detailed serial lifecycle states.
+   *
+   * @returns Observable of serial state machine events
+   * @internal
+   */
+  get state$(): Observable<SerialState> {
+    return this.stateSubject$.asObservable();
+  }
+
+  /**
+   * Get serial error stream.
+   *
+   * @returns Observable of aggregated serial errors
+   * @internal
+   */
+  get errors$(): Observable<SerialError> {
+    return this.errorsSubject$.asObservable();
   }
 
   /**
@@ -415,5 +469,52 @@ export class SerialClientImpl {
    */
   get currentPort(): SerialPort | null {
     return this.port;
+  }
+
+  /**
+   * Check Web Serial support information.
+   *
+   * @returns Browser support data
+   * @internal
+   */
+  support(): SerialSupport {
+    const browser = detectBrowserType();
+    const supported = hasWebSerialSupport();
+    if (supported) {
+      return { supported: true, browser };
+    }
+
+    return {
+      supported: false,
+      browser,
+      reason: this.buildUnsupportedMessage(browser),
+    };
+  }
+
+  private getInitialState(): SerialState {
+    const support = this.support();
+    if (!support.supported) {
+      return { kind: 'unsupported', support };
+    }
+    return { kind: 'idle' };
+  }
+
+  private setUnsupportedState(support: SerialSupport): void {
+    this.stateSubject$.next({ kind: 'unsupported', support });
+  }
+
+  private createUnsupportedError(support: SerialSupport): SerialError {
+    return new SerialError(
+      SerialErrorCode.BROWSER_NOT_SUPPORTED,
+      support.supported
+        ? 'Web Serial API is supported'
+        : support.reason,
+    );
+  }
+
+  private buildUnsupportedMessage(browser: BrowserType): string {
+    const browserName =
+      browser === BrowserType.UNKNOWN ? 'your browser' : browser.toUpperCase();
+    return `Web Serial API is not supported in ${browserName}. Please use a Chromium-based browser (Chrome, Edge, or Opera).`;
   }
 }
