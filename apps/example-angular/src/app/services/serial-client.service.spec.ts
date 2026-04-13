@@ -29,9 +29,15 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
       ),
     ),
     requestPort: vi.fn(() => of({} as unknown as SerialPort)),
-    getReadStream: vi.fn(
-      () => of(new Uint8Array([72, 101, 108, 108, 111])), // "Hello"
-    ),
+    get bytes$() {
+      return of(new Uint8Array([72, 101, 108, 108, 111]));
+    },
+    get text$() {
+      return of('Hello');
+    },
+    get lines$() {
+      return of('Hello');
+    },
     write: vi.fn(() => of(undefined)),
     getPorts: vi.fn(() => of([])),
   };
@@ -156,7 +162,15 @@ describe('SerialClientService', () => {
       connect: vi.fn(() => throwError(() => new Error('Connection failed'))),
       disconnect: vi.fn(() => of(undefined)),
       requestPort: vi.fn(() => of({} as unknown as SerialPort)),
-      getReadStream: vi.fn(() => of(new Uint8Array())),
+      get bytes$() {
+        return of(new Uint8Array());
+      },
+      get text$() {
+        return of('');
+      },
+      get lines$() {
+        return of('');
+      },
       write: vi.fn(() => of(undefined)),
       getPorts: vi.fn(() => of([])),
     };

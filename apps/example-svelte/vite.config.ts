@@ -11,7 +11,7 @@ const workspaceRoot = resolve(__dirname, '../../../');
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../../node_modules/.vite/apps/example-svelte',
+  cacheDir: '../../node_modules/.vite/apps/example-svelte',
   plugins: [svelte(), nxViteTsPaths()],
   server: {
     port: 4220,

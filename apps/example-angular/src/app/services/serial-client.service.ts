@@ -103,14 +103,10 @@ export class SerialClientService implements OnDestroy {
       this.readSubscription = null;
     }
 
-    const readStream$ = this.client.getReadStream();
+    const readStream$ = this.client.text$;
 
     this.readSubscription = readStream$.subscribe({
-      next: (data: Uint8Array) => {
-        // Uint8Array をテキストに変換（UTF-8 デコード）
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const text = decoder.decode(data, { stream: true });
-
+      next: (text: string) => {
         // 受信データを追加
         this.receivedData$.next(this.receivedData$.value + text);
       },
