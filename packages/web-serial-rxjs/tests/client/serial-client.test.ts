@@ -26,7 +26,7 @@ describe('serial-client', () => {
   });
 
   it('broadcasts bytes$ chunks while connected', async () => {
-    let controller: ReadableStreamDefaultController<Uint8Array>;
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
     const readable = new ReadableStream<Uint8Array>({
       start(nextController) {
         controller = nextController;
@@ -59,7 +59,7 @@ describe('serial-client', () => {
 
   it('decodes text$ stream and writes text', async () => {
     const writes: Uint8Array[] = [];
-    let controller: ReadableStreamDefaultController<Uint8Array>;
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
     const readable = new ReadableStream<Uint8Array>({
       start(nextController) {
         controller = nextController;
@@ -95,7 +95,7 @@ describe('serial-client', () => {
   });
 
   it('parses newline-delimited lines$ across chunk boundaries', async () => {
-    let controller: ReadableStreamDefaultController<Uint8Array>;
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
     const readable = new ReadableStream<Uint8Array>({
       start(nextController) {
         controller = nextController;
