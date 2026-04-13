@@ -49,7 +49,7 @@ class ShellClientImpl implements ShellClient {
     this.lineEnding = options.lineEnding ?? DEFAULT_LINE_ENDING;
     this.promptRegex =
       this.prompt instanceof RegExp ? this.createAnchoredRegex(this.prompt) : null;
-    this.read$ = this.client.getReadStreamAsText().pipe(shareReplay(1));
+    this.read$ = this.client.text$.pipe(shareReplay(1));
 
     this.read$.subscribe({
       next: (chunk) => {

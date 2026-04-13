@@ -20,8 +20,8 @@ import { SerialState, SerialSupport } from './serial-state';
  *     console.log('Connected!');
  *
  *     // Read data
- *     client.getReadStream().subscribe({
- *       next: (data) => console.log('Received:', data),
+ *     client.text$.subscribe({
+ *       next: (text) => console.log('Received:', text),
  *     });
  *
  *     // Write data
@@ -139,40 +139,6 @@ export interface SerialClient {
    * ```
    */
   disconnect(): Observable<void>;
-
-  /**
-   * Get an Observable that emits data read from the serial port.
-   *
-   * Returns an Observable stream that emits Uint8Array chunks as data is received
-   * from the serial port. The stream will continue until the port is disconnected
-   * or an error occurs.
-   *
-   * @returns An Observable that emits Uint8Array chunks containing data read from the serial port
-   * @throws {@link SerialError} with code {@link SerialErrorCode.PORT_NOT_OPEN} if the port is not open
-   *
-   * @example
-   * ```typescript
-   * client.getReadStream().subscribe({
-   *   next: (data) => {
-   *     const text = new TextDecoder().decode(data);
-   *     console.log('Received:', text);
-   *   },
-   *   error: (error) => console.error('Read error:', error),
-   * });
-   * ```
-   */
-  getReadStream(): Observable<Uint8Array>;
-
-  /**
-   * Get an Observable that emits text read from the serial port.
-   *
-   * This is a convenience API on top of {@link getReadStream} that decodes bytes
-   * with TextDecoder and emits text chunks.
-   *
-   * @returns An Observable that emits decoded text chunks
-   * @throws {@link SerialError} with code {@link SerialErrorCode.PORT_NOT_OPEN} if the port is not open
-   */
-  getReadStreamAsText(): Observable<string>;
 
   /**
    * Get an Observable that emits received byte chunks.

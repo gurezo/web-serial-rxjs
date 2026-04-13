@@ -6,7 +6,6 @@ import {
   distinctUntilChanged,
   map,
   of,
-  share,
   switchMap,
   throwError,
 } from 'rxjs';
@@ -43,8 +42,6 @@ export class SerialClientImpl {
   private readSubscription: { unsubscribe: () => void } | null = null;
   /** @internal */
   private writeSubscription: { unsubscribe: () => void } | null = null;
-  /** @internal */
-  private sharedReadStream$: Observable<Uint8Array> | null = null;
   /** @internal */
   private textEncoder = new TextEncoder();
   /** @internal */
@@ -267,33 +264,6 @@ export class SerialClientImpl {
           throw serialError;
         });
     });
-  }
-
-  /**
-   * Get an Observable that emits data read from the serial port.
-   *
-   * @returns Observable that emits Uint8Array chunks
-   * @internal
-   */
-  getReadStream(): Observable<Uint8Array> {
-    if (!this.isOpen || !this.port || !this.port.readable) {
-      throw new SerialError(
-        SerialErrorCode.PORT_NOT_OPEN,
-        'Port is not open or readable stream is not available',
-      );
-    }
-
-    return this.bytes$;
-  }
-
-  /**
-   * Get an Observable that emits decoded text from the serial port.
-   *
-   * @returns Observable that emits text chunks
-   * @internal
-   */
-  getReadStreamAsText(): Observable<string> {
-    return this.text$;
   }
 
   /**
@@ -580,7 +550,6 @@ export class SerialClientImpl {
   }
 
   private resetReceiveState(): void {
-    this.sharedReadStream$ = null;
     this.textDecoder = new TextDecoder();
     this.lineBuffer = '';
   }
