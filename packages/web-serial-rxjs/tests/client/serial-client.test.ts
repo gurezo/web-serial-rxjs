@@ -100,6 +100,7 @@ describe('serial-client', () => {
     } as unknown as SerialPort;
 
     const client = createSerialClient();
+    const serialStatesPromise = firstValueFrom(client.state$.pipe(take(4), toArray()));
     const statesPromise = firstValueFrom(client.connected$.pipe(take(3), toArray()));
     const eventsPromise = firstValueFrom(
       client.connectionEvents$.pipe(take(2), toArray()),
@@ -108,7 +109,42 @@ describe('serial-client', () => {
     await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
     await firstValueFrom(client.disconnect().pipe(defaultIfEmpty(undefined)));
 
+    await expect(serialStatesPromise).resolves.toEqual([
+      { kind: 'idle' },
+      { kind: 'connecting' },
+      { kind: 'connected' },
+      { kind: 'disconnecting' },
+    ]);
     await expect(statesPromise).resolves.toEqual([false, true, false]);
     await expect(eventsPromise).resolves.toEqual(['connected', 'disconnected']);
+  });
+
+  it('emits unsupported state and errors in unsupported browsers', async () => {
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      writable: true,
+      value: {},
+    });
+
+    const client = createSerialClient();
+    const support = client.support();
+    expect(support.supported).toBe(false);
+
+    const statePromise = firstValueFrom(client.state$.pipe(take(1)));
+    await expect(statePromise).resolves.toMatchObject({
+      kind: 'unsupported',
+      support: { supported: false },
+    });
+
+    const errorsPromise = firstValueFrom(client.errors$.pipe(take(1)));
+    await expect(
+      firstValueFrom(client.connect().pipe(defaultIfEmpty(undefined))),
+    ).rejects.toMatchObject({
+      name: 'SerialError',
+      code: 'BROWSER_NOT_SUPPORTED',
+    });
+    await expect(errorsPromise).resolves.toMatchObject({
+      code: 'BROWSER_NOT_SUPPORTED',
+    });
   });
 });
