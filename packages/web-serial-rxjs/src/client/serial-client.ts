@@ -1,12 +1,16 @@
 import {
   BehaviorSubject,
+  EMPTY,
   Observable,
   Subject,
+  catchError,
+  concatMap,
   defer,
   distinctUntilChanged,
   map,
   of,
   switchMap,
+  tap,
   throwError,
 } from 'rxjs';
 import {
@@ -16,7 +20,6 @@ import {
 } from '../browser/browser-detection';
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { buildRequestOptions } from '../filters/build-request-options';
-import { subscribeToWritable } from '../io/observable-to-writable';
 import { readableToObservable } from '../io/readable-to-observable';
 import {
   DEFAULT_SERIAL_CLIENT_OPTIONS,
@@ -41,8 +44,6 @@ export class SerialClientImpl {
   /** @internal */
   private readSubscription: { unsubscribe: () => void } | null = null;
   /** @internal */
-  private writeSubscription: { unsubscribe: () => void } | null = null;
-  /** @internal */
   private textEncoder = new TextEncoder();
   /** @internal */
   private textDecoder = new TextDecoder();
@@ -54,6 +55,26 @@ export class SerialClientImpl {
   private readonly textSubject$ = new Subject<string>();
   /** @internal */
   private readonly linesSubject$ = new Subject<string>();
+  /** @internal */
+  private readonly outboundSubject$ = new Subject<{
+    payload: Uint8Array;
+    onComplete: () => void;
+    onError: (error: unknown) => void;
+  }>();
+  /** @internal */
+  private readonly outboundSubscription = this.outboundSubject$
+    .pipe(
+      concatMap((job) =>
+        this.write(job.payload).pipe(
+          tap({ complete: job.onComplete }),
+          catchError((error) => {
+            job.onError(error);
+            return EMPTY;
+          }),
+        ),
+      ),
+    )
+    .subscribe();
   /** @internal */
   private readonly stateSubject$: BehaviorSubject<SerialState>;
   /** @internal */
@@ -236,11 +257,6 @@ export class SerialClientImpl {
       }
       this.resetReceiveState();
 
-      if (this.writeSubscription) {
-        this.writeSubscription.unsubscribe();
-        this.writeSubscription = null;
-      }
-
       // Close the port
       return this.port
         .close()
@@ -266,62 +282,27 @@ export class SerialClientImpl {
     });
   }
 
-  /**
-   * Write data to the serial port from an Observable.
-   *
-   * @param data$ - Observable that emits Uint8Array chunks to write
-   * @returns Observable that completes when writing is finished
-   * @internal
-   */
-  writeStream(data$: Observable<Uint8Array>): Observable<void> {
-    if (!this.isOpen || !this.port || !this.port.writable) {
-      throw new SerialError(
-        SerialErrorCode.PORT_NOT_OPEN,
-        'Port is not open or writable stream is not available',
-      );
-    }
-
-    // Cancel previous write subscription if exists
-    if (this.writeSubscription) {
-      this.writeSubscription.unsubscribe();
-    }
-
-    this.writeSubscription = subscribeToWritable(data$, this.port.writable);
-
+  send$(data: string | Uint8Array): Observable<void> {
     return new Observable<void>((subscriber) => {
-      // The subscription is already active, we just need to track completion
-      if (!this.writeSubscription) {
+      if (!this.isOpen || !this.port || !this.port.writable) {
         subscriber.error(
           new SerialError(
-            SerialErrorCode.WRITE_FAILED,
-            'Write subscription is not available',
+            SerialErrorCode.PORT_NOT_OPEN,
+            'Port is not open or writable stream is not available',
           ),
         );
         return;
       }
-      const originalUnsubscribe = this.writeSubscription.unsubscribe;
 
-      this.writeSubscription = {
-        unsubscribe: () => {
-          originalUnsubscribe();
+      const payload =
+        typeof data === 'string' ? this.textEncoder.encode(data) : data;
+      this.outboundSubject$.next({
+        payload,
+        onComplete: () => {
+          subscriber.next();
           subscriber.complete();
         },
-      };
-
-      // If the observable completes, complete the subscriber
-      data$.subscribe({
-        complete: () => {
-          if (this.writeSubscription) {
-            this.writeSubscription.unsubscribe();
-            this.writeSubscription = null;
-          }
-          subscriber.complete();
-        },
-        error: (error) => {
-          if (this.writeSubscription) {
-            this.writeSubscription.unsubscribe();
-            this.writeSubscription = null;
-          }
+        onError: (error) => {
           subscriber.error(error);
         },
       });
@@ -369,7 +350,7 @@ export class SerialClientImpl {
    * @internal
    */
   writeText(data: string): Observable<void> {
-    return this.write(this.textEncoder.encode(data));
+    return this.send$(data);
   }
 
   /**
