@@ -94,6 +94,68 @@ describe('serial-client', () => {
     expect(new TextDecoder().decode(writes[0])).toBe('ok');
   });
 
+  it('serializes concurrent send$ calls in order', async () => {
+    const writes: string[] = [];
+    let firstWriteStarted = false;
+    let firstWriteDone = false;
+    let secondWriteStartedBeforeFirstDone = false;
+    const writable = new WritableStream<Uint8Array>({
+      async write(chunk) {
+        const text = new TextDecoder().decode(chunk);
+        writes.push(text);
+        if (text === 'first') {
+          firstWriteStarted = true;
+          await new Promise((resolve) => setTimeout(resolve, 20));
+          firstWriteDone = true;
+          return;
+        }
+        if (text === 'second' && firstWriteStarted && !firstWriteDone) {
+          secondWriteStartedBeforeFirstDone = true;
+        }
+      },
+    });
+    const port = {
+      readable: new ReadableStream<Uint8Array>({}),
+      writable,
+      open: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SerialPort;
+
+    const client = createSerialClient();
+    await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
+
+    await Promise.all([
+      firstValueFrom(client.send$('first').pipe(defaultIfEmpty(undefined))),
+      firstValueFrom(client.send$('second').pipe(defaultIfEmpty(undefined))),
+    ]);
+
+    expect(writes).toEqual(['first', 'second']);
+    expect(secondWriteStartedBeforeFirstDone).toBe(false);
+  });
+
+  it('propagates write errors through send$', async () => {
+    const port = {
+      readable: new ReadableStream<Uint8Array>({}),
+      writable: new WritableStream<Uint8Array>({
+        write() {
+          throw new Error('boom');
+        },
+      }),
+      open: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SerialPort;
+
+    const client = createSerialClient();
+    await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
+
+    await expect(
+      firstValueFrom(client.send$('bad').pipe(defaultIfEmpty(undefined))),
+    ).rejects.toMatchObject({
+      name: 'SerialError',
+      code: 'WRITE_FAILED',
+    });
+  });
+
   it('parses newline-delimited lines$ across chunk boundaries', async () => {
     let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
     const readable = new ReadableStream<Uint8Array>({
