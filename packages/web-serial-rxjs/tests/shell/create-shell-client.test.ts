@@ -15,7 +15,7 @@ function createMockClient(
     bytes$: of(new Uint8Array()),
     text$: readSubject.asObservable(),
     lines$: of(''),
-    writeStream: vi.fn(),
+    send$: vi.fn(),
     write: vi.fn(),
     writeText: writeTextImpl,
     connected: true,
