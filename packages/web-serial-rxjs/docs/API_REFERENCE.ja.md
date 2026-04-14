@@ -1,5 +1,15 @@
 # API リファレンス
 
+## 推奨公開 API
+
+v1 で通常のアプリ実装に推奨される公開面は次のとおりです。
+
+- `createSerialClient`
+- `SerialClient`
+- `SerialState`
+
+`createShellClient`、`observableToWritable`、`subscribeToWritable` などは引き続き利用可能ですが、特殊用途向けの上級 API / 互換 API として位置づけます。
+
 ## `createSerialClient(options?)`
 
 新しい `SerialClient` インスタンスを作成します。

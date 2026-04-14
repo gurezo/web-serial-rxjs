@@ -1,5 +1,15 @@
 # API Reference
 
+## Recommended Public API
+
+The v1 recommended surface for application code is:
+
+- `createSerialClient`
+- `SerialClient`
+- `SerialState`
+
+Advanced/compatibility exports such as `createShellClient`, `observableToWritable`, and `subscribeToWritable` remain available, but are intended for specialized use cases.
+
 ## `createSerialClient(options?)`
 
 Creates a new `SerialClient` instance.
