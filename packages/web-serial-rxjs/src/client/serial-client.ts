@@ -73,10 +73,6 @@ export class SerialClientImpl {
   /** @internal */
   private readonly errorsSubject$ = new Subject<SerialError>();
   /** @internal */
-  private readonly connectionEventsSubject$ = new Subject<
-    'connected' | 'disconnected'
-  >();
-  /** @internal */
   private readonly options: Required<Omit<SerialClientOptions, 'filters'>> & {
     filters?: SerialClientOptions['filters'];
   };
@@ -205,7 +201,6 @@ export class SerialClientImpl {
               this.isOpen = true;
               this.startReadPump();
               this.stateSubject$.next({ kind: 'connected' });
-              this.connectionEventsSubject$.next('connected');
             })
             .catch((error) => {
               this.port = null;
@@ -257,7 +252,6 @@ export class SerialClientImpl {
           this.port = null;
           this.isOpen = false;
           this.stateSubject$.next({ kind: 'idle' });
-          this.connectionEventsSubject$.next('disconnected');
         })
         .catch((error) => {
           this.port = null;
@@ -425,16 +419,6 @@ export class SerialClientImpl {
    */
   get errors$(): Observable<SerialError> {
     return this.errorsSubject$.asObservable();
-  }
-
-  /**
-   * Get an Observable that emits connection lifecycle events.
-   *
-   * @returns Observable that emits 'connected' or 'disconnected'
-   * @internal
-   */
-  get connectionEvents$(): Observable<'connected' | 'disconnected'> {
-    return this.connectionEventsSubject$.asObservable();
   }
 
   /**

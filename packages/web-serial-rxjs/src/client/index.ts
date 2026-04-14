@@ -267,13 +267,6 @@ export interface SerialClient {
   readonly errors$: Observable<SerialError>;
 
   /**
-   * Reactive connection event stream.
-   *
-   * Emits `'connected'` on successful connection and `'disconnected'` on disconnection.
-   */
-  readonly connectionEvents$: Observable<'connected' | 'disconnected'>;
-
-  /**
    * Get the current SerialPort instance.
    *
    * Returns the currently connected SerialPort instance, or `null` if no port is open.

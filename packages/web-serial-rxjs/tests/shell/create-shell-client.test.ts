@@ -5,7 +5,7 @@ import { createShellClient } from '../../src/shell';
 
 function createMockClient(
   readSubject: Subject<string>,
-  writeTextImpl: (text: string) => Observable<void>,
+  sendImpl: (text: string) => Observable<void>,
 ): SerialClient {
   return {
     requestPort: vi.fn(),
@@ -15,16 +15,15 @@ function createMockClient(
     bytes$: of(new Uint8Array()),
     text$: readSubject.asObservable(),
     lines$: of(''),
-    send$: vi.fn(),
+    send$: sendImpl,
     command$: vi.fn(),
     transact$: vi.fn(),
     write: vi.fn(),
-    writeText: writeTextImpl,
+    writeText: vi.fn(),
     connected: true,
     connected$: of(true),
     state$: of({ kind: 'connected' }),
     errors$: new Subject(),
-    connectionEvents$: of('connected'),
     currentPort: null,
   } as unknown as SerialClient;
 }
