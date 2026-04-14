@@ -32,12 +32,12 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
         }, 0);
       }),
     })),
-    getReadStream: vi.fn(() => ({
+    text$: {
       subscribe: vi.fn(() => ({
         unsubscribe: vi.fn(),
       })),
     })),
-    write: vi.fn(() => ({
+    send$: vi.fn(() => ({
       subscribe: vi.fn((observer) => {
         setTimeout(() => {
           observer.next();

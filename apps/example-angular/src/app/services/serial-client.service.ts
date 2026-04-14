@@ -328,8 +328,7 @@ export class SerialClientService implements OnDestroy {
     }
 
     // テキストを Uint8Array に変換（UTF-8 エンコード）
-    const encoder = new TextEncoder();
-    const encodedData = encoder.encode(text + '\n'); // 改行を追加
+    const payload = `${text}\n`;
 
     return new Observable<void>((observer) => {
       if (!this.client) {
@@ -337,7 +336,7 @@ export class SerialClientService implements OnDestroy {
         return;
       }
 
-      const subscription = this.client.write(encodedData).subscribe({
+      const subscription = this.client.send$(payload).subscribe({
         next: () => {
           observer.next();
           observer.complete();
