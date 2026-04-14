@@ -61,12 +61,6 @@ Disconnects from the serial port.
 
 **Returns:** `Observable<void>` - Completes when the port is closed
 
-#### `text$: Observable<Uint8Array>`
-
-Gets an Observable that emits data read from the serial port.
-
-**Returns:** `Observable<Uint8Array>` - Emits `Uint8Array` chunks as data is received
-
 #### `text$: Observable<string>`
 
 Gets an Observable that emits decoded text from the serial port.
@@ -74,6 +68,14 @@ Gets an Observable that emits decoded text from the serial port.
 The stream is decoded with `TextDecoder` internally so consumers do not need to decode chunks manually.
 
 **Returns:** `Observable<string>` - Emits text chunks as data is received
+
+#### `lines$: Observable<string>`
+
+Gets an Observable that emits line-based text from the serial port.
+
+Each line is emitted when a newline is received (`\n` or `\r\n`).
+
+**Returns:** `Observable<string>` - Emits complete lines without trailing newline
 
 #### `send$(data: string | Uint8Array): Observable<void>`
 
@@ -87,7 +89,9 @@ Enqueues data for ordered writes to the serial port.
 
 #### `write(data: Uint8Array): Observable<void>`
 
-Writes a single chunk of data to the serial port.
+Writes a single chunk of data to the serial port (low-level API).
+
+Prefer `send$` for application-level writes and ordering.
 
 **Parameters:**
 
@@ -97,9 +101,9 @@ Writes a single chunk of data to the serial port.
 
 #### `writeText(data: string): Observable<void>`
 
-Writes a text payload to the serial port.
+Writes a text payload to the serial port (compatibility API).
 
-The text is encoded with `TextEncoder` internally.
+Prefer `send$` for new code.
 
 **Parameters:**
 
@@ -111,9 +115,8 @@ The text is encoded with `TextEncoder` internally.
 
 - `connected: boolean` - Read-only property indicating if the port is currently open
 - `connected$: Observable<boolean>` - Reactive connection state stream (`true` when connected, `false` when disconnected)
-- `state$: Observable<SerialState>` - Detailed lifecycle state stream (`idle`, `unsupported`, `connecting`, `connected`, `disconnecting`, `error`)
+- `state$: Observable<SerialState>` - State-machine lifecycle stream (`idle`, `unsupported`, `connecting`, `connected`, `disconnecting`, `error`)
 - `errors$: Observable<SerialError>` - Aggregated error stream emitted by the client
-- `state$: Observable<'connected' | 'disconnected'>` - Reactive lifecycle events for connect/disconnect
 - `currentPort: SerialPort | null` - Read-only property with the current `SerialPort` instance, or `null` if not connected
 
 ## `createShellClient(client, options)`
