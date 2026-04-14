@@ -1,57 +1,106 @@
 # Advanced Usage
 
-## Observable Patterns
+## Reactive Receive Patterns
 
-You can use RxJS operators to process serial data:
+Use `text$` and `lines$` directly without manual decoding:
 
 ```typescript
-import { map, filter, bufferTime } from 'rxjs/operators';
+import { bufferTime, filter } from 'rxjs/operators';
 
 client
-  .text$
+  .lines$
   .pipe(
-    map((data: Uint8Array) => {
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(data);
-    }),
-    filter((text) => text.trim().length > 0),
-    bufferTime(1000), // Buffer messages for 1 second
+    filter((line) => line.trim().length > 0),
+    bufferTime(1000), // Collect lines for 1 second
   )
   .subscribe({
-    next: (messages) => {
-      console.log('Buffered messages:', messages);
+    next: (lines) => {
+      console.log('Buffered lines:', lines);
     },
   });
 ```
 
-## Stream Processing
+## Ordered Command Execution
 
-Process data streams with RxJS operators:
+`send$` and `command$` are serialized internally, so concurrent calls are processed in order:
 
 ```typescript
-import { map, scan, debounceTime } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 
-// Accumulate received data
-client
-  .text$
-  .pipe(
-    map((data: Uint8Array) => {
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(data);
-    }),
-    scan((acc, current) => acc + current, ''),
-    debounceTime(500),
-  )
+const commands = ['help', 'status', 'version'];
+
+from(commands)
+  .pipe(concatMap((command) => client.command$(command)))
   .subscribe({
-    next: (accumulated) => {
-      console.log('Accumulated data:', accumulated);
+    next: ({ stdout }) => {
+      console.log('Command output:', stdout);
+    },
+    error: (error) => {
+      console.error('Command failed:', error);
     },
   });
 ```
 
-## Custom Filters
+## Request/Response Transactions
 
-Use port filters to limit available ports:
+`transact$` wraps custom request/response parsing in one operation:
+
+```typescript
+client
+  .transact$({
+    payload: 'read-temp',
+    prompt: /device>\s$/,
+    timeout: 5000,
+    collect: (stdout) => {
+      const match = stdout.match(/TEMP:\s*([0-9.]+)/);
+      if (!match) {
+        throw new Error('Temperature field was not found');
+      }
+      return Number.parseFloat(match[1]);
+    },
+  })
+  .subscribe({
+    next: (temperature) => {
+      console.log('Temperature:', temperature);
+    },
+    error: (error) => {
+      console.error('Transaction failed:', error);
+    },
+  });
+```
+
+## State and Error Streams
+
+Use `state$` and `errors$` to keep UI/state machines simple:
+
+```typescript
+client.state$.subscribe((state) => {
+  switch (state.kind) {
+    case 'connecting':
+    case 'connected':
+    case 'disconnecting':
+      console.log('State:', state.kind);
+      break;
+    case 'unsupported':
+      console.warn('Unsupported browser:', state.support.reason);
+      break;
+    case 'error':
+      console.error('Serial state error:', state.error.message);
+      break;
+    default:
+      console.log('State:', state.kind);
+  }
+});
+
+client.errors$.subscribe((error) => {
+  console.error('Serial error stream:', error.code, error.message);
+});
+```
+
+## Port Filters
+
+Use filters when you need to narrow selectable ports:
 
 ```typescript
 const client = createSerialClient({
@@ -61,33 +110,4 @@ const client = createSerialClient({
     { usbVendorId: 0xabcd },
   ],
 });
-```
-
-## Error Recovery
-
-Implement error recovery patterns:
-
-```typescript
-import { retry, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
-
-client
-  .text$
-  .pipe(
-    retry({
-      count: 3,
-      delay: 1000,
-    }),
-    catchError((error) => {
-      console.error('Failed after retries:', error);
-      return of(null); // Return empty observable
-    }),
-  )
-  .subscribe({
-    next: (data) => {
-      if (data) {
-        console.log('Received:', data);
-      }
-    },
-  });
 ```
