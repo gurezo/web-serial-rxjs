@@ -62,6 +62,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   let client: SerialClient | null = null;
   let readSubscription: Subscription | null = null;
+  let stateSubscription: Subscription | null = null;
   let baudRate = initialBaudRate;
 
   // ブラウザサポートをチェック
@@ -72,6 +73,10 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     if (readSubscription) {
       readSubscription.unsubscribe();
       readSubscription = null;
+    }
+    if (stateSubscription) {
+      stateSubscription.unsubscribe();
+      stateSubscription = null;
     }
     if (client?.connected) {
       client.disconnect().subscribe();
@@ -126,6 +131,37 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     }
   };
 
+  const subscribeState = () => {
+    if (!client) {
+      return;
+    }
+    if (stateSubscription) {
+      stateSubscription.unsubscribe();
+    }
+    stateSubscription = client.state$.subscribe((state) => {
+      if (state.kind === 'error') {
+        connectionState.set({
+          connected: false,
+          connecting: false,
+          disconnecting: false,
+          error: `エラー: ${state.error.message}`,
+        });
+        return;
+      }
+
+      connectionState.update((prev) => ({
+        ...prev,
+        connected: state.kind === 'connected',
+        connecting: state.kind === 'connecting',
+        disconnecting: state.kind === 'disconnecting',
+        error:
+          state.kind === 'unsupported' && !state.support.supported
+            ? state.support.reason
+            : null,
+      }));
+    });
+  };
+
   /**
    * 接続を開始
    */
@@ -138,14 +174,8 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       client = createSerialClient({
         baudRate: baudRate,
       });
+      subscribeState();
     }
-
-    connectionState.set({
-      connected: false,
-      connecting: true,
-      disconnecting: false,
-      error: null,
-    });
 
     return new Promise((resolve, reject) => {
       if (!client) {
@@ -155,12 +185,6 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
       client.connect().subscribe({
         next: () => {
-          connectionState.set({
-            connected: true,
-            connecting: false,
-            disconnecting: false,
-            error: null,
-          });
           startReading();
           resolve();
         },
@@ -193,11 +217,6 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
     stopReading();
 
-    connectionState.update((prev) => ({
-      ...prev,
-      disconnecting: true,
-    }));
-
     return new Promise((resolve, reject) => {
       if (!client) {
         resolve();
@@ -206,12 +225,6 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
       client.disconnect().subscribe({
         next: () => {
-          connectionState.set({
-            connected: false,
-            connecting: false,
-            disconnecting: false,
-            error: null,
-          });
           resolve();
         },
         error: (error: unknown) => {
