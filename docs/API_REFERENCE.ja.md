@@ -55,7 +55,7 @@ const client = createSerialClient({
 
 **戻り値:** `Observable<void>` - ポートが閉じられたときに完了
 
-#### `getReadStream(): Observable<Uint8Array>`
+#### `text$: Observable<Uint8Array>`
 
 シリアルポートから読み取ったデータを発行する Observable を取得します。
 

@@ -23,7 +23,7 @@ client.connect().subscribe({
     console.log('シリアルポートに接続しました');
 
     // シリアルポートからデータを読み取る
-    client.getReadStream().subscribe({
+    client.text$.subscribe({
       next: (data: Uint8Array) => {
         const decoder = new TextDecoder('utf-8');
         const text = decoder.decode(data);
@@ -81,7 +81,7 @@ client.connect().subscribe({
   next: () => {
     // データを読み取ってデコード
     client
-      .getReadStream()
+      .text$
       .pipe(
         map((data: Uint8Array) => {
           const decoder = new TextDecoder('utf-8');

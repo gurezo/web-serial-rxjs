@@ -23,7 +23,7 @@ client.connect().subscribe({
     console.log('Connected to serial port');
 
     // Read data from the serial port
-    client.getReadStream().subscribe({
+    client.text$.subscribe({
       next: (data: Uint8Array) => {
         const decoder = new TextDecoder('utf-8');
         const text = decoder.decode(data);
@@ -81,7 +81,7 @@ client.connect().subscribe({
   next: () => {
     // Read and decode data
     client
-      .getReadStream()
+      .text$
       .pipe(
         map((data: Uint8Array) => {
           const decoder = new TextDecoder('utf-8');

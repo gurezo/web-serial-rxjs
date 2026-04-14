@@ -77,6 +77,7 @@ pnpm add rxjs
 - **[Quick Start](docs/QUICK_START.md)** - Get started with basic examples and usage patterns
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
 - **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
+- **[Migration Guide (Phase5)](docs/MIGRATION_PHASE5.md)** - Legacy API cleanup and migration mapping
 
 ## Examples
 
