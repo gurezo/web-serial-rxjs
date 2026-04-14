@@ -47,7 +47,14 @@ export { createSerialClient } from './client';
 export { createShellClient } from './shell';
 
 // Type exports
-export type { SerialClient, SerialState, SerialSupport } from './client';
+export type {
+  CommandResult,
+  SerialClient,
+  SerialCommandOptions,
+  SerialRequest,
+  SerialState,
+  SerialSupport,
+} from './client';
 export type { ShellClient, ShellClientOptions, ShellExecResult } from './shell';
 
 // Error exports

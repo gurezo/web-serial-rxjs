@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialClientOptions } from '../types/options';
+import type {
+  CommandResult,
+  SerialCommandOptions,
+  SerialRequest,
+} from './protocol';
 import { SerialClientImpl } from './serial-client';
 import { SerialState, SerialSupport } from './serial-state';
 
@@ -181,6 +186,23 @@ export interface SerialClient {
   send$(data: string | Uint8Array): Observable<void>;
 
   /**
+   * Execute a command and collect output until prompt.
+   *
+   * @param command - Command text to send
+   * @param options - Prompt matching and timeout options
+   * @returns An Observable that emits captured stdout
+   */
+  command$(command: string, options?: SerialCommandOptions): Observable<CommandResult>;
+
+  /**
+   * Execute a protocol transaction with custom response collector.
+   *
+   * @param request - Transaction request options
+   * @returns An Observable that emits collected value
+   */
+  transact$<T>(request: SerialRequest<T>): Observable<T>;
+
+  /**
    * Write a single chunk of data to the serial port.
    *
    * Writes a single Uint8Array chunk to the serial port immediately.
@@ -266,6 +288,11 @@ export interface SerialClient {
  * Browser support information for Web Serial API.
  */
 export type { SerialState, SerialSupport };
+export type {
+  CommandResult,
+  SerialCommandOptions,
+  SerialRequest,
+} from './protocol';
 
 /**
  * Create a new SerialClient instance for interacting with serial ports.

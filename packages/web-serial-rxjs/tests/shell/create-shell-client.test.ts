@@ -16,6 +16,8 @@ function createMockClient(
     text$: readSubject.asObservable(),
     lines$: of(''),
     send$: vi.fn(),
+    command$: vi.fn(),
+    transact$: vi.fn(),
     write: vi.fn(),
     writeText: writeTextImpl,
     connected: true,

@@ -243,4 +243,136 @@ describe('serial-client', () => {
       code: 'BROWSER_NOT_SUPPORTED',
     });
   });
+
+  it('executes command$ and collects stdout until prompt', async () => {
+    const writes: string[] = [];
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const readable = new ReadableStream<Uint8Array>({
+      start(nextController) {
+        controller = nextController;
+      },
+    });
+    const writable = new WritableStream<Uint8Array>({
+      write(chunk) {
+        writes.push(new TextDecoder().decode(chunk));
+      },
+    });
+    const port = {
+      readable,
+      writable,
+      open: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SerialPort;
+    const client = createSerialClient();
+    await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
+
+    const resultPromise = firstValueFrom(client.command$('status'));
+    if (!controller) {
+      throw new Error('Readable stream controller was not initialized');
+    }
+    controller.enqueue(new TextEncoder().encode('ok\n$ '));
+
+    await expect(resultPromise).resolves.toEqual({ stdout: 'ok' });
+    expect(writes[0]).toBe('status\r\n');
+  });
+
+  it('executes transact$ with custom collect function', async () => {
+    const writes: string[] = [];
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const readable = new ReadableStream<Uint8Array>({
+      start(nextController) {
+        controller = nextController;
+      },
+    });
+    const writable = new WritableStream<Uint8Array>({
+      write(chunk) {
+        writes.push(new TextDecoder().decode(chunk));
+      },
+    });
+    const port = {
+      readable,
+      writable,
+      open: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SerialPort;
+    const client = createSerialClient();
+    await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
+
+    const resultPromise = firstValueFrom(
+      client.transact$({
+        payload: 'whoami',
+        prompt: '> ',
+        collect: (stdout) => stdout.split(':')[1],
+      }),
+    );
+    if (!controller) {
+      throw new Error('Readable stream controller was not initialized');
+    }
+    controller.enqueue(new TextEncoder().encode('user:root> '));
+
+    await expect(resultPromise).resolves.toBe('root');
+    expect(writes[0]).toBe('whoami\r\n');
+  });
+
+  it('returns timeout error when command$ prompt is not received', async () => {
+    const port = {
+      readable: new ReadableStream<Uint8Array>({}),
+      writable: new WritableStream<Uint8Array>({}),
+      open: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SerialPort;
+    const client = createSerialClient();
+    await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
+
+    await expect(
+      firstValueFrom(client.command$('timeout', { timeout: 5 })),
+    ).rejects.toMatchObject({
+      name: 'SerialError',
+      code: 'OPERATION_TIMEOUT',
+    });
+  });
+
+  it('serializes command$ and send$ on a single queue', async () => {
+    const writes: string[] = [];
+    let promptSent = false;
+    let sendStartedBeforePrompt = false;
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const readable = new ReadableStream<Uint8Array>({
+      start(nextController) {
+        controller = nextController;
+      },
+    });
+    const writable = new WritableStream<Uint8Array>({
+      write(chunk) {
+        const text = new TextDecoder().decode(chunk);
+        writes.push(text);
+        if (text === 'tail' && !promptSent) {
+          sendStartedBeforePrompt = true;
+        }
+      },
+    });
+    const port = {
+      readable,
+      writable,
+      open: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SerialPort;
+    const client = createSerialClient();
+    await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
+
+    const commandPromise = firstValueFrom(client.command$('cmd'));
+    const sendPromise = firstValueFrom(client.send$('tail').pipe(defaultIfEmpty(undefined)));
+    if (!controller) {
+      throw new Error('Readable stream controller was not initialized');
+    }
+    setTimeout(() => {
+      promptSent = true;
+      controller.enqueue(new TextEncoder().encode('done$ '));
+    }, 20);
+
+    await Promise.all([commandPromise, sendPromise]);
+
+    expect(writes).toEqual(['cmd\r\n', 'tail']);
+    expect(sendStartedBeforePrompt).toBe(false);
+  });
 });

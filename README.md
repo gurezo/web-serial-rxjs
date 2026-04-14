@@ -23,8 +23,9 @@ A TypeScript library that provides a reactive RxJS-based wrapper for the Web Ser
 ## Features
 
 - **RxJS-based reactive API**: Leverage the power of RxJS Observables for reactive serial port communication
-- **Text-friendly API**: Use `text$`/`lines$` and `writeText()` without manual encoding/decoding
-- **Shell utility layer**: Execute command/prompt workflows with `createShellClient()`
+- **Text-friendly API**: Use `text$`/`lines$`, `send$()`, and `writeText()` without manual encoding/decoding
+- **Built-in protocol API**: Execute request/response workflows with `command$()` and `transact$()`
+- **Shell utility layer**: `createShellClient()` remains available for shell-oriented helpers
 - **TypeScript support**: Full TypeScript type definitions included
 - **Browser detection**: Built-in browser support detection and error handling
 - **Error handling**: Comprehensive error handling with custom error classes and error codes

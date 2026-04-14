@@ -130,6 +130,14 @@ export enum SerialErrorCode {
   OPERATION_CANCELLED = 'OPERATION_CANCELLED',
 
   /**
+   * Operation timed out before completion.
+   *
+   * This error occurs when an operation waits for a condition (for example, prompt
+   * detection) and the timeout period elapses first.
+   */
+  OPERATION_TIMEOUT = 'OPERATION_TIMEOUT',
+
+  /**
    * Unknown error occurred.
    *
    * This error code is used for errors that don't fit into any other category.
