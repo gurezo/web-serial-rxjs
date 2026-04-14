@@ -38,7 +38,7 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
     get lines$() {
       return of('Hello');
     },
-    write: vi.fn(() => of(undefined)),
+    send$: vi.fn(() => of(undefined)),
     getPorts: vi.fn(() => of([])),
   };
 
@@ -171,7 +171,7 @@ describe('SerialClientService', () => {
       get lines$() {
         return of('');
       },
-      write: vi.fn(() => of(undefined)),
+      send$: vi.fn(() => of(undefined)),
       getPorts: vi.fn(() => of([])),
     };
 

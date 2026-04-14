@@ -36,7 +36,7 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
       subscribe: vi.fn(() => ({
         unsubscribe: vi.fn(),
       })),
-    })),
+    },
     send$: vi.fn(() => ({
       subscribe: vi.fn((observer) => {
         setTimeout(() => {
