@@ -8,7 +8,7 @@ RxJS オペレーターを使用してシリアルデータを処理できます
 import { map, filter, bufferTime } from 'rxjs/operators';
 
 client
-  .getReadStream()
+  .text$
   .pipe(
     map((data: Uint8Array) => {
       const decoder = new TextDecoder('utf-8');
@@ -33,7 +33,7 @@ import { map, scan, debounceTime } from 'rxjs/operators';
 
 // 受信データを累積
 client
-  .getReadStream()
+  .text$
   .pipe(
     map((data: Uint8Array) => {
       const decoder = new TextDecoder('utf-8');
@@ -72,7 +72,7 @@ import { retry, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 client
-  .getReadStream()
+  .text$
   .pipe(
     retry({
       count: 3,

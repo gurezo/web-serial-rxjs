@@ -128,7 +128,7 @@ class ShellClientImpl implements ShellClient {
   }
 
   private async writeText(text: string): Promise<void> {
-    await firstValueFrom(this.client.writeText(text).pipe(defaultIfEmpty(undefined)));
+    await firstValueFrom(this.client.send$(text).pipe(defaultIfEmpty(undefined)));
   }
 
   private waitUntilPrompt(timeoutMs: number): Promise<string> {

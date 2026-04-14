@@ -185,7 +185,7 @@ describe('serial-client', () => {
     await expect(linesPromise).resolves.toEqual(['foo', 'bar', 'baz']);
   });
 
-  it('emits reactive connection states and events', async () => {
+  it('emits reactive connection states', async () => {
     const readable = new ReadableStream<Uint8Array>({});
     const writable = new WritableStream<Uint8Array>({});
     const port = {
@@ -198,9 +198,6 @@ describe('serial-client', () => {
     const client = createSerialClient();
     const serialStatesPromise = firstValueFrom(client.state$.pipe(take(4), toArray()));
     const statesPromise = firstValueFrom(client.connected$.pipe(take(3), toArray()));
-    const eventsPromise = firstValueFrom(
-      client.connectionEvents$.pipe(take(2), toArray()),
-    );
 
     await firstValueFrom(client.connect(port).pipe(defaultIfEmpty(undefined)));
     await firstValueFrom(client.disconnect().pipe(defaultIfEmpty(undefined)));
@@ -212,7 +209,6 @@ describe('serial-client', () => {
       { kind: 'disconnecting' },
     ]);
     await expect(statesPromise).resolves.toEqual([false, true, false]);
-    await expect(eventsPromise).resolves.toEqual(['connected', 'disconnected']);
   });
 
   it('emits unsupported state and errors in unsupported browsers', async () => {

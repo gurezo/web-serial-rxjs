@@ -80,16 +80,16 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
         },
       ),
     })) as unknown as () => Observable<SerialPort>,
-    getReadStream: vi.fn(() => ({
+    text$: {
       subscribe: vi.fn(() => ({
         unsubscribe: vi.fn(),
       })) as unknown as (observer: {
-        next?: (data: Uint8Array) => void;
+        next?: (text: string) => void;
         error?: (error: unknown) => void;
         complete?: () => void;
       }) => { unsubscribe: () => void },
-    })) as unknown as () => Observable<Uint8Array>,
-    write: vi.fn(() => ({
+    } as unknown as Observable<string>,
+    send$: vi.fn(() => ({
       subscribe: vi.fn(
         (observer: {
           next?: () => void;
@@ -109,7 +109,7 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
           };
         },
       ),
-    })) as unknown as (data: Uint8Array) => Observable<void>,
+    })) as unknown as (data: string) => Observable<void>,
     getPorts: vi.fn(() => ({
       subscribe: vi.fn(),
     })) as unknown as () => Observable<SerialPort[]>,

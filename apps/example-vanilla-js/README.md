@@ -97,7 +97,7 @@ client.connect().subscribe({
   next: () => {
     console.log('Connected!');
     // Start reading
-    client.getReadStream().subscribe({
+    client.text$.subscribe({
       next: (data) => {
         const text = new TextDecoder().decode(data);
         console.log('Received:', text);

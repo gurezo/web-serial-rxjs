@@ -55,13 +55,13 @@ Disconnects from the serial port.
 
 **Returns:** `Observable<void>` - Completes when the port is closed
 
-#### `getReadStream(): Observable<Uint8Array>`
+#### `text$: Observable<Uint8Array>`
 
 Gets an Observable that emits data read from the serial port.
 
 **Returns:** `Observable<Uint8Array>` - Emits `Uint8Array` chunks as data is received
 
-#### `getReadStreamAsText(): Observable<string>`
+#### `text$: Observable<string>`
 
 Gets an Observable that emits decoded text from the serial port.
 
@@ -105,7 +105,7 @@ The text is encoded with `TextEncoder` internally.
 
 - `connected: boolean` - Read-only property indicating if the port is currently open
 - `connected$: Observable<boolean>` - Reactive connection state stream (`true` when connected, `false` when disconnected)
-- `connectionEvents$: Observable<'connected' | 'disconnected'>` - Reactive lifecycle events for connect/disconnect
+- `state$: Observable<'connected' | 'disconnected'>` - Reactive lifecycle events for connect/disconnect
 - `currentPort: SerialPort | null` - Read-only property with the current `SerialPort` instance, or `null` if not connected
 
 ## `createShellClient(client, options)`

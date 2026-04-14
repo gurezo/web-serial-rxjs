@@ -8,7 +8,7 @@ You can use RxJS operators to process serial data:
 import { map, filter, bufferTime } from 'rxjs/operators';
 
 client
-  .getReadStream()
+  .text$
   .pipe(
     map((data: Uint8Array) => {
       const decoder = new TextDecoder('utf-8');
@@ -33,7 +33,7 @@ import { map, scan, debounceTime } from 'rxjs/operators';
 
 // Accumulate received data
 client
-  .getReadStream()
+  .text$
   .pipe(
     map((data: Uint8Array) => {
       const decoder = new TextDecoder('utf-8');
@@ -72,7 +72,7 @@ import { retry, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 client
-  .getReadStream()
+  .text$
   .pipe(
     retry({
       count: 3,

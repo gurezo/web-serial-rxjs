@@ -98,14 +98,10 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       readSubscriptionRef.current = null;
     }
 
-    const readStream$ = clientRef.current.getReadStream();
+    const readStream$ = clientRef.current.text$;
 
     readSubscriptionRef.current = readStream$.subscribe({
-      next: (data: Uint8Array) => {
-        // Uint8Array をテキストに変換（UTF-8 デコード）
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const text = decoder.decode(data, { stream: true });
-
+      next: (text: string) => {
         // 受信データを追加
         setReceivedData((prev) => prev + text);
       },
@@ -306,8 +302,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     }
 
     // テキストを Uint8Array に変換（UTF-8 エンコード）
-    const encoder = new TextEncoder();
-    const encodedData = encoder.encode(text + '\n'); // 改行を追加
+    const payload = `${text}\n`;
 
     return new Promise((resolve, reject) => {
       if (!clientRef.current) {
@@ -315,7 +310,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
         return;
       }
 
-      clientRef.current.write(encodedData).subscribe({
+      clientRef.current.send$(payload).subscribe({
         next: () => {
           resolve();
         },

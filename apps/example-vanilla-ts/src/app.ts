@@ -283,11 +283,7 @@ export class App {
       return;
     }
 
-    // Convert text to Uint8Array (UTF-8 encoding)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text + '\n'); // Add newline
-
-    this.client.write(data).subscribe({
+    this.client.send$(`${text}\n`).subscribe({
       next: () => {
         // Clear input after successful send
         this.sendInput.value = '';
@@ -309,14 +305,10 @@ export class App {
     // Stop any existing read subscription
     this.stopReading();
 
-    const readStream$ = this.client.getReadStream();
+    const readStream$ = this.client.text$;
 
     this.readSubscription = readStream$.subscribe({
-      next: (data: Uint8Array) => {
-        // Convert Uint8Array to text (UTF-8 decoding)
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const text = decoder.decode(data, { stream: true });
-
+      next: (text: string) => {
         // Append to receive output
         this.receiveOutput.value += text;
 
