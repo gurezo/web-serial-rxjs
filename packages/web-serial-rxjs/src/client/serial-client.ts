@@ -1,16 +1,14 @@
 import {
   BehaviorSubject,
-  EMPTY,
   Observable,
   Subject,
-  catchError,
-  concatMap,
+  defaultIfEmpty,
   defer,
   distinctUntilChanged,
+  firstValueFrom,
   map,
   of,
   switchMap,
-  tap,
   throwError,
 } from 'rxjs';
 import {
@@ -21,11 +19,20 @@ import {
 import { SerialError, SerialErrorCode } from '../errors/serial-error';
 import { buildRequestOptions } from '../filters/build-request-options';
 import { readableToObservable } from '../io/readable-to-observable';
+import type {
+  CommandResult,
+  SerialCommandOptions,
+  SerialRequest,
+} from './protocol';
 import {
   DEFAULT_SERIAL_CLIENT_OPTIONS,
   SerialClientOptions,
 } from '../types/options';
 import type { SerialState, SerialSupport } from './serial-state';
+
+const DEFAULT_PROMPT = '$ ';
+const DEFAULT_PROTOCOL_TIMEOUT_MS = 10_000;
+const DEFAULT_PROTOCOL_LINE_ENDING = '\r\n';
 
 /**
  * Internal implementation of SerialClient interface.
@@ -56,25 +63,11 @@ export class SerialClientImpl {
   /** @internal */
   private readonly linesSubject$ = new Subject<string>();
   /** @internal */
-  private readonly outboundSubject$ = new Subject<{
-    payload: Uint8Array;
-    onComplete: () => void;
-    onError: (error: unknown) => void;
-  }>();
+  private readonly bufferTick$ = new Subject<void>();
   /** @internal */
-  private readonly outboundSubscription = this.outboundSubject$
-    .pipe(
-      concatMap((job) =>
-        this.write(job.payload).pipe(
-          tap({ complete: job.onComplete }),
-          catchError((error) => {
-            job.onError(error);
-            return EMPTY;
-          }),
-        ),
-      ),
-    )
-    .subscribe();
+  private operationQueue: Promise<void> = Promise.resolve();
+  /** @internal */
+  private readBuffer = '';
   /** @internal */
   private readonly stateSubject$: BehaviorSubject<SerialState>;
   /** @internal */
@@ -283,29 +276,35 @@ export class SerialClientImpl {
   }
 
   send$(data: string | Uint8Array): Observable<void> {
-    return new Observable<void>((subscriber) => {
-      if (!this.isOpen || !this.port || !this.port.writable) {
-        subscriber.error(
-          new SerialError(
-            SerialErrorCode.PORT_NOT_OPEN,
-            'Port is not open or writable stream is not available',
-          ),
-        );
-        return;
-      }
-
+    return this.enqueueOperation(async () => {
       const payload =
         typeof data === 'string' ? this.textEncoder.encode(data) : data;
-      this.outboundSubject$.next({
-        payload,
-        onComplete: () => {
-          subscriber.next();
-          subscriber.complete();
-        },
-        onError: (error) => {
-          subscriber.error(error);
-        },
-      });
+      await firstValueFrom(this.write(payload).pipe(defaultIfEmpty(undefined)));
+    });
+  }
+
+  command$(
+    command: string,
+    options?: SerialCommandOptions,
+  ): Observable<CommandResult> {
+    return this.enqueueOperation(async () => {
+      await this.sendCommandPayload(command, options?.lineEnding);
+      const stdout = await this.waitUntilPrompt(
+        options?.prompt ?? DEFAULT_PROMPT,
+        options?.timeout ?? DEFAULT_PROTOCOL_TIMEOUT_MS,
+      );
+      return { stdout };
+    });
+  }
+
+  transact$<T>(request: SerialRequest<T>): Observable<T> {
+    return this.enqueueOperation(async () => {
+      await this.sendRequestPayload(request.payload, request.lineEnding);
+      const stdout = await this.waitUntilPrompt(
+        request.prompt ?? DEFAULT_PROMPT,
+        request.timeout ?? DEFAULT_PROTOCOL_TIMEOUT_MS,
+      );
+      return request.collect(stdout);
     });
   }
 
@@ -521,6 +520,8 @@ export class SerialClientImpl {
     this.bytesSubject$.next(chunk);
     const decodedText = this.textDecoder.decode(chunk, { stream: true });
     this.textSubject$.next(decodedText);
+    this.readBuffer += decodedText;
+    this.bufferTick$.next();
 
     const merged = `${this.lineBuffer}${decodedText}`.replace(/\r\n/g, '\n');
     const parts = merged.split('\n');
@@ -533,5 +534,132 @@ export class SerialClientImpl {
   private resetReceiveState(): void {
     this.textDecoder = new TextDecoder();
     this.lineBuffer = '';
+    this.readBuffer = '';
+  }
+
+  private enqueueOperation<T>(operation: () => Promise<T>): Observable<T> {
+    return defer(
+      () =>
+        new Observable<T>((subscriber) => {
+          let cancelled = false;
+          const run = async (): Promise<void> => {
+            try {
+              const value = await operation();
+              if (!cancelled) {
+                subscriber.next(value);
+                subscriber.complete();
+              }
+            } catch (error) {
+              if (!cancelled) {
+                subscriber.error(error);
+              }
+            }
+          };
+
+          const scheduled = this.operationQueue.then(run, run);
+          this.operationQueue = scheduled.then(
+            () => undefined,
+            () => undefined,
+          );
+
+          return () => {
+            cancelled = true;
+          };
+        }),
+    );
+  }
+
+  private async sendCommandPayload(
+    command: string,
+    lineEnding = DEFAULT_PROTOCOL_LINE_ENDING,
+  ): Promise<void> {
+    await this.sendRequestPayload(command, lineEnding);
+  }
+
+  private async sendRequestPayload(
+    payload: string | Uint8Array,
+    lineEnding = DEFAULT_PROTOCOL_LINE_ENDING,
+  ): Promise<void> {
+    const normalized =
+      typeof payload === 'string'
+        ? this.textEncoder.encode(payload + lineEnding)
+        : payload;
+    await firstValueFrom(this.write(normalized).pipe(defaultIfEmpty(undefined)));
+  }
+
+  private waitUntilPrompt(
+    prompt: string | RegExp,
+    timeoutMs: number,
+  ): Promise<string> {
+    const immediate = this.tryConsumePrompt(prompt);
+    if (immediate !== null) {
+      return Promise.resolve(immediate);
+    }
+
+    return new Promise<string>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        subscription.unsubscribe();
+        reject(
+          new SerialError(
+            SerialErrorCode.OPERATION_TIMEOUT,
+            `Timed out waiting for prompt after ${timeoutMs}ms`,
+          ),
+        );
+      }, timeoutMs);
+
+      const complete = (value: string): void => {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+        resolve(value);
+      };
+
+      const fail = (error: unknown): void => {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+        reject(error);
+      };
+
+      const tryResolve = (): void => {
+        const output = this.tryConsumePrompt(prompt);
+        if (output !== null) {
+          complete(output);
+        }
+      };
+
+      const subscription = this.bufferTick$.subscribe({
+        next: () => tryResolve(),
+        error: (error) => fail(error),
+        complete: () => fail(new Error('Read stream completed before prompt was found')),
+      });
+    });
+  }
+
+  private tryConsumePrompt(prompt: string | RegExp): string | null {
+    if (typeof prompt === 'string') {
+      if (
+        this.readBuffer.length >= prompt.length &&
+        this.readBuffer.endsWith(prompt)
+      ) {
+        const body = this.readBuffer.slice(0, this.readBuffer.length - prompt.length);
+        this.readBuffer = '';
+        return body.trimEnd();
+      }
+      return null;
+    }
+
+    const regex = this.createAnchoredRegex(prompt);
+    const match = regex.exec(this.readBuffer);
+    if (!match || match.index == null) {
+      return null;
+    }
+
+    const body = this.readBuffer.slice(0, match.index);
+    this.readBuffer = '';
+    return body.trimEnd();
+  }
+
+  private createAnchoredRegex(source: RegExp): RegExp {
+    const flags = source.flags.replace(/g/g, '');
+    return new RegExp(`(?:${source.source})$`, flags);
   }
 }
