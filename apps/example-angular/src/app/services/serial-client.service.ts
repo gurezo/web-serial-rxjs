@@ -33,6 +33,7 @@ export interface SerialConnectionState {
 export class SerialClientService implements OnDestroy {
   private client: SerialClient | null = null;
   private readSubscription: Subscription | null = null;
+  private stateSubscription: Subscription | null = null;
   private baudRate = 9600;
 
   private readonly browserSupported$ = new BehaviorSubject<boolean>(false);
@@ -83,6 +84,10 @@ export class SerialClientService implements OnDestroy {
     if (this.readSubscription) {
       this.readSubscription.unsubscribe();
       this.readSubscription = null;
+    }
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+      this.stateSubscription = null;
     }
     if (this.client?.connected) {
       this.client.disconnect().subscribe();
@@ -137,6 +142,44 @@ export class SerialClientService implements OnDestroy {
     }
   }
 
+  private subscribeState(): void {
+    if (!this.client) {
+      return;
+    }
+    const state$ = (this.client as unknown as { state$?: Observable<unknown> })
+      .state$;
+    if (!state$ || typeof state$.subscribe !== 'function') {
+      return;
+    }
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+    }
+    this.stateSubscription = this.client.state$.subscribe((state) => {
+      if (state.kind === 'error') {
+        this.connectionState$.next({
+          connected: false,
+          connecting: false,
+          disconnecting: false,
+          error: `エラー: ${state.error.message}`,
+        });
+        return;
+      }
+
+      this.connectionState$.next({
+        ...this.connectionState$.value,
+        connected: state.kind === 'connected',
+        connecting: state.kind === 'connecting',
+        disconnecting: state.kind === 'disconnecting',
+      });
+      if (state.kind === 'unsupported' && !state.support.supported) {
+        this.connectionState$.next({
+          ...this.connectionState$.value,
+          error: state.support.reason,
+        });
+      }
+    });
+  }
+
   /**
    * 接続を開始
    */
@@ -149,6 +192,7 @@ export class SerialClientService implements OnDestroy {
       this.client = createSerialClient({
         baudRate: this.baudRate,
       });
+      this.subscribeState();
     }
 
     this.connectionState$.next({

@@ -1,6 +1,6 @@
 # Quick Start
 
-Here's a simple example to get you started:
+Start with the v1-style API (`text$`, `state$`, `send$`) so you do not need manual `TextDecoder`/`TextEncoder` handling.
 
 ```typescript
 import {
@@ -17,29 +17,20 @@ if (!isBrowserSupported()) {
 // Create a serial client
 const client = createSerialClient({ baudRate: 9600 });
 
-// Connect to a serial port
+client.state$.subscribe((state) => {
+  console.log('State:', state);
+});
+
+client.text$.subscribe((text) => {
+  console.log('Received:', text);
+});
+
+// Connect to a serial port (prompts for port selection)
 client.connect().subscribe({
   next: () => {
-    console.log('Connected to serial port');
-
-    // Read data from the serial port
-    client.text$.subscribe({
-      next: (data: Uint8Array) => {
-        const decoder = new TextDecoder('utf-8');
-        const text = decoder.decode(data);
-        console.log('Received:', text);
-      },
-      error: (error) => {
-        console.error('Read error:', error);
-      },
-    });
-
-    // Write data to the serial port
-    const encoder = new TextEncoder();
-    const data = encoder.encode('Hello, Serial Port!\n');
-    client.write(data).subscribe({
-      next: () => console.log('Data written'),
-      error: (error) => console.error('Write error:', error),
+    client.send$('help\n').subscribe({
+      next: () => console.log('Sent: help'),
+      error: (error) => console.error('Send error:', error),
     });
   },
   error: (error) => {
@@ -69,59 +60,40 @@ client.connect().subscribe({
 });
 ```
 
-### Reading Data
+### Reading Text and Lines
 
 ```typescript
 import { createSerialClient } from '@gurezo/web-serial-rxjs';
-import { map } from 'rxjs/operators';
 
 const client = createSerialClient({ baudRate: 9600 });
 
 client.connect().subscribe({
   next: () => {
-    // Read and decode data
-    client
-      .text$
-      .pipe(
-        map((data: Uint8Array) => {
-          const decoder = new TextDecoder('utf-8');
-          return decoder.decode(data);
-        }),
-      )
-      .subscribe({
-        next: (text) => console.log('Received:', text),
-        error: (error) => console.error('Read error:', error),
-      });
+    client.text$.subscribe((text) => console.log('Chunk:', text));
+    client.lines$.subscribe((line) => console.log('Line:', line));
   },
 });
 ```
 
-### Writing Data
+### Ordered Sends
 
 ```typescript
 import { createSerialClient } from '@gurezo/web-serial-rxjs';
 import { from } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 
 const client = createSerialClient({ baudRate: 9600 });
 
 client.connect().subscribe({
   next: () => {
-    // Write a single chunk
-    const encoder = new TextEncoder();
-    const data = encoder.encode('Hello\n');
-    client.write(data).subscribe({
-      next: () => console.log('Written'),
-      error: (error) => console.error('Write error:', error),
-    });
-
-    // Queue multiple writes in order
+    // send$ internally queues writes in order.
     const messages = ['Message 1\n', 'Message 2\n', 'Message 3\n'];
-    from(messages).subscribe((msg) => {
-      client.send$(msg).subscribe({
+    from(messages)
+      .pipe(concatMap((msg) => client.send$(msg)))
+      .subscribe({
         next: () => console.log('Message written'),
-        error: (error) => console.error('Queued write error:', error),
+        error: (error) => console.error('Send error:', error),
       });
-    });
   },
 });
 ```

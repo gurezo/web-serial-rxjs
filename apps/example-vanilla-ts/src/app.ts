@@ -16,6 +16,7 @@ import { filter, map } from 'rxjs/operators';
 export class App {
   private client: SerialClient | null = null;
   private readSubscription: Subscription | null = null;
+  private stateSubscription: Subscription | null = null;
 
   // Browser support
   private browserSupportStatus!: HTMLElement;
@@ -198,12 +199,8 @@ export class App {
 
     this.client.connect().subscribe({
       next: () => {
-        this.updateConnectionUI(true);
-        this.showStatus(
-          this.connectionStatus,
-          'success',
-          'シリアルポートに接続しました。',
-        );
+        this.showStatus(this.connectionStatus, 'success', '接続処理を開始しました。');
+        this.subscribeState();
         this.startReading();
       },
       error: (error: unknown) => {
@@ -225,12 +222,8 @@ export class App {
 
     this.client.disconnect().subscribe({
       next: () => {
+        this.stopStateSubscription();
         this.updateConnectionUI(false);
-        this.showStatus(
-          this.connectionStatus,
-          'info',
-          'シリアルポートから切断しました。',
-        );
       },
       error: (error: unknown) => {
         this.handleError(error, this.connectionStatus);
@@ -321,6 +314,43 @@ export class App {
         this.handleDisconnect();
       },
     });
+  }
+
+  private subscribeState(): void {
+    if (!this.client) {
+      return;
+    }
+    this.stopStateSubscription();
+
+    this.stateSubscription = this.client.state$.subscribe((state) => {
+      this.updateConnectionUI(state.kind === 'connected');
+      if (state.kind === 'connecting') {
+        this.showStatus(this.connectionStatus, 'info', '接続中です...');
+      } else if (state.kind === 'disconnecting') {
+        this.showStatus(this.connectionStatus, 'info', '切断中です...');
+      } else if (state.kind === 'connected') {
+        this.showStatus(this.connectionStatus, 'success', 'シリアルポートに接続しました。');
+      } else if (state.kind === 'idle') {
+        this.showStatus(this.connectionStatus, 'info', 'シリアルポートから切断しました。');
+      } else if (state.kind === 'unsupported') {
+        this.showStatus(
+          this.connectionStatus,
+          'error',
+          state.support.supported
+            ? 'Unsupported state was reported.'
+            : state.support.reason,
+        );
+      } else if (state.kind === 'error') {
+        this.showStatus(this.connectionStatus, 'error', `エラー: ${state.error.message}`);
+      }
+    });
+  }
+
+  private stopStateSubscription(): void {
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
+      this.stateSubscription = null;
+    }
   }
 
   /**

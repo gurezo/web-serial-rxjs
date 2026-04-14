@@ -42,9 +42,8 @@
  * ```
  */
 
-// Main exports
+// Core API (recommended)
 export { createSerialClient } from './client';
-export { createShellClient } from './shell';
 
 // Type exports
 export type {
@@ -55,6 +54,9 @@ export type {
   SerialState,
   SerialSupport,
 } from './client';
+
+// Advanced API
+export { createShellClient } from './shell';
 export type { ShellClient, ShellClientOptions, ShellExecResult } from './shell';
 
 // Error exports
@@ -76,7 +78,8 @@ export {
   isBrowserSupported,
 } from './browser/browser-support';
 
-// I/O utility exports
+// Compatibility/utility exports
+// These are low-level helpers and are not required for standard v1 usage.
 export {
   observableToWritable,
   subscribeToWritable,

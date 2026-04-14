@@ -4,7 +4,7 @@ import {
   SerialClient,
   SerialError,
 } from '@gurezo/web-serial-rxjs';
-import type { Subscription } from 'rxjs';
+import type { Observable, Subscription } from 'rxjs';
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 
 /**
@@ -61,6 +61,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   const clientRef: Ref<SerialClient | null> = ref(null);
   const readSubscriptionRef: Ref<Subscription | null> = ref(null);
+  const stateSubscriptionRef: Ref<Subscription | null> = ref(null);
   const baudRateRef = ref(initialBaudRate);
 
   // ブラウザサポートをチェック
@@ -74,6 +75,10 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     if (readSubscriptionRef.value) {
       readSubscriptionRef.value.unsubscribe();
       readSubscriptionRef.value = null;
+    }
+    if (stateSubscriptionRef.value) {
+      stateSubscriptionRef.value.unsubscribe();
+      stateSubscriptionRef.value = null;
     }
     if (clientRef.value?.connected) {
       clientRef.value.disconnect().subscribe();
@@ -128,6 +133,44 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     }
   };
 
+  const subscribeState = () => {
+    if (!clientRef.value) {
+      return;
+    }
+    const state$ = (clientRef.value as unknown as { state$?: Observable<unknown> })
+      .state$;
+    if (!state$ || typeof state$.subscribe !== 'function') {
+      return;
+    }
+    if (stateSubscriptionRef.value) {
+      stateSubscriptionRef.value.unsubscribe();
+    }
+    stateSubscriptionRef.value = clientRef.value.state$.subscribe((state) => {
+      if (state.kind === 'error') {
+        connectionState.value = {
+          connected: false,
+          connecting: false,
+          disconnecting: false,
+          error: `エラー: ${state.error.message}`,
+        };
+        return;
+      }
+
+      connectionState.value = {
+        ...connectionState.value,
+        connected: state.kind === 'connected',
+        connecting: state.kind === 'connecting',
+        disconnecting: state.kind === 'disconnecting',
+      };
+      if (state.kind === 'unsupported' && !state.support.supported) {
+        connectionState.value = {
+          ...connectionState.value,
+          error: state.support.reason,
+        };
+      }
+    });
+  };
+
   /**
    * 接続を開始
    */
@@ -140,6 +183,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       clientRef.value = createSerialClient({
         baudRate: baudRateRef.value,
       });
+      subscribeState();
     }
 
     connectionState.value = {

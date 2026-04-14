@@ -1,57 +1,106 @@
 # 高度な使用方法
 
-## Observable パターン
+## リアクティブな受信パターン
 
-RxJS オペレーターを使用してシリアルデータを処理できます：
+`text$` と `lines$` をそのまま利用できるため、手動デコードは不要です：
 
 ```typescript
-import { map, filter, bufferTime } from 'rxjs/operators';
+import { bufferTime, filter } from 'rxjs/operators';
 
 client
-  .text$
+  .lines$
   .pipe(
-    map((data: Uint8Array) => {
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(data);
-    }),
-    filter((text) => text.trim().length > 0),
-    bufferTime(1000), // 1 秒間メッセージをバッファリング
+    filter((line) => line.trim().length > 0),
+    bufferTime(1000), // 1秒分の行をまとめる
   )
   .subscribe({
-    next: (messages) => {
-      console.log('バッファリングされたメッセージ:', messages);
+    next: (lines) => {
+      console.log('バッファリングされた行:', lines);
     },
   });
 ```
 
-## ストリーム処理
+## 順序保証付きコマンド実行
 
-RxJS オペレーターでデータストリームを処理：
+`send$` / `command$` は内部キューで直列化されるため、並行呼び出しでも順序が保たれます：
 
 ```typescript
-import { map, scan, debounceTime } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 
-// 受信データを累積
-client
-  .text$
-  .pipe(
-    map((data: Uint8Array) => {
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(data);
-    }),
-    scan((acc, current) => acc + current, ''),
-    debounceTime(500),
-  )
+const commands = ['help', 'status', 'version'];
+
+from(commands)
+  .pipe(concatMap((command) => client.command$(command)))
   .subscribe({
-    next: (accumulated) => {
-      console.log('累積データ:', accumulated);
+    next: ({ stdout }) => {
+      console.log('コマンド出力:', stdout);
+    },
+    error: (error) => {
+      console.error('コマンド実行失敗:', error);
     },
   });
+```
+
+## リクエスト/レスポンス取引
+
+`transact$` を使うと、送信・待受・抽出を1つの操作として扱えます：
+
+```typescript
+client
+  .transact$({
+    payload: 'read-temp',
+    prompt: /device>\s$/,
+    timeout: 5000,
+    collect: (stdout) => {
+      const match = stdout.match(/TEMP:\s*([0-9.]+)/);
+      if (!match) {
+        throw new Error('温度フィールドが見つかりませんでした');
+      }
+      return Number.parseFloat(match[1]);
+    },
+  })
+  .subscribe({
+    next: (temperature) => {
+      console.log('温度:', temperature);
+    },
+    error: (error) => {
+      console.error('トランザクション失敗:', error);
+    },
+  });
+```
+
+## 状態・エラーストリーム
+
+UI 側の状態管理は `state$` と `errors$` に集約できます：
+
+```typescript
+client.state$.subscribe((state) => {
+  switch (state.kind) {
+    case 'connecting':
+    case 'connected':
+    case 'disconnecting':
+      console.log('状態:', state.kind);
+      break;
+    case 'unsupported':
+      console.warn('未対応ブラウザ:', state.support.reason);
+      break;
+    case 'error':
+      console.error('状態遷移エラー:', state.error.message);
+      break;
+    default:
+      console.log('状態:', state.kind);
+  }
+});
+
+client.errors$.subscribe((error) => {
+  console.error('エラーストリーム:', error.code, error.message);
+});
 ```
 
 ## カスタムフィルター
 
-ポートフィルターを使用して利用可能なポートを制限：
+ポート選択対象を絞りたい場合はフィルターを設定します：
 
 ```typescript
 const client = createSerialClient({
@@ -61,33 +110,4 @@ const client = createSerialClient({
     { usbVendorId: 0xabcd },
   ],
 });
-```
-
-## エラー回復
-
-エラー回復パターンを実装：
-
-```typescript
-import { retry, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
-
-client
-  .text$
-  .pipe(
-    retry({
-      count: 3,
-      delay: 1000,
-    }),
-    catchError((error) => {
-      console.error('リトライ後も失敗:', error);
-      return of(null); // 空の observable を返す
-    }),
-  )
-  .subscribe({
-    next: (data) => {
-      if (data) {
-        console.log('受信:', data);
-      }
-    },
-  });
 ```

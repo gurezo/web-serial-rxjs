@@ -1,6 +1,6 @@
 # クイックスタート
 
-簡単な使用例：
+v1 の推奨導線（`text$` / `state$` / `send$`）で始めると、`TextDecoder` / `TextEncoder` の手動処理が不要です。
 
 ```typescript
 import {
@@ -17,29 +17,20 @@ if (!isBrowserSupported()) {
 // シリアルクライアントを作成
 const client = createSerialClient({ baudRate: 9600 });
 
-// シリアルポートに接続
+client.state$.subscribe((state) => {
+  console.log('状態:', state);
+});
+
+client.text$.subscribe((text) => {
+  console.log('受信:', text);
+});
+
+// シリアルポートに接続（ポート選択ダイアログを表示）
 client.connect().subscribe({
   next: () => {
-    console.log('シリアルポートに接続しました');
-
-    // シリアルポートからデータを読み取る
-    client.text$.subscribe({
-      next: (data: Uint8Array) => {
-        const decoder = new TextDecoder('utf-8');
-        const text = decoder.decode(data);
-        console.log('受信:', text);
-      },
-      error: (error) => {
-        console.error('読み取りエラー:', error);
-      },
-    });
-
-    // シリアルポートにデータを書き込む
-    const encoder = new TextEncoder();
-    const data = encoder.encode('Hello, Serial Port!\n');
-    client.write(data).subscribe({
-      next: () => console.log('データを書き込みました'),
-      error: (error) => console.error('書き込みエラー:', error),
+    client.send$('help\n').subscribe({
+      next: () => console.log('送信: help'),
+      error: (error) => console.error('送信エラー:', error),
     });
   },
   error: (error) => {
@@ -69,60 +60,40 @@ client.connect().subscribe({
 });
 ```
 
-### データの読み取り
+### テキストと行の読み取り
 
 ```typescript
 import { createSerialClient } from '@gurezo/web-serial-rxjs';
-import { map } from 'rxjs/operators';
 
 const client = createSerialClient({ baudRate: 9600 });
 
 client.connect().subscribe({
   next: () => {
-    // データを読み取ってデコード
-    client
-      .text$
-      .pipe(
-        map((data: Uint8Array) => {
-          const decoder = new TextDecoder('utf-8');
-          return decoder.decode(data);
-        }),
-      )
-      .subscribe({
-        next: (text) => console.log('受信:', text),
-        error: (error) => console.error('読み取りエラー:', error),
-      });
+    client.text$.subscribe((text) => console.log('チャンク:', text));
+    client.lines$.subscribe((line) => console.log('行:', line));
   },
 });
 ```
 
-### データの書き込み
+### 順序保証付き送信
 
 ```typescript
 import { createSerialClient } from '@gurezo/web-serial-rxjs';
 import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { concatMap } from 'rxjs/operators';
 
 const client = createSerialClient({ baudRate: 9600 });
 
 client.connect().subscribe({
   next: () => {
-    // 単一のチャンクを書き込む
-    const encoder = new TextEncoder();
-    const data = encoder.encode('Hello\n');
-    client.write(data).subscribe({
-      next: () => console.log('書き込みました'),
-      error: (error) => console.error('書き込みエラー:', error),
-    });
-
-    // 複数送信を順序付きでキュー投入する
+    // send$ は内部キューにより送信順序を保証します。
     const messages = ['メッセージ 1\n', 'メッセージ 2\n', 'メッセージ 3\n'];
-    from(messages).subscribe((msg) => {
-      client.send$(msg).subscribe({
+    from(messages)
+      .pipe(concatMap((msg) => client.send$(msg)))
+      .subscribe({
         next: () => console.log('メッセージを書き込みました'),
-        error: (error) => console.error('キュー書き込みエラー:', error),
+        error: (error) => console.error('送信エラー:', error),
       });
-    });
   },
 });
 ```

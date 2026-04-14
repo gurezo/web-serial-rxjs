@@ -5,7 +5,7 @@ import {
   SerialError,
 } from '@gurezo/web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
-import type { Subscription } from 'rxjs';
+import type { Observable, Subscription } from 'rxjs';
 
 /**
  * SerialClient の接続状態を表す型
@@ -63,6 +63,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   const clientRef = useRef<SerialClient | null>(null);
   const readSubscriptionRef = useRef<Subscription | null>(null);
+  const stateSubscriptionRef = useRef<Subscription | null>(null);
   const baudRateRef = useRef(initialBaudRate);
 
   // ブラウザサポートをチェック
@@ -77,6 +78,10 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       if (readSubscriptionRef.current) {
         readSubscriptionRef.current.unsubscribe();
         readSubscriptionRef.current = null;
+      }
+      if (stateSubscriptionRef.current) {
+        stateSubscriptionRef.current.unsubscribe();
+        stateSubscriptionRef.current = null;
       }
       if (clientRef.current?.connected) {
         clientRef.current.disconnect().subscribe();
@@ -132,6 +137,43 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     }
   };
 
+  const subscribeState = () => {
+    if (!clientRef.current) {
+      return;
+    }
+    const state$ = (clientRef.current as unknown as { state$?: Observable<unknown> })
+      .state$;
+    if (!state$ || typeof state$.subscribe !== 'function') {
+      return;
+    }
+    if (stateSubscriptionRef.current) {
+      stateSubscriptionRef.current.unsubscribe();
+    }
+
+    stateSubscriptionRef.current = clientRef.current.state$.subscribe((state) => {
+      if (state.kind === 'error') {
+        setConnectionState({
+          connected: false,
+          connecting: false,
+          disconnecting: false,
+          error: `エラー: ${state.error.message}`,
+        });
+        return;
+      }
+
+      setConnectionState((prev) => ({
+        ...prev,
+        connected: state.kind === 'connected',
+        connecting: state.kind === 'connecting',
+        disconnecting: state.kind === 'disconnecting',
+        ...(state.kind === 'unsupported' &&
+        !state.support.supported
+          ? { error: state.support.reason }
+          : {}),
+      }));
+    });
+  };
+
   /**
    * 接続を開始
    */
@@ -144,6 +186,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       clientRef.current = createSerialClient({
         baudRate: baudRateRef.current,
       });
+      subscribeState();
     }
 
     setConnectionState({
