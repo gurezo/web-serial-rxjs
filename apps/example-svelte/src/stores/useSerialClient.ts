@@ -4,7 +4,7 @@ import {
   SerialClient,
   SerialError,
 } from '@gurezo/web-serial-rxjs';
-import type { Subscription } from 'rxjs';
+import type { Observable, Subscription } from 'rxjs';
 import { onDestroy } from 'svelte';
 import { writable, type Writable } from 'svelte/store';
 
@@ -135,6 +135,10 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     if (!client) {
       return;
     }
+    const state$ = (client as unknown as { state$?: Observable<unknown> }).state$;
+    if (!state$ || typeof state$.subscribe !== 'function') {
+      return;
+    }
     if (stateSubscription) {
       stateSubscription.unsubscribe();
     }
@@ -154,11 +158,13 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
         connected: state.kind === 'connected',
         connecting: state.kind === 'connecting',
         disconnecting: state.kind === 'disconnecting',
-        error:
-          state.kind === 'unsupported' && !state.support.supported
-            ? state.support.reason
-            : null,
       }));
+      if (state.kind === 'unsupported' && !state.support.supported) {
+        connectionState.update((prev) => ({
+          ...prev,
+          error: state.support.reason,
+        }));
+      }
     });
   };
 
@@ -177,6 +183,13 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       subscribeState();
     }
 
+    connectionState.set({
+      connected: false,
+      connecting: true,
+      disconnecting: false,
+      error: null,
+    });
+
     return new Promise((resolve, reject) => {
       if (!client) {
         reject(new Error('SerialClient が初期化されていません'));
@@ -185,6 +198,12 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
       client.connect().subscribe({
         next: () => {
+          connectionState.set({
+            connected: true,
+            connecting: false,
+            disconnecting: false,
+            error: null,
+          });
           startReading();
           resolve();
         },
@@ -217,6 +236,11 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
     stopReading();
 
+    connectionState.update((prev) => ({
+      ...prev,
+      disconnecting: true,
+    }));
+
     return new Promise((resolve, reject) => {
       if (!client) {
         resolve();
@@ -225,6 +249,12 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
       client.disconnect().subscribe({
         next: () => {
+          connectionState.set({
+            connected: false,
+            connecting: false,
+            disconnecting: false,
+            error: null,
+          });
           resolve();
         },
         error: (error: unknown) => {

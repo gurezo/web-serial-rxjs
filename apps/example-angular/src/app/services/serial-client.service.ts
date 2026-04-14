@@ -146,6 +146,11 @@ export class SerialClientService implements OnDestroy {
     if (!this.client) {
       return;
     }
+    const state$ = (this.client as unknown as { state$?: Observable<unknown> })
+      .state$;
+    if (!state$ || typeof state$.subscribe !== 'function') {
+      return;
+    }
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
@@ -165,11 +170,13 @@ export class SerialClientService implements OnDestroy {
         connected: state.kind === 'connected',
         connecting: state.kind === 'connecting',
         disconnecting: state.kind === 'disconnecting',
-        error:
-          state.kind === 'unsupported' && !state.support.supported
-            ? state.support.reason
-            : null,
       });
+      if (state.kind === 'unsupported' && !state.support.supported) {
+        this.connectionState$.next({
+          ...this.connectionState$.value,
+          error: state.support.reason,
+        });
+      }
     });
   }
 
@@ -188,6 +195,13 @@ export class SerialClientService implements OnDestroy {
       this.subscribeState();
     }
 
+    this.connectionState$.next({
+      connected: false,
+      connecting: true,
+      disconnecting: false,
+      error: null,
+    });
+
     return new Observable<void>((observer) => {
       if (!this.client) {
         observer.error(new Error('SerialClient が初期化されていません'));
@@ -196,6 +210,12 @@ export class SerialClientService implements OnDestroy {
 
       const subscription = this.client.connect().subscribe({
         next: () => {
+          this.connectionState$.next({
+            connected: true,
+            connecting: false,
+            disconnecting: false,
+            error: null,
+          });
           this.startReading();
           observer.next();
           observer.complete();
@@ -236,6 +256,11 @@ export class SerialClientService implements OnDestroy {
 
     this.stopReading();
 
+    this.connectionState$.next({
+      ...this.connectionState$.value,
+      disconnecting: true,
+    });
+
     return new Observable<void>((observer) => {
       if (!this.client) {
         observer.next();
@@ -245,6 +270,12 @@ export class SerialClientService implements OnDestroy {
 
       const subscription = this.client.disconnect().subscribe({
         next: () => {
+          this.connectionState$.next({
+            connected: false,
+            connecting: false,
+            disconnecting: false,
+            error: null,
+          });
           observer.next();
           observer.complete();
         },
