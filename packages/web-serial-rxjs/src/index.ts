@@ -55,6 +55,14 @@ export type {
   SerialSupport,
 } from './client';
 
+// v2 SerialSession API (additive, stabilizing under #199)
+export { createSerialSession } from './session';
+export type {
+  SerialSession,
+  SerialSessionOptions,
+  SerialSessionState,
+} from './session';
+
 // Advanced API
 export { createShellClient } from './shell';
 export type { ShellClient, ShellClientOptions, ShellExecResult } from './shell';
