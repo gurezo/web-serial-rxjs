@@ -63,7 +63,10 @@ describe('createSerialSession (skeleton)', () => {
   });
 
   describe('state$', () => {
-    it('replays the current idle state on subscribe', async () => {
+    it('replays idle on subscribe when Web Serial API is available', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (global as any).navigator = { serial: {} };
+
       const session = createSerialSession();
 
       const state = await firstValueFrom(session.state$);
@@ -71,7 +74,18 @@ describe('createSerialSession (skeleton)', () => {
       expect(state).toBe<SerialSessionState>('idle');
     });
 
-    it('only emits idle in the skeleton implementation', async () => {
+    it('replays unsupported when navigator.serial is missing', async () => {
+      const session = createSerialSession();
+
+      const state = await firstValueFrom(session.state$);
+
+      expect(state).toBe<SerialSessionState>('unsupported');
+    });
+
+    it('only emits the initial state in the skeleton implementation', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (global as any).navigator = { serial: {} };
+
       const session = createSerialSession();
 
       const states = await lastValueFrom(
