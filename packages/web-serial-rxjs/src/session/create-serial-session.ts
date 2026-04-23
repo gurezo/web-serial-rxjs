@@ -50,7 +50,7 @@ export function createSerialSession(
   const supported = hasWebSerialSupport();
   const machine = new SessionStateMachine(supported ? 'idle' : 'unsupported');
   const errorsSubject = new Subject<SerialError>();
-  const receiveSubject = new Subject<string | Uint8Array>();
+  const receiveSubject = new Subject<string>();
 
   const errors$ = errorsSubject.asObservable();
   const receive$ = receiveSubject.asObservable();

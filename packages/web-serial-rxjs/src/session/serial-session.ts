@@ -77,13 +77,15 @@ export interface SerialSession {
   readonly errors$: Observable<SerialError>;
 
   /**
-   * Incoming data from the serial port.
+   * Incoming data from the serial port as UTF-8 decoded text.
    *
-   * The stream is driven by the read pump started by `connect$`. It is
-   * **not** subscription-lazy: emissions happen regardless of whether a
-   * consumer is currently subscribed, so late subscribers see only new data.
+   * The stream is driven by the read pump started by `connect$` and is
+   * decoded internally with a streaming `TextDecoder`, so multi-byte
+   * characters split across chunks are joined correctly. It is **not**
+   * subscription-lazy: emissions happen regardless of whether a consumer
+   * is currently subscribed, so late subscribers see only new data.
    */
-  readonly receive$: Observable<string | Uint8Array>;
+  readonly receive$: Observable<string>;
 
   /**
    * Enqueue data for ordered transmission.
