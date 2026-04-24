@@ -1,5 +1,7 @@
 # Quick Start
 
+This is the **shortest path** to an open port and working subscriptions. For a one-page map of `state$` / `receive$` / `errors$` and the imperative methods, start with the [project README](../../../README.md#serialsession-v2-at-a-glance).
+
 The v2 public API is a single `SerialSession` created by `createSerialSession`. Subscribe to `state$`, `receive$`, and `errors$` and drive the port through `connect$`, `disconnect$`, and `send$`.
 
 ```typescript
@@ -47,32 +49,15 @@ session.connect$().subscribe({
 
 ### Reading Text
 
-`receive$` emits UTF-8 decoded strings using a streaming `TextDecoder`. Multi-byte characters split across chunks are joined automatically. Use RxJS operators when you need line framing.
+`receive$` emits UTF-8 decoded strings using a streaming `TextDecoder`. Multi-byte characters split across chunks are joined automatically. Subscriptions see **arbitrary chunk boundaries**—not one line per emission. For newline-delimited lines, compose operators over `receive$` (full recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)):
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
-import { scan, filter, map } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 9600 });
 
 session.connect$().subscribe();
-
 session.receive$.subscribe((chunk) => console.log('Chunk:', chunk));
-
-session.receive$
-  .pipe(
-    scan(
-      (acc, chunk) => {
-        const combined = acc.buffer + chunk;
-        const parts = combined.split('\n');
-        return { buffer: parts.pop() ?? '', lines: parts };
-      },
-      { buffer: '', lines: [] as string[] },
-    ),
-    filter((s) => s.lines.length > 0),
-    map((s) => s.lines),
-  )
-  .subscribe((lines) => lines.forEach((line) => console.log('Line:', line)));
 ```
 
 ### Ordered Sends
@@ -155,5 +140,5 @@ session.connect$().subscribe({
 ## Next Steps
 
 - See [API Reference](./API_REFERENCE.md) for the full `SerialSession` surface.
-- Check out [Advanced Usage](./ADVANCED_USAGE.md) for more patterns.
-- Coming from v1? Read the [v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md).
+- Check out [Advanced Usage](./ADVANCED_USAGE.md) for line framing, request/response-style flows, and recovery.
+- Coming from v1? Read the [v1 → v2 Migration Guide](./MIGRATION_V2.md).

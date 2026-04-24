@@ -1,6 +1,6 @@
 # Advanced Usage
 
-The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`.
+The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
 
 ## Line Framing
 
@@ -28,6 +28,18 @@ const lines$ = session.receive$.pipe(
 
 lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
 ```
+
+## Connected boolean (UI)
+
+There is no `connected$` on `SerialSession`. For a simple "is the port open?" flag for buttons or templates, derive from `state$`:
+
+```typescript
+import { map } from 'rxjs';
+
+const connected$ = session.state$.pipe(map((s) => s === 'connected'));
+```
+
+Prefer driving full UI from `state$` when you need spinners and multiple phases (see [State-driven UI](#state-driven-ui) below).
 
 ## Ordered Writes
 

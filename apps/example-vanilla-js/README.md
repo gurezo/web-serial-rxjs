@@ -2,6 +2,8 @@
 
 This is a vanilla JavaScript example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API.
 
+**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
+
 ## Features
 
 - Browser support detection
@@ -83,31 +85,6 @@ This example uses RxJS observables to handle serial port communication reactivel
 - `index.html`: HTML structure
 - `vite.config.ts`: Vite configuration
 - `project.json`: Nx project configuration
-
-## Example Usage in Code
-
-```javascript
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
-
-const session = createSerialSession({ baudRate: 115200 });
-
-if (!session.isBrowserSupported()) {
-  console.error('Web Serial API is not supported in this browser');
-}
-
-session.state$.subscribe((state) => console.log('state:', state));
-session.receive$.subscribe((chunk) => console.log('received:', chunk));
-session.errors$.subscribe((error) => console.error('serial error:', error));
-
-session.connect$().subscribe({
-  error: (error) => console.error('Connection error:', error),
-});
-
-session.send$('Hello, Serial!\n').subscribe({
-  next: () => console.log('Data sent'),
-  error: (error) => console.error('Send error:', error),
-});
-```
 
 ## Browser Compatibility
 

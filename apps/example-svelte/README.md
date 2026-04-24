@@ -2,6 +2,8 @@
 
 This is a Svelte example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with the v2 `SerialSession` API to interact with serial ports through the Web Serial API. The example exposes a thin Svelte helper (`useSerialSession`) that mirrors the React hook, the Vue composable, and the Angular service: it just wraps the library's `state$` / `receive$` / `errors$` streams into Svelte `readable` stores without reconstructing any connection state of its own.
 
+**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
+
 ## Features
 
 - Browser support detection (`session.isBrowserSupported()`)
@@ -83,89 +85,6 @@ The example uses the v2 `SerialSession` API directly:
 - `svelte.config.js`: Svelte configuration
 - `project.json`: Nx project configuration
 - `tsconfig.json`: TypeScript configuration
-
-## Example Usage in Code
-
-### Using the Svelte helper
-
-```svelte
-<script lang="ts">
-  import { useSerialSession } from './stores/useSerialSession';
-
-  const {
-    browserSupported,
-    state,
-    receivedData,
-    errorMessage,
-    connect$,
-    disconnect$,
-    send$,
-    clearReceivedData,
-  } = useSerialSession(9600);
-
-  $: connected = $state === 'connected';
-
-  const handleConnect = () => connect$(9600).subscribe();
-  const handleDisconnect = () => disconnect$().subscribe();
-  const handleSend = () => send$('Hello, Serial!\n').subscribe();
-</script>
-
-{#if !$browserSupported}
-  <p>Web Serial API is not supported.</p>
-{/if}
-{#if $errorMessage}
-  <p role="alert">Error: {$errorMessage}</p>
-{/if}
-
-<button on:click={handleConnect} disabled={connected}>Connect</button>
-<button on:click={handleDisconnect} disabled={!connected}>Disconnect</button>
-<button on:click={handleSend} disabled={!connected}>Send</button>
-
-<textarea value={$receivedData} readonly />
-<button on:click={clearReceivedData}>Clear</button>
-```
-
-### The helper at a glance
-
-```typescript
-import {
-  createSerialSession,
-  type SerialSession,
-  type SerialSessionState,
-} from '@gurezo/web-serial-rxjs';
-import { ReplaySubject, Subscription, switchMap } from 'rxjs';
-import { onDestroy } from 'svelte';
-import { readable } from 'svelte/store';
-
-export function useSerialSession(initialBaudRate = 9600) {
-  let currentSession: SerialSession = createSerialSession({
-    baudRate: initialBaudRate,
-  });
-  const sessions$ = new ReplaySubject<SerialSession>(1);
-  sessions$.next(currentSession);
-
-  const state = readable<SerialSessionState>('idle', (set) => {
-    const sub = sessions$.pipe(switchMap((s) => s.state$)).subscribe(set);
-    return () => sub.unsubscribe();
-  });
-
-  // ...receivedData / errorMessage / browserSupported stores
-  // ...connect$ / disconnect$ / send$ / clearReceivedData
-
-  onDestroy(() => {
-    currentSession.disconnect$().subscribe({ error: () => void 0 });
-    sessions$.complete();
-  });
-}
-```
-
-## Svelte and TypeScript Features
-
-- **Svelte 5**: Uses the latest Svelte version.
-- **Stores**: `readable` stores are derived directly from the library's Observables — no `writable` re-composition.
-- **Type safety**: Full TypeScript strict mode using library-provided types (`SerialSession`, `SerialSessionState`, `SerialError`).
-- **RxJS integration**: Observable subscriptions are created lazily inside `readable` start/stop callbacks and torn down on `onDestroy`.
-- **Testing**: Vitest with `BehaviorSubject` / `Subject` mocks of `createSerialSession` for deterministic state streams.
 
 ## Browser Compatibility
 
