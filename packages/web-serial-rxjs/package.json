@@ -11,10 +11,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
     },
-    "./shell": {
-      "types": "./dist/shell/index.d.ts",
-      "import": "./dist/shell/index.mjs"
-    },
     "./package.json": "./package.json"
   },
   "files": [
