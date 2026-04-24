@@ -28,6 +28,7 @@ import type { SerialSessionState } from './serial-session-state';
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
  */
 export interface SerialSession {
   /**
@@ -90,12 +91,25 @@ export interface SerialSession {
   /**
    * Enqueue data for ordered transmission.
    *
-   * Writes are serialized internally so that concurrent `send$` calls are
-   * delivered to the port in call order. The returned Observable completes
-   * once the enqueued payload has been flushed.
+   * Writes are serialized internally through a FIFO send queue so that
+   * concurrent `send$` calls are delivered to the port in **call order**,
+   * regardless of how quickly each subscriber runs. String payloads are
+   * UTF-8 encoded via a shared `TextEncoder`; `Uint8Array` payloads are
+   * passed through unchanged. Write failures are normalized into
+   * {@link SerialError} with {@link SerialErrorCode.WRITE_FAILED} and
+   * multiplexed on {@link SerialSession.errors$} in addition to being
+   * surfaced to the subscriber, so a single subscription is enough to
+   * observe every I/O error. Calling `send$` while the session is not in
+   * `'connected'` state fails fast with
+   * {@link SerialErrorCode.PORT_NOT_OPEN}.
+   *
+   * The returned Observable completes once the enqueued payload has been
+   * flushed to the underlying writer.
    *
    * @param data - Text (UTF-8 encoded) or raw bytes to send.
    * @returns An Observable that completes when the payload is written.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
    */
   send$(data: string | Uint8Array): Observable<void>;
 }
