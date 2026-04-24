@@ -67,7 +67,7 @@ This example uses RxJS observables to handle serial port communication reactivel
 
 1. **Browser Support Check**: On initialization, the app checks if the browser supports the Web Serial API.
 
-2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses `createSerialClient()` to create a client instance.
+2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses `createSerialSession()` to create a session instance.
 
 3. **Configuration**: Users can select the baud rate before connecting.
 
@@ -87,32 +87,23 @@ This example uses RxJS observables to handle serial port communication reactivel
 ## Example Usage in Code
 
 ```javascript
-import { createSerialClient } from '@gurezo/web-serial-rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-// Create a serial client
-const client = createSerialClient({ baudRate: 115200 });
+const session = createSerialSession({ baudRate: 115200 });
 
-// Connect to a port
-client.connect().subscribe({
-  next: () => {
-    console.log('Connected!');
-    // Start reading
-    client.text$.subscribe({
-      next: (data) => {
-        const text = new TextDecoder().decode(data);
-        console.log('Received:', text);
-      },
-    });
-  },
-  error: (error) => {
-    console.error('Connection error:', error);
-  },
+if (!session.isBrowserSupported()) {
+  console.error('Web Serial API is not supported in this browser');
+}
+
+session.state$.subscribe((state) => console.log('state:', state));
+session.receive$.subscribe((chunk) => console.log('received:', chunk));
+session.errors$.subscribe((error) => console.error('serial error:', error));
+
+session.connect$().subscribe({
+  error: (error) => console.error('Connection error:', error),
 });
 
-// Send data
-const encoder = new TextEncoder();
-const data = encoder.encode('Hello, Serial!');
-client.write(data).subscribe({
+session.send$('Hello, Serial!\n').subscribe({
   next: () => console.log('Data sent'),
   error: (error) => console.error('Send error:', error),
 });
