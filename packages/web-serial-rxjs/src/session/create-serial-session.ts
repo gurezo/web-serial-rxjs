@@ -1,9 +1,8 @@
 import { Observable, Subject } from 'rxjs';
-import { hasWebSerialSupport } from '../browser/browser-detection';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
-import { buildRequestOptions } from '../filters/build-request-options';
-import { DEFAULT_SERIAL_CLIENT_OPTIONS } from '../types/options';
+import { buildRequestOptions } from './internal/build-request-options';
+import { hasWebSerialSupport } from './internal/has-web-serial-support';
 import {
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
@@ -11,7 +10,10 @@ import {
 import { createReadPump, type ReadPump } from './read-pump';
 import { createSendQueue } from './send-queue';
 import type { SerialSession } from './serial-session';
-import type { SerialSessionOptions } from './serial-session-options';
+import {
+  DEFAULT_SERIAL_SESSION_OPTIONS,
+  type SerialSessionOptions,
+} from './serial-session-options';
 import { SessionStateMachine } from './session-state-machine';
 
 /**
@@ -72,7 +74,7 @@ export function createSerialSession(
   options?: SerialSessionOptions,
 ): SerialSession {
   const resolvedOptions = {
-    ...DEFAULT_SERIAL_CLIENT_OPTIONS,
+    ...DEFAULT_SERIAL_SESSION_OPTIONS,
     ...options,
     filters: options?.filters,
   };

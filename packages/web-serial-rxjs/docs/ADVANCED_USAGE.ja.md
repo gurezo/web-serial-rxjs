@@ -1,113 +1,132 @@
 # 高度な使用方法
 
-## リアクティブな受信パターン
+v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。
 
-`text$` と `lines$` をそのまま利用できるため、手動デコードは不要です：
+## 行単位のフレーミング
+
+`receive$` は `TextDecoder` 経由で UTF-8 デコード済みのチャンクをそのまま emit します。`scan` と組み合わせて改行でフレーム化します。
 
 ```typescript
-import { bufferTime, filter } from 'rxjs/operators';
+import { filter, map, scan } from 'rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-client
-  .lines$
-  .pipe(
-    filter((line) => line.trim().length > 0),
-    bufferTime(1000), // 1秒分の行をまとめる
-  )
-  .subscribe({
-    next: (lines) => {
-      console.log('バッファリングされた行:', lines);
+const session = createSerialSession({ baudRate: 115200 });
+session.connect$().subscribe();
+
+const lines$ = session.receive$.pipe(
+  scan(
+    (acc, chunk) => {
+      const combined = acc.buffer + chunk;
+      const parts = combined.split('\n');
+      return { buffer: parts.pop() ?? '', lines: parts };
     },
-  });
+    { buffer: '', lines: [] as string[] },
+  ),
+  filter((s) => s.lines.length > 0),
+  map((s) => s.lines),
+);
+
+lines$.subscribe((lines) => lines.forEach((line) => console.log('行:', line)));
 ```
 
-## 順序保証付きコマンド実行
+## 順序保証のある送信
 
-`send$` / `command$` は内部キューで直列化されるため、並行呼び出しでも順序が保たれます：
+`send$` は内部 FIFO キューで直列化済みなので、並行購読でも呼び出し順に配送されます。
 
 ```typescript
-import { from } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
+import { from, concatMap } from 'rxjs';
 
-const commands = ['help', 'status', 'version'];
-
+const commands = ['help\n', 'status\n', 'version\n'];
 from(commands)
-  .pipe(concatMap((command) => client.command$(command)))
+  .pipe(concatMap((cmd) => session.send$(cmd)))
   .subscribe({
-    next: ({ stdout }) => {
-      console.log('コマンド出力:', stdout);
-    },
-    error: (error) => {
-      console.error('コマンド実行失敗:', error);
-    },
+    error: (error) => console.error('コマンド失敗:', error),
   });
 ```
 
-## リクエスト/レスポンス取引
-
-`transact$` を使うと、送信・待受・抽出を1つの操作として扱えます：
+リクエスト／レスポンスのペアが欲しい場合は、`send$` と `receive$` の有限な読み取りを合成します。
 
 ```typescript
-client
-  .transact$({
-    payload: 'read-temp',
-    prompt: /device>\s$/,
-    timeout: 5000,
-    collect: (stdout) => {
-      const match = stdout.match(/TEMP:\s*([0-9.]+)/);
-      if (!match) {
-        throw new Error('温度フィールドが見つかりませんでした');
-      }
-      return Number.parseFloat(match[1]);
-    },
-  })
-  .subscribe({
-    next: (temperature) => {
-      console.log('温度:', temperature);
-    },
-    error: (error) => {
-      console.error('トランザクション失敗:', error);
-    },
-  });
+import { firstValueFrom, scan, filter, map, timeout } from 'rxjs';
+
+async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
+  const response$ = session.receive$.pipe(
+    scan((buffer, chunk) => buffer + chunk, ''),
+    filter((buffer) => prompt.test(buffer)),
+    map((buffer) => buffer),
+    timeout(5000),
+  );
+  await firstValueFrom(session.send$(cmd));
+  return firstValueFrom(response$);
+}
 ```
 
-## 状態・エラーストリーム
+## state$ 駆動の UI
 
-UI 側の状態管理は `state$` と `errors$` に集約できます：
+真偽値を自分で追うのではなく、UI 遷移は `state$` で駆動します。
 
 ```typescript
-client.state$.subscribe((state) => {
-  switch (state.kind) {
-    case 'connecting':
-    case 'connected':
-    case 'disconnecting':
-      console.log('状態:', state.kind);
+session.state$.subscribe((state) => {
+  switch (state) {
+    case 'idle':
+      showConnectButton();
       break;
-    case 'unsupported':
-      console.warn('未対応ブラウザ:', state.support.reason);
+    case 'connecting':
+    case 'disconnecting':
+      showSpinner();
+      break;
+    case 'connected':
+      showSendUi();
       break;
     case 'error':
-      console.error('状態遷移エラー:', state.error.message);
+      showErrorBanner();
       break;
-    default:
-      console.log('状態:', state.kind);
+    case 'unsupported':
+      showUnsupportedBanner();
+      break;
   }
 });
-
-client.errors$.subscribe((error) => {
-  console.error('エラーストリーム:', error.code, error.message);
-});
 ```
 
-## カスタムフィルター
+## 一元化されたエラーハンドリング
 
-ポート選択対象を絞りたい場合はフィルターを設定します：
+`errors$` が主エラーチャネルです。`connect$().subscribe({ error })` で受け取るのは `errors$` に流れるものと同一の `SerialError` インスタンスです。
 
 ```typescript
-const client = createSerialClient({
-  baudRate: 9600,
-  filters: [
-    { usbVendorId: 0x1234, usbProductId: 0x5678 },
-    { usbVendorId: 0xabcd },
-  ],
+import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
+
+session.errors$.subscribe((error) => {
+  if (error.code === SerialErrorCode.READ_FAILED) {
+    // 致命的エラー — session はすでに 'error' 状態でポートもテアダウン済み
+    session.disconnect$().subscribe();
+  }
 });
 ```
+
+## 致命的エラー時の再接続
+
+致命的エラーは `state$` を `'error'` に遷移させるので、再接続ポリシーは素直に書けます。
+
+```typescript
+import { filter, concatMap } from 'rxjs';
+
+session.state$
+  .pipe(
+    filter((state) => state === 'error'),
+    concatMap(() => session.disconnect$()),
+    concatMap(() => session.connect$()),
+  )
+  .subscribe({
+    error: (error) => console.error('再接続失敗:', error),
+  });
+```
+
+## フレームワーク統合
+
+各 example は典型的な統合例を示しています。
+
+- Angular: `ReplaySubject<SerialSession>` を `switchMap` で展開し、`state$` / `receive$` / `errors$` を service から公開
+- Vue 3: 同じストリームを `ref` にミラーする composable
+- React: session を `ref` に保持しつつ、ストリームを `useState` にミラーする hook
+- Svelte: `derived` store でセッションをラップ
+- Vanilla JS/TS: そのまま subscribe

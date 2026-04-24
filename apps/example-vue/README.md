@@ -69,7 +69,7 @@ This example uses Vue 3 Composition API and RxJS observables to handle serial po
 
 1. **Browser Support Check**: On initialization, the app checks if the browser supports the Web Serial API using the `useSerialClient` composable.
 
-2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses the `useSerialClient` composable which internally uses `createSerialClient()` to create a client instance.
+2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses the `useSerialClient` composable, which internally wraps a v2 `SerialSession` created via `createSerialSession()`.
 
 3. **Configuration**: Users can select the baud rate before connecting. The baud rate is managed as Vue reactive state using `ref`.
 
@@ -95,52 +95,51 @@ This example uses Vue 3 Composition API and RxJS observables to handle serial po
 
 ### Using the Composable Function
 
-```typescript
+```vue
 <script setup lang="ts">
 import { useSerialClient } from './composables/useSerialClient';
 
 const {
   browserSupported,
-  connectionState,
+  state,
   receivedData,
-  connect,
-  disconnect,
-  send,
+  errorMessage,
+  connect$,
+  send$,
   clearReceivedData,
 } = useSerialClient(9600);
 
-const handleConnect = async () => {
-  try {
-    await connect();
-  } catch (error) {
-    console.error('Connection error:', error);
-  }
+const handleConnect = () => {
+  connect$().subscribe({
+    error: (error) => console.error('Connection error:', error),
+  });
 };
 
-const handleSend = async () => {
-  try {
-    await send('Hello, Serial!');
-  } catch (error) {
-    console.error('Send error:', error);
-  }
+const handleSend = () => {
+  send$('Hello, Serial!\n').subscribe({
+    error: (error) => console.error('Send error:', error),
+  });
 };
 </script>
 
 <template>
   <div>
+    <p v-if="!browserSupported">Web Serial API is not supported.</p>
     <button
       v-if="browserSupported"
+      :disabled="state === 'connected' || state === 'connecting'"
       @click="handleConnect"
-      :disabled="connectionState.connected"
     >
       Connect
     </button>
     <button
-      v-if="connectionState.connected"
+      v-if="state === 'connected'"
       @click="handleSend"
     >
       Send Data
     </button>
+    <p>State: {{ state }}</p>
+    <p v-if="errorMessage">Error: {{ errorMessage }}</p>
     <textarea :value="receivedData" readonly />
   </div>
 </template>
@@ -150,38 +149,44 @@ const handleSend = async () => {
 
 ```typescript
 import {
-  createSerialClient,
-  SerialClient,
+  createSerialSession,
+  type SerialSession,
+  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { Observable, ReplaySubject, switchMap } from 'rxjs';
+import { onUnmounted, ref } from 'vue';
 
-export function useSerialClient(baudRate = 9600) {
-  const connected = ref(false);
-  const clientRef = ref<SerialClient | null>(null);
+export function useSerialClient(initialBaudRate = 9600) {
+  const sessions$ = new ReplaySubject<SerialSession>(1);
+  let current: SerialSession = createSerialSession({ baudRate: initialBaudRate });
+  sessions$.next(current);
 
-  onMounted(() => {
-    clientRef.value = createSerialClient({ baudRate });
-  });
+  const state = ref<SerialSessionState>('idle');
+  const receivedData = ref('');
 
-  onUnmounted(() => {
-    if (clientRef.value?.connected) {
-      clientRef.value.disconnect().subscribe();
+  const stateSub = sessions$
+    .pipe(switchMap((s) => s.state$))
+    .subscribe((next) => (state.value = next));
+  const receiveSub = sessions$
+    .pipe(switchMap((s) => s.receive$))
+    .subscribe((chunk) => (receivedData.value += chunk));
+
+  const connect$ = (baudRate?: number): Observable<void> => {
+    if (baudRate !== undefined) {
+      current = createSerialSession({ baudRate });
+      sessions$.next(current);
     }
-  });
-
-  const connect = async () => {
-    return new Promise<void>((resolve, reject) => {
-      clientRef.value?.connect().subscribe({
-        next: () => {
-          connected.value = true;
-          resolve();
-        },
-        error: reject,
-      });
-    });
+    return current.connect$();
   };
 
-  return { connected, connect };
+  onUnmounted(() => {
+    stateSub.unsubscribe();
+    receiveSub.unsubscribe();
+    current.disconnect$().subscribe({ error: () => void 0 });
+    sessions$.complete();
+  });
+
+  return { state, receivedData, connect$ };
 }
 ```
 

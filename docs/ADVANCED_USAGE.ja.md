@@ -1,93 +1,132 @@
 # 高度な使用方法
 
-## Observable パターン
+v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。
 
-RxJS オペレーターを使用してシリアルデータを処理できます：
+## 行単位のフレーミング
+
+`receive$` は `TextDecoder` 経由で UTF-8 デコード済みのチャンクをそのまま emit します。`scan` と組み合わせて改行でフレーム化します。
 
 ```typescript
-import { map, filter, bufferTime } from 'rxjs/operators';
+import { filter, map, scan } from 'rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-client
-  .text$
-  .pipe(
-    map((data: Uint8Array) => {
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(data);
-    }),
-    filter((text) => text.trim().length > 0),
-    bufferTime(1000), // 1 秒間メッセージをバッファリング
-  )
-  .subscribe({
-    next: (messages) => {
-      console.log('バッファリングされたメッセージ:', messages);
+const session = createSerialSession({ baudRate: 115200 });
+session.connect$().subscribe();
+
+const lines$ = session.receive$.pipe(
+  scan(
+    (acc, chunk) => {
+      const combined = acc.buffer + chunk;
+      const parts = combined.split('\n');
+      return { buffer: parts.pop() ?? '', lines: parts };
     },
+    { buffer: '', lines: [] as string[] },
+  ),
+  filter((s) => s.lines.length > 0),
+  map((s) => s.lines),
+);
+
+lines$.subscribe((lines) => lines.forEach((line) => console.log('行:', line)));
+```
+
+## 順序保証のある送信
+
+`send$` は内部 FIFO キューで直列化済みなので、並行購読でも呼び出し順に配送されます。
+
+```typescript
+import { from, concatMap } from 'rxjs';
+
+const commands = ['help\n', 'status\n', 'version\n'];
+from(commands)
+  .pipe(concatMap((cmd) => session.send$(cmd)))
+  .subscribe({
+    error: (error) => console.error('コマンド失敗:', error),
   });
 ```
 
-## ストリーム処理
-
-RxJS オペレーターでデータストリームを処理：
+リクエスト／レスポンスのペアが欲しい場合は、`send$` と `receive$` の有限な読み取りを合成します。
 
 ```typescript
-import { map, scan, debounceTime } from 'rxjs/operators';
+import { firstValueFrom, scan, filter, map, timeout } from 'rxjs';
 
-// 受信データを累積
-client
-  .text$
-  .pipe(
-    map((data: Uint8Array) => {
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(data);
-    }),
-    scan((acc, current) => acc + current, ''),
-    debounceTime(500),
-  )
-  .subscribe({
-    next: (accumulated) => {
-      console.log('累積データ:', accumulated);
-    },
-  });
+async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
+  const response$ = session.receive$.pipe(
+    scan((buffer, chunk) => buffer + chunk, ''),
+    filter((buffer) => prompt.test(buffer)),
+    map((buffer) => buffer),
+    timeout(5000),
+  );
+  await firstValueFrom(session.send$(cmd));
+  return firstValueFrom(response$);
+}
 ```
 
-## カスタムフィルター
+## state$ 駆動の UI
 
-ポートフィルターを使用して利用可能なポートを制限：
+真偽値を自分で追うのではなく、UI 遷移は `state$` で駆動します。
 
 ```typescript
-const client = createSerialClient({
-  baudRate: 9600,
-  filters: [
-    { usbVendorId: 0x1234, usbProductId: 0x5678 },
-    { usbVendorId: 0xabcd },
-  ],
+session.state$.subscribe((state) => {
+  switch (state) {
+    case 'idle':
+      showConnectButton();
+      break;
+    case 'connecting':
+    case 'disconnecting':
+      showSpinner();
+      break;
+    case 'connected':
+      showSendUi();
+      break;
+    case 'error':
+      showErrorBanner();
+      break;
+    case 'unsupported':
+      showUnsupportedBanner();
+      break;
+  }
 });
 ```
 
-## エラー回復
+## 一元化されたエラーハンドリング
 
-エラー回復パターンを実装：
+`errors$` が主エラーチャネルです。`connect$().subscribe({ error })` で受け取るのは `errors$` に流れるものと同一の `SerialError` インスタンスです。
 
 ```typescript
-import { retry, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
-client
-  .text$
+session.errors$.subscribe((error) => {
+  if (error.code === SerialErrorCode.READ_FAILED) {
+    // 致命的エラー — session はすでに 'error' 状態でポートもテアダウン済み
+    session.disconnect$().subscribe();
+  }
+});
+```
+
+## 致命的エラー時の再接続
+
+致命的エラーは `state$` を `'error'` に遷移させるので、再接続ポリシーは素直に書けます。
+
+```typescript
+import { filter, concatMap } from 'rxjs';
+
+session.state$
   .pipe(
-    retry({
-      count: 3,
-      delay: 1000,
-    }),
-    catchError((error) => {
-      console.error('リトライ後も失敗:', error);
-      return of(null); // 空の observable を返す
-    }),
+    filter((state) => state === 'error'),
+    concatMap(() => session.disconnect$()),
+    concatMap(() => session.connect$()),
   )
   .subscribe({
-    next: (data) => {
-      if (data) {
-        console.log('受信:', data);
-      }
-    },
+    error: (error) => console.error('再接続失敗:', error),
   });
 ```
+
+## フレームワーク統合
+
+各 example は典型的な統合例を示しています。
+
+- Angular: `ReplaySubject<SerialSession>` を `switchMap` で展開し、`state$` / `receive$` / `errors$` を service から公開
+- Vue 3: 同じストリームを `ref` にミラーする composable
+- React: session を `ref` に保持しつつ、ストリームを `useState` にミラーする hook
+- Svelte: `derived` store でセッションをラップ
+- Vanilla JS/TS: そのまま subscribe

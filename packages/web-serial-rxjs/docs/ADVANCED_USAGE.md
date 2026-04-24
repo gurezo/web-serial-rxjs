@@ -1,113 +1,132 @@
 # Advanced Usage
 
-## Reactive Receive Patterns
+The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`.
 
-Use `text$` and `lines$` directly without manual decoding:
+## Line Framing
+
+`receive$` emits UTF-8 decoded chunks as they arrive from the underlying `TextDecoder`. Combine it with `scan` to frame by newline:
 
 ```typescript
-import { bufferTime, filter } from 'rxjs/operators';
+import { filter, map, scan } from 'rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-client
-  .lines$
-  .pipe(
-    filter((line) => line.trim().length > 0),
-    bufferTime(1000), // Collect lines for 1 second
-  )
-  .subscribe({
-    next: (lines) => {
-      console.log('Buffered lines:', lines);
+const session = createSerialSession({ baudRate: 115200 });
+session.connect$().subscribe();
+
+const lines$ = session.receive$.pipe(
+  scan(
+    (acc, chunk) => {
+      const combined = acc.buffer + chunk;
+      const parts = combined.split('\n');
+      return { buffer: parts.pop() ?? '', lines: parts };
     },
-  });
+    { buffer: '', lines: [] as string[] },
+  ),
+  filter((s) => s.lines.length > 0),
+  map((s) => s.lines),
+);
+
+lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
 ```
 
-## Ordered Command Execution
+## Ordered Writes
 
-`send$` and `command$` are serialized internally, so concurrent calls are processed in order:
+`send$` is already serialised by an internal FIFO queue, so concurrent subscribers are delivered in call order:
 
 ```typescript
-import { from } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
+import { from, concatMap } from 'rxjs';
 
-const commands = ['help', 'status', 'version'];
-
+const commands = ['help\n', 'status\n', 'version\n'];
 from(commands)
-  .pipe(concatMap((command) => client.command$(command)))
+  .pipe(concatMap((cmd) => session.send$(cmd)))
   .subscribe({
-    next: ({ stdout }) => {
-      console.log('Command output:', stdout);
-    },
-    error: (error) => {
-      console.error('Command failed:', error);
-    },
+    error: (error) => console.error('Command failed:', error),
   });
 ```
 
-## Request/Response Transactions
-
-`transact$` wraps custom request/response parsing in one operation:
+If you need one-shot request / response pairs, compose `send$` with a bounded read of `receive$`:
 
 ```typescript
-client
-  .transact$({
-    payload: 'read-temp',
-    prompt: /device>\s$/,
-    timeout: 5000,
-    collect: (stdout) => {
-      const match = stdout.match(/TEMP:\s*([0-9.]+)/);
-      if (!match) {
-        throw new Error('Temperature field was not found');
-      }
-      return Number.parseFloat(match[1]);
-    },
-  })
-  .subscribe({
-    next: (temperature) => {
-      console.log('Temperature:', temperature);
-    },
-    error: (error) => {
-      console.error('Transaction failed:', error);
-    },
-  });
+import { firstValueFrom, scan, filter, map, timeout } from 'rxjs';
+
+async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
+  const response$ = session.receive$.pipe(
+    scan((buffer, chunk) => buffer + chunk, ''),
+    filter((buffer) => prompt.test(buffer)),
+    map((buffer) => buffer),
+    timeout(5000),
+  );
+  await firstValueFrom(session.send$(cmd));
+  return firstValueFrom(response$);
+}
 ```
 
-## State and Error Streams
+## State-Driven UI
 
-Use `state$` and `errors$` to keep UI/state machines simple:
+Drive every UI transition from `state$` rather than tracking a boolean:
 
 ```typescript
-client.state$.subscribe((state) => {
-  switch (state.kind) {
-    case 'connecting':
-    case 'connected':
-    case 'disconnecting':
-      console.log('State:', state.kind);
+session.state$.subscribe((state) => {
+  switch (state) {
+    case 'idle':
+      showConnectButton();
       break;
-    case 'unsupported':
-      console.warn('Unsupported browser:', state.support.reason);
+    case 'connecting':
+    case 'disconnecting':
+      showSpinner();
+      break;
+    case 'connected':
+      showSendUi();
       break;
     case 'error':
-      console.error('Serial state error:', state.error.message);
+      showErrorBanner();
       break;
-    default:
-      console.log('State:', state.kind);
+    case 'unsupported':
+      showUnsupportedBanner();
+      break;
   }
 });
-
-client.errors$.subscribe((error) => {
-  console.error('Serial error stream:', error.code, error.message);
-});
 ```
 
-## Port Filters
+## Unified Error Handling
 
-Use filters when you need to narrow selectable ports:
+`errors$` is the primary error channel; `connect$().subscribe({ error })` receives the same `SerialError` instance.
 
 ```typescript
-const client = createSerialClient({
-  baudRate: 9600,
-  filters: [
-    { usbVendorId: 0x1234, usbProductId: 0x5678 },
-    { usbVendorId: 0xabcd },
-  ],
+import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
+
+session.errors$.subscribe((error) => {
+  if (error.code === SerialErrorCode.READ_FAILED) {
+    // fatal — session is already in 'error' and the port is torn down
+    session.disconnect$().subscribe();
+  }
 });
 ```
+
+## Reconnect On Fatal Error
+
+Because fatal failures drive `state$` to `'error'`, a reconnect policy is straightforward:
+
+```typescript
+import { filter, concatMap } from 'rxjs';
+
+session.state$
+  .pipe(
+    filter((state) => state === 'error'),
+    concatMap(() => session.disconnect$()),
+    concatMap(() => session.connect$()),
+  )
+  .subscribe({
+    error: (error) => console.error('Reconnect failed:', error),
+  });
+```
+
+## Framework Integration
+
+Each example application in this repository demonstrates one idiomatic integration:
+
+- Angular: thin service that exposes `state$` / `receive$` / `errors$` through `switchMap` over a `ReplaySubject<SerialSession>`
+- Vue 3: composable that mirrors the same streams into `ref`s
+- React: hook that stores the session in a `ref` and mirrors the streams into `useState`
+- Svelte: store that wraps the session with `derived` stores
+- Vanilla JS/TS: direct subscriptions
