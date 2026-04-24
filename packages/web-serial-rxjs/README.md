@@ -1,5 +1,3 @@
-# web-serial-rxjs
-
 <p align="center">
   <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
@@ -77,7 +75,8 @@ pnpm add rxjs
 - **[Quick Start](docs/QUICK_START.md)** - Get started with basic examples and usage patterns
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
 - **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
-- **[v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md)** - Mapping from the removed `SerialClient` / `ShellClient` API to the v2 `SerialSession` API
+- **[v1 → v2 Migration Guide](docs/MIGRATION_V2.md)** - Mapping from the removed `SerialClient` / `ShellClient` API to the v2 `SerialSession` API
+- **[Phase 5 archive (legacy v1 doc)](docs/archive/MIGRATION_PHASE5.md)** - Pointer left after Phase 5 cleanup; for historical context only
 
 ## Examples
 

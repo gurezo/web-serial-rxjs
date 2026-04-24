@@ -1,5 +1,3 @@
-# web-serial-rxjs
-
 <p align="center">
   <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
@@ -76,7 +74,8 @@ pnpm add rxjs
 - **[クイックスタート](docs/QUICK_START.ja.md)** - 基本的な例と使用方法で始める
 - **[API リファレンス](docs/API_REFERENCE.ja.md)** - 詳細な説明を含む完全な API ドキュメント
 - **[高度な使用方法](docs/ADVANCED_USAGE.ja.md)** - 高度なパターン、ストリーム処理、エラー回復
-- **[v1 → v2 マイグレーションガイド](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.ja.md)** - 削除された `SerialClient` / `ShellClient` から v2 `SerialSession` への対応表
+- **[v1 → v2 マイグレーションガイド](docs/MIGRATION_V2.ja.md)** - 削除された `SerialClient` / `ShellClient` から v2 `SerialSession` への対応表（[English](docs/MIGRATION_V2.md)）
+- **Phase 5（アーカイブ）** - [MIGRATION_PHASE5.ja.md](docs/archive/MIGRATION_PHASE5.ja.md)（旧 v1 ドキュメントの参照用）
 
 ## サンプル
 
