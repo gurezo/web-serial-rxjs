@@ -8,11 +8,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 
 /**
- * useSerialSession フックの戻り値の型。
- *
- * v2 `SerialSession` を薄くラップし、`state$` / `receive$` / `errors$` を
- * React の state にそのまま反映する。BehaviorSubject 的な接続状態再合成、
- * `text$` の手動購読、read loop 管理は一切持たない。
+ * v2 `SerialSession` を薄くラップした React カスタムフック。
+ * state / receive / errors をそのまま React state に反映するだけで、
+ * BehaviorSubject 的な接続状態再合成や read loop 管理は持たない。
+ * @see https://github.com/gurezo/web-serial-rxjs/issues/199 | #208
  */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
@@ -25,94 +24,67 @@ export interface UseSerialSessionReturn {
   clearReceivedData: () => void;
 }
 
-/**
- * v2 `SerialSession` を React コンポーネントから利用するためのカスタムフック。
- *
- * @see https://github.com/gurezo/web-serial-rxjs/issues/199
- * @see https://github.com/gurezo/web-serial-rxjs/issues/208
- */
 export function useSerialSession(
   initialBaudRate = 9600,
 ): UseSerialSessionReturn {
   const sessionsRef = useRef<ReplaySubject<SerialSession> | null>(null);
-  const currentSessionRef = useRef<SerialSession | null>(null);
-  const currentBaudRateRef = useRef<number>(initialBaudRate);
-
+  const sessionRef = useRef<SerialSession | null>(null);
+  const baudRateRef = useRef<number>(initialBaudRate);
   if (sessionsRef.current === null) {
-    const session = createSerialSession({ baudRate: initialBaudRate });
-    const sessions$ = new ReplaySubject<SerialSession>(1);
-    sessions$.next(session);
-    sessionsRef.current = sessions$;
-    currentSessionRef.current = session;
+    sessionRef.current = createSerialSession({ baudRate: initialBaudRate });
+    sessionsRef.current = new ReplaySubject<SerialSession>(1);
+    sessionsRef.current.next(sessionRef.current);
   }
 
-  const [browserSupported] = useState<boolean>(() =>
-    currentSessionRef.current!.isBrowserSupported(),
+  const [browserSupported] = useState(() =>
+    (sessionRef.current as SerialSession).isBrowserSupported(),
   );
   const [state, setState] = useState<SerialSessionState>('idle');
-  const [receivedData, setReceivedData] = useState<string>('');
+  const [receivedData, setReceivedData] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const sessions$ = sessionsRef.current!;
-    const subscription = new Subscription();
-
-    subscription.add(
-      sessions$
-        .pipe(switchMap((session) => session.state$))
-        .subscribe((next) => {
-          setState(next);
-          if (next === 'connected' || next === 'idle') {
-            setErrorMessage(null);
-          }
-        }),
+    const sessions$ = sessionsRef.current as ReplaySubject<SerialSession>;
+    const sub = new Subscription();
+    sub.add(
+      sessions$.pipe(switchMap((s) => s.state$)).subscribe((next) => {
+        setState(next);
+        if (next === 'connected' || next === 'idle') setErrorMessage(null);
+      }),
     );
-    subscription.add(
+    sub.add(
       sessions$
-        .pipe(switchMap((session) => session.receive$))
-        .subscribe((chunk) => {
-          setReceivedData((prev) => prev + chunk);
-        }),
+        .pipe(switchMap((s) => s.receive$))
+        .subscribe((c) => setReceivedData((prev) => prev + c)),
     );
-    subscription.add(
+    sub.add(
       sessions$
-        .pipe(switchMap((session) => session.errors$))
-        .subscribe((error: SerialError) => {
-          setErrorMessage(error.message);
-        }),
+        .pipe(switchMap((s) => s.errors$))
+        .subscribe((e: SerialError) => setErrorMessage(e.message)),
     );
-
     return () => {
-      subscription.unsubscribe();
-      const session = currentSessionRef.current;
-      if (session) {
-        session.disconnect$().subscribe({ error: () => void 0 });
-      }
+      sub.unsubscribe();
+      sessionRef.current?.disconnect$().subscribe({ error: () => void 0 });
       sessions$.complete();
       sessionsRef.current = null;
-      currentSessionRef.current = null;
+      sessionRef.current = null;
     };
   }, []);
 
   const connect$ = (baudRate?: number): Observable<void> => {
-    if (baudRate !== undefined && baudRate !== currentBaudRateRef.current) {
-      currentBaudRateRef.current = baudRate;
+    if (baudRate !== undefined && baudRate !== baudRateRef.current) {
+      baudRateRef.current = baudRate;
       const next = createSerialSession({ baudRate });
-      currentSessionRef.current = next;
+      sessionRef.current = next;
       sessionsRef.current?.next(next);
     }
-    return currentSessionRef.current!.connect$();
+    return (sessionRef.current as SerialSession).connect$();
   };
-
   const disconnect$ = (): Observable<void> =>
-    currentSessionRef.current!.disconnect$();
-
+    (sessionRef.current as SerialSession).disconnect$();
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    currentSessionRef.current!.send$(data);
-
-  const clearReceivedData = (): void => {
-    setReceivedData('');
-  };
+    (sessionRef.current as SerialSession).send$(data);
+  const clearReceivedData = (): void => setReceivedData('');
 
   return {
     browserSupported,
