@@ -5,18 +5,9 @@ import {
   SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { Observable, ReplaySubject, switchMap } from 'rxjs';
+import { Observable, ReplaySubject, switchMap, filter, map, scan } from 'rxjs';
 
-/**
- * v2 SerialSession を薄くラップした Angular Service。
- *
- * 状態 (`state$`)・受信 (`receive$`)・エラー (`errors$`) はライブラリ側の
- * ストリームをそのまま公開する。旧実装にあった `BehaviorSubject` ベースの
- * 接続状態再合成・`text$` 手動購読・read loop 管理は一切持たない。
- *
- * @see https://github.com/gurezo/web-serial-rxjs/issues/199
- * @see https://github.com/gurezo/web-serial-rxjs/issues/205
- */
+/** v2 SerialSession を薄くラップ。受信は行単位の `lines$` に派生。 */
 @Injectable({ providedIn: 'root' })
 export class SerialClientService implements OnDestroy {
   private readonly sessions$ = new ReplaySubject<SerialSession>(1);
@@ -24,7 +15,8 @@ export class SerialClientService implements OnDestroy {
   private currentBaudRate: number;
 
   readonly state$: Observable<SerialSessionState>;
-  readonly receive$: Observable<string>;
+  /** `receive$` を `\n` で分割した行のバッチ（QUICK_START と同パターン）。 */
+  readonly lines$: Observable<string[]>;
   readonly errors$: Observable<SerialError>;
 
   constructor() {
@@ -35,8 +27,21 @@ export class SerialClientService implements OnDestroy {
     this.sessions$.next(this.currentSession);
 
     this.state$ = this.sessions$.pipe(switchMap((session) => session.state$));
-    this.receive$ = this.sessions$.pipe(
-      switchMap((session) => session.receive$),
+    this.lines$ = this.sessions$.pipe(
+      switchMap((session) =>
+        session.receive$.pipe(
+          scan(
+            (acc, chunk: string) => {
+              const combined = acc.buffer + chunk;
+              const parts = combined.split('\n');
+              return { buffer: parts.pop() ?? '', lines: parts };
+            },
+            { buffer: '', lines: [] as string[] },
+          ),
+          filter((x) => x.lines.length > 0),
+          map((x) => x.lines),
+        ),
+      ),
     );
     this.errors$ = this.sessions$.pipe(switchMap((session) => session.errors$));
   }

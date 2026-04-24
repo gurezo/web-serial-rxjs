@@ -4,6 +4,8 @@ This is a vanilla JavaScript example application demonstrating how to use the `@
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
 
+**Scope**: Minimal smoke test—connect, line-delimited receive (from `receive$`), send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+
 ## Features
 
 - Browser support detection

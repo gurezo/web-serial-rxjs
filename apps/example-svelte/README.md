@@ -1,8 +1,10 @@
 # Svelte Example
 
-This is a Svelte example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with the v2 `SerialSession` API to interact with serial ports through the Web Serial API. The example exposes a thin Svelte helper (`useSerialSession`) that mirrors the React hook, the Vue composable, and the Angular service: it just wraps the library's `state$` / `receive$` / `errors$` streams into Svelte `readable` stores without reconstructing any connection state of its own.
+This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `errors$` into `readable` stores and derives **newline-delimited lines** from `receive$` (same pattern as [Quick Start](../../docs/QUICK_START.md)).
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
+
+**Scope**: Connect, line-delimited receive, send, disconnect only. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## Features
 
@@ -10,15 +12,9 @@ This is a Svelte example application demonstrating how to use the `@gurezo/web-s
 - Reactive session lifecycle driven by `state$` (`idle | connecting | connected | disconnecting | unsupported | error`)
 - Configuration option (baud rate)
 - Send data to the serial port through the library-owned FIFO send queue
-- Receive decoded text from the read pump
+- Receive newline-delimited lines (derived from `receive$`)
 - Unified error channel via `errors$`
 - Full TypeScript type safety
-
-## Completion criteria (Issue #209)
-
-- The Svelte example is composed of `readable` stores only — no `writable` BehaviorSubject reassembly, no read-loop management, no `state.kind` remapping.
-- `App.svelte` drives its UI purely from the store subscriptions returned by `useSerialSession` via `$store` syntax.
-- No imperative Web Serial plumbing (open / read / write / close) lives in the app.
 
 ## Requirements
 

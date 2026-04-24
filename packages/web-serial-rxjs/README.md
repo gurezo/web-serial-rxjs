@@ -136,6 +136,8 @@ Examples are available for the following environments:
 - **[Vanilla TypeScript](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-ts)** - TypeScript example with RxJS
 - **[Vue](https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vue)** - Vue 3 example using Composition API
 
+Each sample is a **minimal smoke test** for **connect**, **receive** (newline-delimited lines derived from `receive$`), **send**, and **disconnect**. See [Advanced Usage](docs/ADVANCED_USAGE.md) for richer patterns.
+
 Each example includes a README with setup and usage instructions.
 
 ## Project Icon

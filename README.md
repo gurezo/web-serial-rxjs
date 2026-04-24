@@ -136,6 +136,8 @@ Examples are available for the following environments:
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
 - **[Vue](apps/example-vue/)** - Vue 3 example using Composition API
 
+Each sample is a **minimal smoke test** for **connect**, **receive** (newline-delimited lines derived from `receive$`), **send**, and **disconnect**. Deeper patterns live in [Advanced Usage](docs/ADVANCED_USAGE.md).
+
 Each example includes a README with setup and usage instructions.
 
 ## Project Icon

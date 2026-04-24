@@ -4,18 +4,19 @@ import {
   type SerialSession,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { type Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
+import {
+  type Observable,
+  ReplaySubject,
+  Subscription,
+  switchMap,
+  filter,
+  map,
+  scan,
+} from 'rxjs';
 import { onDestroy } from 'svelte';
 import { readable, type Readable } from 'svelte/store';
 
-/**
- * v2 `SerialSession` を Svelte store に薄く写すだけのヘルパー。
- * `state$` / `receive$` / `errors$` をそのまま `readable` にラップし、
- * BehaviorSubject 的な接続状態再合成や read loop 管理は持たない。
- *
- * @see https://github.com/gurezo/web-serial-rxjs/issues/199
- * @see https://github.com/gurezo/web-serial-rxjs/issues/209
- */
+/** v2 `SerialSession` を Svelte store に薄く写す。受信は行単位に派生。 */
 export interface UseSerialSessionReturn {
   browserSupported: Readable<boolean>;
   state: Readable<SerialSessionState>;
@@ -51,9 +52,24 @@ export function useSerialSession(
   const receivedData = readable<string>('', (set) => {
     setReceived = set;
     const sub = sessions$
-      .pipe(switchMap((s) => s.receive$))
-      .subscribe((chunk) => {
-        receivedAcc += chunk;
+      .pipe(
+        switchMap((s) =>
+          s.receive$.pipe(
+            scan(
+              (acc, chunk: string) => {
+                const combined = acc.buffer + chunk;
+                const parts = combined.split('\n');
+                return { buffer: parts.pop() ?? '', lines: parts };
+              },
+              { buffer: '', lines: [] as string[] },
+            ),
+            filter((x) => x.lines.length > 0),
+            map((x) => x.lines),
+          ),
+        ),
+      )
+      .subscribe((lines) => {
+        receivedAcc += lines.map((l) => `${l}\n`).join('');
         set(receivedAcc);
       });
     return () => {

@@ -180,19 +180,19 @@ describe('App', () => {
     expect(latestMock().send$).toHaveBeenCalledWith('hello\n');
   });
 
-  it('receive$ の値が受信データ欄に蓄積される', async () => {
+  it('行区切り受信が受信データ欄に蓄積される', async () => {
     render(<App />);
 
     act(() => {
-      latestMock().receiveSubject.next('foo');
-      latestMock().receiveSubject.next('bar');
+      latestMock().receiveSubject.next('foo\n');
+      latestMock().receiveSubject.next('bar\n');
     });
 
     await waitFor(() => {
       const textarea = screen.getByLabelText(
         '受信データ',
       ) as HTMLTextAreaElement;
-      expect(textarea.value).toBe('foobar');
+      expect(textarea.value).toBe('foo\nbar\n');
     });
   });
 
@@ -211,12 +211,12 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    act(() => latestMock().receiveSubject.next('data'));
+    act(() => latestMock().receiveSubject.next('data\n'));
     await waitFor(() => {
       const textarea = screen.getByLabelText(
         '受信データ',
       ) as HTMLTextAreaElement;
-      expect(textarea.value).toBe('data');
+      expect(textarea.value).toBe('data\n');
     });
 
     await user.click(screen.getByText('クリア'));

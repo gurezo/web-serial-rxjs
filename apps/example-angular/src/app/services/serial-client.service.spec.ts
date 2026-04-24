@@ -152,11 +152,11 @@ describe('SerialClientService', () => {
     await expect(firstValueFrom(service.connect$())).rejects.toBe(boom);
   });
 
-  it('should forward incoming receive$ chunks', async () => {
+  it('should emit newline-delimited lines on lines$', async () => {
     const mock = latestMock();
-    const pending = firstValueFrom(service.receive$);
-    mock.receiveSubject.next('chunk-1');
-    await expect(pending).resolves.toBe('chunk-1');
+    const pending = firstValueFrom(service.lines$);
+    mock.receiveSubject.next('chunk-1\n');
+    await expect(pending).resolves.toEqual(['chunk-1']);
   });
 
   it('should forward errors$ emissions', async () => {
