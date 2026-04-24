@@ -453,4 +453,146 @@ describe('createSerialSession', () => {
       expect(emitted.code).toBe(SerialErrorCode.WRITE_FAILED);
     });
   });
+
+  describe('errors$ integration (#204)', () => {
+    it('emits the same SerialError instance on errors$ and to the connect$ subscriber', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      port.open.mockRejectedValueOnce(new Error('cannot open'));
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+
+      try {
+        const rejection = await firstValueFrom(session.connect$()).catch(
+          (error: unknown) => error as SerialError,
+        );
+
+        expect(rejection).toBeInstanceOf(SerialError);
+        expect(emissions).toHaveLength(1);
+        expect(emissions[0]).toBe(rejection);
+        expect(emissions[0].code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+      } finally {
+        subscription.unsubscribe();
+      }
+    });
+
+    it('does not mutate state$ when a write fails (non-fatal)', async () => {
+      const { stream } = makeStream();
+      const writable = new WritableStream<Uint8Array>({
+        write() {
+          return Promise.reject(new Error('write rejected'));
+        },
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      await expect(firstValueFrom(session.send$('x'))).rejects.toMatchObject({
+        code: SerialErrorCode.WRITE_FAILED,
+      });
+
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
+        'connected',
+      );
+    });
+
+    it('routes close failures on disconnect$ to errors$ as CONNECTION_LOST and state -> error', async () => {
+      const { stream } = makeStream();
+      const close = vi.fn().mockRejectedValue(new Error('close failed'));
+      const port = makeMockPort(stream, close);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errorsPromise = firstValueFrom(session.errors$);
+
+      await expect(
+        firstValueFrom(session.disconnect$()),
+      ).rejects.toMatchObject({
+        name: 'SerialError',
+        code: SerialErrorCode.CONNECTION_LOST,
+      });
+
+      const emitted = await errorsPromise;
+      expect(emitted.code).toBe(SerialErrorCode.CONNECTION_LOST);
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
+        'error',
+      );
+    });
+
+    it('forwards DOMException(NotFoundError) on requestPort as a single OPERATION_CANCELLED emission', async () => {
+      const requestPort = vi
+        .fn()
+        .mockRejectedValue(new DOMException('cancel', 'NotFoundError'));
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+
+      try {
+        await expect(
+          firstValueFrom(session.connect$()),
+        ).rejects.toMatchObject({
+          code: SerialErrorCode.OPERATION_CANCELLED,
+        });
+
+        expect(emissions).toHaveLength(1);
+        expect(emissions[0].code).toBe(SerialErrorCode.OPERATION_CANCELLED);
+      } finally {
+        subscription.unsubscribe();
+      }
+    });
+
+    it('multiplexes connect, pump, and write failures through the same errors$ channel', async () => {
+      const { stream, controller } = makeStream();
+      const writable = new WritableStream<Uint8Array>({
+        write() {
+          return Promise.reject(new Error('write rejected'));
+        },
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+
+      try {
+        await firstValueFrom(session.connect$());
+
+        await expect(
+          firstValueFrom(session.send$('x')),
+        ).rejects.toMatchObject({
+          code: SerialErrorCode.WRITE_FAILED,
+        });
+
+        controller.error(new Error('device unplugged'));
+        await flushMicrotasks();
+
+        expect(emissions.map((error) => error.code)).toEqual([
+          SerialErrorCode.WRITE_FAILED,
+          SerialErrorCode.READ_FAILED,
+        ]);
+      } finally {
+        subscription.unsubscribe();
+      }
+    });
+  });
 });
