@@ -135,6 +135,8 @@ session.send$('hello\r\n').subscribe();
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - RxJS を使用した TypeScript の例
 - **[Vue](apps/example-vue/)** - Composition API を使用した Vue 3 の例
 
+各サンプルは **connect・受信（`receive$` から派生した行区切り）・send・disconnect** の最小動作確認用です。行フレーミングや応用パターンの詳細は [高度な使用方法](docs/ADVANCED_USAGE.ja.md) に集約しています。
+
 各例には、セットアップと使用方法の説明を含む README が含まれています。
 
 ## プロジェクトアイコンについて
