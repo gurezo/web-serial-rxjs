@@ -2,6 +2,8 @@
 
 This is a React example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with the v2 `SerialSession` API to interact with serial ports through the Web Serial API. The example exposes a thin custom hook (`useSerialSession`) that mirrors the Vue composable and the Angular service: it just reflects the library's `state$` / `receive$` / `errors$` streams into React state without reconstructing any connection state of its own.
 
+**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance) before reading this app.
+
 ## Features
 
 - Browser support detection (`session.isBrowserSupported()`)
@@ -82,108 +84,6 @@ The example uses the v2 `SerialSession` API directly:
 - `vite.config.ts`: Vite configuration with React plugin
 - `project.json`: Nx project configuration
 - `tsconfig.json`: TypeScript configuration with JSX support
-
-## Example Usage in Code
-
-### Using the custom hook
-
-```typescript
-import { useSerialSession } from './hooks/useSerialSession';
-
-function MyComponent() {
-  const {
-    browserSupported,
-    state,
-    receivedData,
-    errorMessage,
-    connect$,
-    disconnect$,
-    send$,
-    clearReceivedData,
-  } = useSerialSession(9600);
-
-  const connected = state === 'connected';
-
-  return (
-    <div>
-      {!browserSupported && <p>Web Serial API is not supported.</p>}
-      {errorMessage && <p role="alert">Error: {errorMessage}</p>}
-
-      <button onClick={() => connect$(9600).subscribe()} disabled={connected}>
-        Connect
-      </button>
-      <button onClick={() => disconnect$().subscribe()} disabled={!connected}>
-        Disconnect
-      </button>
-      <button
-        onClick={() => send$('Hello, Serial!\n').subscribe()}
-        disabled={!connected}
-      >
-        Send
-      </button>
-
-      <textarea value={receivedData} readOnly />
-      <button onClick={clearReceivedData}>Clear</button>
-    </div>
-  );
-}
-```
-
-### The hook at a glance
-
-```typescript
-import {
-  createSerialSession,
-  type SerialSession,
-  type SerialSessionState,
-} from '@gurezo/web-serial-rxjs';
-import { useEffect, useRef, useState } from 'react';
-import { ReplaySubject, Subscription, switchMap } from 'rxjs';
-
-export function useSerialSession(initialBaudRate = 9600) {
-  const sessionsRef = useRef<ReplaySubject<SerialSession> | null>(null);
-  const sessionRef = useRef<SerialSession | null>(null);
-  if (!sessionsRef.current) {
-    sessionRef.current = createSerialSession({ baudRate: initialBaudRate });
-    sessionsRef.current = new ReplaySubject<SerialSession>(1);
-    sessionsRef.current.next(sessionRef.current);
-  }
-
-  const [state, setState] = useState<SerialSessionState>('idle');
-  const [receivedData, setReceivedData] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const sessions$ = sessionsRef.current!;
-    const sub = new Subscription();
-    sub.add(
-      sessions$.pipe(switchMap((s) => s.state$)).subscribe(setState),
-    );
-    sub.add(
-      sessions$
-        .pipe(switchMap((s) => s.receive$))
-        .subscribe((c) => setReceivedData((prev) => prev + c)),
-    );
-    sub.add(
-      sessions$
-        .pipe(switchMap((s) => s.errors$))
-        .subscribe((e) => setErrorMessage(e.message)),
-    );
-    return () => sub.unsubscribe();
-  }, []);
-
-  // ...connect$ / disconnect$ / send$ / clearReceivedData
-}
-```
-
-## React and TypeScript Features
-
-- **React 18**: Uses the modern `createRoot` API for rendering.
-- **Custom hook**: Encapsulates session wiring in a reusable hook.
-- **Type safety**: Full TypeScript strict mode, using library-provided types (`SerialSession`, `SerialSessionState`, `SerialError`).
-- **State management**: Pure React hooks (`useState`, `useEffect`, `useRef`) — no third-party state libraries required.
-- **RxJS integration**: Observable subscriptions are created once and torn down on unmount.
-- **Testing**: React Testing Library + Vitest, mocking `createSerialSession` with RxJS Subjects for deterministic state streams.
 
 ## Browser Compatibility
 

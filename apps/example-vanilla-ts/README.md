@@ -2,6 +2,8 @@
 
 This is a vanilla TypeScript example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API.
 
+**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
+
 ## Features
 
 - Browser support detection
@@ -85,48 +87,6 @@ This example uses RxJS observables to handle serial port communication reactivel
 - `vite.config.ts`: Vite configuration
 - `project.json`: Nx project configuration
 - `tsconfig.json`: TypeScript configuration with strict mode enabled
-
-## Example Usage in Code
-
-```typescript
-import {
-  createSerialSession,
-  type SerialSession,
-} from '@gurezo/web-serial-rxjs';
-
-const session: SerialSession = createSerialSession({ baudRate: 115200 });
-
-if (!session.isBrowserSupported()) {
-  console.error('Web Serial API is not supported in this browser');
-}
-
-session.state$.subscribe((state) => console.log('state:', state));
-session.receive$.subscribe((chunk: string) => {
-  console.log('Received:', chunk);
-});
-session.errors$.subscribe((error) => {
-  console.error('serial error:', error);
-});
-
-session.connect$().subscribe({
-  error: (error: unknown) => console.error('Connection error:', error),
-});
-
-session.send$('Hello, Serial!\n').subscribe({
-  next: () => console.log('Data sent'),
-  error: (error: unknown) => console.error('Send error:', error),
-});
-```
-
-## TypeScript Features
-
-This example demonstrates TypeScript best practices:
-
-- **Strict Mode**: TypeScript strict mode is enabled for maximum type safety
-- **Type Annotations**: All variables, parameters, and return types are explicitly typed
-- **DOM Typing**: DOM elements are properly typed (e.g., `HTMLButtonElement`, `HTMLInputElement`)
-- **RxJS Typing**: Observable subscriptions and operators are fully typed
-- **Error Handling**: Errors are properly typed and handled
 
 ## Browser Compatibility
 
