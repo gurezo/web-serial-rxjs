@@ -36,12 +36,31 @@ const makeStream = (): StreamHandle => {
 const makeMockPort = (
   stream: ReadableStream<Uint8Array>,
   close: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined),
+  writable: WritableStream<Uint8Array> | null = null,
 ): MockPort => ({
   readable: stream,
-  writable: null,
+  writable,
   open: vi.fn().mockResolvedValue(undefined),
   close,
 });
+
+type WritableHarness = {
+  stream: WritableStream<Uint8Array>;
+  writes: Uint8Array[];
+};
+
+const makeRecordingWritable = (
+  onChunk?: (chunk: Uint8Array) => Promise<void> | void,
+): WritableHarness => {
+  const writes: Uint8Array[] = [];
+  const stream = new WritableStream<Uint8Array>({
+    async write(chunk) {
+      writes.push(chunk);
+      await onChunk?.(chunk);
+    },
+  });
+  return { stream, writes };
+};
 
 const installNavigator = (port: MockPort): void => {
   Object.defineProperty(globalThis, 'navigator', {
@@ -327,33 +346,111 @@ describe('createSerialSession', () => {
     });
   });
 
-  describe('send$ (not implemented)', () => {
-    const failsWithNotImplemented = async (
-      observable: ReturnType<SerialSession['send$']>,
-    ) => {
-      await expect(firstValueFrom(observable)).rejects.toMatchObject({
-        name: 'SerialError',
-        code: SerialErrorCode.UNKNOWN,
-      });
-    };
+  describe('send$', () => {
+    it('rejects with PORT_NOT_OPEN when called before connect$', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (globalThis as any).navigator = { serial: {} };
 
-    it('fails with SerialErrorCode.UNKNOWN for string payload', async () => {
       const session = createSerialSession();
 
-      await failsWithNotImplemented(session.send$('ping\r\n'));
+      await expect(
+        firstValueFrom(session.send$('ping\r\n')),
+      ).rejects.toMatchObject({
+        name: 'SerialError',
+        code: SerialErrorCode.PORT_NOT_OPEN,
+      });
     });
 
-    it('fails with SerialErrorCode.UNKNOWN for bytes payload and references #203', async () => {
-      const session = createSerialSession();
+    it('encodes string payloads as UTF-8 and writes them through the port writer', async () => {
+      const { stream } = makeStream();
+      const { stream: writable, writes } = makeRecordingWritable();
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
 
-      try {
-        await firstValueFrom(session.send$(new Uint8Array([0x41])));
-        expect.fail('Expected send$ to error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(SerialError);
-        expect((error as SerialError).code).toBe(SerialErrorCode.UNKNOWN);
-        expect((error as SerialError).message).toContain('issues/203');
-      }
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      await firstValueFrom(session.send$('ping\r\n'));
+
+      expect(writes).toHaveLength(1);
+      expect(new TextDecoder().decode(writes[0])).toBe('ping\r\n');
+    });
+
+    it('passes raw Uint8Array payloads straight through to the writer', async () => {
+      const { stream } = makeStream();
+      const { stream: writable, writes } = makeRecordingWritable();
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const payload = new Uint8Array([0x01, 0x02, 0x03]);
+      await firstValueFrom(session.send$(payload));
+
+      expect(writes).toHaveLength(1);
+      expect(Array.from(writes[0])).toEqual([0x01, 0x02, 0x03]);
+    });
+
+    it('guarantees FIFO order for concurrently subscribed send$ calls', async () => {
+      const { stream } = makeStream();
+      let releaseFirst!: () => void;
+      const firstPending = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+      let chunkIndex = 0;
+      const { stream: writable, writes } = makeRecordingWritable(async () => {
+        if (chunkIndex === 0) {
+          chunkIndex += 1;
+          await firstPending;
+        }
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const first = firstValueFrom(session.send$('a'));
+      const second = firstValueFrom(session.send$('b'));
+      const third = firstValueFrom(session.send$('c'));
+
+      await flushMicrotasks();
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual(['a']);
+
+      releaseFirst();
+      await Promise.all([first, second, third]);
+
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual([
+        'a',
+        'b',
+        'c',
+      ]);
+    });
+
+    it('maps writer failures to WRITE_FAILED and emits them on errors$', async () => {
+      const { stream } = makeStream();
+      const writable = new WritableStream<Uint8Array>({
+        write() {
+          return Promise.reject(new Error('write rejected'));
+        },
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errorsPromise = firstValueFrom(session.errors$);
+
+      await expect(firstValueFrom(session.send$('x'))).rejects.toMatchObject({
+        name: 'SerialError',
+        code: SerialErrorCode.WRITE_FAILED,
+      });
+
+      const emitted = await errorsPromise;
+      expect(emitted).toBeInstanceOf(SerialError);
+      expect(emitted.code).toBe(SerialErrorCode.WRITE_FAILED);
     });
   });
 });
