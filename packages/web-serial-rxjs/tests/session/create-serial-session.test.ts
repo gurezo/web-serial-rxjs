@@ -327,33 +327,19 @@ describe('createSerialSession', () => {
     });
   });
 
-  describe('send$ (not implemented)', () => {
-    const failsWithNotImplemented = async (
-      observable: ReturnType<SerialSession['send$']>,
-    ) => {
-      await expect(firstValueFrom(observable)).rejects.toMatchObject({
+  describe('send$', () => {
+    it('rejects with PORT_NOT_OPEN when called before connect$', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (globalThis as any).navigator = { serial: {} };
+
+      const session = createSerialSession();
+
+      await expect(
+        firstValueFrom(session.send$('ping\r\n')),
+      ).rejects.toMatchObject({
         name: 'SerialError',
-        code: SerialErrorCode.UNKNOWN,
+        code: SerialErrorCode.PORT_NOT_OPEN,
       });
-    };
-
-    it('fails with SerialErrorCode.UNKNOWN for string payload', async () => {
-      const session = createSerialSession();
-
-      await failsWithNotImplemented(session.send$('ping\r\n'));
-    });
-
-    it('fails with SerialErrorCode.UNKNOWN for bytes payload and references #203', async () => {
-      const session = createSerialSession();
-
-      try {
-        await firstValueFrom(session.send$(new Uint8Array([0x41])));
-        expect.fail('Expected send$ to error');
-      } catch (error) {
-        expect(error).toBeInstanceOf(SerialError);
-        expect((error as SerialError).code).toBe(SerialErrorCode.UNKNOWN);
-        expect((error as SerialError).message).toContain('issues/203');
-      }
     });
   });
 });
