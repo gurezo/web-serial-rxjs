@@ -1,144 +1,100 @@
+import type {
+  SerialError,
+  SerialSession,
+  SerialSessionState,
+} from '@gurezo/web-serial-rxjs';
 import { mount } from '@vue/test-utils';
-// @ts-expect-error - Mocked module, types not needed at runtime
-import type { SerialClient } from '@gurezo/web-serial-rxjs';
-import type { Observable } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
 
-// Mock the web-serial-rxjs library
-vi.mock('@gurezo/web-serial-rxjs', () => {
-  let isConnected = false;
-  const mockClient = {
-    get connected() {
-      return isConnected;
-    },
-    currentPort: null,
-    connect: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: () => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          const timeoutId = setTimeout(() => {
-            isConnected = true;
-            if (observer.next) {
-              observer.next();
-            }
-            if (observer.complete) {
-              observer.complete();
-            }
-          }, 0);
-          return {
-            unsubscribe: () => clearTimeout(timeoutId),
-          };
-        },
-      ),
-    })) as unknown as () => Observable<void>,
-    disconnect: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: () => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          const obs = observer;
-          const timeoutId = setTimeout(() => {
-            isConnected = false;
-            if (obs?.next) {
-              obs.next();
-            }
-            if (obs?.complete) {
-              obs.complete();
-            }
-          }, 0);
-          return {
-            unsubscribe: () => clearTimeout(timeoutId),
-          };
-        },
-      ),
-    })) as unknown as () => Observable<void>,
-    requestPort: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: (port: SerialPort) => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          const timeoutId = setTimeout(() => {
-            if (observer.next) {
-              observer.next({} as SerialPort);
-            }
-            if (observer.complete) {
-              observer.complete();
-            }
-          }, 0);
-          return {
-            unsubscribe: () => clearTimeout(timeoutId),
-          };
-        },
-      ),
-    })) as unknown as () => Observable<SerialPort>,
-    text$: {
-      subscribe: vi.fn(() => ({
-        unsubscribe: vi.fn(),
-      })) as unknown as (observer: {
-        next?: (text: string) => void;
-        error?: (error: unknown) => void;
-        complete?: () => void;
-      }) => { unsubscribe: () => void },
-    } as unknown as Observable<string>,
-    send$: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: () => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          const timeoutId = setTimeout(() => {
-            if (observer.next) {
-              observer.next();
-            }
-            if (observer.complete) {
-              observer.complete();
-            }
-          }, 0);
-          return {
-            unsubscribe: () => clearTimeout(timeoutId),
-          };
-        },
-      ),
-    })) as unknown as (data: string) => Observable<void>,
-    getPorts: vi.fn(() => ({
-      subscribe: vi.fn(),
-    })) as unknown as () => Observable<SerialPort[]>,
+interface MockSession {
+  session: SerialSession;
+  stateSubject: BehaviorSubject<SerialSessionState>;
+  receiveSubject: Subject<string>;
+  errorsSubject: Subject<SerialError>;
+  connect$: ReturnType<typeof vi.fn>;
+  disconnect$: ReturnType<typeof vi.fn>;
+  send$: ReturnType<typeof vi.fn>;
+  isBrowserSupported: ReturnType<typeof vi.fn>;
+}
+
+const createMockSession = (): MockSession => {
+  const stateSubject = new BehaviorSubject<SerialSessionState>('idle');
+  const receiveSubject = new Subject<string>();
+  const errorsSubject = new Subject<SerialError>();
+  const connect$ = vi.fn(() => {
+    stateSubject.next('connecting');
+    stateSubject.next('connected');
+    return of(undefined);
+  });
+  const disconnect$ = vi.fn(() => {
+    stateSubject.next('disconnecting');
+    stateSubject.next('idle');
+    return of(undefined);
+  });
+  const send$ = vi.fn(() => of(undefined));
+  const isBrowserSupported = vi.fn(() => true);
+
+  const session: SerialSession = {
+    isBrowserSupported,
+    connect$,
+    disconnect$,
+    send$,
+    state$: stateSubject.asObservable(),
+    errors$: errorsSubject.asObservable(),
+    receive$: receiveSubject.asObservable(),
   };
 
   return {
-    createSerialClient: vi.fn(() => mockClient) as unknown as (options?: {
-      baudRate?: number;
-    }) => SerialClient,
-    isBrowserSupported: vi.fn(() => true),
-    SerialError: class MockSerialError extends Error {
-      constructor(message: string) {
-        super(message);
-        this.name = 'SerialError';
-      }
-    },
+    session,
+    stateSubject,
+    receiveSubject,
+    errorsSubject,
+    connect$,
+    disconnect$,
+    send$,
+    isBrowserSupported,
+  };
+};
+
+let mockSessions: MockSession[] = [];
+
+vi.mock('@gurezo/web-serial-rxjs', async () => {
+  const actual =
+    await vi.importActual<typeof import('@gurezo/web-serial-rxjs')>(
+      '@gurezo/web-serial-rxjs',
+    );
+  return {
+    ...actual,
+    createSerialSession: vi.fn(() => {
+      const mock = createMockSession();
+      mockSessions.push(mock);
+      return mock.session;
+    }),
   };
 });
+
+const latestMock = (): MockSession => {
+  const mock = mockSessions.at(-1);
+  if (!mock) {
+    throw new Error('createSerialSession was not called');
+  }
+  return mock;
+};
 
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSessions = [];
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('should render the app', () => {
+  it('should render the app header', () => {
     const wrapper = mount(App);
     expect(wrapper.text()).toContain('Web Serial RxJS - Vue Example');
     expect(wrapper.text()).toContain(
@@ -146,30 +102,29 @@ describe('App', () => {
     );
   });
 
-  it('should display browser support status', async () => {
+  it('should display browser support status', () => {
     const wrapper = mount(App);
-    // Wait for onMounted to execute
-    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(wrapper.text()).toContain(
       'ブラウザは Web Serial API をサポートしています。',
     );
   });
 
-  it('should have connection buttons', () => {
+  it('should render connect and disconnect buttons (no port picker)', () => {
     const wrapper = mount(App);
-    expect(wrapper.text()).toContain('ポートを選択');
-    expect(wrapper.text()).toContain('接続');
-    expect(wrapper.text()).toContain('切断');
+    const text = wrapper.text();
+    expect(text).toContain('接続');
+    expect(text).toContain('切断');
+    expect(text).not.toContain('ポートを選択');
   });
 
-  it('should have baud rate selector', () => {
+  it('should have baud rate selector defaulting to 9600', () => {
     const wrapper = mount(App);
     const baudRateSelect = wrapper.find('#baud-rate');
     expect(baudRateSelect.exists()).toBe(true);
     expect((baudRateSelect.element as HTMLSelectElement).value).toBe('9600');
   });
 
-  it('should change baud rate', async () => {
+  it('should change baud rate value', async () => {
     const wrapper = mount(App);
     const baudRateSelect = wrapper.find('#baud-rate');
 
@@ -177,71 +132,64 @@ describe('App', () => {
     expect((baudRateSelect.element as HTMLSelectElement).value).toBe('115200');
   });
 
-  it('should connect when connect button is clicked', async () => {
+  it('should show connected status after clicking connect', async () => {
     const wrapper = mount(App);
-    // Wait for onMounted to execute
-    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const connectButtons = wrapper.findAll('.btn-primary');
-    const connectButton = connectButtons[0]; // First primary button is connect
-
+    const connectButton = wrapper.findAll('.btn-primary')[0];
     await connectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await wrapper.vm.$nextTick();
 
+    expect(latestMock().connect$).toHaveBeenCalledTimes(1);
     expect(wrapper.text()).toContain('シリアルポートに接続しました。');
   });
 
-  it('should disconnect when disconnect button is clicked', async () => {
+  it('should show disconnected status after clicking disconnect', async () => {
     const wrapper = mount(App);
-    // Wait for onMounted to execute
-    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    // First connect
-    const connectButtons = wrapper.findAll('.btn-primary');
-    const connectButton = connectButtons[0];
+    const connectButton = wrapper.findAll('.btn-primary')[0];
     await connectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await wrapper.vm.$nextTick();
 
-    expect(wrapper.text()).toContain('シリアルポートに接続しました。');
-
-    // Then disconnect
     const disconnectButton = wrapper.find('.btn-secondary');
     await disconnectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await wrapper.vm.$nextTick();
 
+    expect(latestMock().disconnect$).toHaveBeenCalledTimes(1);
     expect(wrapper.text()).toContain('シリアルポートに接続していません。');
   });
 
-  it('should send data when send button is clicked', async () => {
+  it('should send data through the session and clear the input', async () => {
     const wrapper = mount(App);
-    // Wait for onMounted to execute
-    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    // Connect first
-    const connectButtons = wrapper.findAll('.btn-primary');
-    const connectButton = connectButtons[0];
+    const connectButton = wrapper.findAll('.btn-primary')[0];
     await connectButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await wrapper.vm.$nextTick();
 
-    expect(wrapper.text()).toContain('シリアルポートに接続しました。');
-
-    // Enter data and send
     const sendInput = wrapper.find('#send-input');
-    const sendButton = connectButtons[1]; // Second primary button is send
+    const sendButton = wrapper.findAll('.btn-primary')[1];
 
     await sendInput.setValue('test message');
     await sendButton.trigger('click');
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await wrapper.vm.$nextTick();
 
-    // Input should be cleared after sending
+    expect(latestMock().send$).toHaveBeenCalledWith('test message\n');
     expect((sendInput.element as HTMLInputElement).value).toBe('');
   });
 
-  it('should clear received data when clear button is clicked', async () => {
+  it('should disable the clear button when there is no received data', () => {
     const wrapper = mount(App);
 
     const clearButton = wrapper.find('.btn-secondary');
-    // Should be disabled when no data
     expect(clearButton.attributes('disabled')).toBeDefined();
+  });
+
+  it('should display errorMessage when errors$ emits', async () => {
+    const wrapper = mount(App);
+    const mock = latestMock();
+
+    mock.errorsSubject.next({ message: 'write failed' } as SerialError);
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.text()).toContain('エラー: write failed');
   });
 });
