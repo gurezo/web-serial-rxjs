@@ -4,7 +4,7 @@
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-A TypeScript library that provides a reactive RxJS-based wrapper for the Web Serial API, enabling easy serial port communication in web applications.
+A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single `SerialSession` so applications can drive their UI entirely from `state$` + `receive$` + `errors$`, without rebuilding state, read loops, or send queues themselves.
 
 ## Table of Contents
 
@@ -22,14 +22,13 @@ A TypeScript library that provides a reactive RxJS-based wrapper for the Web Ser
 
 ## Features
 
-- **RxJS-based reactive API**: Leverage the power of RxJS Observables for reactive serial port communication
-- **Text-friendly API**: Use `text$`/`lines$`, `send$()`, and `writeText()` without manual encoding/decoding
-- **Built-in protocol API**: Execute request/response workflows with `command$()` and `transact$()`
-- **Shell utility layer**: `createShellClient()` remains available for shell-oriented helpers
-- **TypeScript support**: Full TypeScript type definitions included
-- **Browser detection**: Built-in browser support detection and error handling
-- **Error handling**: Comprehensive error handling with custom error classes and error codes
-- **Framework agnostic**: Works with any JavaScript/TypeScript framework or vanilla JavaScript
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$`, `receive$`, `errors$`, plus `connect$`, `disconnect$`, and `send$`
+- **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
+- **Ordered send queue**: concurrent `send$` calls are serialised internally in call order, without the caller having to manage a writer
+- **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
+- **Explicit lifecycle**: `state$` emits `idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` so UIs can drive directly from it
+- **TypeScript support**: full TypeScript type definitions included
+- **Framework agnostic**: works with any JavaScript/TypeScript framework or vanilla JavaScript
 
 ## Framework Support
 
@@ -48,7 +47,7 @@ The Web Serial API is currently only supported in Chromium-based browsers:
 - **Edge** 89+
 - **Opera** 75+
 
-The library includes built-in browser detection utilities to check for Web Serial API support before attempting to use it.
+`SerialSession.isBrowserSupported()` returns a synchronous boolean for feature detection before calling `connect$`.
 
 ## Installation
 
@@ -77,7 +76,7 @@ pnpm add rxjs
 - **[Quick Start](docs/QUICK_START.md)** - Get started with basic examples and usage patterns
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
 - **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
-- **[Migration Guide (Phase5)](docs/MIGRATION_PHASE5.md)** - Legacy API cleanup and migration mapping
+- **[v1 → v2 Migration Guide](docs/MIGRATION_V2.md)** - Mapping from the removed `SerialClient` / `ShellClient` API to the v2 `SerialSession` API
 
 ## Examples
 

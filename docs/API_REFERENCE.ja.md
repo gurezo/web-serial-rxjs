@@ -1,212 +1,122 @@
 # API リファレンス
 
-## `createSerialClient(options?)`
+v2 の公開 API は、1 つのファクトリ（`createSerialSession`）、1 つのランタイムインターフェイス（`SerialSession`）、1 つの options 型、1 つの状態ユニオン、2 つのエラー型のみで構成されます。
 
-新しい `SerialClient` インスタンスを作成します。
-
-**パラメータ:**
-
-- `options?` (オプション): `SerialClientOptions` - シリアルクライアントの設定オプション
-
-**戻り値:** `SerialClient` - 新しい SerialClient インスタンス
-
-**例:**
+## 公開 export
 
 ```typescript
-const client = createSerialClient({
-  baudRate: 9600,
-  dataBits: 8,
-  stopBits: 1,
-  parity: 'none',
-});
+import {
+  createSerialSession,
+  SerialError,
+  SerialErrorCode,
+  type SerialSession,
+  type SerialSessionOptions,
+  type SerialSessionState,
+} from '@gurezo/web-serial-rxjs';
 ```
 
-## `SerialClient` インターフェース
+## createSerialSession(options?)
 
-シリアルポートと対話するためのメインインターフェースです。
+`SerialSession` を返すファクトリ。`navigator.serial` が存在しない環境でも安全に呼び出せます。その場合 `state$` の初期値は `'unsupported'` となり、`connect$` は `SerialErrorCode.BROWSER_NOT_SUPPORTED` で失敗します。
 
-### メソッド
-
-#### `requestPort(): Observable<SerialPort>`
-
-ユーザーからシリアルポートをリクエストします。ポート選択のためのブラウザダイアログを開きます。
-
-**戻り値:** `Observable<SerialPort>` - 選択された `SerialPort` インスタンスを発行
-
-#### `getPorts(): Observable<SerialPort[]>`
-
-ユーザーが以前にアクセスを許可したすべての利用可能なシリアルポートを取得します。
-
-**戻り値:** `Observable<SerialPort[]>` - 利用可能な `SerialPort` インスタンスの配列を発行
-
-#### `connect(port?: SerialPort): Observable<void>`
-
-シリアルポートに接続します。ポートが提供されない場合、ユーザーにリクエストします。
-
-**パラメータ:**
-
-- `port?` (オプション): `SerialPort` - 接続するポート
-
-**戻り値:** `Observable<void>` - ポートが開かれたときに完了
-
-#### `disconnect(): Observable<void>`
-
-シリアルポートから切断します。
-
-**戻り値:** `Observable<void>` - ポートが閉じられたときに完了
-
-#### `text$: Observable<Uint8Array>`
-
-シリアルポートから読み取ったデータを発行する Observable を取得します。
-
-**戻り値:** `Observable<Uint8Array>` - データが受信されると `Uint8Array` チャンクを発行
-
-#### `send$(data: string | Uint8Array): Observable<void>`
-
-シリアルポートへの送信をキューに追加し、順序を保って書き込みます。
-
-**パラメータ:**
-
-- `data`: `string | Uint8Array` - 書き込む文字列またはバイナリデータ
-
-**戻り値:** `Observable<void>` - キューに入った送信が完了したときに完了
-
-#### `write(data: Uint8Array): Observable<void>`
-
-シリアルポートに単一のデータチャンクを書き込みます。
-
-**パラメータ:**
-
-- `data`: `Uint8Array` - 書き込むデータ
-
-**戻り値:** `Observable<void>` - データが書き込まれたときに完了
-
-### プロパティ
-
-- `connected: boolean` - ポートが現在開いているかどうかを示す読み取り専用プロパティ
-- `currentPort: SerialPort | null` - 現在の `SerialPort` インスタンス、または接続されていない場合は `null` の読み取り専用プロパティ
-
-## `SerialClientOptions` インターフェース
-
-`SerialClient` を作成するための設定オプションです。
+### シグネチャ
 
 ```typescript
-interface SerialClientOptions {
-  baudRate?: number; // デフォルト: 9600
-  dataBits?: 7 | 8; // デフォルト: 8
-  stopBits?: 1 | 2; // デフォルト: 1
-  parity?: 'none' | 'even' | 'odd'; // デフォルト: 'none'
-  bufferSize?: number; // デフォルト: 255
-  flowControl?: 'none' | 'hardware'; // デフォルト: 'none'
-  filters?: SerialPortFilter[]; // オプションのポートフィルター
+function createSerialSession(options?: SerialSessionOptions): SerialSession;
+```
+
+## SerialSessionOptions
+
+| フィールド    | 型                                  | 既定値    | 説明                                                                         |
+| ------------- | ----------------------------------- | --------- | ---------------------------------------------------------------------------- |
+| `baudRate`    | `number`                            | `9600`    | ボーレート（bps）                                                            |
+| `dataBits`    | `7 \| 8`                            | `8`       | データビット                                                                 |
+| `stopBits`    | `1 \| 2`                            | `1`       | ストップビット                                                               |
+| `parity`      | `'none' \| 'even' \| 'odd'`         | `'none'`  | パリティ                                                                     |
+| `bufferSize`  | `number`                            | `255`     | リードストリームのバッファサイズ（バイト）                                   |
+| `flowControl` | `'none' \| 'hardware'`              | `'none'`  | フロー制御                                                                   |
+| `filters`     | `SerialPortFilter[]` \| `undefined` | —         | ポート選択ダイアログに渡される `navigator.serial.requestPort` 用フィルタ     |
+
+## SerialSessionState
+
+`state$` は以下のいずれかを emit します。
+
+- `'idle'` — ポート未接続。Web Serial 対応環境での初期値。
+- `'connecting'` — `connect$` 実行中。
+- `'connected'` — ポートが開いており read pump が動作中。
+- `'disconnecting'` — `disconnect$` 実行中。
+- `'unsupported'` — `navigator.serial` が存在しない環境でセッションを生成した場合。
+- `'error'` — 致命的な失敗が発生した。`disconnect$` を呼ぶかセッションを再生成して復帰する。
+
+遷移:
+
+```
+idle -> connecting -> connected -> disconnecting -> idle
+                              \-> error
+idle / connected / connecting / disconnecting / error -> error（致命的失敗）
+any -> unsupported（生成時に navigator.serial が存在しない場合）
+```
+
+## SerialSession
+
+```typescript
+interface SerialSession {
+  isBrowserSupported(): boolean;
+
+  connect$(): Observable<void>;
+  disconnect$(): Observable<void>;
+
+  readonly state$: Observable<SerialSessionState>;
+  readonly errors$: Observable<SerialError>;
+  readonly receive$: Observable<string>;
+
+  send$(data: string | Uint8Array): Observable<void>;
 }
 ```
-
-**オプション:**
-
-- `baudRate` (オプション): 通信速度（ビット/秒）。デフォルト: `9600`
-- `dataBits` (オプション): 文字あたりのデータビット数。`7` または `8`。デフォルト: `8`
-- `stopBits` (オプション): ストップビット数。`1` または `2`。デフォルト: `1`
-- `parity` (オプション): パリティチェックモード。`'none'`、`'even'`、または `'odd'`。デフォルト: `'none'`
-- `bufferSize` (オプション): 読み取りバッファのサイズ。デフォルト: `255`
-- `flowControl` (オプション): フロー制御モード。`'none'` または `'hardware'`。デフォルト: `'none'`
-- `filters` (オプション): 利用可能なポートをフィルタリングする `SerialPortFilter` オブジェクトの配列
-
-## エラーハンドリング
-
-### `SerialError` クラス
-
-シリアルポート操作のためのカスタムエラークラスです。
-
-```typescript
-class SerialError extends Error {
-  readonly code: SerialErrorCode;
-  readonly originalError?: Error;
-
-  is(code: SerialErrorCode): boolean;
-}
-```
-
-**プロパティ:**
-
-- `code`: `SerialErrorCode` - エラーコード
-- `originalError?`: `Error` - このエラーを引き起こした元のエラー（存在する場合）
-
-**メソッド:**
-
-- `is(code: SerialErrorCode): boolean` - エラーが特定のエラーコードと一致するかチェック
-
-### `SerialErrorCode` 列挙型
-
-さまざまなタイプのシリアルポートエラーのエラーコード：
-
-- `BROWSER_NOT_SUPPORTED` - ブラウザが Web Serial API をサポートしていない
-- `PORT_NOT_AVAILABLE` - シリアルポートが利用できない
-- `PORT_OPEN_FAILED` - シリアルポートを開くのに失敗した
-- `PORT_ALREADY_OPEN` - シリアルポートは既に開いている
-- `PORT_NOT_OPEN` - シリアルポートが開いていない
-- `READ_FAILED` - シリアルポートからの読み取りに失敗した
-- `WRITE_FAILED` - シリアルポートへの書き込みに失敗した
-- `CONNECTION_LOST` - シリアルポート接続が切断された
-- `INVALID_FILTER_OPTIONS` - 無効なフィルターオプション
-- `OPERATION_CANCELLED` - 操作がキャンセルされた
-- `UNKNOWN` - 不明なエラー
-
-## ブラウザ検出ユーティリティ
 
 ### `isBrowserSupported(): boolean`
 
-ブラウザが Web Serial API をサポートしているかチェックします（例外を投げないバージョン）。
+同期的な feature detection。`navigator.serial` が存在すれば `true` を返します。
 
-**戻り値:** `boolean` - サポートされている場合は `true`、それ以外は `false`
+### `connect$(): Observable<void>`
 
-### `checkBrowserSupport(): void`
+ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時は subscriber と `errors$` の両方にエラーを流します。状態遷移は `idle → connecting → connected`。
 
-ブラウザが Web Serial API をサポートしているかチェックします。サポートされていない場合は `SerialError` を投げます。
+### `disconnect$(): Observable<void>`
 
-**例外:** Web Serial API をサポートしていない場合、`BROWSER_NOT_SUPPORTED` コードを持つ `SerialError` を投げます
+read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。
 
-### `detectBrowserType(): BrowserType`
+### `state$: Observable<SerialSessionState>`
 
-ユーザーエージェントからブラウザタイプを検出します。
+購読時に現在値をリプレイします。`BehaviorSubject` を自前で再構築する代わりに、このストリームを UI の駆動源として使ってください。
 
-**戻り値:** `BrowserType` - `CHROME`、`EDGE`、`OPERA`、または `UNKNOWN` のいずれか
+### `errors$: Observable<SerialError>`
 
-### `hasWebSerialSupport(): boolean`
+主エラーチャネル。接続・読み取り・書き込み・クローズで発生したすべての失敗が `SerialError` に正規化されて流れます。致命的な失敗は `state$` を `'error'` に遷移させ、read pump とポートをテアダウンします。
 
-機能検出を使用してブラウザが Web Serial API サポートを持っているかチェックします。
+### `receive$: Observable<string>`
 
-**戻り値:** `boolean` - Web Serial API が利用可能な場合は `true`、それ以外は `false`
+内部の read pump が push する UTF-8 デコード済みテキスト。**subscription-lazy ではありません**：pump は `connect$` によって起動され、チャンクは multicast されます。遅れて購読した consumer は新しいデータのみを受け取ります。
 
-## I/O ユーティリティ
+### `send$(data: string | Uint8Array): Observable<void>`
 
-### `readableToObservable(stream: ReadableStream<Uint8Array>): Observable<Uint8Array>`
+ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。
 
-`ReadableStream` を RxJS `Observable` に変換します。
+## SerialError / SerialErrorCode
 
-**パラメータ:**
+`SerialError` は `Error` を継承し、`code: SerialErrorCode` と任意の `originalError: Error` を持ちます。`is(code): boolean` で簡潔にコード判定できます。
 
-- `stream`: `ReadableStream<Uint8Array>` - 変換するストリーム
-
-**戻り値:** `Observable<Uint8Array>` - データチャンクを発行する Observable
-
-### `observableToWritable(observable: Observable<Uint8Array>): WritableStream<Uint8Array>`
-
-RxJS `Observable` を `WritableStream` に変換します。
-
-**パラメータ:**
-
-- `observable`: `Observable<Uint8Array>` - 変換する observable
-
-**戻り値:** `WritableStream<Uint8Array>` - observable からデータを書き込む書き込み可能なストリーム
-
-### `subscribeToWritable(observable: Observable<Uint8Array>, stream: WritableStream<Uint8Array>): { unsubscribe: () => void }`
-
-Observable を購読し、その値を WritableStream に書き込みます。
-
-**パラメータ:**
-
-- `observable`: `Observable<Uint8Array>` - 購読する observable
-- `stream`: `WritableStream<Uint8Array>` - 書き込むストリーム
-
-**戻り値:** `unsubscribe()` メソッドを持つ購読オブジェクト
+| Code                     | emit されるタイミング                                              |
+| ------------------------ | ------------------------------------------------------------------ |
+| `BROWSER_NOT_SUPPORTED`  | 生成時／`connect$` 時に `navigator.serial` が無い                  |
+| `PORT_NOT_AVAILABLE`     | 要求ポートにアクセスできない                                       |
+| `PORT_OPEN_FAILED`       | `port.open()` が reject                                            |
+| `PORT_ALREADY_OPEN`      | `'idle'` / `'error'` 以外で `connect$` を呼んだ                    |
+| `PORT_NOT_OPEN`          | 許可されない状態で `send$` / `disconnect$` を呼んだ                |
+| `READ_FAILED`            | 内部 read pump でエラーが発生                                      |
+| `WRITE_FAILED`           | `port.writable.getWriter().write()` が reject                      |
+| `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
+| `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる                                     |
+| `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
+| `OPERATION_TIMEOUT`      | 内部操作がタイムアウト                                             |
+| `UNKNOWN`                | 分類不能なエラー。`originalError` を確認                           |

@@ -1,50 +1,27 @@
 # Quick Start
 
-Here's a simple example to get you started:
+The v2 public API is a single `SerialSession` created by `createSerialSession`. Subscribe to `state$`, `receive$`, and `errors$` and drive the port through `connect$`, `disconnect$`, and `send$`.
 
 ```typescript
-import {
-  createSerialClient,
-  isBrowserSupported,
-} from '@gurezo/web-serial-rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-// Check browser support
-if (!isBrowserSupported()) {
+const session = createSerialSession({ baudRate: 9600 });
+
+if (!session.isBrowserSupported()) {
   console.error('Web Serial API is not supported in this browser');
-  return;
 }
 
-// Create a serial client
-const client = createSerialClient({ baudRate: 9600 });
+session.state$.subscribe((state) => console.log('State:', state));
+session.receive$.subscribe((text) => console.log('Received:', text));
+session.errors$.subscribe((error) => console.error('Serial error:', error));
 
-// Connect to a serial port
-client.connect().subscribe({
+session.connect$().subscribe({
   next: () => {
-    console.log('Connected to serial port');
-
-    // Read data from the serial port
-    client.text$.subscribe({
-      next: (data: Uint8Array) => {
-        const decoder = new TextDecoder('utf-8');
-        const text = decoder.decode(data);
-        console.log('Received:', text);
-      },
-      error: (error) => {
-        console.error('Read error:', error);
-      },
-    });
-
-    // Write data to the serial port
-    const encoder = new TextEncoder();
-    const data = encoder.encode('Hello, Serial Port!\n');
-    client.write(data).subscribe({
-      next: () => console.log('Data written'),
-      error: (error) => console.error('Write error:', error),
+    session.send$('help\n').subscribe({
+      error: (error) => console.error('Send error:', error),
     });
   },
-  error: (error) => {
-    console.error('Connection error:', error);
-  },
+  error: (error) => console.error('Connection error:', error),
 });
 ```
 
@@ -53,110 +30,109 @@ client.connect().subscribe({
 ### Basic Connection
 
 ```typescript
-import { createSerialClient } from '@gurezo/web-serial-rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-const client = createSerialClient({
+const session = createSerialSession({
   baudRate: 115200,
   dataBits: 8,
   stopBits: 1,
   parity: 'none',
 });
 
-// Connect (will prompt user to select a port)
-client.connect().subscribe({
+session.connect$().subscribe({
   next: () => console.log('Connected'),
   error: (error) => console.error('Connection failed:', error),
 });
 ```
 
-### Reading Data
+### Reading Text
+
+`receive$` emits UTF-8 decoded strings using a streaming `TextDecoder`. Multi-byte characters split across chunks are joined automatically. Use RxJS operators when you need line framing.
 
 ```typescript
-import { createSerialClient } from '@gurezo/web-serial-rxjs';
-import { map } from 'rxjs/operators';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { scan, filter, map } from 'rxjs';
 
-const client = createSerialClient({ baudRate: 9600 });
+const session = createSerialSession({ baudRate: 9600 });
 
-client.connect().subscribe({
-  next: () => {
-    // Read and decode data
-    client
-      .text$
-      .pipe(
-        map((data: Uint8Array) => {
-          const decoder = new TextDecoder('utf-8');
-          return decoder.decode(data);
-        }),
-      )
-      .subscribe({
-        next: (text) => console.log('Received:', text),
-        error: (error) => console.error('Read error:', error),
-      });
-  },
-});
+session.connect$().subscribe();
+
+session.receive$.subscribe((chunk) => console.log('Chunk:', chunk));
+
+session.receive$
+  .pipe(
+    scan(
+      (acc, chunk) => {
+        const combined = acc.buffer + chunk;
+        const parts = combined.split('\n');
+        return { buffer: parts.pop() ?? '', lines: parts };
+      },
+      { buffer: '', lines: [] as string[] },
+    ),
+    filter((s) => s.lines.length > 0),
+    map((s) => s.lines),
+  )
+  .subscribe((lines) => lines.forEach((line) => console.log('Line:', line)));
 ```
 
-### Writing Data
+### Ordered Sends
+
+`send$` internally serialises concurrent calls through a FIFO queue so payloads reach the port in call order.
 
 ```typescript
-import { createSerialClient } from '@gurezo/web-serial-rxjs';
-import { from } from 'rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { from, concatMap } from 'rxjs';
 
-const client = createSerialClient({ baudRate: 9600 });
+const session = createSerialSession({ baudRate: 9600 });
 
-client.connect().subscribe({
+session.connect$().subscribe({
   next: () => {
-    // Write a single chunk
-    const encoder = new TextEncoder();
-    const data = encoder.encode('Hello\n');
-    client.write(data).subscribe({
-      next: () => console.log('Written'),
-      error: (error) => console.error('Write error:', error),
-    });
-
-    // Queue multiple writes in order
     const messages = ['Message 1\n', 'Message 2\n', 'Message 3\n'];
-    from(messages).subscribe((msg) => {
-      client.send$(msg).subscribe({
-        next: () => console.log('Message written'),
-        error: (error) => console.error('Queued write error:', error),
+    from(messages)
+      .pipe(concatMap((msg) => session.send$(msg)))
+      .subscribe({
+        error: (error) => console.error('Send error:', error),
       });
-    });
   },
 });
 ```
 
 ### Error Handling
 
+Every failure (connect / read / write / close) is normalised to `SerialError` and multiplexed on `errors$`. Fatal failures additionally drive `state$` into `'error'`.
+
 ```typescript
 import {
-  createSerialClient,
+  createSerialSession,
   SerialError,
   SerialErrorCode,
 } from '@gurezo/web-serial-rxjs';
 
-const client = createSerialClient({ baudRate: 9600 });
+const session = createSerialSession({ baudRate: 9600 });
 
-client.connect().subscribe({
-  next: () => console.log('Connected'),
-  error: (error) => {
-    if (error instanceof SerialError) {
-      switch (error.code) {
-        case SerialErrorCode.BROWSER_NOT_SUPPORTED:
-          console.error('Browser does not support Web Serial API');
-          break;
-        case SerialErrorCode.PORT_NOT_AVAILABLE:
-          console.error('Serial port is not available');
-          break;
-        case SerialErrorCode.CONNECTION_LOST:
-          console.error('Connection lost');
-          break;
-        default:
-          console.error('Serial error:', error.message);
-      }
-    } else {
-      console.error('Unknown error:', error);
-    }
+session.errors$.subscribe((error: SerialError) => {
+  switch (error.code) {
+    case SerialErrorCode.BROWSER_NOT_SUPPORTED:
+      console.error('Browser does not support Web Serial API');
+      break;
+    case SerialErrorCode.PORT_OPEN_FAILED:
+      console.error('Failed to open port:', error.message);
+      break;
+    case SerialErrorCode.READ_FAILED:
+    case SerialErrorCode.CONNECTION_LOST:
+      console.error('Connection lost');
+      break;
+    case SerialErrorCode.WRITE_FAILED:
+      console.error('Write failed:', error.message);
+      break;
+    default:
+      console.error('Serial error:', error);
+  }
+});
+
+session.connect$().subscribe({
+  error: () => {
+    // already surfaced via errors$
   },
 });
 ```
@@ -164,30 +140,20 @@ client.connect().subscribe({
 ### Port Filtering
 
 ```typescript
-import { createSerialClient } from '@gurezo/web-serial-rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
-// Filter ports by USB vendor ID
-const client = createSerialClient({
+const session = createSerialSession({
   baudRate: 9600,
   filters: [{ usbVendorId: 0x1234 }, { usbVendorId: 0x5678 }],
 });
 
-// Request a specific port
-client.requestPort().subscribe({
-  next: (port) => {
-    console.log('Port selected:', port);
-    // Connect to the selected port
-    client.connect(port).subscribe({
-      next: () => console.log('Connected to filtered port'),
-      error: (error) => console.error('Connection error:', error),
-    });
-  },
-  error: (error) => console.error('Port request error:', error),
+session.connect$().subscribe({
+  error: (error) => console.error('Connection error:', error),
 });
 ```
 
 ## Next Steps
 
-- See [API Reference](./API_REFERENCE.md) for detailed API documentation
-- Check out [Advanced Usage](./ADVANCED_USAGE.md) for more complex patterns
-- Explore [Framework Examples](../README.md#framework-examples) for framework-specific integrations
+- See [API Reference](./API_REFERENCE.md) for the full `SerialSession` surface.
+- Check out [Advanced Usage](./ADVANCED_USAGE.md) for more patterns.
+- Coming from v1? Read the [v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/docs/MIGRATION_V2.md).
