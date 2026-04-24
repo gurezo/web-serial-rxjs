@@ -10,9 +10,9 @@
       <h2>ブラウザサポート</h2>
       <div
         class="status-message"
-        [ngClass]="(browserSupported$ | async) ? 'success' : 'error'"
+        [ngClass]="browserSupported ? 'success' : 'error'"
       >
-        {{ (browserSupported$ | async) ? 'ブラウザは Web Serial API
+        {{ browserSupported ? 'ブラウザは Web Serial API
         をサポートしています。' : 'このブラウザは Web Serial API
         をサポートしていません。Chrome、Edge、Opera などの Chromium
         ベースのブラウザをご使用ください。' }}
@@ -28,7 +28,7 @@
           id="baud-rate"
           class="form-control"
           [(ngModel)]="baudRate"
-          [disabled]="getConnected(connectionState$ | async)"
+          [disabled]="connected"
         >
           <option [value]="9600">9600</option>
           <option [value]="19200">19200</option>
@@ -39,40 +39,22 @@
       </div>
       <div class="button-group">
         <button
-          class="btn btn-outline"
-          (click)="handleRequestPort()"
-          [disabled]="
-            !getBrowserSupported(browserSupported$ | async) ||
-            getConnected(connectionState$ | async) ||
-            getConnecting(connectionState$ | async)
-          "
-        >
-          ポートを選択
-        </button>
-        <button
           class="btn btn-primary"
           (click)="handleConnect()"
-          [disabled]="
-            !getBrowserSupported(browserSupported$ | async) ||
-            getConnected(connectionState$ | async) ||
-            getConnecting(connectionState$ | async)
-          "
+          [disabled]="!browserSupported || connected || connecting"
         >
           接続
         </button>
         <button
           class="btn btn-secondary"
           (click)="handleDisconnect()"
-          [disabled]="
-            !getConnected(connectionState$ | async) ||
-            getDisconnecting(connectionState$ | async)
-          "
+          [disabled]="!connected || disconnecting"
         >
           切断
         </button>
       </div>
-      <div class="status-message" [ngClass]="(status$ | async)?.type">
-        {{ (status$ | async)?.message }}
+      <div class="status-message" [ngClass]="status.type">
+        {{ status.message }}
       </div>
     </section>
 
@@ -88,15 +70,13 @@
             class="form-control"
             [(ngModel)]="sendInput"
             (keydown)="handleKeyDown($event)"
-            [disabled]="!getConnected(connectionState$ | async)"
+            [disabled]="!connected"
             placeholder="送信するテキストを入力..."
           />
           <button
             class="btn btn-primary"
             (click)="handleSend()"
-            [disabled]="
-              !getConnected(connectionState$ | async) || !sendInput.trim()
-            "
+            [disabled]="!connected || !sendInput.trim()"
           >
             送信
           </button>
@@ -112,7 +92,7 @@
         <textarea
           id="receive-output"
           class="form-control receive-output"
-          [value]="receivedData$ | async"
+          [value]="receivedData()"
           readonly
           placeholder="受信したデータがここに表示されます..."
         ></textarea>
@@ -121,7 +101,7 @@
         <button
           class="btn btn-secondary"
           (click)="clearReceivedData()"
-          [disabled]="!hasReceivedData(receivedData$ | async)"
+          [disabled]="!hasReceivedData"
         >
           クリア
         </button>

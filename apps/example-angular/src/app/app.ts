@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { Observable, map } from 'rxjs';
-import type { SerialConnectionState } from './services/serial-client.service';
+import type { SerialSessionState } from '@gurezo/web-serial-rxjs';
 import { SerialClientService } from './services/serial-client.service';
+
+type StatusType = 'info' | 'success' | 'error';
 
 @Component({
   imports: [CommonModule, FormsModule, RouterModule],
@@ -17,94 +19,109 @@ export class App {
   sendInput = '';
 
   private readonly serialService = inject(SerialClientService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  browserSupported$: Observable<boolean>;
-  connectionState$: Observable<
-    import('./services/serial-client.service').SerialConnectionState
-  >;
-  receivedData$: Observable<string>;
-  status$: Observable<{ type: string; message: string }>;
+  readonly browserSupported = this.serialService.isBrowserSupported();
+  readonly state = signal<SerialSessionState>('idle');
+  readonly receivedData = signal('');
+  readonly errorMessage = signal<string | null>(null);
 
   constructor() {
-    this.browserSupported$ = this.serialService.browserSupported;
-    this.connectionState$ = this.serialService.connectionState;
-    this.receivedData$ = this.serialService.receivedData;
+    this.serialService.state$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((state) => {
+        this.state.set(state);
+        if (state === 'connected' || state === 'idle') {
+          this.errorMessage.set(null);
+        }
+      });
 
-    // ステータスメッセージを計算
-    this.status$ = this.connectionState$.pipe(
-      map((state) => {
-        if (state.error) {
-          return { type: 'error', message: state.error };
-        }
-        if (state.connecting) {
-          return { type: 'info', message: '接続中...' };
-        }
-        if (state.disconnecting) {
-          return { type: 'info', message: '切断中...' };
-        }
-        if (state.connected) {
-          return { type: 'success', message: 'シリアルポートに接続しました。' };
-        }
+    this.serialService.receive$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((chunk) => {
+        this.receivedData.update((prev) => prev + chunk);
+      });
+
+    this.serialService.errors$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((error) => {
+        this.errorMessage.set(error.message);
+      });
+  }
+
+  get connected(): boolean {
+    return this.state() === 'connected';
+  }
+
+  get connecting(): boolean {
+    return this.state() === 'connecting';
+  }
+
+  get disconnecting(): boolean {
+    return this.state() === 'disconnecting';
+  }
+
+  get hasReceivedData(): boolean {
+    return this.receivedData().length > 0;
+  }
+
+  get status(): { type: StatusType; message: string } {
+    const error = this.errorMessage();
+    if (error) {
+      return { type: 'error', message: `エラー: ${error}` };
+    }
+    switch (this.state()) {
+      case 'connecting':
+        return { type: 'info', message: '接続中...' };
+      case 'disconnecting':
+        return { type: 'info', message: '切断中...' };
+      case 'connected':
+        return { type: 'success', message: 'シリアルポートに接続しました。' };
+      case 'unsupported':
+        return {
+          type: 'error',
+          message:
+            'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
+        };
+      case 'error':
+        return { type: 'error', message: 'エラーが発生しました。' };
+      default:
         return { type: 'info', message: 'シリアルポートに接続していません。' };
-      }),
-    );
-  }
-
-  /**
-   * 接続ボタンのハンドラ
-   */
-  async handleConnect(): Promise<void> {
-    try {
-      await this.serialService.connectAsync(this.baudRate);
-    } catch (error) {
-      // エラーは SerialClientService 内で処理される
-      console.error('接続エラー:', error);
     }
   }
 
-  /**
-   * 切断ボタンのハンドラ
-   */
-  async handleDisconnect(): Promise<void> {
-    try {
-      await this.serialService.disconnectAsync();
-    } catch (error) {
-      // エラーは SerialClientService 内で処理される
-      console.error('切断エラー:', error);
-    }
+  handleConnect(): void {
+    this.errorMessage.set(null);
+    this.serialService.connect$(this.baudRate).subscribe({
+      error: (error: unknown) => {
+        console.error('接続エラー:', error);
+      },
+    });
   }
 
-  /**
-   * ポートリクエストボタンのハンドラ
-   */
-  async handleRequestPort(): Promise<void> {
-    try {
-      await this.serialService.requestPortAsync();
-    } catch (error) {
-      // エラーは SerialClientService 内で処理される
-      console.error('ポート選択エラー:', error);
-    }
+  handleDisconnect(): void {
+    this.serialService.disconnect$().subscribe({
+      error: (error: unknown) => {
+        console.error('切断エラー:', error);
+      },
+    });
   }
 
-  /**
-   * 送信ボタンのハンドラ
-   */
-  async handleSend(): Promise<void> {
-    if (!this.sendInput.trim()) {
+  handleSend(): void {
+    const text = this.sendInput.trim();
+    if (!text) {
       return;
     }
-
-    try {
-      await this.serialService.sendAsync(this.sendInput);
-      this.sendInput = ''; // 送信成功後に入力欄をクリア
-    } catch (error) {
-      console.error('送信エラー:', error);
-    }
+    this.serialService.send$(`${text}\n`).subscribe({
+      next: () => {
+        this.sendInput = '';
+      },
+      error: (error: unknown) => {
+        console.error('送信エラー:', error);
+      },
+    });
   }
 
-  /**
-   * Enter キーで送信
-   */
   handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -112,45 +129,7 @@ export class App {
     }
   }
 
-  /**
-   * 受信データをクリア
-   */
   clearReceivedData(): void {
-    this.serialService.clearReceivedData();
-  }
-
-  /**
-   * ヘルパーメソッド: ブラウザサポート状態を取得
-   */
-  getBrowserSupported(bs: boolean | null | undefined): boolean {
-    return bs ?? false;
-  }
-
-  /**
-   * ヘルパーメソッド: 接続状態を取得
-   */
-  getConnected(state: SerialConnectionState | null | undefined): boolean {
-    return state?.connected ?? false;
-  }
-
-  /**
-   * ヘルパーメソッド: 接続中状態を取得
-   */
-  getConnecting(state: SerialConnectionState | null | undefined): boolean {
-    return state?.connecting ?? false;
-  }
-
-  /**
-   * ヘルパーメソッド: 切断中状態を取得
-   */
-  getDisconnecting(state: SerialConnectionState | null | undefined): boolean {
-    return state?.disconnecting ?? false;
-  }
-
-  /**
-   * ヘルパーメソッド: 受信データが空でないか
-   */
-  hasReceivedData(data: string | null | undefined): boolean {
-    return !!data;
+    this.receivedData.set('');
   }
 }
