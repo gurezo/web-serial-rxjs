@@ -1,5 +1,6 @@
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
+import { normalizeSerialError } from './normalize-serial-error';
 
 /**
  * Callback invoked for every decoded chunk the read pump produces.
@@ -85,14 +86,6 @@ export function createReadPump(
   let stopped = false;
   const decoder = new TextDecoder(undefined, { fatal: false });
 
-  const normalizeError = (error: unknown, code: SerialErrorCode): SerialError => {
-    if (error instanceof SerialError) {
-      return error;
-    }
-    const cause = error instanceof Error ? error : new Error(String(error));
-    return new SerialError(code, `Read pump failed: ${cause.message}`, cause);
-  };
-
   const releaseReader = (): void => {
     if (!reader) {
       return;
@@ -129,7 +122,12 @@ export function createReadPump(
       }
     } catch (error) {
       if (!stopped) {
-        onError(normalizeError(error, SerialErrorCode.READ_FAILED));
+        onError(
+          normalizeSerialError(error, {
+            fallbackCode: SerialErrorCode.READ_FAILED,
+            messagePrefix: 'Read pump failed',
+          }),
+        );
       }
     } finally {
       running = false;
