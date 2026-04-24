@@ -1,104 +1,88 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useSerialClient } from '../composables/useSerialClient';
 
-/**
- * メインアプリケーションコンポーネント
- */
+type StatusType = 'info' | 'success' | 'error';
+
 const baudRate = ref(9600);
 const sendInput = ref('');
 
 const {
   browserSupported,
-  connectionState,
+  state,
   receivedData,
-  connect,
-  disconnect,
-  requestPort,
-  send,
+  errorMessage,
+  connect$,
+  disconnect$,
+  send$,
   clearReceivedData,
 } = useSerialClient(baudRate.value);
 
-/**
- * 接続ボタンのハンドラ
- */
-const handleConnect = async () => {
-  try {
-    await connect(baudRate.value);
-  } catch (error) {
-    // エラーは useSerialClient 内で処理される
-    console.error('接続エラー:', error);
+const connected = computed(() => state.value === 'connected');
+const connecting = computed(() => state.value === 'connecting');
+const disconnecting = computed(() => state.value === 'disconnecting');
+
+const status = computed<{ type: StatusType; message: string }>(() => {
+  if (errorMessage.value) {
+    return { type: 'error', message: `エラー: ${errorMessage.value}` };
   }
+  switch (state.value) {
+    case 'connecting':
+      return { type: 'info', message: '接続中...' };
+    case 'disconnecting':
+      return { type: 'info', message: '切断中...' };
+    case 'connected':
+      return { type: 'success', message: 'シリアルポートに接続しました。' };
+    case 'unsupported':
+      return {
+        type: 'error',
+        message:
+          'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
+      };
+    case 'error':
+      return { type: 'error', message: 'エラーが発生しました。' };
+    default:
+      return { type: 'info', message: 'シリアルポートに接続していません。' };
+  }
+});
+
+const handleConnect = () => {
+  connect$(baudRate.value).subscribe({
+    error: (error: unknown) => {
+      console.error('接続エラー:', error);
+    },
+  });
 };
 
-/**
- * 切断ボタンのハンドラ
- */
-const handleDisconnect = async () => {
-  try {
-    await disconnect();
-  } catch (error) {
-    // エラーは useSerialClient 内で処理される
-    console.error('切断エラー:', error);
-  }
+const handleDisconnect = () => {
+  disconnect$().subscribe({
+    error: (error: unknown) => {
+      console.error('切断エラー:', error);
+    },
+  });
 };
 
-/**
- * ポートリクエストボタンのハンドラ
- */
-const handleRequestPort = async () => {
-  try {
-    await requestPort();
-  } catch (error) {
-    // エラーは useSerialClient 内で処理される
-    console.error('ポート選択エラー:', error);
-  }
-};
-
-/**
- * 送信ボタンのハンドラ
- */
-const handleSend = async () => {
-  if (!sendInput.value.trim()) {
+const handleSend = () => {
+  const text = sendInput.value.trim();
+  if (!text) {
     return;
   }
-
-  try {
-    await send(sendInput.value);
-    sendInput.value = ''; // 送信成功後に入力欄をクリア
-  } catch (error) {
-    console.error('送信エラー:', error);
-  }
+  send$(`${text}\n`).subscribe({
+    next: () => {
+      sendInput.value = '';
+    },
+    error: (error: unknown) => {
+      console.error('送信エラー:', error);
+    },
+  });
 };
 
-/**
- * Enter キーで送信
- */
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     handleSend();
   }
 };
-
-/**
- * ステータスメッセージを取得
- */
-const status = computed(() => {
-  if (connectionState.value.error) {
-    return { type: 'error', message: connectionState.value.error };
-  }
-  if (connectionState.value.connecting) {
-    return { type: 'info', message: '接続中...' };
-  }
-  if (connectionState.value.disconnecting) {
-    return { type: 'info', message: '切断中...' };
-  }
-  if (connectionState.value.connected) {
-    return { type: 'success', message: 'シリアルポートに接続しました。' };
-  }
-  return { type: 'info', message: 'シリアルポートに接続していません。' };
-});
 </script>
 
 <template>
@@ -138,7 +122,7 @@ const status = computed(() => {
             class="form-control"
             :value="baudRate"
             @change="(e) => (baudRate = Number((e.target as HTMLSelectElement).value))"
-            :disabled="connectionState.connected"
+            :disabled="connected"
           >
             <option :value="9600">9600</option>
             <option :value="19200">19200</option>
@@ -149,33 +133,16 @@ const status = computed(() => {
         </div>
         <div class="button-group">
           <button
-            class="btn btn-outline"
-            @click="handleRequestPort"
-            :disabled="
-              !browserSupported ||
-              connectionState.connected ||
-              connectionState.connecting
-            "
-          >
-            ポートを選択
-          </button>
-          <button
             class="btn btn-primary"
             @click="handleConnect"
-            :disabled="
-              !browserSupported ||
-              connectionState.connected ||
-              connectionState.connecting
-            "
+            :disabled="!browserSupported || connected || connecting"
           >
             接続
           </button>
           <button
             class="btn btn-secondary"
             @click="handleDisconnect"
-            :disabled="
-              !connectionState.connected || connectionState.disconnecting
-            "
+            :disabled="!connected || disconnecting"
           >
             切断
           </button>
@@ -197,13 +164,13 @@ const status = computed(() => {
               class="form-control"
               v-model="sendInput"
               @keydown="handleKeyDown"
-              :disabled="!connectionState.connected"
+              :disabled="!connected"
               placeholder="送信するテキストを入力..."
             />
             <button
               class="btn btn-primary"
               @click="handleSend"
-              :disabled="!connectionState.connected || !sendInput.trim()"
+              :disabled="!connected || !sendInput.trim()"
             >
               送信
             </button>
