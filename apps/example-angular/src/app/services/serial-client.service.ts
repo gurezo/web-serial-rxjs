@@ -1,443 +1,69 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import {
-  createSerialClient,
-  isBrowserSupported,
-  SerialClient,
+  createSerialSession,
   SerialError,
+  SerialSession,
+  SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import {
-  BehaviorSubject,
-  firstValueFrom,
-  Observable,
-  Subscription,
-} from 'rxjs';
+import { Observable, ReplaySubject, switchMap } from 'rxjs';
 
 /**
- * SerialClient の接続状態を表す型
- */
-export interface SerialConnectionState {
-  /** 接続中かどうか */
-  connected: boolean;
-  /** 接続中かどうか */
-  connecting: boolean;
-  /** 切断中かどうか */
-  disconnecting: boolean;
-  /** エラーが発生したかどうか */
-  error: string | null;
-}
-
-/**
- * Web Serial API を使用するための Angular Service
+ * v2 SerialSession を薄くラップした Angular Service。
+ *
+ * 状態 (`state$`)・受信 (`receive$`)・エラー (`errors$`) はライブラリ側の
+ * ストリームをそのまま公開する。旧実装にあった `BehaviorSubject` ベースの
+ * 接続状態再合成・`text$` 手動購読・read loop 管理は一切持たない。
+ *
+ * @see https://github.com/gurezo/web-serial-rxjs/issues/199
+ * @see https://github.com/gurezo/web-serial-rxjs/issues/205
  */
 @Injectable({ providedIn: 'root' })
 export class SerialClientService implements OnDestroy {
-  private client: SerialClient | null = null;
-  private readSubscription: Subscription | null = null;
-  private stateSubscription: Subscription | null = null;
-  private baudRate = 9600;
+  private readonly sessions$ = new ReplaySubject<SerialSession>(1);
+  private currentSession: SerialSession;
+  private currentBaudRate: number;
 
-  private readonly browserSupported$ = new BehaviorSubject<boolean>(false);
-  private readonly connectionState$ =
-    new BehaviorSubject<SerialConnectionState>({
-      connected: false,
-      connecting: false,
-      disconnecting: false,
-      error: null,
-    });
-  private readonly receivedData$ = new BehaviorSubject<string>('');
-
-  /**
-   * ブラウザサポート状態のObservable
-   */
-  get browserSupported(): Observable<boolean> {
-    return this.browserSupported$.asObservable();
-  }
-
-  /**
-   * 接続状態のObservable
-   */
-  get connectionState(): Observable<SerialConnectionState> {
-    return this.connectionState$.asObservable();
-  }
-
-  /**
-   * 受信データのObservable
-   */
-  get receivedData(): Observable<string> {
-    return this.receivedData$.asObservable();
-  }
+  readonly state$: Observable<SerialSessionState>;
+  readonly receive$: Observable<string>;
+  readonly errors$: Observable<SerialError>;
 
   constructor() {
-    // ブラウザサポートをチェック
-    const supported = isBrowserSupported();
-    this.browserSupported$.next(supported);
+    this.currentBaudRate = 9600;
+    this.currentSession = createSerialSession({
+      baudRate: this.currentBaudRate,
+    });
+    this.sessions$.next(this.currentSession);
+
+    this.state$ = this.sessions$.pipe(switchMap((session) => session.state$));
+    this.receive$ = this.sessions$.pipe(
+      switchMap((session) => session.receive$),
+    );
+    this.errors$ = this.sessions$.pipe(switchMap((session) => session.errors$));
   }
 
   ngOnDestroy(): void {
-    this.cleanup();
+    this.currentSession.disconnect$().subscribe({ error: () => void 0 });
+    this.sessions$.complete();
   }
 
-  /**
-   * クリーンアップ処理
-   */
-  private cleanup(): void {
-    if (this.readSubscription) {
-      this.readSubscription.unsubscribe();
-      this.readSubscription = null;
-    }
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-      this.stateSubscription = null;
-    }
-    if (this.client?.connected) {
-      this.client.disconnect().subscribe();
-    }
+  isBrowserSupported(): boolean {
+    return this.currentSession.isBrowserSupported();
   }
 
-  /**
-   * 読み取りを開始
-   */
-  private startReading(): void {
-    if (!this.client || !this.client.connected) {
-      return;
+  connect$(baudRate?: number): Observable<void> {
+    if (baudRate !== undefined && baudRate !== this.currentBaudRate) {
+      this.currentBaudRate = baudRate;
+      this.currentSession = createSerialSession({ baudRate });
+      this.sessions$.next(this.currentSession);
     }
-
-    // 既存の購読を停止
-    if (this.readSubscription) {
-      this.readSubscription.unsubscribe();
-      this.readSubscription = null;
-    }
-
-    const readStream$ = this.client.text$;
-
-    this.readSubscription = readStream$.subscribe({
-      next: (text: string) => {
-        // 受信データを追加
-        this.receivedData$.next(this.receivedData$.value + text);
-      },
-      error: (error: unknown) => {
-        let message = '読み取りエラーが発生しました。';
-        if (error instanceof SerialError) {
-          message = `エラー: ${error.message}`;
-        } else if (error instanceof Error) {
-          message = `エラー: ${error.message}`;
-        }
-        this.connectionState$.next({
-          ...this.connectionState$.value,
-          error: message,
-        });
-        // 読み取りエラー時は切断
-        this.disconnect();
-      },
-    });
+    return this.currentSession.connect$();
   }
 
-  /**
-   * 読み取りを停止
-   */
-  private stopReading(): void {
-    if (this.readSubscription) {
-      this.readSubscription.unsubscribe();
-      this.readSubscription = null;
-    }
+  disconnect$(): Observable<void> {
+    return this.currentSession.disconnect$();
   }
 
-  private subscribeState(): void {
-    if (!this.client) {
-      return;
-    }
-    const state$ = (this.client as unknown as { state$?: Observable<unknown> })
-      .state$;
-    if (!state$ || typeof state$.subscribe !== 'function') {
-      return;
-    }
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-    }
-    this.stateSubscription = this.client.state$.subscribe((state) => {
-      if (state.kind === 'error') {
-        this.connectionState$.next({
-          connected: false,
-          connecting: false,
-          disconnecting: false,
-          error: `エラー: ${state.error.message}`,
-        });
-        return;
-      }
-
-      this.connectionState$.next({
-        ...this.connectionState$.value,
-        connected: state.kind === 'connected',
-        connecting: state.kind === 'connecting',
-        disconnecting: state.kind === 'disconnecting',
-      });
-      if (state.kind === 'unsupported' && !state.support.supported) {
-        this.connectionState$.next({
-          ...this.connectionState$.value,
-          error: state.support.reason,
-        });
-      }
-    });
-  }
-
-  /**
-   * 接続を開始
-   */
-  connect(baudRate?: number): Observable<void> {
-    if (baudRate) {
-      this.baudRate = baudRate;
-    }
-
-    if (!this.client) {
-      this.client = createSerialClient({
-        baudRate: this.baudRate,
-      });
-      this.subscribeState();
-    }
-
-    this.connectionState$.next({
-      connected: false,
-      connecting: true,
-      disconnecting: false,
-      error: null,
-    });
-
-    return new Observable<void>((observer) => {
-      if (!this.client) {
-        observer.error(new Error('SerialClient が初期化されていません'));
-        return;
-      }
-
-      const subscription = this.client.connect().subscribe({
-        next: () => {
-          this.connectionState$.next({
-            connected: true,
-            connecting: false,
-            disconnecting: false,
-            error: null,
-          });
-          this.startReading();
-          observer.next();
-          observer.complete();
-        },
-        error: (error: unknown) => {
-          let message = '接続エラーが発生しました。';
-          if (error instanceof SerialError) {
-            message = `エラー: ${error.message}`;
-          } else if (error instanceof Error) {
-            message = `エラー: ${error.message}`;
-          }
-          this.connectionState$.next({
-            connected: false,
-            connecting: false,
-            disconnecting: false,
-            error: message,
-          });
-          observer.error(error);
-        },
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    });
-  }
-
-  /**
-   * 切断
-   */
-  disconnect(): Observable<void> {
-    if (!this.client || !this.client.connected) {
-      return new Observable<void>((observer) => {
-        observer.next();
-        observer.complete();
-      });
-    }
-
-    this.stopReading();
-
-    this.connectionState$.next({
-      ...this.connectionState$.value,
-      disconnecting: true,
-    });
-
-    return new Observable<void>((observer) => {
-      if (!this.client) {
-        observer.next();
-        observer.complete();
-        return;
-      }
-
-      const subscription = this.client.disconnect().subscribe({
-        next: () => {
-          this.connectionState$.next({
-            connected: false,
-            connecting: false,
-            disconnecting: false,
-            error: null,
-          });
-          observer.next();
-          observer.complete();
-        },
-        error: (error: unknown) => {
-          let message = '切断エラーが発生しました。';
-          if (error instanceof SerialError) {
-            message = `エラー: ${error.message}`;
-          } else if (error instanceof Error) {
-            message = `エラー: ${error.message}`;
-          }
-          // エラーが発生しても UI は切断状態にする
-          this.connectionState$.next({
-            connected: false,
-            connecting: false,
-            disconnecting: false,
-            error: message,
-          });
-          observer.error(error);
-        },
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    });
-  }
-
-  /**
-   * ポートをリクエスト
-   */
-  requestPort(): Observable<void> {
-    if (!this.client) {
-      this.client = createSerialClient({
-        baudRate: this.baudRate,
-      });
-    }
-
-    return new Observable<void>((observer) => {
-      if (!this.client) {
-        observer.error(new Error('SerialClient が初期化されていません'));
-        return;
-      }
-
-      const subscription = this.client.requestPort().subscribe({
-        next: () => {
-          this.connectionState$.next({
-            ...this.connectionState$.value,
-            error: null,
-          });
-          observer.next();
-          observer.complete();
-        },
-        error: (error: unknown) => {
-          let message = 'ポート選択エラーが発生しました。';
-          if (error instanceof SerialError) {
-            message = `エラー: ${error.message}`;
-          } else if (error instanceof Error) {
-            message = `エラー: ${error.message}`;
-          }
-          this.connectionState$.next({
-            ...this.connectionState$.value,
-            error: message,
-          });
-          observer.error(error);
-        },
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    });
-  }
-
-  /**
-   * データを送信
-   */
-  send(data: string): Observable<void> {
-    if (!this.client || !this.client.connected) {
-      return new Observable<void>((observer) => {
-        observer.error(
-          new Error(
-            '接続されていません。先にシリアルポートに接続してください。',
-          ),
-        );
-      });
-    }
-
-    const text = data.trim();
-    if (!text) {
-      return new Observable<void>((observer) => {
-        observer.next();
-        observer.complete();
-      });
-    }
-
-    // テキストを Uint8Array に変換（UTF-8 エンコード）
-    const payload = `${text}\n`;
-
-    return new Observable<void>((observer) => {
-      if (!this.client) {
-        observer.error(new Error('SerialClient が初期化されていません'));
-        return;
-      }
-
-      const subscription = this.client.send$(payload).subscribe({
-        next: () => {
-          observer.next();
-          observer.complete();
-        },
-        error: (error: unknown) => {
-          let message = '送信エラーが発生しました。';
-          if (error instanceof SerialError) {
-            message = `エラー: ${error.message}`;
-          } else if (error instanceof Error) {
-            message = `エラー: ${error.message}`;
-          }
-          this.connectionState$.next({
-            ...this.connectionState$.value,
-            error: message,
-          });
-          observer.error(error);
-        },
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    });
-  }
-
-  /**
-   * 受信データをクリア
-   */
-  clearReceivedData(): void {
-    this.receivedData$.next('');
-  }
-
-  /**
-   * Promise版の接続メソッド（コンポーネントでの使用を簡単にするため）
-   */
-  async connectAsync(baudRate?: number): Promise<void> {
-    return firstValueFrom(this.connect(baudRate));
-  }
-
-  /**
-   * Promise版の切断メソッド（コンポーネントでの使用を簡単にするため）
-   */
-  async disconnectAsync(): Promise<void> {
-    return firstValueFrom(this.disconnect());
-  }
-
-  /**
-   * Promise版のポートリクエストメソッド（コンポーネントでの使用を簡単にするため）
-   */
-  async requestPortAsync(): Promise<void> {
-    return firstValueFrom(this.requestPort());
-  }
-
-  /**
-   * Promise版の送信メソッド（コンポーネントでの使用を簡単にするため）
-   */
-  async sendAsync(data: string): Promise<void> {
-    return firstValueFrom(this.send(data));
+  send$(data: string | Uint8Array): Observable<void> {
+    return this.currentSession.send$(data);
   }
 }

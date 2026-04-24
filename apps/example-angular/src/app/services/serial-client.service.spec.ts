@@ -1,66 +1,85 @@
 import { TestBed } from '@angular/core/testing';
-import type { SerialClient } from '@gurezo/web-serial-rxjs';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
-import { firstValueFrom, of, throwError } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import type { SerialSession } from '@gurezo/web-serial-rxjs';
+import { BehaviorSubject, firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialClientService } from './serial-client.service';
 
-// Mock the web-serial-rxjs library
-vi.mock('@gurezo/web-serial-rxjs', () => {
-  let isConnected = false;
-  const mockClient = {
-    get connected() {
-      return isConnected;
-    },
-    currentPort: null,
-    connect: vi.fn(() =>
-      of(undefined).pipe(
-        tap(() => {
-          isConnected = true;
-        }),
-      ),
-    ),
-    disconnect: vi.fn(() =>
-      of(undefined).pipe(
-        tap(() => {
-          isConnected = false;
-        }),
-      ),
-    ),
-    requestPort: vi.fn(() => of({} as unknown as SerialPort)),
-    get bytes$() {
-      return of(new Uint8Array([72, 101, 108, 108, 111]));
-    },
-    get text$() {
-      return of('Hello');
-    },
-    get lines$() {
-      return of('Hello');
-    },
-    send$: vi.fn(() => of(undefined)),
-    getPorts: vi.fn(() => of([])),
+interface MockSession {
+  session: SerialSession;
+  stateSubject: BehaviorSubject<webSerialRxjs.SerialSessionState>;
+  receiveSubject: Subject<string>;
+  errorsSubject: Subject<webSerialRxjs.SerialError>;
+  connect$: ReturnType<typeof vi.fn>;
+  disconnect$: ReturnType<typeof vi.fn>;
+  send$: ReturnType<typeof vi.fn>;
+  isBrowserSupported: ReturnType<typeof vi.fn>;
+}
+
+const createMockSession = (): MockSession => {
+  const stateSubject = new BehaviorSubject<webSerialRxjs.SerialSessionState>(
+    'idle',
+  );
+  const receiveSubject = new Subject<string>();
+  const errorsSubject = new Subject<webSerialRxjs.SerialError>();
+  const connect$ = vi.fn(() => of(undefined));
+  const disconnect$ = vi.fn(() => of(undefined));
+  const send$ = vi.fn(() => of(undefined));
+  const isBrowserSupported = vi.fn(() => true);
+
+  const session: SerialSession = {
+    isBrowserSupported,
+    connect$,
+    disconnect$,
+    send$,
+    state$: stateSubject.asObservable(),
+    errors$: errorsSubject.asObservable(),
+    receive$: receiveSubject.asObservable(),
   };
 
   return {
-    createSerialClient: vi.fn(() => mockClient) as unknown as (options?: {
-      baudRate?: number;
-    }) => SerialClient,
-    isBrowserSupported: vi.fn(() => true),
-    SerialError: class MockSerialError extends Error {
-      constructor(message: string) {
-        super(message);
-        this.name = 'SerialError';
-      }
-    },
+    session,
+    stateSubject,
+    receiveSubject,
+    errorsSubject,
+    connect$,
+    disconnect$,
+    send$,
+    isBrowserSupported,
+  };
+};
+
+let mockSessions: MockSession[] = [];
+
+vi.mock('@gurezo/web-serial-rxjs', async () => {
+  const actual =
+    await vi.importActual<typeof import('@gurezo/web-serial-rxjs')>(
+      '@gurezo/web-serial-rxjs',
+    );
+  return {
+    ...actual,
+    createSerialSession: vi.fn(() => {
+      const mock = createMockSession();
+      mockSessions.push(mock);
+      return mock.session;
+    }),
   };
 });
+
+const latestMock = (): MockSession => {
+  const mock = mockSessions.at(-1);
+  if (!mock) {
+    throw new Error('createSerialSession was not called');
+  }
+  return mock;
+};
 
 describe('SerialClientService', () => {
   let service: SerialClientService;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSessions = [];
     TestBed.configureTestingModule({});
     service = TestBed.inject(SerialClientService);
   });
@@ -69,150 +88,85 @@ describe('SerialClientService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should be created', () => {
+  it('should create a session on construction', () => {
+    expect(
+      vi.mocked(webSerialRxjs.createSerialSession),
+    ).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(webSerialRxjs.createSerialSession)).toHaveBeenCalledWith({
+      baudRate: 9600,
+    });
     expect(service).toBeTruthy();
   });
 
-  it('should initialize with default values', async () => {
-    const browserSupported = await firstValueFrom(service.browserSupported);
-    expect(browserSupported).toBe(true);
-
-    const connectionState = await firstValueFrom(service.connectionState);
-    expect(connectionState.connected).toBe(false);
-    expect(connectionState.connecting).toBe(false);
-    expect(connectionState.disconnecting).toBe(false);
-    expect(connectionState.error).toBe(null);
+  it('should expose browser support via the session', () => {
+    expect(service.isBrowserSupported()).toBe(true);
+    expect(latestMock().isBrowserSupported).toHaveBeenCalled();
   });
 
-  it('should check browser support on initialization', () => {
-    expect(vi.mocked(webSerialRxjs.isBrowserSupported)).toHaveBeenCalled();
+  it('should emit the initial idle state on state$', async () => {
+    const state = await firstValueFrom(service.state$);
+    expect(state).toBe('idle');
   });
 
-  it('should connect to serial port', async () => {
-    const initialState = await firstValueFrom(service.connectionState);
-    expect(initialState.connected).toBe(false);
+  it('should forward session state transitions', async () => {
+    const mock = latestMock();
+    mock.stateSubject.next('connecting');
+    mock.stateSubject.next('connected');
 
-    await firstValueFrom(service.connect());
-
-    // Wait a bit for state updates
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const newState = await firstValueFrom(service.connectionState);
-    expect(newState.connected).toBe(true);
-    expect(newState.connecting).toBe(false);
+    const state = await firstValueFrom(service.state$);
+    expect(state).toBe('connected');
   });
 
-  it('should disconnect from serial port', async () => {
-    // First connect
-    await firstValueFrom(service.connect());
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const connectedState = await firstValueFrom(service.connectionState);
-    expect(connectedState.connected).toBe(true);
-
-    // Then disconnect
-    await firstValueFrom(service.disconnect());
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const disconnectedState = await firstValueFrom(service.connectionState);
-    expect(disconnectedState.connected).toBe(false);
-    expect(disconnectedState.disconnecting).toBe(false);
+  it('should connect through the session', async () => {
+    await firstValueFrom(service.connect$());
+    expect(latestMock().connect$).toHaveBeenCalledTimes(1);
   });
 
-  it('should request port', async () => {
-    await firstValueFrom(service.requestPort());
+  it('should recreate the session when baud rate changes', async () => {
+    await firstValueFrom(service.connect$(115200));
 
-    const connectionState = await firstValueFrom(service.connectionState);
-    expect(connectionState.error).toBe(null);
+    expect(
+      vi.mocked(webSerialRxjs.createSerialSession),
+    ).toHaveBeenCalledTimes(2);
+    expect(
+      vi.mocked(webSerialRxjs.createSerialSession),
+    ).toHaveBeenLastCalledWith({ baudRate: 115200 });
+    expect(latestMock().connect$).toHaveBeenCalledTimes(1);
   });
 
-  it('should send data when connected', async () => {
-    // Connect first
-    await firstValueFrom(service.connect());
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const connectedState = await firstValueFrom(service.connectionState);
-    expect(connectedState.connected).toBe(true);
-
-    // Send data
-    await firstValueFrom(service.send('test data'));
-
-    // No error should occur
-    const finalState = await firstValueFrom(service.connectionState);
-    expect(finalState.error).toBe(null);
+  it('should disconnect through the session', async () => {
+    await firstValueFrom(service.disconnect$());
+    expect(latestMock().disconnect$).toHaveBeenCalledTimes(1);
   });
 
-  it('should clear received data', async () => {
-    service.clearReceivedData();
-
-    const receivedData = await firstValueFrom(service.receivedData);
-    expect(receivedData).toBe('');
+  it('should send payloads through the session', async () => {
+    await firstValueFrom(service.send$('hello'));
+    expect(latestMock().send$).toHaveBeenCalledWith('hello');
   });
 
-  it('should handle connection errors', async () => {
-    // Create a new service instance to test error handling
-    const errorService = new SerialClientService();
+  it('should propagate connect errors', async () => {
+    const mock = latestMock();
+    const boom = new Error('connect failed');
+    mock.connect$.mockReturnValueOnce(throwError(() => boom));
 
-    // Mock createSerialClient to return a client that throws on connect
-    const errorClient = {
-      get connected() {
-        return false;
-      },
-      currentPort: null,
-      connect: vi.fn(() => throwError(() => new Error('Connection failed'))),
-      disconnect: vi.fn(() => of(undefined)),
-      requestPort: vi.fn(() => of({} as unknown as SerialPort)),
-      get bytes$() {
-        return of(new Uint8Array());
-      },
-      get text$() {
-        return of('');
-      },
-      get lines$() {
-        return of('');
-      },
-      send$: vi.fn(() => of(undefined)),
-      getPorts: vi.fn(() => of([])),
-    };
+    await expect(firstValueFrom(service.connect$())).rejects.toBe(boom);
+  });
 
-    vi.mocked(webSerialRxjs.createSerialClient).mockReturnValueOnce(
-      errorClient as unknown as SerialClient,
+  it('should forward incoming receive$ chunks', async () => {
+    const mock = latestMock();
+    const pending = firstValueFrom(service.receive$);
+    mock.receiveSubject.next('chunk-1');
+    await expect(pending).resolves.toBe('chunk-1');
+  });
+
+  it('should forward errors$ emissions', async () => {
+    const mock = latestMock();
+    const pending = firstValueFrom(service.errors$);
+    const error = new webSerialRxjs.SerialError(
+      webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+      'boom',
     );
-
-    try {
-      await firstValueFrom(errorService.connect());
-    } catch {
-      // Expected to throw
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const errorState = await firstValueFrom(errorService.connectionState);
-    expect(errorState.error).toBeTruthy();
-    expect(errorState.connected).toBe(false);
-  });
-
-  it('should provide async methods', async () => {
-    // Test connectAsync
-    await service.connectAsync(9600);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const connectedState = await firstValueFrom(service.connectionState);
-    expect(connectedState.connected).toBe(true);
-
-    // Test disconnectAsync
-    await service.disconnectAsync();
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const disconnectedState = await firstValueFrom(service.connectionState);
-    expect(disconnectedState.connected).toBe(false);
-
-    // Test requestPortAsync
-    await service.requestPortAsync();
-
-    // Test sendAsync
-    await service.connectAsync();
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    await service.sendAsync('test');
+    mock.errorsSubject.next(error);
+    await expect(pending).resolves.toBe(error);
   });
 });
