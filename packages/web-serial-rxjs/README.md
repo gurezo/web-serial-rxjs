@@ -77,7 +77,7 @@ pnpm add rxjs
 - **[Quick Start](docs/QUICK_START.md)** - Get started with basic examples and usage patterns
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
 - **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
-- **[v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/docs/MIGRATION_V2.md)** - Mapping from the removed `SerialClient` / `ShellClient` API to the v2 `SerialSession` API
+- **[v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md)** - Mapping from the removed `SerialClient` / `ShellClient` API to the v2 `SerialSession` API
 
 ## Examples
 
