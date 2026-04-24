@@ -2,7 +2,9 @@
 
 The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../../../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
 
-## Line Framing
+This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): **`lines$`**, **`connected$`**, **`sendLine`**, **`readUntil`**, and **`waitForState`** are all patterns you build on top of the existing API—no extra library exports. For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
+
+## Line Framing (`lines$` from `receive$`)
 
 `receive$` emits UTF-8 decoded chunks as they arrive from the underlying `TextDecoder`. Combine it with `scan` to frame by newline:
 
@@ -29,7 +31,9 @@ const lines$ = session.receive$.pipe(
 lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
 ```
 
-## Connected boolean (UI)
+Many embedded shells use `\r\n` line endings. You can split on `/\r?\n/` instead of `'\n'`, or normalize chunks before splitting.
+
+## Connected boolean (UI) (`connected$` from `state$`)
 
 There is no `connected$` on `SerialSession`. For a simple "is the port open?" flag for buttons or templates, derive from `state$`:
 
@@ -40,6 +44,20 @@ const connected$ = session.state$.pipe(map((s) => s === 'connected'));
 ```
 
 Prefer driving full UI from `state$` when you need spinners and multiple phases (see [State-driven UI](#state-driven-ui) below).
+
+## Send line (`sendLine` / `sendLine$` pattern)
+
+Interactive shells often expect a full line terminated by CRLF. Wrap `send$` in a small helper instead of adding API to the library:
+
+```typescript
+const sendLine = (line: string) => session.send$(`${line}\r\n`);
+
+sendLine('ls -al').subscribe({
+  error: (error) => console.error('send failed:', error),
+});
+```
+
+Use `\n` only when the remote explicitly expects LF-only (some UART protocols). The session encodes strings as UTF-8 the same way in both cases.
 
 ## Ordered Writes
 
@@ -56,21 +74,80 @@ from(commands)
   });
 ```
 
-If you need one-shot request / response pairs, compose `send$` with a bounded read of `receive$`:
+## readUntil pattern (`readUntil$` / prompt-style reads)
+
+`receive$` delivers **chunks**, not logical messages. A **read-until** pattern accumulates text until a predicate (delimiter, regex, prompt) matches. Because `receive$` is hot and does not replay past chunks to late subscribers, **start waiting on `receive$` before you `send$`** if the device may respond immediately.
 
 ```typescript
-import { firstValueFrom, scan, filter, map, timeout } from 'rxjs';
+import { firstValueFrom, scan, filter, map, take, timeout } from 'rxjs';
 
+async function readUntil(
+  predicate: (buffer: string) => boolean,
+  options: { timeoutMs?: number } = {},
+): Promise<string> {
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const match$ = session.receive$.pipe(
+    scan((buffer, chunk) => buffer + chunk, ''),
+    filter(predicate),
+    map((buffer) => buffer),
+    take(1),
+    timeout(timeoutMs),
+  );
+  return firstValueFrom(match$);
+}
+
+const sendLine = (line: string) => session.send$(`${line}\r\n`);
+
+// Example: wait for a login prompt, then send credentials (illustrative only)
+await readUntil((buf) => /login:\s*$/im.test(buf));
+await firstValueFrom(sendLine('pi'));
+await readUntil((buf) => /password:\s*$/im.test(buf));
+await firstValueFrom(sendLine('raspberry'));
+```
+
+One-shot **command + prompt** pairs use the same accumulation pipeline; subscribe first, then send:
+
+```typescript
 async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
   const response$ = session.receive$.pipe(
     scan((buffer, chunk) => buffer + chunk, ''),
     filter((buffer) => prompt.test(buffer)),
     map((buffer) => buffer),
+    take(1),
     timeout(5000),
   );
+  const responsePromise = firstValueFrom(response$);
   await firstValueFrom(session.send$(cmd));
-  return firstValueFrom(response$);
+  return responsePromise;
 }
+```
+
+## waitForState
+
+Sometimes you need to **await** a specific `SerialSessionState` (for example `'connected'` after UI-driven `connect$`, or `'idle'` after `disconnect$`) instead of wiring everything through `subscribe`. Use `state$` with `filter`, `take(1)`, and an optional timeout:
+
+```typescript
+import { filter, take, firstValueFrom, timeout } from 'rxjs';
+import type { SerialSessionState } from '@gurezo/web-serial-rxjs';
+
+async function waitForState(
+  target: SerialSessionState,
+  options: { timeoutMs?: number } = {},
+): Promise<void> {
+  const timeoutMs = options.timeoutMs ?? 30_000;
+  await firstValueFrom(
+    session.state$.pipe(
+      filter((s) => s === target),
+      take(1),
+      timeout(timeoutMs),
+    ),
+  );
+}
+
+// Example: after connect$ completes, you are already 'connected'; this is for
+// coordination with other async code or stricter timeout handling.
+await firstValueFrom(session.connect$());
+await waitForState('connected', { timeoutMs: 5000 });
 ```
 
 ## State-Driven UI
