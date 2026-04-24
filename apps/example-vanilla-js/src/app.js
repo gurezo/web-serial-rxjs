@@ -1,328 +1,91 @@
-// Static imports are correct for application code.
-// Test files use vi.mock which causes false positives for lazy-load detection.
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import {
-  createSerialClient,
-  isBrowserSupported,
-  SerialError,
-} from '@gurezo/web-serial-rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 
-/**
- * Main application class for the vanilla JavaScript example
- */
+const UNSUPPORTED_MSG =
+  'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。';
+const STATUS = {
+  idle: ['info', 'シリアルポートから切断しました。'],
+  connecting: ['info', '接続中です...'],
+  connected: ['success', 'シリアルポートに接続しました。'],
+  disconnecting: ['info', '切断中です...'],
+  unsupported: ['error', UNSUPPORTED_MSG],
+  error: ['error', 'エラーが発生しました。errors$ を確認してください。'],
+};
+
+const $ = (id) => {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`${id} element not found`);
+  return el;
+};
+const setStatus = (el, type, msg) => {
+  el.textContent = msg;
+  el.className = `status-message ${type}`;
+};
+
 export class App {
   constructor() {
-    this.client = null;
-    this.readSubscription = null;
-    this.stateSubscription = null;
-
-    // Initialize UI elements
-    this.initializeElements();
-    // Check browser support
-    this.checkBrowserSupport();
-    // Setup event handlers
-    this.setupEventHandlers();
-  }
-
-  /**
-   * Initialize DOM elements
-   */
-  initializeElements() {
-    // Browser support
-    this.browserSupportStatus = document.getElementById(
-      'browser-support-status',
+    const connectBtn = $('connect-btn');
+    const disconnectBtn = $('disconnect-btn');
+    const status = $('connection-status');
+    const baudRateSelect = $('baud-rate');
+    const sendInput = $('send-input');
+    const sendBtn = $('send-btn');
+    const receiveOutput = $('receive-output');
+    this.baudRate = parseInt(baudRateSelect.value, 10);
+    this.session = createSerialSession({ baudRate: this.baudRate });
+    const supported = this.session.isBrowserSupported();
+    setStatus(
+      $('browser-support-status'),
+      supported ? 'success' : 'error',
+      supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
     );
-
-    // Connection
-    this.connectBtn = document.getElementById('connect-btn');
-    this.disconnectBtn = document.getElementById('disconnect-btn');
-    this.requestPortBtn = document.getElementById('request-port-btn');
-    this.connectionStatus = document.getElementById('connection-status');
-
-    // Configuration
-    this.baudRateSelect = document.getElementById('baud-rate');
-
-    // Send data
-    this.sendInput = document.getElementById('send-input');
-    this.sendBtn = document.getElementById('send-btn');
-
-    // Receive data
-    this.receiveOutput = document.getElementById('receive-output');
-    this.clearReceiveBtn = document.getElementById('clear-receive-btn');
-  }
-
-  /**
-   * Check browser support
-   */
-  checkBrowserSupport() {
-    const supported = isBrowserSupported();
-
-    if (supported) {
-      this.showStatus(
-        this.browserSupportStatus,
-        'success',
-        'ブラウザは Web Serial API をサポートしています。',
-      );
-      // Enable connection button if browser is supported
-      this.connectBtn.disabled = false;
-      this.requestPortBtn.disabled = false;
-    } else {
-      this.showStatus(
-        this.browserSupportStatus,
-        'error',
-        'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
-      );
-    }
-  }
-
-  /**
-   * Setup event handlers using RxJS
-   */
-  setupEventHandlers() {
-    // Connect button
-    fromEvent(this.connectBtn, 'click').subscribe(() => {
-      this.handleConnect();
+    this.session.state$.subscribe((state) => {
+      const connected = state === 'connected';
+      const busy = state === 'connecting' || state === 'disconnecting';
+      connectBtn.disabled = !supported || connected || busy;
+      disconnectBtn.disabled = !connected;
+      sendInput.disabled = sendBtn.disabled = !connected;
+      baudRateSelect.disabled = connected || busy;
+      setStatus(status, ...STATUS[state]);
     });
-
-    // Disconnect button
-    fromEvent(this.disconnectBtn, 'click').subscribe(() => {
-      this.handleDisconnect();
+    this.session.receive$.subscribe((text) => {
+      receiveOutput.value += text;
+      receiveOutput.scrollTop = receiveOutput.scrollHeight;
     });
-
-    // Request port button
-    fromEvent(this.requestPortBtn, 'click').subscribe(() => {
-      this.handleRequestPort();
+    this.session.errors$.subscribe((error) => {
+      setStatus(status, 'error', `エラー: ${error.message}`);
+      console.error('Serial port error:', error);
     });
-
-    // Send button
-    fromEvent(this.sendBtn, 'click').subscribe(() => {
-      this.handleSend();
-    });
-
-    // Send on Enter key
-    fromEvent(this.sendInput, 'keydown')
-      .pipe(
-        filter((event) => event.key === 'Enter' && !event.shiftKey),
-        map((event) => {
-          event.preventDefault();
-          return event;
-        }),
-      )
-      .subscribe(() => {
-        this.handleSend();
-      });
-
-    // Clear receive output
-    fromEvent(this.clearReceiveBtn, 'click').subscribe(() => {
-      this.receiveOutput.value = '';
-    });
-  }
-
-  /**
-   * Handle connect action
-   */
-  handleConnect() {
-    if (!this.client) {
-      const baudRate = parseInt(this.baudRateSelect.value, 10);
-      this.client = createSerialClient({ baudRate });
-    }
-
-    this.updateConnectionUI(false);
-
-    this.client.connect().subscribe({
-      next: () => {
-        this.showStatus(this.connectionStatus, 'success', '接続処理を開始しました。');
-        this.subscribeState();
-        this.startReading();
-      },
-      error: (error) => {
-        this.updateConnectionUI(false);
-        this.handleError(error, this.connectionStatus);
-      },
-    });
-  }
-
-  /**
-   * Handle disconnect action
-   */
-  handleDisconnect() {
-    if (!this.client || !this.client.connected) {
-      return;
-    }
-
-    this.stopReading();
-
-    this.client.disconnect().subscribe({
-      next: () => {
-        this.stopStateSubscription();
-        this.updateConnectionUI(false);
-      },
-      error: (error) => {
-        this.handleError(error, this.connectionStatus);
-        // Even if there's an error, update UI to reflect disconnected state
-        this.updateConnectionUI(false);
-      },
-    });
-  }
-
-  /**
-   * Handle request port action
-   */
-  handleRequestPort() {
-    if (!this.client) {
-      const baudRate = parseInt(this.baudRateSelect.value, 10);
-      this.client = createSerialClient({ baudRate });
-    }
-
-    this.client.requestPort().subscribe({
-      next: (port) => {
-        this.showStatus(
-          this.connectionStatus,
-          'success',
-          `ポートが選択されました: ${port.getInfo?.()?.usbVendorId || 'N/A'}`,
-        );
-      },
-      error: (error) => {
-        this.handleError(error, this.connectionStatus);
-      },
-    });
-  }
-
-  /**
-   * Handle send data action
-   */
-  handleSend() {
-    if (!this.client || !this.client.connected) {
-      this.showStatus(
-        this.connectionStatus,
-        'warning',
-        '接続されていません。先にシリアルポートに接続してください。',
-      );
-      return;
-    }
-
-    const text = this.sendInput.value.trim();
-    if (!text) {
-      return;
-    }
-
-    this.client.send$(`${text}\n`).subscribe({
-      next: () => {
-        // Clear input after successful send
-        this.sendInput.value = '';
-      },
-      error: (error) => {
-        this.handleError(error, this.connectionStatus);
-      },
-    });
-  }
-
-  /**
-   * Start reading from serial port
-   */
-  startReading() {
-    if (!this.client || !this.client.connected) {
-      return;
-    }
-
-    // Stop any existing read subscription
-    this.stopReading();
-
-    const readStream$ = this.client.text$;
-
-    this.readSubscription = readStream$.subscribe({
-      next: (text) => {
-        // Append to receive output
-        this.receiveOutput.value += text;
-
-        // Auto-scroll to bottom
-        this.receiveOutput.scrollTop = this.receiveOutput.scrollHeight;
-      },
-      error: (error) => {
-        this.handleError(error, this.connectionStatus);
-        // Disconnect on read error
-        this.handleDisconnect();
-      },
-    });
-  }
-
-  subscribeState() {
-    if (!this.client) {
-      return;
-    }
-    this.stopStateSubscription();
-
-    this.stateSubscription = this.client.state$.subscribe((state) => {
-      this.updateConnectionUI(state.kind === 'connected');
-      if (state.kind === 'connecting') {
-        this.showStatus(this.connectionStatus, 'info', '接続中です...');
-      } else if (state.kind === 'disconnecting') {
-        this.showStatus(this.connectionStatus, 'info', '切断中です...');
-      } else if (state.kind === 'connected') {
-        this.showStatus(this.connectionStatus, 'success', 'シリアルポートに接続しました。');
-      } else if (state.kind === 'idle') {
-        this.showStatus(this.connectionStatus, 'info', 'シリアルポートから切断しました。');
-      } else if (state.kind === 'unsupported') {
-        this.showStatus(this.connectionStatus, 'error', state.support.reason);
-      } else if (state.kind === 'error') {
-        this.showStatus(this.connectionStatus, 'error', `エラー: ${state.error.message}`);
+    fromEvent(connectBtn, 'click').subscribe(() => {
+      const baudRate = parseInt(baudRateSelect.value, 10);
+      if (baudRate !== this.baudRate) {
+        this.baudRate = baudRate;
+        this.session = createSerialSession({ baudRate });
       }
+      this.session.connect$().subscribe({ error: () => void 0 });
     });
-  }
-
-  stopStateSubscription() {
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-      this.stateSubscription = null;
-    }
-  }
-
-  /**
-   * Stop reading from serial port
-   */
-  stopReading() {
-    if (this.readSubscription) {
-      this.readSubscription.unsubscribe();
-      this.readSubscription = null;
-    }
-  }
-
-  /**
-   * Update connection UI state
-   */
-  updateConnectionUI(connected) {
-    this.connectBtn.disabled = connected;
-    this.disconnectBtn.disabled = !connected;
-    this.sendInput.disabled = !connected;
-    this.sendBtn.disabled = !connected;
-    this.baudRateSelect.disabled = connected;
-  }
-
-  /**
-   * Show status message
-   */
-  showStatus(element, type, message) {
-    element.textContent = message;
-    element.className = `status-message ${type}`;
-  }
-
-  /**
-   * Handle errors
-   */
-  handleError(error, statusElement) {
-    let message = 'エラーが発生しました。';
-
-    if (error instanceof SerialError) {
-      message = `エラー: ${error.message}`;
-    } else if (error instanceof Error) {
-      message = `エラー: ${error.message}`;
-    } else {
-      message = `エラー: ${String(error)}`;
-    }
-
-    this.showStatus(statusElement, 'error', message);
-    console.error('Serial port error:', error);
+    fromEvent(disconnectBtn, 'click').subscribe(() =>
+      this.session.disconnect$().subscribe({ error: () => void 0 }),
+    );
+    const send = () => {
+      const text = sendInput.value.trim();
+      if (!text) return;
+      this.session.send$(`${text}\n`).subscribe({
+        next: () => (sendInput.value = ''),
+        error: () => void 0,
+      });
+    };
+    fromEvent(sendBtn, 'click').subscribe(send);
+    fromEvent(sendInput, 'keydown')
+      .pipe(filter((e) => e.key === 'Enter' && !e.shiftKey))
+      .subscribe((e) => {
+        e.preventDefault();
+        send();
+      });
+    fromEvent($('clear-receive-btn'), 'click').subscribe(
+      () => (receiveOutput.value = ''),
+    );
   }
 }
