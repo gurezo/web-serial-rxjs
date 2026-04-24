@@ -1,106 +1,58 @@
 import { useState } from 'react';
-import { useSerialClient } from './hooks/useSerialClient';
+import { useSerialSession } from './hooks/useSerialSession';
 
-/**
- * メインアプリケーションコンポーネント
- */
+type StatusType = 'info' | 'success' | 'error';
+
 export function App() {
   const [baudRate, setBaudRate] = useState(9600);
   const [sendInput, setSendInput] = useState('');
-
   const {
     browserSupported,
-    connectionState,
+    state,
     receivedData,
-    connect,
-    disconnect,
-    requestPort,
-    send,
+    errorMessage,
+    connect$,
+    disconnect$,
+    send$,
     clearReceivedData,
-  } = useSerialClient(baudRate);
+  } = useSerialSession(baudRate);
 
-  /**
-   * 接続ボタンのハンドラ
-   */
-  const handleConnect = async () => {
-    try {
-      await connect(baudRate);
-    } catch (error) {
-      // エラーは useSerialClient 内で処理される
-      console.error('接続エラー:', error);
-    }
+  const connected = state === 'connected';
+  const connecting = state === 'connecting';
+  const disconnecting = state === 'disconnecting';
+
+  const status: { type: StatusType; message: string } = errorMessage
+    ? { type: 'error', message: `エラー: ${errorMessage}` }
+    : connecting
+      ? { type: 'info', message: '接続中...' }
+      : disconnecting
+        ? { type: 'info', message: '切断中...' }
+        : connected
+          ? { type: 'success', message: 'シリアルポートに接続しました。' }
+          : { type: 'info', message: 'シリアルポートに接続していません。' };
+
+  const handleConnect = () =>
+    connect$(baudRate).subscribe({
+      error: (e: unknown) => console.error('接続エラー:', e),
+    });
+  const handleDisconnect = () =>
+    disconnect$().subscribe({
+      error: (e: unknown) => console.error('切断エラー:', e),
+    });
+  const handleSend = () => {
+    const text = sendInput.trim();
+    if (!text) return;
+    send$(`${text}\n`).subscribe({
+      next: () => setSendInput(''),
+      error: (e: unknown) => console.error('送信エラー:', e),
+    });
   };
-
-  /**
-   * 切断ボタンのハンドラ
-   */
-  const handleDisconnect = async () => {
-    try {
-      await disconnect();
-    } catch (error) {
-      // エラーは useSerialClient 内で処理される
-      console.error('切断エラー:', error);
-    }
-  };
-
-  /**
-   * ポートリクエストボタンのハンドラ
-   */
-  const handleRequestPort = async () => {
-    try {
-      await requestPort();
-    } catch (error) {
-      // エラーは useSerialClient 内で処理される
-      console.error('ポート選択エラー:', error);
-    }
-  };
-
-  /**
-   * 送信ボタンのハンドラ
-   */
-  const handleSend = async () => {
-    if (!sendInput.trim()) {
-      return;
-    }
-
-    try {
-      await send(sendInput);
-      setSendInput(''); // 送信成功後に入力欄をクリア
-    } catch (error) {
-      console.error('送信エラー:', error);
-    }
-  };
-
-  /**
-   * Enter キーで送信
-   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
-
-  /**
-   * ステータスメッセージを取得
-   */
-  const getStatusMessage = (): { type: string; message: string } => {
-    if (connectionState.error) {
-      return { type: 'error', message: connectionState.error };
-    }
-    if (connectionState.connecting) {
-      return { type: 'info', message: '接続中...' };
-    }
-    if (connectionState.disconnecting) {
-      return { type: 'info', message: '切断中...' };
-    }
-    if (connectionState.connected) {
-      return { type: 'success', message: 'シリアルポートに接続しました。' };
-    }
-    return { type: 'info', message: 'シリアルポートに接続していません。' };
-  };
-
-  const status = getStatusMessage();
 
   return (
     <div className="container">
@@ -110,23 +62,15 @@ export function App() {
           React カスタムフックを使用した Web Serial API のサンプル
         </p>
       </header>
-
       <main>
-        {/* ブラウザサポート */}
         <section className="section">
           <h2>ブラウザサポート</h2>
-          <div
-            className={`status-message ${
-              browserSupported ? 'success' : 'error'
-            }`}
-          >
+          <div className={`status-message ${browserSupported ? 'success' : 'error'}`}>
             {browserSupported
               ? 'ブラウザは Web Serial API をサポートしています。'
               : 'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。'}
           </div>
         </section>
-
-        {/* 接続設定 */}
         <section className="section">
           <h2>接続設定</h2>
           <div className="form-group">
@@ -136,54 +80,33 @@ export function App() {
               className="form-control"
               value={baudRate}
               onChange={(e) => setBaudRate(Number(e.target.value))}
-              disabled={connectionState.connected}
+              disabled={connected}
             >
-              <option value={9600}>9600</option>
-              <option value={19200}>19200</option>
-              <option value={38400}>38400</option>
-              <option value={57600}>57600</option>
-              <option value={115200}>115200</option>
+              {[9600, 19200, 38400, 57600, 115200].map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
           </div>
           <div className="button-group">
             <button
-              className="btn btn-outline"
-              onClick={handleRequestPort}
-              disabled={
-                !browserSupported ||
-                connectionState.connected ||
-                connectionState.connecting
-              }
-            >
-              ポートを選択
-            </button>
-            <button
               className="btn btn-primary"
               onClick={handleConnect}
-              disabled={
-                !browserSupported ||
-                connectionState.connected ||
-                connectionState.connecting
-              }
+              disabled={!browserSupported || connected || connecting}
             >
               接続
             </button>
             <button
               className="btn btn-secondary"
               onClick={handleDisconnect}
-              disabled={
-                !connectionState.connected || connectionState.disconnecting
-              }
+              disabled={!connected || disconnecting}
             >
               切断
             </button>
           </div>
-          <div className={`status-message ${status.type}`}>
-            {status.message}
-          </div>
+          <div className={`status-message ${status.type}`}>{status.message}</div>
         </section>
-
-        {/* データ送信 */}
         <section className="section">
           <h2>データ送信</h2>
           <div className="form-group">
@@ -196,21 +119,19 @@ export function App() {
                 value={sendInput}
                 onChange={(e) => setSendInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={!connectionState.connected}
+                disabled={!connected}
                 placeholder="送信するテキストを入力..."
               />
               <button
                 className="btn btn-primary"
                 onClick={handleSend}
-                disabled={!connectionState.connected || !sendInput.trim()}
+                disabled={!connected || !sendInput.trim()}
               >
                 送信
               </button>
             </div>
           </div>
         </section>
-
-        {/* データ受信 */}
         <section className="section">
           <h2>データ受信</h2>
           <div className="form-group">
