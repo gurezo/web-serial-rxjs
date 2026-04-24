@@ -1,97 +1,23 @@
-import type { SerialClient } from '@gurezo/web-serial-rxjs';
-import type { Observable, Subscription } from 'rxjs';
+import type { SerialError, SerialSession } from '@gurezo/web-serial-rxjs';
+import { BehaviorSubject, Subject, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './app.js';
 
-// Mock the web-serial-rxjs library
 vi.mock('@gurezo/web-serial-rxjs', () => {
-  let isConnected = false;
-  const mockClient = {
-    get connected() {
-      return isConnected;
-    },
-    currentPort: null,
-    connect: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: () => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          setTimeout(() => {
-            isConnected = true;
-            observer.next?.();
-            observer.complete?.();
-          }, 0);
-        },
-      ),
-    })) as unknown as () => Observable<void>,
-    disconnect: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: () => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          setTimeout(() => {
-            isConnected = false;
-            observer.next?.();
-            observer.complete?.();
-          }, 0);
-        },
-      ),
-    })) as unknown as () => Observable<void>,
-    requestPort: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: (port: SerialPort) => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          setTimeout(() => {
-            observer.next?.({} as SerialPort);
-            observer.complete?.();
-          }, 0);
-        },
-      ),
-    })) as unknown as () => Observable<SerialPort>,
-    text$: {
-      subscribe: vi.fn(() => ({
-        unsubscribe: vi.fn(),
-      })) as unknown as (observer: {
-        next?: (text: string) => void;
-        error?: (error: unknown) => void;
-        complete?: () => void;
-      }) => Subscription,
-    } as unknown as Observable<string>,
-    send$: vi.fn(() => ({
-      subscribe: vi.fn(
-        (observer: {
-          next?: () => void;
-          error?: (error: unknown) => void;
-          complete?: () => void;
-        }) => {
-          setTimeout(() => {
-            observer.next?.();
-            observer.complete?.();
-          }, 0);
-        },
-      ),
-    })) as unknown as (data: string) => Observable<void>,
-    getPorts: vi.fn(() => ({
-      subscribe: vi.fn(),
-    })) as unknown as () => Observable<SerialPort[]>,
-  } as SerialClient;
-
-  return {
-    createSerialClient: vi.fn(() => mockClient),
+  const state$ = new BehaviorSubject<string>('idle');
+  const receive$ = new Subject<string>();
+  const errors$ = new Subject<SerialError>();
+  const mockSession = {
     isBrowserSupported: vi.fn(() => true),
-    SerialError: class MockSerialError extends Error {
-      constructor(message: string) {
-        super(message);
-        this.name = 'SerialError';
-      }
-    },
+    connect$: vi.fn(() => of(undefined)),
+    disconnect$: vi.fn(() => of(undefined)),
+    send$: vi.fn(() => of(undefined)),
+    state$,
+    receive$,
+    errors$,
+  };
+  return {
+    createSerialSession: vi.fn(() => mockSession as unknown as SerialSession),
   };
 });
 
@@ -100,13 +26,11 @@ describe('App', () => {
   let container: HTMLDivElement | null = null;
 
   beforeEach(() => {
-    // Create a mock DOM structure
     container = document.createElement('div');
     container.innerHTML = `
       <div id="browser-support-status"></div>
       <button id="connect-btn"></button>
       <button id="disconnect-btn"></button>
-      <button id="request-port-btn"></button>
       <div id="connection-status"></div>
       <select id="baud-rate">
         <option value="9600">9600</option>
@@ -121,7 +45,6 @@ describe('App', () => {
   });
 
   afterEach(() => {
-    // Cleanup: App instance will handle its own cleanup
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
@@ -134,36 +57,24 @@ describe('App', () => {
     expect(app).toBeInstanceOf(App);
   });
 
-  it('should initialize DOM elements', () => {
+  it('should create a SerialSession via createSerialSession on init', async () => {
+    const { createSerialSession } = await import('@gurezo/web-serial-rxjs');
     app = new App();
-    // Verify that the app was created successfully
-    // DOM elements are private, so we just verify the app instance exists
-    expect(app).toBeDefined();
-    // Verify that required DOM elements exist in the document
-    expect(document.getElementById('connect-btn')).toBeDefined();
-    expect(document.getElementById('disconnect-btn')).toBeDefined();
-    expect(document.getElementById('send-input')).toBeDefined();
-    expect(document.getElementById('receive-output')).toBeDefined();
+    expect(createSerialSession).toHaveBeenCalled();
   });
 
-  it('should check browser support on initialization', async () => {
-    const { isBrowserSupported } =
-      await import('@gurezo/web-serial-rxjs');
+  it('should render browser support status based on session.isBrowserSupported', () => {
     app = new App();
-    // Give time for the async initialization to complete
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(isBrowserSupported).toHaveBeenCalled();
+    const el = document.getElementById('browser-support-status');
+    expect(el?.textContent).toContain('Web Serial API');
+    expect(el?.className).toContain('success');
   });
 
-  it('should enable connect button when browser is supported', () => {
+  it('should render DOM elements required by the app', () => {
     app = new App();
-    // Wait for async initialization
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        // The button should be enabled if browser is supported
-        // (Note: In real tests, this depends on the mock return value)
-        resolve();
-      }, 100);
-    });
+    expect(document.getElementById('connect-btn')).not.toBeNull();
+    expect(document.getElementById('disconnect-btn')).not.toBeNull();
+    expect(document.getElementById('send-input')).not.toBeNull();
+    expect(document.getElementById('receive-output')).not.toBeNull();
   });
 });
