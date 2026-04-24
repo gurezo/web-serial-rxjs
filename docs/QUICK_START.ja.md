@@ -156,4 +156,4 @@ session.connect$().subscribe({
 
 - `SerialSession` の全インターフェイスは [API リファレンス](./API_REFERENCE.ja.md) を参照してください。
 - 応用パターンは [高度な使用方法](./ADVANCED_USAGE.ja.md) を参照してください。
-- v1 からの移行は [v1 → v2 マイグレーションガイド](https://github.com/gurezo/web-serial-rxjs/blob/main/docs/MIGRATION_V2.ja.md) を参照してください。
+- v1 からの移行は [v1 → v2 マイグレーションガイド](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.ja.md) を参照してください。
