@@ -2,7 +2,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
-<p>A TypeScript library that provides a reactive RxJS-based wrapper for the Web Serial API, enabling easy serial port communication in web applications.</p>
+<p>A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single <code>SerialSession</code> so applications can drive their UI entirely from <code>state$</code> + <code>receive$</code> + <code>errors$</code>, without rebuilding state, read loops, or send queues themselves.</p>
 <h2 id="table-of-contents" class="tsd-anchor-link">Table of Contents<a href="#table-of-contents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="#features">Features</a></li>
@@ -20,13 +20,13 @@
 </ul>
 <h2 id="features" class="tsd-anchor-link">Features<a href="#features" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
-<li><strong>RxJS-based reactive API</strong>: Leverage the power of RxJS Observables for reactive serial port communication</li>
-<li><strong>Text-friendly API</strong>: Use <code>text$</code>/<code>lines$</code>, <code>send$()</code>, and <code>writeText()</code> without manual encoding/decoding</li>
-<li><strong>Shell utility layer</strong>: Execute command/prompt workflows with <code>createShellClient()</code></li>
-<li><strong>TypeScript support</strong>: Full TypeScript type definitions included</li>
-<li><strong>Browser detection</strong>: Built-in browser support detection and error handling</li>
-<li><strong>Error handling</strong>: Comprehensive error handling with custom error classes and error codes</li>
-<li><strong>Framework agnostic</strong>: Works with any JavaScript/TypeScript framework or vanilla JavaScript</li>
+<li><strong>Session-oriented reactive API</strong>: a single <code>SerialSession</code> exposes <code>state$</code>, <code>receive$</code>, <code>errors$</code>, plus <code>connect$</code>, <code>disconnect$</code>, and <code>send$</code></li>
+<li><strong>UTF-8 text stream</strong>: <code>receive$</code> is already decoded with a streaming <code>TextDecoder</code>, so multi-byte characters split across chunks are joined correctly</li>
+<li><strong>Ordered send queue</strong>: concurrent <code>send$</code> calls are serialized internally in call order, without the caller having to manage a writer</li>
+<li><strong>Unified error channel</strong>: every I/O error is normalised into <code>SerialError</code> and multiplexed on <code>errors$</code></li>
+<li><strong>Explicit lifecycle</strong>: <code>state$</code> emits <code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>unsupported</code> / <code>error</code> so UIs can drive directly from it</li>
+<li><strong>TypeScript support</strong>: full TypeScript type definitions included</li>
+<li><strong>Framework agnostic</strong>: works with any JavaScript/TypeScript framework or vanilla JavaScript</li>
 </ul>
 <h2 id="framework-support" class="tsd-anchor-link">Framework Support<a href="#framework-support" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>This library is framework-agnostic and can be used with:</p>
@@ -43,7 +43,7 @@
 <li><strong>Edge</strong> 89+</li>
 <li><strong>Opera</strong> 75+</li>
 </ul>
-<p>The library includes built-in browser detection utilities to check for Web Serial API support before attempting to use it.</p>
+<p><code>SerialSession.isBrowserSupported()</code> returns a synchronous boolean for feature detection before calling <code>connect$</code>.</p>
 <h2 id="installation" class="tsd-anchor-link">Installation<a href="#installation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>Install the package using npm or pnpm:</p>
 <pre><code class="bash"><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">install</span><span class="hl-1"> </span><span class="hl-2">@gurezo/web-serial-rxjs</span><br/><span class="hl-3"># or</span><br/><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-2">add</span><span class="hl-1"> </span><span class="hl-2">@gurezo/web-serial-rxjs</span>
@@ -60,6 +60,7 @@
 <li><strong><a href="media/QUICK_START.md">Quick Start</a></strong> - Get started with basic examples and usage patterns</li>
 <li><strong><a href="media/API_REFERENCE.md">API Reference</a></strong> - Complete API documentation with detailed descriptions</li>
 <li><strong><a href="media/ADVANCED_USAGE.md">Advanced Usage</a></strong> - Advanced patterns, stream processing, and error recovery</li>
+<li><strong><a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md">v1 → v2 Migration Guide</a></strong> - Mapping from the removed <code>SerialClient</code> / <code>ShellClient</code> API to the v2 <code>SerialSession</code> API</li>
 </ul>
 <h2 id="examples" class="tsd-anchor-link">Examples<a href="#examples" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>Examples are available for the following environments:</p>

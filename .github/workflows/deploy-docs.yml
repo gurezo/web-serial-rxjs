@@ -5,8 +5,10 @@ on:
     branches:
       - main
     paths:
+      - 'package.json'
       - 'packages/web-serial-rxjs/src/**'
       - 'packages/web-serial-rxjs/typedoc.json'
+      - 'packages/web-serial-rxjs/docs/**'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
@@ -54,7 +56,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate documentation
-        run: pnpm run docs:generate
+        run: pnpm run docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -156,4 +156,4 @@ session.connect$().subscribe({
 
 - See [API Reference](./API_REFERENCE.md) for the full `SerialSession` surface.
 - Check out [Advanced Usage](./ADVANCED_USAGE.md) for more patterns.
-- Coming from v1? Read the [v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/docs/MIGRATION_V2.md).
+- Coming from v1? Read the [v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md).
