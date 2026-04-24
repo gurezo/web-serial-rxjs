@@ -74,6 +74,20 @@ export interface SerialSession {
    * All {@link SerialError} instances produced by the session (connect /
    * read / write / close) are multiplexed here. This is the main channel,
    * not a supplementary one.
+   *
+   * Every emission is the exact same instance that is also surfaced to
+   * the relevant call-site subscriber (for example `connect$().subscribe`
+   * receives the same `SerialError` that `errors$` emits for that
+   * failure), so a single subscription is enough to observe the full
+   * error history without double-normalisation.
+   *
+   * Fatal failures (connect / read / close) additionally drive `state$`
+   * to `'error'` and tear down the live pump + port; non-fatal failures
+   * (currently only `send$` write failures) are multiplexed here without
+   * mutating `state$`, on the assumption that a real connection loss is
+   * detected by the read pump on the next tick.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
    */
   readonly errors$: Observable<SerialError>;
 
