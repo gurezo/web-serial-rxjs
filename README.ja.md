@@ -8,6 +8,7 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 
 ## 目次
 
+- [SerialSession（v2）の全体像](#serialsessionv2の全体像)
 - [機能](#機能)
 - [対応フレームワーク](#対応フレームワーク)
 - [ブラウザサポート](#ブラウザサポート)
@@ -70,19 +71,65 @@ pnpm add rxjs
 
 **最小要件バージョン**: RxJS ^7.8.0
 
+## SerialSession（v2）の全体像
+
+`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、行区切りや「接続中」真偽値などは `state$` / `receive$` の上に RxJS で組み立てます（[高度な使用方法](docs/ADVANCED_USAGE.ja.md)）。
+
+| 公開面 | 役割 |
+| --- | --- |
+| `state$` | **接続ライフサイクル** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`。購読時に現在値をリプレイ。 |
+| `receive$` | **受信 UTF-8 テキスト**（デコード済みの**チャンク**列。行区切りではない。マルチバイト安全）。 |
+| `errors$` | **すべての `SerialError`**（接続・読み取り・書き込み・クローズ）の主チャネル。 |
+| `connect$()` | ポート選択 → オープン → 内部 read pump 開始。 |
+| `disconnect$()` | ポートを閉じ、pump を停止。 |
+| `send$(string \| Uint8Array)` | 送信を **FIFO** で直列化（並行 `send$` も呼び出し順）。 |
+| `isBrowserSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
+
+**`connected$`（UI 用）** — `SerialSession` のプロパティではありません。真偽の `Observable` が欲しい場合は `state$` から派生します。
+
+```typescript
+import { map } from 'rxjs';
+
+const connected$ = session.state$.pipe(map((s) => s === 'connected'));
+```
+
+**行単位の `lines$`** — ビルトインではありません。`receive$` の上にフレーミングします（[行単位のフレーミング](docs/ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
+
+### 最小サンプル
+
+```typescript
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
+
+const session = createSerialSession({ baudRate: 115200 });
+
+if (!session.isBrowserSupported()) {
+  throw new Error('このブラウザでは Web Serial を利用できません');
+}
+
+session.receive$.subscribe(console.log);
+session.errors$.subscribe(console.error);
+session.connect$().subscribe();
+session.send$('hello\r\n').subscribe();
+```
+
+実アプリでは `connect$` / `send$` の `subscribe` で `error` も扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](docs/QUICK_START.ja.md) を参照してください。
+
 ## ドキュメント
 
-- **[クイックスタート](docs/QUICK_START.ja.md)** - 基本的な例と使用方法で始める
-- **[API リファレンス](docs/API_REFERENCE.ja.md)** - 詳細な説明を含む完全な API ドキュメント
-- **[高度な使用方法](docs/ADVANCED_USAGE.ja.md)** - 高度なパターン、ストリーム処理、エラー回復
-- **[v1 → v2 マイグレーションガイド](docs/MIGRATION_V2.ja.md)** - 削除された `SerialClient` / `ShellClient` から v2 `SerialSession` への対応表
+| ドキュメント | 用途 |
+| --- | --- |
+| **この README** | 全体像と API の入り口。 |
+| **[クイックスタート](docs/QUICK_START.ja.md)** | 最短でポートを開いて購読するところまで。 |
+| **[高度な使用方法](docs/ADVANCED_USAGE.ja.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
+| **[API リファレンス](docs/API_REFERENCE.ja.md)** | オプション、`SerialSessionState`、`SerialError` の詳細。 |
+| **[v1 → v2 マイグレーション](docs/MIGRATION_V2.ja.md)** | 削除された v1 API からの対応表。 |
 
 ## サンプル
 
 以下の環境向けのサンプルを用意しています。
 
 - **[Angular](apps/example-angular/)** - Service を使用した Angular の例
-- **[React](apps/example-react/)** - カスタムフック（`useSerialClient`）を使用した React の例
+- **[React](apps/example-react/)** - カスタムフック（`useSerialSession`）を使用した React の例
 - **[Svelte](apps/example-svelte/)** - Svelte Store を使用した Svelte の例
 - **[Vanilla JavaScript](apps/example-vanilla-js/)** - バニラ JavaScript での基本的な使用方法
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - RxJS を使用した TypeScript の例

@@ -8,6 +8,7 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 
 ## Table of Contents
 
+- [SerialSession (v2) at a glance](#serialsession-v2-at-a-glance)
 - [Features](#features)
 - [Framework Support](#framework-support)
 - [Browser Support](#browser-support)
@@ -71,19 +72,65 @@ pnpm add rxjs
 
 **Minimum required version**: RxJS ^7.8.0
 
+## SerialSession (v2) at a glance
+
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; line framing, “connected” booleans, and other patterns are built with plain RxJS on top of the streams (see [Advanced Usage](docs/ADVANCED_USAGE.md)).
+
+| Surface | Role |
+| --- | --- |
+| `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`. Replays the current state on subscribe. |
+| `receive$` | **Raw incoming UTF-8 text** as decoded string **chunks** (not line-delimited; multi-byte safe). |
+| `errors$` | **All `SerialError` instances** from connect / read / write / close (primary error channel). |
+| `connect$()` | **Open** a user-selected port and start the internal read pump. |
+| `disconnect$()` | **Close** the port and stop the pump. |
+| `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
+| `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
+
+**`connected$` (for simple UIs)** — not a property on `SerialSession`. For a read-only `Observable<boolean>`, compose `state$`:
+
+```typescript
+import { map } from 'rxjs';
+
+const connected$ = session.state$.pipe(map((s) => s === 'connected'));
+```
+
+**Line-delimited “lines$”** — not a built-in property. Frame on top of `receive$` (recipes in [Advanced Usage](docs/ADVANCED_USAGE.md#line-framing)).
+
+### Minimal example
+
+```typescript
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
+
+const session = createSerialSession({ baudRate: 115200 });
+
+if (!session.isBrowserSupported()) {
+  throw new Error('Web Serial is not available in this browser');
+}
+
+session.receive$.subscribe(console.log);
+session.errors$.subscribe(console.error);
+session.connect$().subscribe();
+session.send$('hello\r\n').subscribe();
+```
+
+In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](docs/QUICK_START.md).
+
 ## Documentation
 
-- **[Quick Start](docs/QUICK_START.md)** - Get started with basic examples and usage patterns
-- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with detailed descriptions
-- **[Advanced Usage](docs/ADVANCED_USAGE.md)** - Advanced patterns, stream processing, and error recovery
-- **[v1 → v2 Migration Guide](docs/MIGRATION_V2.md)** - Mapping from the removed `SerialClient` / `ShellClient` API to the v2 `SerialSession` API
+| Doc | Use it for |
+| --- | --- |
+| **This README** | Mental model, API surface, and where to go next. |
+| **[Quick Start](docs/QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
+| **[Advanced Usage](docs/ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
+| **[API Reference](docs/API_REFERENCE.md)** | Options, `SerialSessionState`, and `SerialError` details. |
+| **[v1 → v2 Migration Guide](docs/MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
 
 ## Examples
 
 Examples are available for the following environments:
 
 - **[Angular](apps/example-angular/)** - Angular example using a Service
-- **[React](apps/example-react/)** - React example with custom hook (`useSerialClient`)
+- **[React](apps/example-react/)** - React example with custom hook (`useSerialSession`)
 - **[Svelte](apps/example-svelte/)** - Svelte example using Svelte Store
 - **[Vanilla JavaScript](apps/example-vanilla-js/)** - Basic usage with vanilla JavaScript
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
