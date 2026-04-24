@@ -47,6 +47,7 @@ const status = computed<{ type: StatusType; message: string }>(() => {
 });
 
 const handleConnect = () => {
+  clearReceivedData();
   connect$(baudRate.value).subscribe({
     error: (error: unknown) => {
       console.error('接続エラー:', error);

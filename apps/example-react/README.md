@@ -1,8 +1,10 @@
 # React Example
 
-This is a React example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with the v2 `SerialSession` API to interact with serial ports through the Web Serial API. The example exposes a thin custom hook (`useSerialSession`) that mirrors the Vue composable and the Angular service: it just reflects the library's `state$` / `receive$` / `errors$` streams into React state without reconstructing any connection state of its own.
+This is a minimal React example for the v2 `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `errors$` into React state and derives **newline-delimited lines** from `receive$` (same pattern as [Quick Start](../../docs/QUICK_START.md)).
 
-**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance) before reading this app.
+**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
+
+**Scope**: Connect, line-delimited receive, send, and disconnect only. For richer recipes, see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## Features
 
@@ -10,15 +12,9 @@ This is a React example application demonstrating how to use the `@gurezo/web-se
 - Reactive session lifecycle driven by `state$` (`idle | connecting | connected | disconnecting | unsupported | error`)
 - Configuration option (baud rate)
 - Send data to the serial port through the library-owned FIFO send queue
-- Receive decoded text from the read pump
+- Receive newline-delimited lines (derived from `receive$`)
 - Unified error channel via `errors$`
 - Full TypeScript type safety
-
-## Completion criteria (Issue #208)
-
-- `useSerialSession` hook is under 100 lines.
-- The hook is implemented with `useEffect` + `subscribe` only — no BehaviorSubject reassembly, no read-loop management, no state-kind mapping.
-- `App.tsx` drives its UI purely from the hook's returned React state (`state`, `receivedData`, `errorMessage`).
 
 ## Requirements
 

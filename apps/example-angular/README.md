@@ -4,6 +4,8 @@ This is an Angular example application demonstrating how to use the `@gurezo/web
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
 
+**Scope**: Minimal smoke test—connect, line-delimited receive (`lines$` derived from `receive$`), send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+
 ## Features
 
 - Browser support detection
@@ -77,7 +79,7 @@ This example uses Angular Services and RxJS observables to handle serial port co
 
 4. **Data Sending**: Users can type text in the input field and send it to the serial port. The text is encoded as UTF-8 and sent as `Uint8Array` through the service's `sendAsync` method.
 
-5. **Data Receiving**: Data received from the serial port is decoded as UTF-8 and displayed in real-time in the textarea. The received data is managed as an Observable in the service.
+5. **Data Receiving**: UTF-8 chunks are framed into newline-delimited lines (`lines$` in the service) and shown in the textarea.
 
 ## Code Structure
 

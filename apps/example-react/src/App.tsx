@@ -31,10 +31,12 @@ export function App() {
           ? { type: 'success', message: 'シリアルポートに接続しました。' }
           : { type: 'info', message: 'シリアルポートに接続していません。' };
 
-  const handleConnect = () =>
+  const handleConnect = () => {
+    clearReceivedData();
     connect$(baudRate).subscribe({
       error: (e: unknown) => console.error('接続エラー:', e),
     });
+  };
   const handleDisconnect = () =>
     disconnect$().subscribe({
       error: (e: unknown) => console.error('切断エラー:', e),

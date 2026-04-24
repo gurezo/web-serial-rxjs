@@ -4,7 +4,7 @@ import {
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, map, scan } from 'rxjs/operators';
 
 type StatusType = 'info' | 'success' | 'error';
 
@@ -58,10 +58,23 @@ export class App {
       baudRateSelect.disabled = connected || busy;
       setStatus(status, ...STATUS[state]);
     });
-    this.session.receive$.subscribe((text) => {
-      receiveOutput.value += text;
-      receiveOutput.scrollTop = receiveOutput.scrollHeight;
-    });
+    this.session.receive$
+      .pipe(
+        scan(
+          (acc, chunk: string) => {
+            const combined = acc.buffer + chunk;
+            const parts = combined.split('\n');
+            return { buffer: parts.pop() ?? '', lines: parts };
+          },
+          { buffer: '', lines: [] as string[] },
+        ),
+        filter((x) => x.lines.length > 0),
+        map((x) => x.lines),
+      )
+      .subscribe((lines) => {
+        receiveOutput.value += lines.map((l) => `${l}\n`).join('');
+        receiveOutput.scrollTop = receiveOutput.scrollHeight;
+      });
     this.session.errors$.subscribe((error) => {
       setStatus(status, 'error', `エラー: ${error.message}`);
       console.error('Serial port error:', error);
@@ -72,6 +85,7 @@ export class App {
         this.baudRate = baudRate;
         this.session = createSerialSession({ baudRate });
       }
+      receiveOutput.value = '';
       this.session.connect$().subscribe({ error: () => void 0 });
     });
     fromEvent(disconnectBtn, 'click').subscribe(() =>

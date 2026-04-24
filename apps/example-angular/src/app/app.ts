@@ -36,10 +36,11 @@ export class App {
         }
       });
 
-    this.serialService.receive$
+    this.serialService.lines$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((chunk) => {
-        this.receivedData.update((prev) => prev + chunk);
+      .subscribe((lines) => {
+        const block = lines.map((l) => `${l}\n`).join('');
+        this.receivedData.update((prev) => prev + block);
       });
 
     this.serialService.errors$
@@ -91,6 +92,7 @@ export class App {
   }
 
   handleConnect(): void {
+    this.receivedData.set('');
     this.errorMessage.set(null);
     this.serialService.connect$(this.baudRate).subscribe({
       error: (error: unknown) => {

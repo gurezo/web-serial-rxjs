@@ -5,14 +5,17 @@ import {
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
-import { Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
+import {
+  Observable,
+  ReplaySubject,
+  Subscription,
+  switchMap,
+  filter,
+  map,
+  scan,
+} from 'rxjs';
 
-/**
- * v2 `SerialSession` を薄くラップした React カスタムフック。
- * state / receive / errors をそのまま React state に反映するだけで、
- * BehaviorSubject 的な接続状態再合成や read loop 管理は持たない。
- * @see https://github.com/gurezo/web-serial-rxjs/issues/199 | #208
- */
+/** v2 `SerialSession` を薄くラップ。受信は `receive$` から行単位に派生（QUICK_START と同パターン）。 */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
   state: SerialSessionState;
@@ -54,8 +57,25 @@ export function useSerialSession(
     );
     sub.add(
       sessions$
-        .pipe(switchMap((s) => s.receive$))
-        .subscribe((c) => setReceivedData((prev) => prev + c)),
+        .pipe(
+          switchMap((s) =>
+            s.receive$.pipe(
+              scan(
+                (acc, chunk: string) => {
+                  const combined = acc.buffer + chunk;
+                  const parts = combined.split('\n');
+                  return { buffer: parts.pop() ?? '', lines: parts };
+                },
+                { buffer: '', lines: [] as string[] },
+              ),
+              filter((x) => x.lines.length > 0),
+              map((x) => x.lines),
+            ),
+          ),
+        )
+        .subscribe((lines) =>
+          setReceivedData((prev) => prev + lines.map((l) => `${l}\n`).join('')),
+        ),
     );
     sub.add(
       sessions$
@@ -77,6 +97,7 @@ export function useSerialSession(
       const next = createSerialSession({ baudRate });
       sessionRef.current = next;
       sessionsRef.current?.next(next);
+      setReceivedData('');
     }
     return (sessionRef.current as SerialSession).connect$();
   };

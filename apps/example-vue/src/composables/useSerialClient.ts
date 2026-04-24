@@ -4,19 +4,17 @@ import {
   type SerialSession,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { Observable, ReplaySubject, switchMap } from 'rxjs';
+import {
+  Observable,
+  ReplaySubject,
+  switchMap,
+  filter,
+  map,
+  scan,
+} from 'rxjs';
 import { onUnmounted, ref, type Ref } from 'vue';
 
-/**
- * v2 `SerialSession` を薄くラップした Vue Composable。
- *
- * `state$` / `receive$` / `errors$` をそのままリアクティブな `Ref` に反映し、
- * BehaviorSubject 的な接続状態再合成、`text$` の手動購読、read loop 管理は
- * 一切持たない。
- *
- * @see https://github.com/gurezo/web-serial-rxjs/issues/199
- * @see https://github.com/gurezo/web-serial-rxjs/issues/206
- */
+/** v2 `SerialSession` を薄くラップ。受信は `receive$` から行単位に派生。 */
 export interface UseSerialClientReturn {
   browserSupported: Ref<boolean>;
   state: Ref<SerialSessionState>;
@@ -50,9 +48,25 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       }
     });
   const receiveSub = sessions$
-    .pipe(switchMap((session) => session.receive$))
-    .subscribe((chunk) => {
-      receivedData.value = receivedData.value + chunk;
+    .pipe(
+      switchMap((session) =>
+        session.receive$.pipe(
+          scan(
+            (acc, chunk: string) => {
+              const combined = acc.buffer + chunk;
+              const parts = combined.split('\n');
+              return { buffer: parts.pop() ?? '', lines: parts };
+            },
+            { buffer: '', lines: [] as string[] },
+          ),
+          filter((x) => x.lines.length > 0),
+          map((x) => x.lines),
+        ),
+      ),
+    )
+    .subscribe((lines) => {
+      receivedData.value =
+        receivedData.value + lines.map((l) => `${l}\n`).join('');
     });
   const errorsSub = sessions$
     .pipe(switchMap((session) => session.errors$))
@@ -65,6 +79,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       currentBaudRate = baudRate;
       currentSession = createSerialSession({ baudRate });
       sessions$.next(currentSession);
+      receivedData.value = '';
     }
     return currentSession.connect$();
   };
