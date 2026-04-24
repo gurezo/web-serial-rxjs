@@ -1,6 +1,6 @@
 # 高度な使用方法
 
-v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。
+v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[README](../README.ja.md#serialsessionv2の全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは README で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。
 
 ## 行単位のフレーミング
 
@@ -28,6 +28,18 @@ const lines$ = session.receive$.pipe(
 
 lines$.subscribe((lines) => lines.forEach((line) => console.log('行:', line)));
 ```
+
+## 接続中フラグ（`connected$` 相当）
+
+`SerialSession` に `connected$` プロパティはありません。ボタンの有効／無効などに使う真偽値が欲しい場合は `state$` から派生します。
+
+```typescript
+import { map } from 'rxjs';
+
+const connected$ = session.state$.pipe(map((s) => s === 'connected'));
+```
+
+接続中以外の段階（`connecting` など）も扱う UI では、真偽値ではなく下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
 
 ## 順序保証のある送信
 

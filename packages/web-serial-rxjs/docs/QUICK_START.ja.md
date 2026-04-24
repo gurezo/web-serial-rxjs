@@ -1,5 +1,7 @@
 # クイックスタート
 
+**最短で**ポートを開き、購読まで進む手順です。`state$` / `receive$` / `errors$` と各メソッドの一覧は、先に[リポジトリの README](../../../README.ja.md#serialsessionv2の全体像)を参照してください。
+
 v2 の公開 API は `createSerialSession` が返す単一の `SerialSession` です。`state$` / `receive$` / `errors$` を購読し、`connect$` / `disconnect$` / `send$` でポートを操作します。
 
 ```typescript
@@ -47,32 +49,15 @@ session.connect$().subscribe({
 
 ### テキストを読み取る
 
-`receive$` はストリーミング `TextDecoder` を用いて UTF-8 デコード済みの文字列を emit します。マルチバイト文字がチャンクをまたいでも正しく結合されます。行単位で扱いたい場合は RxJS のオペレータで整形します。
+`receive$` はストリーミング `TextDecoder` により UTF-8 デコード済みの文字列を emit します。マルチバイト文字がチャンクをまたいでも正しく結合されます。境界は**任意のチャンク**で、1 行が 1 emit になるとは限りません。改行区切りの行が欲しい場合は `receive$` の上にオペレータを重ねます（完全な例は[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）:
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
-import { scan, filter, map } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 9600 });
 
 session.connect$().subscribe();
-
 session.receive$.subscribe((chunk) => console.log('chunk:', chunk));
-
-session.receive$
-  .pipe(
-    scan(
-      (acc, chunk) => {
-        const combined = acc.buffer + chunk;
-        const parts = combined.split('\n');
-        return { buffer: parts.pop() ?? '', lines: parts };
-      },
-      { buffer: '', lines: [] as string[] },
-    ),
-    filter((s) => s.lines.length > 0),
-    map((s) => s.lines),
-  )
-  .subscribe((lines) => lines.forEach((line) => console.log('行:', line)));
 ```
 
 ### 順序を保証した送信
@@ -155,5 +140,5 @@ session.connect$().subscribe({
 ## 次のステップ
 
 - `SerialSession` の全インターフェイスは [API リファレンス](./API_REFERENCE.ja.md) を参照してください。
-- 応用パターンは [高度な使用方法](./ADVANCED_USAGE.ja.md) を参照してください。
-- v1 からの移行は [v1 → v2 マイグレーションガイド](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.ja.md) を参照してください。
+- 行フレーミング、擬似リクエスト／レスポンス、リカバリは [高度な使用方法](./ADVANCED_USAGE.ja.md) を参照してください。
+- v1 からの移行は [v1 → v2 マイグレーション](./MIGRATION_V2.ja.md) を参照してください。
