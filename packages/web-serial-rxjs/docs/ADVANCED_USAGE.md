@@ -1,6 +1,6 @@
 # Advanced Usage
 
-The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../../../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
+The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read [SerialSession (v2) overview](./OVERVIEW.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the overview defers on purpose.
 
 This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`**, **`isConnected$`**, and the imperative methods cover common cases. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 

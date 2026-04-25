@@ -16,7 +16,7 @@
   "excludePrivate": true,
   "excludeProtected": false,
   "excludeInternal": true,
-  "readme": "./README.md",
+  "readme": "./docs/OVERVIEW.md",
   "name": "web-serial-rxjs API Documentation",
   "includeVersion": false,
   "gitRevision": "main",

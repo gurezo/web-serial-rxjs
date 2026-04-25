@@ -1,6 +1,6 @@
 # Quick Start
 
-This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, and the imperative methods, read [SerialSession (v2) overview](./OVERVIEW.md#serialsession-v2-at-a-glance) first.
+This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, and the imperative methods, read [SerialSession (v2) overview](../OVERVIEW.md#serialsession-v2-at-a-glance) first.
 
 Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
 
