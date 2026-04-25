@@ -7,7 +7,7 @@ import type { SerialSessionState } from './serial-session-state';
  * minimal, session-oriented surface.
  *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
- * can drive their UI purely from `state$` + `receive$` + `errors$` and never
+ * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `errors$` and never
  * have to rebuild BehaviorSubjects, manage a read loop, or serialize writes
  * themselves.
  *

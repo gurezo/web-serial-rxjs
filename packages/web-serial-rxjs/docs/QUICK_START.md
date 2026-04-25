@@ -2,7 +2,7 @@
 
 This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `receive$`, `errors$`, and the imperative methods, read the [project README](../../../README.md#serialsession-v2-at-a-glance) first.
 
-`SerialSession` does not expose built-in `lines$` or `connected$`. Below they are **derived** from `receive$` and `state$` (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing) for the pattern).
+`SerialSession` does not expose a built-in `lines$` — frame on top of `receive$` (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
 
 ```typescript
 import { filter, map, scan } from 'rxjs';
@@ -13,8 +13,6 @@ const session = createSerialSession({ baudRate: 115200 });
 if (!session.isBrowserSupported()) {
   console.error('Web Serial API is not supported in this browser');
 }
-
-const connected$ = session.state$.pipe(map((s) => s === 'connected'));
 
 const lines$ = session.receive$.pipe(
   scan(
@@ -29,7 +27,9 @@ const lines$ = session.receive$.pipe(
   map((s) => s.lines),
 );
 
-connected$.subscribe((isConnected) => console.log('Connected:', isConnected));
+session.isConnected$.subscribe((isConnected) =>
+  console.log('Connected:', isConnected),
+);
 lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
 
 // In production apps, subscribe to errors$ and handle SerialError

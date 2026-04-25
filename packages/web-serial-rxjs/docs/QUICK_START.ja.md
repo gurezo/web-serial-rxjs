@@ -2,7 +2,7 @@
 
 **最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `receive$` / `errors$` と各メソッドの一覧は、先に[リポジトリの README](../../../README.ja.md#serialsessionv2の全体像)を参照してください。
 
-`SerialSession` にビルトインの `lines$` や `connected$` はありません。下記では `receive$` と `state$` から**派生**させます（パターンの説明は[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
+`lines$` のような行区切りストリームは `receive$` 上に**派生**させます（パターンの説明は[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。接続の真偽は **`isConnected$`** を使うか、従来どおり `state$` から `map` しても構いません。
 
 ```typescript
 import { filter, map, scan } from 'rxjs';
@@ -13,8 +13,6 @@ const session = createSerialSession({ baudRate: 115200 });
 if (!session.isBrowserSupported()) {
   console.error('このブラウザは Web Serial API をサポートしていません');
 }
-
-const connected$ = session.state$.pipe(map((s) => s === 'connected'));
 
 const lines$ = session.receive$.pipe(
   scan(
@@ -29,7 +27,7 @@ const lines$ = session.receive$.pipe(
   map((s) => s.lines),
 );
 
-connected$.subscribe((isConnected) => console.log('接続中:', isConnected));
+session.isConnected$.subscribe((isConnected) => console.log('接続中:', isConnected));
 lines$.subscribe((lines) => lines.forEach((line) => console.log('行:', line)));
 
 // 本番では errors$ を購読して SerialError を扱うことを推奨します

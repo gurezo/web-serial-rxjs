@@ -69,6 +69,7 @@ interface SerialSession {
   disconnect$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
+  readonly isConnected$: Observable<boolean>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
 
@@ -91,6 +92,10 @@ Stops the read pump and closes the port. Safe to call when already idle. Transit
 ### `state$: Observable<SerialSessionState>`
 
 Replays the current state on subscribe. Prefer driving your UI from this stream instead of rebuilding a `BehaviorSubject`.
+
+### `isConnected$: Observable<boolean>`
+
+`true` when the session is in `'connected'`; `false` for every other `SerialSessionState` value. Derived from `state$` with `distinctUntilChanged` so simple UIs can bind without repeating string comparisons (you can still `map` `state$` yourself if you prefer).
 
 ### `errors$: Observable<SerialError>`
 
