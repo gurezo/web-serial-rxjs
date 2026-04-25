@@ -69,6 +69,14 @@ export interface SerialSession {
   readonly state$: Observable<SerialSessionState>;
 
   /**
+   * `true` when {@link state$} is `'connected'`, `false` for all other states.
+   *
+   * Derived from `state$` with `distinctUntilChanged` so UIs can bind
+   * connect/disabled flags without reimplementing the comparison.
+   */
+  readonly isConnected$: Observable<boolean>;
+
+  /**
    * Primary error channel.
    *
    * All {@link SerialError} instances produced by the session (connect /
