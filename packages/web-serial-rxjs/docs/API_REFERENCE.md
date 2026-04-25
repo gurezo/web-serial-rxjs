@@ -72,6 +72,7 @@ interface SerialSession {
   readonly isConnected$: Observable<boolean>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
+  readonly lines$: Observable<string>;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -103,7 +104,11 @@ Primary error channel. Every connect / read / write / close failure is normalise
 
 ### `receive$: Observable<string>`
 
-UTF-8 decoded text pushed by the internal read pump. **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data.
+UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Prefer `lines$` for newline-framed protocols.
+
+### `lines$: Observable<string>`
+
+The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. **Not subscription-lazy** with respect to the read pump, like `receive$`.
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 

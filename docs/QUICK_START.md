@@ -1,11 +1,10 @@
 # Quick Start
 
-This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `receive$`, `errors$`, and the imperative methods, read the [project README](../../../README.md#serialsession-v2-at-a-glance) first.
+This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `receive$`, `lines$`, `errors$`, and the imperative methods, read the [project README](../../../README.md#serialsession-v2-at-a-glance) first.
 
-`SerialSession` does not expose a built-in `lines$` — frame on top of `receive$` (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
+Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
 
 ```typescript
-import { filter, map, scan } from 'rxjs';
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
@@ -14,23 +13,10 @@ if (!session.isBrowserSupported()) {
   console.error('Web Serial API is not supported in this browser');
 }
 
-const lines$ = session.receive$.pipe(
-  scan(
-    (acc, chunk) => {
-      const combined = acc.buffer + chunk;
-      const parts = combined.split('\n');
-      return { buffer: parts.pop() ?? '', lines: parts };
-    },
-    { buffer: '', lines: [] as string[] },
-  ),
-  filter((s) => s.lines.length > 0),
-  map((s) => s.lines),
-);
-
 session.isConnected$.subscribe((isConnected) =>
   console.log('Connected:', isConnected),
 );
-lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
+session.lines$.subscribe((line) => console.log('line:', line));
 
 // In production apps, subscribe to errors$ and handle SerialError
 session.errors$.subscribe((err) => console.error('Serial error:', err));

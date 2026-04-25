@@ -56,7 +56,7 @@ session.send$('hi').subscribe();
 | `client.disconnect()`                   | `session.disconnect$()`                                                  |
 | `client.connected` / `client.connected$`| `session.isConnected$`（または `session.state$` を `map`）               |
 | `client.state$`（discriminated object） | `session.state$`（`SerialSessionState` 文字列ユニオン）                 |
-| `client.text$` / `client.lines$`        | `session.receive$`（UTF-8 デコード済み）                                 |
+| `client.text$` / `client.lines$`        | `session.lines$`（行区切り）または `session.receive$`（生の UTF-8 チャンク） |
 | `client.bytes$`                         | v2 では非公開。バイトが必要なら `new TextEncoder().encode(chunk)` などで変換するか issue でリクエストしてください |
 | `client.write(bytes)`                   | `session.send$(bytes)`                                                   |
 | `client.writeText(str)`                 | `session.send$(str)`                                                     |
