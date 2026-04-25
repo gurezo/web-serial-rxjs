@@ -125,6 +125,7 @@ describe('createSerialSession', () => {
       expect(session.isConnected$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
+      expect(session.lines$).toBeDefined();
     });
 
     it('accepts SerialSessionOptions without throwing', () => {
@@ -398,6 +399,60 @@ describe('createSerialSession', () => {
       expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
         S.Error,
       );
+    });
+  });
+
+  describe('lines$', () => {
+    it('emits one line per LF and supports multiple lines in one chunk', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const twoLines = firstValueFrom(
+        session.lines$.pipe(take(2), toArray()),
+      );
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('a\nb\n'));
+      await flushMicrotasks();
+
+      await expect(twoLines).resolves.toEqual(['a', 'b']);
+    });
+
+    it('splits CRLF that spans two decoder chunks', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const oneLine = firstValueFrom(session.lines$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('x\r'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('\n'));
+      await flushMicrotasks();
+
+      await expect(oneLine).resolves.toBe('x');
+    });
+
+    it('does not emit when no line terminator is present', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      let lineCount = 0;
+      session.lines$.subscribe(() => {
+        lineCount += 1;
+      });
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('no-eol-here'));
+      await flushMicrotasks();
+
+      expect(lineCount).toBe(0);
     });
   });
 
