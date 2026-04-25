@@ -122,6 +122,7 @@ describe('createSerialSession', () => {
       expect(typeof session.disconnect$).toBe('function');
       expect(typeof session.send$).toBe('function');
       expect(session.state$).toBeDefined();
+      expect(session.isConnected$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
     });
@@ -176,6 +177,58 @@ describe('createSerialSession', () => {
       const state = await firstValueFrom(session.state$);
 
       expect(state).toBe<SerialSessionState>(S.Unsupported);
+    });
+  });
+
+  describe('isConnected$', () => {
+    it('replays false on subscribe when state is unsupported', async () => {
+      const session = createSerialSession();
+
+      expect(await firstValueFrom(session.isConnected$)).toBe(false);
+    });
+
+    it('replays false on subscribe when state is idle', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (globalThis as any).navigator = { serial: {} };
+
+      const session = createSerialSession();
+
+      expect(await firstValueFrom(session.isConnected$)).toBe(false);
+    });
+
+    it('is true when connected and false after disconnect$ returns to idle', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const connectedBools = lastValueFrom(
+        session.isConnected$.pipe(take(3), toArray()),
+      );
+
+      await firstValueFrom(session.connect$());
+      await firstValueFrom(session.disconnect$());
+
+      expect(await connectedBools).toEqual([false, true, false]);
+    });
+
+    it('is false when state$ is error', async () => {
+      const requestPort = vi
+        .fn()
+        .mockRejectedValue(new DOMException('user cancel', 'NotFoundError'));
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+
+      await expect(firstValueFrom(session.connect$())).rejects.toBeInstanceOf(
+        SerialError,
+      );
+
+      expect(await firstValueFrom(session.isConnected$)).toBe(false);
     });
   });
 
