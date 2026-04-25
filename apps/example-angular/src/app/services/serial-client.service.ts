@@ -5,9 +5,9 @@ import {
   SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { Observable, ReplaySubject, switchMap, filter, map, scan } from 'rxjs';
+import { Observable, ReplaySubject, switchMap } from 'rxjs';
 
-/** v2 SerialSession を薄くラップ。受信は行単位の `lines$` に派生。 */
+/** v2 SerialSession を薄くラップ。受信は組み込み `lines$`。 */
 @Injectable({ providedIn: 'root' })
 export class SerialClientService implements OnDestroy {
   private readonly sessions$ = new ReplaySubject<SerialSession>(1);
@@ -15,8 +15,9 @@ export class SerialClientService implements OnDestroy {
   private currentBaudRate: number;
 
   readonly state$: Observable<SerialSessionState>;
-  /** `receive$` を `\n` で分割した行のバッチ（QUICK_START と同パターン）。 */
-  readonly lines$: Observable<string[]>;
+  /** 組み込みの行区切りストリーム（1 行ごとに 1 件）。 */
+  readonly lines$: Observable<string>;
+  readonly isConnected$: Observable<boolean>;
   readonly errors$: Observable<SerialError>;
 
   constructor() {
@@ -27,21 +28,9 @@ export class SerialClientService implements OnDestroy {
     this.sessions$.next(this.currentSession);
 
     this.state$ = this.sessions$.pipe(switchMap((session) => session.state$));
-    this.lines$ = this.sessions$.pipe(
-      switchMap((session) =>
-        session.receive$.pipe(
-          scan(
-            (acc, chunk: string) => {
-              const combined = acc.buffer + chunk;
-              const parts = combined.split('\n');
-              return { buffer: parts.pop() ?? '', lines: parts };
-            },
-            { buffer: '', lines: [] as string[] },
-          ),
-          filter((x) => x.lines.length > 0),
-          map((x) => x.lines),
-        ),
-      ),
+    this.lines$ = this.sessions$.pipe(switchMap((session) => session.lines$));
+    this.isConnected$ = this.sessions$.pipe(
+      switchMap((session) => session.isConnected$),
     );
     this.errors$ = this.sessions$.pipe(switchMap((session) => session.errors$));
   }

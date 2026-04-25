@@ -28,7 +28,7 @@
           id="baud-rate"
           class="form-control"
           [(ngModel)]="baudRate"
-          [disabled]="connected"
+          [disabled]="isConnected()"
         >
           <option [value]="9600">9600</option>
           <option [value]="19200">19200</option>
@@ -41,14 +41,14 @@
         <button
           class="btn btn-primary"
           (click)="handleConnect()"
-          [disabled]="!browserSupported || connected || connecting"
+          [disabled]="!browserSupported || isConnected() || connecting"
         >
           接続
         </button>
         <button
           class="btn btn-secondary"
           (click)="handleDisconnect()"
-          [disabled]="!connected || disconnecting"
+          [disabled]="!isConnected() || disconnecting"
         >
           切断
         </button>
@@ -70,13 +70,13 @@
             class="form-control"
             [(ngModel)]="sendInput"
             (keydown)="handleKeyDown($event)"
-            [disabled]="!connected"
+            [disabled]="!isConnected()"
             placeholder="送信するテキストを入力..."
           />
           <button
             class="btn btn-primary"
             (click)="handleSend()"
-            [disabled]="!connected || !sendInput.trim()"
+            [disabled]="!isConnected() || !sendInput.trim()"
           >
             送信
           </button>
