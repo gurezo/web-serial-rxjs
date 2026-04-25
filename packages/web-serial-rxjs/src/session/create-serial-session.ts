@@ -3,6 +3,7 @@ import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { buildRequestOptions } from './internal/build-request-options';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
+import { createLineBuffer } from './internal/line-buffer';
 import {
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
@@ -52,6 +53,9 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
  *   **not** subscription-lazy - the pump is started by `connect$` and
  *   decoded text is multicast to all subscribers; late subscribers see only
  *   new data.
+ * - `lines$` emits the same decoded stream split into line-terminated
+ *   segments (`\n`, `\r\n`); a trailing line without a terminator is
+ *   buffered. It is also not subscription-lazy relative to the pump.
  * - `send$` enqueues each payload on an internal FIFO queue so concurrent
  *   subscribers are written to the port in call order. String payloads are
  *   UTF-8 encoded through a shared `TextEncoder`.
@@ -86,11 +90,14 @@ export function createSerialSession(
   );
   const errorsSubject = new Subject<SerialError>();
   const receiveSubject = new Subject<string>();
+  const linesSubject = new Subject<string>();
   const sendQueue = createSendQueue();
   const textEncoder = new TextEncoder();
+  const lineBuffer = createLineBuffer();
 
   const errors$ = errorsSubject.asObservable();
   const receive$ = receiveSubject.asObservable();
+  const lines$ = linesSubject.asObservable();
 
   const isConnected$ = machine.state$.pipe(
     map((state) => state === SerialSessionState.Connected),
@@ -103,6 +110,7 @@ export function createSerialSession(
   const teardownPump = async (): Promise<void> => {
     const pump = activePump;
     activePump = null;
+    lineBuffer.clear();
     if (pump) {
       await pump.stop();
     }
@@ -249,8 +257,14 @@ export function createSerialSession(
           }
 
           activePort = selectedPort;
+          lineBuffer.clear();
           activePump = createReadPump(selectedPort, {
-            onChunk: (text) => receiveSubject.next(text),
+            onChunk: (text) => {
+              receiveSubject.next(text);
+              for (const line of lineBuffer.feed(text)) {
+                linesSubject.next(line);
+              }
+            },
             onError: (pumpError) =>
               reportError(pumpError, 'fatal', {
                 fallbackCode: SerialErrorCode.READ_FAILED,
@@ -354,5 +368,6 @@ export function createSerialSession(
     isConnected$,
     errors$,
     receive$,
+    lines$,
   };
 }

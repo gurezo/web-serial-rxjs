@@ -7,7 +7,7 @@ import type { SerialSessionState } from './serial-session-state';
  * minimal, session-oriented surface.
  *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
- * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `errors$` and never
+ * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$` and never
  * have to rebuild BehaviorSubjects, manage a read loop, or serialize writes
  * themselves.
  *
@@ -107,8 +107,22 @@ export interface SerialSession {
    * characters split across chunks are joined correctly. It is **not**
    * subscription-lazy: emissions happen regardless of whether a consumer
    * is currently subscribed, so late subscribers see only new data.
+   *
+   * Emits **raw decoder chunks** (not line-aligned). For newline-framed
+   * protocols, use {@link lines$} or derive your own framing from
+   * `receive$`.
    */
   readonly receive$: Observable<string>;
+
+  /**
+   * Decoded text split into **complete lines** using `\n`, `\r\n`, and
+   * lone interior `\r` (see implementation). A trailing fragment without
+   * a line terminator is buffered until a later chunk completes a line, or
+   * discarded on disconnect. It is **not** subscription-lazy: the same
+   * framing runs whenever the read pump is active, independent of
+   * subscribers.
+   */
+  readonly lines$: Observable<string>;
 
   /**
    * Enqueue data for ordered transmission.
