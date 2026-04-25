@@ -1,7 +1,9 @@
 import { firstValueFrom, lastValueFrom, take, toArray } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SerialSessionState } from '../../src/session/serial-session-state';
+import { SerialSessionState } from '../../src/session/serial-session-state';
 import { SessionStateMachine } from '../../src/session/session-state-machine';
+
+const S = SerialSessionState;
 
 describe('SessionStateMachine', () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
@@ -18,13 +20,13 @@ describe('SessionStateMachine', () => {
     it('starts in idle by default', () => {
       const machine = new SessionStateMachine();
 
-      expect(machine.current).toBe<SerialSessionState>('idle');
+      expect(machine.current).toBe<SerialSessionState>(S.Idle);
     });
 
     it('honours an explicit initial state', () => {
-      const machine = new SessionStateMachine('unsupported');
+      const machine = new SessionStateMachine(S.Unsupported);
 
-      expect(machine.current).toBe<SerialSessionState>('unsupported');
+      expect(machine.current).toBe<SerialSessionState>(S.Unsupported);
     });
   });
 
@@ -34,7 +36,7 @@ describe('SessionStateMachine', () => {
 
       const state = await firstValueFrom(machine.state$);
 
-      expect(state).toBe<SerialSessionState>('idle');
+      expect(state).toBe<SerialSessionState>(S.Idle);
     });
 
     it('emits every valid transition in order', async () => {
@@ -50,11 +52,11 @@ describe('SessionStateMachine', () => {
       machine.toIdle();
 
       await expect(collected).resolves.toEqual<SerialSessionState[]>([
-        'idle',
-        'connecting',
-        'connected',
-        'disconnecting',
-        'idle',
+        S.Idle,
+        S.Connecting,
+        S.Connected,
+        S.Disconnecting,
+        S.Idle,
       ]);
     });
   });
@@ -64,16 +66,16 @@ describe('SessionStateMachine', () => {
       const machine = new SessionStateMachine();
 
       expect(machine.toConnecting()).toBe(true);
-      expect(machine.current).toBe<SerialSessionState>('connecting');
+      expect(machine.current).toBe<SerialSessionState>(S.Connecting);
 
       expect(machine.toConnected()).toBe(true);
-      expect(machine.current).toBe<SerialSessionState>('connected');
+      expect(machine.current).toBe<SerialSessionState>(S.Connected);
 
       expect(machine.toDisconnecting()).toBe(true);
-      expect(machine.current).toBe<SerialSessionState>('disconnecting');
+      expect(machine.current).toBe<SerialSessionState>(S.Disconnecting);
 
       expect(machine.toIdle()).toBe(true);
-      expect(machine.current).toBe<SerialSessionState>('idle');
+      expect(machine.current).toBe<SerialSessionState>(S.Idle);
     });
   });
 
@@ -82,20 +84,20 @@ describe('SessionStateMachine', () => {
       const fromConnecting = new SessionStateMachine();
       fromConnecting.toConnecting();
       expect(fromConnecting.toError()).toBe(true);
-      expect(fromConnecting.current).toBe<SerialSessionState>('error');
+      expect(fromConnecting.current).toBe<SerialSessionState>(S.Error);
 
       const fromConnected = new SessionStateMachine();
       fromConnected.toConnecting();
       fromConnected.toConnected();
       expect(fromConnected.toError()).toBe(true);
-      expect(fromConnected.current).toBe<SerialSessionState>('error');
+      expect(fromConnected.current).toBe<SerialSessionState>(S.Error);
 
       const fromDisconnecting = new SessionStateMachine();
       fromDisconnecting.toConnecting();
       fromDisconnecting.toConnected();
       fromDisconnecting.toDisconnecting();
       expect(fromDisconnecting.toError()).toBe(true);
-      expect(fromDisconnecting.current).toBe<SerialSessionState>('error');
+      expect(fromDisconnecting.current).toBe<SerialSessionState>(S.Error);
     });
 
     it('recovers from error back to idle and forward to connecting', () => {
@@ -104,12 +106,12 @@ describe('SessionStateMachine', () => {
       machine.toError();
 
       expect(machine.toIdle()).toBe(true);
-      expect(machine.current).toBe<SerialSessionState>('idle');
+      expect(machine.current).toBe<SerialSessionState>(S.Idle);
 
       machine.toConnecting();
       machine.toError();
       expect(machine.toConnecting()).toBe(true);
-      expect(machine.current).toBe<SerialSessionState>('connecting');
+      expect(machine.current).toBe<SerialSessionState>(S.Connecting);
     });
   });
 
@@ -118,7 +120,7 @@ describe('SessionStateMachine', () => {
       const machine = new SessionStateMachine();
 
       expect(machine.toConnected()).toBe(false);
-      expect(machine.current).toBe<SerialSessionState>('idle');
+      expect(machine.current).toBe<SerialSessionState>(S.Idle);
       expect(warnSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -128,7 +130,7 @@ describe('SessionStateMachine', () => {
       machine.toConnected();
 
       expect(machine.toIdle()).toBe(false);
-      expect(machine.current).toBe<SerialSessionState>('connected');
+      expect(machine.current).toBe<SerialSessionState>(S.Connected);
       expect(warnSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -141,27 +143,27 @@ describe('SessionStateMachine', () => {
       const states = await lastValueFrom(
         machine.state$.pipe(take(1), toArray()),
       );
-      expect(states).toEqual<SerialSessionState[]>(['idle']);
+      expect(states).toEqual<SerialSessionState[]>([S.Idle]);
     });
   });
 
   describe('unsupported (terminal)', () => {
     it('rejects every transition once entered via construction', () => {
-      const machine = new SessionStateMachine('unsupported');
+      const machine = new SessionStateMachine(S.Unsupported);
 
       expect(machine.toIdle()).toBe(false);
       expect(machine.toConnecting()).toBe(false);
       expect(machine.toConnected()).toBe(false);
       expect(machine.toDisconnecting()).toBe(false);
       expect(machine.toError()).toBe(false);
-      expect(machine.current).toBe<SerialSessionState>('unsupported');
+      expect(machine.current).toBe<SerialSessionState>(S.Unsupported);
     });
 
     it('cannot be entered from idle at runtime', () => {
       const machine = new SessionStateMachine();
 
       expect(machine.toUnsupported()).toBe(false);
-      expect(machine.current).toBe<SerialSessionState>('idle');
+      expect(machine.current).toBe<SerialSessionState>(S.Idle);
       expect(warnSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -176,8 +178,8 @@ describe('SessionStateMachine', () => {
       machine.complete();
 
       await expect(collected).resolves.toEqual<SerialSessionState[]>([
-        'idle',
-        'connecting',
+        S.Idle,
+        S.Connecting,
       ]);
     });
   });

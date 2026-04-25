@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import type { SerialSessionState } from './serial-session-state';
+import { SerialSessionState } from './serial-session-state';
 
 /**
  * Allowed transitions for the internal SerialSession state machine.
@@ -22,15 +22,17 @@ import type { SerialSessionState } from './serial-session-state';
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/201 | Issue #201}
  */
+const S = SerialSessionState;
+
 const ALLOWED_TRANSITIONS: Readonly<
   Record<SerialSessionState, readonly SerialSessionState[]>
 > = {
-  idle: ['connecting', 'error'],
-  connecting: ['connected', 'error', 'idle'],
-  connected: ['disconnecting', 'error'],
-  disconnecting: ['idle', 'error'],
-  error: ['idle', 'connecting'],
-  unsupported: [],
+  [S.Idle]: [S.Connecting, S.Error],
+  [S.Connecting]: [S.Connected, S.Error, S.Idle],
+  [S.Connected]: [S.Disconnecting, S.Error],
+  [S.Disconnecting]: [S.Idle, S.Error],
+  [S.Error]: [S.Idle, S.Connecting],
+  [S.Unsupported]: [],
 };
 
 /**
@@ -58,7 +60,7 @@ const ALLOWED_TRANSITIONS: Readonly<
 export class SessionStateMachine {
   private readonly subject: BehaviorSubject<SerialSessionState>;
 
-  constructor(initial: SerialSessionState = 'idle') {
+  constructor(initial: SerialSessionState = SerialSessionState.Idle) {
     this.subject = new BehaviorSubject<SerialSessionState>(initial);
   }
 
@@ -71,27 +73,27 @@ export class SessionStateMachine {
   }
 
   toConnecting(): boolean {
-    return this.transition('connecting');
+    return this.transition(S.Connecting);
   }
 
   toConnected(): boolean {
-    return this.transition('connected');
+    return this.transition(S.Connected);
   }
 
   toDisconnecting(): boolean {
-    return this.transition('disconnecting');
+    return this.transition(S.Disconnecting);
   }
 
   toIdle(): boolean {
-    return this.transition('idle');
+    return this.transition(S.Idle);
   }
 
   toError(): boolean {
-    return this.transition('error');
+    return this.transition(S.Error);
   }
 
   toUnsupported(): boolean {
-    return this.transition('unsupported');
+    return this.transition(S.Unsupported);
   }
 
   complete(): void {

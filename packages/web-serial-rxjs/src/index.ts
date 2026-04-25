@@ -16,7 +16,7 @@
  * - {@link createSerialSession} - factory for a {@link SerialSession}
  * - {@link SerialSession} - the runtime interface
  * - {@link SerialSessionOptions} - connection options
- * - {@link SerialSessionState} - `state$` payload type
+ * - {@link SerialSessionState} - `state$` payload values (const + type)
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
  *
  * ## Browser Support
@@ -49,12 +49,8 @@
  * ```
  */
 
-export { createSerialSession } from './session';
-export type {
-  SerialSession,
-  SerialSessionOptions,
-  SerialSessionState,
-} from './session';
+export { createSerialSession, SerialSessionState } from './session';
+export type { SerialSession, SerialSessionOptions } from './session';
 
 export { SerialError } from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';
