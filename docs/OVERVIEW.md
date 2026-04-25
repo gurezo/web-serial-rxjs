@@ -1,5 +1,9 @@
 # SerialSession (v2) overview
 
+<p align="center">
+  <img src="../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
+</p>
+
 This page is the **mental model** for the v2 public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. For options, error codes, and formal type details, see [API Reference](./API_REFERENCE.md).
 
 ## Table of Contents

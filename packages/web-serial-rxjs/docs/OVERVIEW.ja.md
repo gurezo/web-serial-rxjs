@@ -1,5 +1,9 @@
 # SerialSession（v2）の概要
 
+<p align="center">
+  <img src="../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
+</p>
+
 このページは v2 公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。オプション、エラーコード、型の詳細は [API リファレンス](./API_REFERENCE.ja.md) を参照してください。
 
 ## 目次
