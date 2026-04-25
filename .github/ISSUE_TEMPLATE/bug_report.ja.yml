@@ -13,7 +13,7 @@ body:
     id: package_version
     attributes:
       label: web-serial-rxjs バージョン
-      description: "例: @gurezo/web-serial-rxjs@2.0.0"
+      description: "例: @gurezo/web-serial-rxjs@2.0.1"
       placeholder: "@gurezo/web-serial-rxjs@x.y.z"
     validations:
       required: true
