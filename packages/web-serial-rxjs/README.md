@@ -1,5 +1,9 @@
 # @gurezo/web-serial-rxjs
 
+<p align="center">
+  <img src="./web-serial-rxjs-icon.png" alt="@gurezo/web-serial-rxjs project icon" width="512" />
+</p>
+
 A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single `SerialSession` so applications can drive their UI from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$`, without rebuilding read loops or send queues themselves.
 
 ## Browser support
