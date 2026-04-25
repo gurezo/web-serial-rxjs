@@ -9,9 +9,9 @@ import {
   createSerialSession,
   SerialError,
   SerialErrorCode,
+  SerialSessionState,
   type SerialSession,
   type SerialSessionOptions,
-  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 ```
 
@@ -38,6 +38,8 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
 
 ## SerialSessionState
+
+The same union is available as a **const object** `SerialSessionState` (e.g. `SerialSessionState.Connected` is `'connected'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons.
 
 `state$` emits one of:
 

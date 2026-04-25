@@ -5,6 +5,8 @@ import { BehaviorSubject, firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialClientService } from './serial-client.service';
 
+const SS = webSerialRxjs.SerialSessionState;
+
 interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<webSerialRxjs.SerialSessionState>;
@@ -18,7 +20,7 @@ interface MockSession {
 
 const createMockSession = (): MockSession => {
   const stateSubject = new BehaviorSubject<webSerialRxjs.SerialSessionState>(
-    'idle',
+    SS.Idle,
   );
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<webSerialRxjs.SerialError>();
@@ -105,16 +107,16 @@ describe('SerialClientService', () => {
 
   it('should emit the initial idle state on state$', async () => {
     const state = await firstValueFrom(service.state$);
-    expect(state).toBe('idle');
+    expect(state).toBe(SS.Idle);
   });
 
   it('should forward session state transitions', async () => {
     const mock = latestMock();
-    mock.stateSubject.next('connecting');
-    mock.stateSubject.next('connected');
+    mock.stateSubject.next(SS.Connecting);
+    mock.stateSubject.next(SS.Connected);
 
     const state = await firstValueFrom(service.state$);
-    expect(state).toBe('connected');
+    expect(state).toBe(SS.Connected);
   });
 
   it('should connect through the session', async () => {

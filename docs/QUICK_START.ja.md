@@ -1,6 +1,6 @@
 # クイックスタート
 
-**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `receive$` / `errors$` と各メソッドの一覧は、先に[リポジトリの README](../README.ja.md#serialsessionv2の全体像)を参照してください。
+**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `receive$` / `errors$` と各メソッドの一覧は、先に[リポジトリの README](../../../README.ja.md#serialsessionv2の全体像)を参照してください。
 
 `SerialSession` にビルトインの `lines$` や `connected$` はありません。下記では `receive$` と `state$` から**派生**させます（パターンの説明は[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
 

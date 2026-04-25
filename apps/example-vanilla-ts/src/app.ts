@@ -1,7 +1,7 @@
 import {
   createSerialSession,
+  SerialSessionState,
   type SerialSession,
-  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
 import { filter, map, scan } from 'rxjs/operators';
@@ -10,13 +10,15 @@ type StatusType = 'info' | 'success' | 'error';
 
 const UNSUPPORTED_MSG =
   'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。';
+const S = SerialSessionState;
+
 const STATUS: Record<SerialSessionState, [StatusType, string]> = {
-  idle: ['info', 'シリアルポートから切断しました。'],
-  connecting: ['info', '接続中です...'],
-  connected: ['success', 'シリアルポートに接続しました。'],
-  disconnecting: ['info', '切断中です...'],
-  unsupported: ['error', UNSUPPORTED_MSG],
-  error: ['error', 'エラーが発生しました。errors$ を確認してください。'],
+  [S.Idle]: ['info', 'シリアルポートから切断しました。'],
+  [S.Connecting]: ['info', '接続中です...'],
+  [S.Connected]: ['success', 'シリアルポートに接続しました。'],
+  [S.Disconnecting]: ['info', '切断中です...'],
+  [S.Unsupported]: ['error', UNSUPPORTED_MSG],
+  [S.Error]: ['error', 'エラーが発生しました。errors$ を確認してください。'],
 };
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -50,8 +52,8 @@ export class App {
       supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
     );
     this.session.state$.subscribe((state) => {
-      const connected = state === 'connected';
-      const busy = state === 'connecting' || state === 'disconnecting';
+      const connected = state === S.Connected;
+      const busy = state === S.Connecting || state === S.Disconnecting;
       connectBtn.disabled = !supported || connected || busy;
       disconnectBtn.disabled = !connected;
       sendInput.disabled = sendBtn.disabled = !connected;

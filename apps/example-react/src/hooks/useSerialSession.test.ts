@@ -3,10 +3,13 @@ import type {
   SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { act, renderHook } from '@testing-library/react';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialSession } from './useSerialSession';
+
+const SS = webSerialRxjs.SerialSessionState;
 
 interface MockSession {
   session: SerialSession;
@@ -22,7 +25,7 @@ interface MockSession {
 const createMockSession = (
   supported = true,
 ): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>('idle');
+  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const connect$ = vi.fn(() => of(undefined));
@@ -88,7 +91,7 @@ describe('useSerialSession', () => {
 
   it('初期状態は idle、receivedData は空、errorMessage は null', () => {
     const { result } = renderHook(() => useSerialSession());
-    expect(result.current.state).toBe('idle');
+    expect(result.current.state).toBe(SS.Idle);
     expect(result.current.receivedData).toBe('');
     expect(result.current.errorMessage).toBeNull();
     expect(result.current.browserSupported).toBe(true);
@@ -102,10 +105,10 @@ describe('useSerialSession', () => {
 
   it('state$ の変化が state に反映される', () => {
     const { result } = renderHook(() => useSerialSession());
-    act(() => latestMock().stateSubject.next('connecting'));
-    expect(result.current.state).toBe('connecting');
-    act(() => latestMock().stateSubject.next('connected'));
-    expect(result.current.state).toBe('connected');
+    act(() => latestMock().stateSubject.next(SS.Connecting));
+    expect(result.current.state).toBe(SS.Connecting);
+    act(() => latestMock().stateSubject.next(SS.Connected));
+    expect(result.current.state).toBe(SS.Connected);
   });
 
   it('receive$ から派生した行が receivedData に累積する', () => {
@@ -131,7 +134,7 @@ describe('useSerialSession', () => {
       latestMock().errorsSubject.next({ message: 'boom' } as SerialError),
     );
     expect(result.current.errorMessage).toBe('boom');
-    act(() => latestMock().stateSubject.next('connected'));
+    act(() => latestMock().stateSubject.next(SS.Connected));
     expect(result.current.errorMessage).toBeNull();
   });
 
@@ -171,8 +174,8 @@ describe('useSerialSession', () => {
     });
     expect(mockSessions).toHaveLength(2);
 
-    act(() => latestMock().stateSubject.next('connecting'));
-    expect(result.current.state).toBe('connecting');
+    act(() => latestMock().stateSubject.next(SS.Connecting));
+    expect(result.current.state).toBe(SS.Connecting);
   });
 
   it('connect$ が失敗すると subscriber にエラーが渡る', () => {

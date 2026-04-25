@@ -3,10 +3,13 @@ import type {
   SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialSession } from './useSerialSession';
+
+const SS = webSerialRxjs.SerialSessionState;
 
 interface MockSession {
   session: SerialSession;
@@ -20,7 +23,7 @@ interface MockSession {
 }
 
 const createMockSession = (supported = true): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>('idle');
+  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const connect$ = vi.fn(() => of(undefined));
@@ -105,7 +108,7 @@ describe('useSerialSession', () => {
 
   it('初期状態は idle、receivedData は空、errorMessage は null、browserSupported は true', () => {
     const s = useSerialSession();
-    expect(get(s.state)).toBe('idle');
+    expect(get(s.state)).toBe(SS.Idle);
     expect(get(s.receivedData)).toBe('');
     expect(get(s.errorMessage)).toBeNull();
     expect(get(s.browserSupported)).toBe(true);
@@ -120,10 +123,10 @@ describe('useSerialSession', () => {
   it('state$ の変化が state に反映される', () => {
     const s = useSerialSession();
     const unsub = s.state.subscribe(() => void 0);
-    latestMock().stateSubject.next('connecting');
-    expect(get(s.state)).toBe('connecting');
-    latestMock().stateSubject.next('connected');
-    expect(get(s.state)).toBe('connected');
+    latestMock().stateSubject.next(SS.Connecting);
+    expect(get(s.state)).toBe(SS.Connecting);
+    latestMock().stateSubject.next(SS.Connected);
+    expect(get(s.state)).toBe(SS.Connected);
     unsub();
   });
 
@@ -149,7 +152,7 @@ describe('useSerialSession', () => {
     const unsub = s.errorMessage.subscribe(() => void 0);
     latestMock().errorsSubject.next({ message: 'boom' } as SerialError);
     expect(get(s.errorMessage)).toBe('boom');
-    latestMock().stateSubject.next('connected');
+    latestMock().stateSubject.next(SS.Connected);
     expect(get(s.errorMessage)).toBeNull();
     unsub();
   });
@@ -185,8 +188,8 @@ describe('useSerialSession', () => {
     s.connect$(115200).subscribe();
     expect(mockSessions).toHaveLength(2);
 
-    latestMock().stateSubject.next('connecting');
-    expect(get(s.state)).toBe('connecting');
+    latestMock().stateSubject.next(SS.Connecting);
+    expect(get(s.state)).toBe(SS.Connecting);
     unsub();
   });
 

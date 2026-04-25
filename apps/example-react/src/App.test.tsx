@@ -3,11 +3,14 @@ import type {
   SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
+
+const SS = webSerialRxjs.SerialSessionState;
 
 interface MockSession {
   session: SerialSession;
@@ -21,7 +24,7 @@ interface MockSession {
 }
 
 const createMockSession = (): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>('idle');
+  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const connect$ = vi.fn(() => of(undefined));
@@ -127,7 +130,7 @@ describe('App', () => {
     render(<App />);
 
     await user.click(screen.getByText('接続'));
-    act(() => latestMock().stateSubject.next('connected'));
+    act(() => latestMock().stateSubject.next(SS.Connected));
 
     await waitFor(() => {
       expect(
@@ -142,7 +145,7 @@ describe('App', () => {
     render(<App />);
 
     await user.click(screen.getByText('接続'));
-    act(() => latestMock().stateSubject.next('connected'));
+    act(() => latestMock().stateSubject.next(SS.Connected));
     await waitFor(() => {
       expect(
         screen.getByText('シリアルポートに接続しました。'),
@@ -150,7 +153,7 @@ describe('App', () => {
     });
 
     await user.click(screen.getByText('切断'));
-    act(() => latestMock().stateSubject.next('idle'));
+    act(() => latestMock().stateSubject.next(SS.Idle));
 
     await waitFor(() => {
       expect(
@@ -165,7 +168,7 @@ describe('App', () => {
     render(<App />);
 
     await user.click(screen.getByText('接続'));
-    act(() => latestMock().stateSubject.next('connected'));
+    act(() => latestMock().stateSubject.next(SS.Connected));
     await waitFor(() => {
       expect(
         screen.getByText('シリアルポートに接続しました。'),

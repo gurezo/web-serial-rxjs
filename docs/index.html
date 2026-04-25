@@ -4,6 +4,7 @@
 <p>A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single <code>SerialSession</code> so applications can drive their UI entirely from <code>state$</code> + <code>receive$</code> + <code>errors$</code>, without rebuilding state, read loops, or send queues themselves.</p>
 <h2 id="table-of-contents" class="tsd-anchor-link">Table of Contents<a href="#table-of-contents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
+<li><a href="#serialsession-v2-at-a-glance">SerialSession (v2) at a glance</a></li>
 <li><a href="#features">Features</a></li>
 <li><a href="#framework-support">Framework Support</a></li>
 <li><a href="#browser-support">Browser Support</a></li>
@@ -54,24 +55,102 @@
 </code><button type="button">Copy</button></pre>
 
 <p><strong>Minimum required version</strong>: RxJS ^7.8.0</p>
+<h2 id="serialsession-v2-at-a-glance" class="tsd-anchor-link">SerialSession (v2) at a glance<a href="#serialsession-v2-at-a-glance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>createSerialSession</code> returns a single <strong>SerialSession</strong>. All interaction goes through the fields below. The public API is intentionally small; line framing, “connected” booleans, and other patterns are built with plain RxJS on top of the streams (see <a href="media/ADVANCED_USAGE.md">Advanced Usage</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>state$</code></td>
+<td><strong>Connection lifecycle</strong> — <code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>error</code> / <code>unsupported</code>. Replays the current state on subscribe.</td>
+</tr>
+<tr>
+<td><code>receive$</code></td>
+<td><strong>Raw incoming UTF-8 text</strong> as decoded string <strong>chunks</strong> (not line-delimited; multi-byte safe).</td>
+</tr>
+<tr>
+<td><code>errors$</code></td>
+<td><strong>All <code>SerialError</code> instances</strong> from connect / read / write / close (primary error channel).</td>
+</tr>
+<tr>
+<td><code>connect$()</code></td>
+<td><strong>Open</strong> a user-selected port and start the internal read pump.</td>
+</tr>
+<tr>
+<td><code>disconnect$()</code></td>
+<td><strong>Close</strong> the port and stop the pump.</td>
+</tr>
+<tr>
+<td><code>send$(string | Uint8Array)</code></td>
+<td><strong>Enqueue</strong> outgoing data; writes are <strong>FIFO-ordered</strong> when multiple <code>send$</code> run concurrently.</td>
+</tr>
+<tr>
+<td><code>isBrowserSupported()</code></td>
+<td>Synchronous <code>boolean</code> for Web Serial availability before <code>connect$</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>connected$</code> (for simple UIs)</strong> — not a property on <code>SerialSession</code>. For a read-only <code>Observable&lt;boolean&gt;</code>, compose <code>state$</code>:</p>
+<pre><code class="typescript"><span class="hl-4">import</span><span class="hl-1"> { </span><span class="hl-5">map</span><span class="hl-1"> } </span><span class="hl-4">from</span><span class="hl-1"> </span><span class="hl-2">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">connected$</span><span class="hl-1"> = </span><span class="hl-5">session</span><span class="hl-1">.</span><span class="hl-5">state$</span><span class="hl-1">.</span><span class="hl-0">pipe</span><span class="hl-1">(</span><span class="hl-0">map</span><span class="hl-1">((</span><span class="hl-5">s</span><span class="hl-1">) </span><span class="hl-6">=&gt;</span><span class="hl-1"> </span><span class="hl-5">s</span><span class="hl-1"> === </span><span class="hl-2">&#39;connected&#39;</span><span class="hl-1">));</span>
+</code><button type="button">Copy</button></pre>
+
+<p><strong>Line-delimited “lines$”</strong> — not a built-in property. Frame on top of <code>receive$</code> (recipes in <a href="media/ADVANCED_USAGE.md#line-framing">Advanced Usage</a>).</p>
+<h3 id="minimal-example" class="tsd-anchor-link">Minimal example<a href="#minimal-example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-4">import</span><span class="hl-1"> { </span><span class="hl-5">createSerialSession</span><span class="hl-1"> } </span><span class="hl-4">from</span><span class="hl-1"> </span><span class="hl-2">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">session</span><span class="hl-1"> = </span><span class="hl-0">createSerialSession</span><span class="hl-1">({ </span><span class="hl-5">baudRate:</span><span class="hl-1"> </span><span class="hl-8">115200</span><span class="hl-1"> });</span><br/><br/><span class="hl-4">if</span><span class="hl-1"> (!</span><span class="hl-5">session</span><span class="hl-1">.</span><span class="hl-0">isBrowserSupported</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-4">throw</span><span class="hl-1"> </span><span class="hl-6">new</span><span class="hl-1"> </span><span class="hl-0">Error</span><span class="hl-1">(</span><span class="hl-2">&#39;Web Serial is not available in this browser&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-5">session</span><span class="hl-1">.</span><span class="hl-5">receive$</span><span class="hl-1">.</span><span class="hl-0">subscribe</span><span class="hl-1">(</span><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-5">log</span><span class="hl-1">);</span><br/><span class="hl-5">session</span><span class="hl-1">.</span><span class="hl-5">errors$</span><span class="hl-1">.</span><span class="hl-0">subscribe</span><span class="hl-1">(</span><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-5">error</span><span class="hl-1">);</span><br/><span class="hl-5">session</span><span class="hl-1">.</span><span class="hl-0">connect$</span><span class="hl-1">().</span><span class="hl-0">subscribe</span><span class="hl-1">();</span><br/><span class="hl-5">session</span><span class="hl-1">.</span><span class="hl-0">send$</span><span class="hl-1">(</span><span class="hl-2">&#39;hello</span><span class="hl-9">\r\n</span><span class="hl-2">&#39;</span><span class="hl-1">).</span><span class="hl-0">subscribe</span><span class="hl-1">();</span>
+</code><button type="button">Copy</button></pre>
+
+<p>In real apps, handle <code>connect$().subscribe({ next, error })</code> and <code>send$().subscribe({ error })</code> (errors are also on <code>errors$</code>). A fuller walkthrough is in <a href="media/QUICK_START.md">Quick Start</a>.</p>
 <h2 id="documentation" class="tsd-anchor-link">Documentation<a href="#documentation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<ul>
-<li><strong><a href="media/QUICK_START.md">Quick Start</a></strong> - Get started with basic examples and usage patterns</li>
-<li><strong><a href="media/API_REFERENCE.md">API Reference</a></strong> - Complete API documentation with detailed descriptions</li>
-<li><strong><a href="media/ADVANCED_USAGE.md">Advanced Usage</a></strong> - Advanced patterns, stream processing, and error recovery</li>
-<li><strong><a href="media/MIGRATION_V2.md">v1 → v2 Migration Guide</a></strong> - Mapping from the removed <code>SerialClient</code> / <code>ShellClient</code> API to the v2 <code>SerialSession</code> API</li>
-<li><strong><a href="media/MIGRATION_PHASE5.md">Phase 5 archive (legacy v1 doc)</a></strong> - Pointer left after Phase 5 cleanup; for historical context only</li>
-</ul>
+<table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Repository <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/README.md">README</a></strong></td>
+<td>Monorepo overview, examples index, and contribution links.</td>
+</tr>
+<tr>
+<td><strong><a href="media/QUICK_START.md">Quick Start</a></strong></td>
+<td>Shortest path to a working open port and subscriptions.</td>
+</tr>
+<tr>
+<td><strong><a href="media/ADVANCED_USAGE.md">Advanced Usage</a></strong></td>
+<td>Line framing, request/response-style flows, and recovery.</td>
+</tr>
+<tr>
+<td><strong><a href="media/API_REFERENCE.md">API Reference</a></strong></td>
+<td>Options, <code>SerialSessionState</code>, and <code>SerialError</code> details.</td>
+</tr>
+<tr>
+<td><strong><a href="media/MIGRATION_V2.md">v1 → v2 Migration Guide</a></strong></td>
+<td>Replacing the removed v1 <code>SerialClient</code> / <code>ShellClient</code> API.</td>
+</tr>
+<tr>
+<td><strong><a href="media/MIGRATION_PHASE5.md">Phase 5 archive (legacy v1 doc)</a></strong></td>
+<td>Historical v1 context only.</td>
+</tr>
+</tbody>
+</table>
 <h2 id="examples" class="tsd-anchor-link">Examples<a href="#examples" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>Examples are available for the following environments:</p>
 <ul>
 <li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-angular">Angular</a></strong> - Angular example using a Service</li>
-<li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-react">React</a></strong> - React example with custom hook (<code>useSerialClient</code>)</li>
+<li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-react">React</a></strong> - React example with custom hook (<code>useSerialSession</code>)</li>
 <li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-svelte">Svelte</a></strong> - Svelte example using Svelte Store</li>
 <li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-js">Vanilla JavaScript</a></strong> - Basic usage with vanilla JavaScript</li>
 <li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vanilla-ts">Vanilla TypeScript</a></strong> - TypeScript example with RxJS</li>
 <li><strong><a href="https://github.com/gurezo/web-serial-rxjs/tree/main/apps/example-vue">Vue</a></strong> - Vue 3 example using Composition API</li>
 </ul>
+<p>Each sample is a <strong>minimal smoke test</strong> for <strong>connect</strong>, <strong>receive</strong> (newline-delimited lines derived from <code>receive$</code>), <strong>send</strong>, and <strong>disconnect</strong>. See <a href="media/ADVANCED_USAGE.md">Advanced Usage</a> for richer patterns.</p>
 <p>Each example includes a README with setup and usage instructions.</p>
 <h2 id="project-icon" class="tsd-anchor-link">Project Icon<a href="#project-icon" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>The project icon includes a modified design inspired by the <a href="https://rxjs.dev/">RxJS</a> logo,
@@ -139,4 +218,4 @@ endorsed by, or sponsored by the <a href="http://reactivex.io/">ReactiveX</a> or
 <li><strong>Issues</strong>: <a href="https://github.com/gurezo/web-serial-rxjs/issues">https://github.com/gurezo/web-serial-rxjs/issues</a></li>
 <li><strong>Web Serial API Specification</strong>: <a href="https://wicg.github.io/serial/">https://wicg.github.io/serial/</a></li>
 </ul>
-</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#table-of-contents"><span>Table of <wbr/>Contents</span></a><a href="#features"><span>Features</span></a><a href="#framework-support"><span>Framework <wbr/>Support</span></a><a href="#browser-support"><span>Browser <wbr/>Support</span></a><a href="#installation"><span>Installation</span></a><ul><li><a href="#peer-dependencies"><span>Peer <wbr/>Dependencies</span></a></li></ul><a href="#documentation"><span>Documentation</span></a><a href="#examples"><span>Examples</span></a><a href="#project-icon"><span>Project <wbr/>Icon</span></a><a href="#ai-assistant-mcp"><span>AI <wbr/>Assistant (<wbr/>MCP)</span></a><a href="#development-and-release-strategy"><span>Development and <wbr/>Release <wbr/>Strategy</span></a><a href="#contributing"><span>Contributing</span></a><a href="#license"><span>License</span></a><a href="#links"><span>Links</span></a></div></details></div><div class="site-menu"><nav class="tsd-navigation"><a href="modules.html">web-serial-rxjs API Documentation</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer></footer><div class="overlay"></div></body></html>
+</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#table-of-contents"><span>Table of <wbr/>Contents</span></a><a href="#features"><span>Features</span></a><a href="#framework-support"><span>Framework <wbr/>Support</span></a><a href="#browser-support"><span>Browser <wbr/>Support</span></a><a href="#installation"><span>Installation</span></a><ul><li><a href="#peer-dependencies"><span>Peer <wbr/>Dependencies</span></a></li></ul><a href="#serialsession-v2-at-a-glance"><span>Serial<wbr/>Session (v2) at a glance</span></a><ul><li><a href="#minimal-example"><span>Minimal example</span></a></li></ul><a href="#documentation"><span>Documentation</span></a><a href="#examples"><span>Examples</span></a><a href="#project-icon"><span>Project <wbr/>Icon</span></a><a href="#ai-assistant-mcp"><span>AI <wbr/>Assistant (<wbr/>MCP)</span></a><a href="#development-and-release-strategy"><span>Development and <wbr/>Release <wbr/>Strategy</span></a><a href="#contributing"><span>Contributing</span></a><a href="#license"><span>License</span></a><a href="#links"><span>Links</span></a></div></details></div><div class="site-menu"><nav class="tsd-navigation"><a href="modules.html">web-serial-rxjs API Documentation</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer></footer><div class="overlay"></div></body></html>

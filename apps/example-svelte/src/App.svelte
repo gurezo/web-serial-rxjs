@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { SerialSessionState } from '@gurezo/web-serial-rxjs';
+  import { SerialSessionState } from '@gurezo/web-serial-rxjs';
   import { useSerialSession } from './stores/useSerialSession';
 
   let baudRate = 9600;
@@ -26,19 +26,19 @@
       return { type: 'error', message: `エラー: ${error}` };
     }
     switch (current) {
-      case 'connecting':
+      case SerialSessionState.Connecting:
         return { type: 'info', message: '接続中...' };
-      case 'disconnecting':
+      case SerialSessionState.Disconnecting:
         return { type: 'info', message: '切断中...' };
-      case 'connected':
+      case SerialSessionState.Connected:
         return { type: 'success', message: 'シリアルポートに接続しました。' };
-      case 'unsupported':
+      case SerialSessionState.Unsupported:
         return {
           type: 'error',
           message:
             'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
         };
-      case 'error':
+      case SerialSessionState.Error:
         return { type: 'error', message: 'エラーが発生しました。' };
       default:
         return { type: 'info', message: 'シリアルポートに接続していません。' };
@@ -46,9 +46,9 @@
   };
 
   $: status = statusFor($state, $errorMessage);
-  $: connected = $state === 'connected';
-  $: connecting = $state === 'connecting';
-  $: disconnecting = $state === 'disconnecting';
+  $: connected = $state === SerialSessionState.Connected;
+  $: connecting = $state === SerialSessionState.Connecting;
+  $: disconnecting = $state === SerialSessionState.Disconnecting;
 
   const handleConnect = () => {
     clearReceivedData();

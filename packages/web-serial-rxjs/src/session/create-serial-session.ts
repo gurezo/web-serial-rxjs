@@ -14,6 +14,7 @@ import {
   DEFAULT_SERIAL_SESSION_OPTIONS,
   type SerialSessionOptions,
 } from './serial-session-options';
+import { SerialSessionState } from './serial-session-state';
 import { SessionStateMachine } from './session-state-machine';
 
 /**
@@ -80,7 +81,9 @@ export function createSerialSession(
   };
 
   const supported = hasWebSerialSupport();
-  const machine = new SessionStateMachine(supported ? 'idle' : 'unsupported');
+  const machine = new SessionStateMachine(
+    supported ? SerialSessionState.Idle : SerialSessionState.Unsupported,
+  );
   const errorsSubject = new Subject<SerialError>();
   const receiveSubject = new Subject<string>();
   const sendQueue = createSendQueue();
@@ -147,7 +150,7 @@ export function createSerialSession(
 
   const writeToPort = async (payload: Uint8Array): Promise<void> => {
     const port = activePort;
-    if (machine.current !== 'connected' || !port || !port.writable) {
+    if (machine.current !== SerialSessionState.Connected || !port || !port.writable) {
       throw new SerialError(
         SerialErrorCode.PORT_NOT_OPEN,
         'Cannot send data while session is not connected',
@@ -187,7 +190,10 @@ export function createSerialSession(
         }
 
         const current = machine.current;
-        if (current !== 'idle' && current !== 'error') {
+        if (
+          current !== SerialSessionState.Idle &&
+          current !== SerialSessionState.Error
+        ) {
           const error = reportError(
             new SerialError(
               SerialErrorCode.PORT_ALREADY_OPEN,
@@ -264,13 +270,19 @@ export function createSerialSession(
       return new Observable<void>((subscriber) => {
         const current = machine.current;
 
-        if (current === 'idle' || current === 'unsupported') {
+        if (
+          current === SerialSessionState.Idle ||
+          current === SerialSessionState.Unsupported
+        ) {
           subscriber.next();
           subscriber.complete();
           return;
         }
 
-        if (current !== 'connected' && current !== 'error') {
+        if (
+          current !== SerialSessionState.Connected &&
+          current !== SerialSessionState.Error
+        ) {
           const error = reportError(
             new SerialError(
               SerialErrorCode.PORT_NOT_OPEN,

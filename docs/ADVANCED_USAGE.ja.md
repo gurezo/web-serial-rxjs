@@ -1,6 +1,6 @@
 # 高度な使用方法
 
-v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[README](../README.ja.md#serialsessionv2の全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは README で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。
+v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[README](../../../README.ja.md#serialsessionv2の全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは README で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。
 
 本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`・`connected$`・`sendLine`・`readUntil`・`waitForState`** はいずれも既存 API の組み合わせであり、ライブラリに追加の export はありません。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
 
@@ -124,11 +124,11 @@ async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
 
 ## waitForState
 
-`connect$` や `disconnect$` のあと、特定の `SerialSessionState`（例: `'connected'` や `'idle'`）が立つまで **await** したい場合があります。`state$` に `filter`・`take(1)`・必要なら `timeout` を載せます。
+`connect$` や `disconnect$` のあと、特定の `SerialSessionState`（例: `SerialSessionState.Connected` や `SerialSessionState.Idle`）が立つまで **await** したい場合があります。`state$` に `filter`・`take(1)`・必要なら `timeout` を載せます。
 
 ```typescript
 import { filter, take, firstValueFrom, timeout } from 'rxjs';
-import type { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
 
 async function waitForState(
   target: SerialSessionState,
@@ -147,7 +147,7 @@ async function waitForState(
 // 例: connect$ 成功後はすでに 'connected' だが、他の非同期処理との整合や
 // タイムアウトを明示したいときに使う
 await firstValueFrom(session.connect$());
-await waitForState('connected', { timeoutMs: 5000 });
+await waitForState(SerialSessionState.Connected, { timeoutMs: 5000 });
 ```
 
 ## state$ 駆動の UI
@@ -155,22 +155,24 @@ await waitForState('connected', { timeoutMs: 5000 });
 真偽値を自分で追うのではなく、UI 遷移は `state$` で駆動します。
 
 ```typescript
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+
 session.state$.subscribe((state) => {
   switch (state) {
-    case 'idle':
+    case SerialSessionState.Idle:
       showConnectButton();
       break;
-    case 'connecting':
-    case 'disconnecting':
+    case SerialSessionState.Connecting:
+    case SerialSessionState.Disconnecting:
       showSpinner();
       break;
-    case 'connected':
+    case SerialSessionState.Connected:
       showSendUi();
       break;
-    case 'error':
+    case SerialSessionState.Error:
       showErrorBanner();
       break;
-    case 'unsupported':
+    case SerialSessionState.Unsupported:
       showUnsupportedBanner();
       break;
   }
@@ -198,10 +200,11 @@ session.errors$.subscribe((error) => {
 
 ```typescript
 import { filter, concatMap } from 'rxjs';
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
 
 session.state$
   .pipe(
-    filter((state) => state === 'error'),
+    filter((state) => state === SerialSessionState.Error),
     concatMap(() => session.disconnect$()),
     concatMap(() => session.connect$()),
   )

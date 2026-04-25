@@ -35,7 +35,7 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 | `createSerialClient`              | `createSerialSession`                                            |
 | `SerialClient` (type)             | `SerialSession`                                                  |
 | `SerialClientOptions`             | `SerialSessionOptions` (same fields)                             |
-| `SerialState`                     | `SerialSessionState` (flat union; see below)                     |
+| `SerialState`                     | `SerialSessionState` (const object + type; see below)             |
 | `SerialSupport` / `SerialRequest` | _(internal details, no longer public)_                           |
 | `createShellClient` / `ShellClient` / `ShellClientOptions` / `ShellExecResult` | Implement request/response on top of `send$` + `receive$` |
 | `isBrowserSupported` (top-level)  | `session.isBrowserSupported()`                                   |
@@ -55,7 +55,7 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 | `client.connect()`                      | `session.connect$()`                                                    |
 | `client.disconnect()`                   | `session.disconnect$()`                                                 |
 | `client.connected` / `client.connected$`| Derive from `session.state$` (`state === 'connected'`)                  |
-| `client.state$` (discriminated object)  | `session.state$` (flat `SerialSessionState` union)                      |
+| `client.state$` (discriminated object)  | `session.state$` (`SerialSessionState` string union)                  |
 | `client.text$` / `client.lines$`        | `session.receive$` (already UTF-8 decoded)                              |
 | `client.bytes$`                         | Not exposed in v2. Convert with `new TextEncoder().encode(chunk)` if you need bytes, or open an issue. |
 | `client.write(bytes)`                   | `session.send$(bytes)`                                                  |
@@ -67,16 +67,20 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 
 ## `state$` shape changes
 
-v1 `SerialState` was a discriminated object (for example `{ connected: true, connecting: false, ... }`). v2 `SerialSessionState` is a flat string union so UIs can switch on it directly:
+v1 `SerialState` was a discriminated object (for example `{ connected: true, connecting: false, ... }`). v2 exposes the same flat strings as a **const object** plus a type alias, so UIs can switch on `SerialSessionState.Connected` or on `'connected'` interchangeably:
 
 ```typescript
-type SerialSessionState =
-  | 'idle'
-  | 'connecting'
-  | 'connected'
-  | 'disconnecting'
-  | 'unsupported'
-  | 'error';
+export const SerialSessionState = {
+  Idle: 'idle',
+  Connecting: 'connecting',
+  Connected: 'connected',
+  Disconnecting: 'disconnecting',
+  Unsupported: 'unsupported',
+  Error: 'error',
+} as const;
+
+export type SerialSessionState =
+  (typeof SerialSessionState)[keyof typeof SerialSessionState];
 ```
 
 Lifecycle:

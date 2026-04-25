@@ -1,6 +1,6 @@
 # Advanced Usage
 
-The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
+The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../../../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
 
 This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): **`lines$`**, **`connected$`**, **`sendLine`**, **`readUntil`**, and **`waitForState`** are all patterns you build on top of the existing API—no extra library exports. For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 
@@ -124,11 +124,11 @@ async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
 
 ## waitForState
 
-Sometimes you need to **await** a specific `SerialSessionState` (for example `'connected'` after UI-driven `connect$`, or `'idle'` after `disconnect$`) instead of wiring everything through `subscribe`. Use `state$` with `filter`, `take(1)`, and an optional timeout:
+Sometimes you need to **await** a specific `SerialSessionState` (for example `SerialSessionState.Connected` after UI-driven `connect$`, or `SerialSessionState.Idle` after `disconnect$`) instead of wiring everything through `subscribe`. Use `state$` with `filter`, `take(1)`, and an optional timeout:
 
 ```typescript
 import { filter, take, firstValueFrom, timeout } from 'rxjs';
-import type { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
 
 async function waitForState(
   target: SerialSessionState,
@@ -147,7 +147,7 @@ async function waitForState(
 // Example: after connect$ completes, you are already 'connected'; this is for
 // coordination with other async code or stricter timeout handling.
 await firstValueFrom(session.connect$());
-await waitForState('connected', { timeoutMs: 5000 });
+await waitForState(SerialSessionState.Connected, { timeoutMs: 5000 });
 ```
 
 ## State-Driven UI
@@ -155,22 +155,24 @@ await waitForState('connected', { timeoutMs: 5000 });
 Drive every UI transition from `state$` rather than tracking a boolean:
 
 ```typescript
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+
 session.state$.subscribe((state) => {
   switch (state) {
-    case 'idle':
+    case SerialSessionState.Idle:
       showConnectButton();
       break;
-    case 'connecting':
-    case 'disconnecting':
+    case SerialSessionState.Connecting:
+    case SerialSessionState.Disconnecting:
       showSpinner();
       break;
-    case 'connected':
+    case SerialSessionState.Connected:
       showSendUi();
       break;
-    case 'error':
+    case SerialSessionState.Error:
       showErrorBanner();
       break;
-    case 'unsupported':
+    case SerialSessionState.Unsupported:
       showUnsupportedBanner();
       break;
   }
@@ -198,10 +200,11 @@ Because fatal failures drive `state$` to `'error'`, a reconnect policy is straig
 
 ```typescript
 import { filter, concatMap } from 'rxjs';
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
 
 session.state$
   .pipe(
-    filter((state) => state === 'error'),
+    filter((state) => state === SerialSessionState.Error),
     concatMap(() => session.disconnect$()),
     concatMap(() => session.connect$()),
   )

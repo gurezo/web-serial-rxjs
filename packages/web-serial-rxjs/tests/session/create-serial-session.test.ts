@@ -9,7 +9,9 @@ import { SerialError } from '../../src/errors/serial-error';
 import { SerialErrorCode } from '../../src/errors/serial-error-code';
 import { createSerialSession } from '../../src/session/create-serial-session';
 import type { SerialSession } from '../../src/session/serial-session';
-import type { SerialSessionState } from '../../src/session/serial-session-state';
+import { SerialSessionState } from '../../src/session/serial-session-state';
+
+const S = SerialSessionState;
 
 type MockPort = {
   readable: ReadableStream<Uint8Array> | null;
@@ -165,7 +167,7 @@ describe('createSerialSession', () => {
 
       const state = await firstValueFrom(session.state$);
 
-      expect(state).toBe<SerialSessionState>('idle');
+      expect(state).toBe<SerialSessionState>(S.Idle);
     });
 
     it('replays unsupported when navigator.serial is missing', async () => {
@@ -173,7 +175,7 @@ describe('createSerialSession', () => {
 
       const state = await firstValueFrom(session.state$);
 
-      expect(state).toBe<SerialSessionState>('unsupported');
+      expect(state).toBe<SerialSessionState>(S.Unsupported);
     });
   });
 
@@ -192,9 +194,9 @@ describe('createSerialSession', () => {
 
       const states = await statesPromise;
       expect(states).toEqual<SerialSessionState[]>([
-        'idle',
-        'connecting',
-        'connected',
+        S.Idle,
+        S.Connecting,
+        S.Connected,
       ]);
       expect(port.open).toHaveBeenCalledTimes(1);
       expect(port.open).toHaveBeenCalledWith(
@@ -223,7 +225,7 @@ describe('createSerialSession', () => {
       expect(emitted).toBeInstanceOf(SerialError);
       expect(emitted.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
       expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        'error',
+        S.Error,
       );
     });
 
@@ -282,9 +284,9 @@ describe('createSerialSession', () => {
 
       const states = await statesPromise;
       expect(states).toEqual<SerialSessionState[]>([
-        'connected',
-        'disconnecting',
-        'idle',
+        S.Connected,
+        S.Disconnecting,
+        S.Idle,
       ]);
       expect(close).toHaveBeenCalledTimes(1);
     });
@@ -341,7 +343,7 @@ describe('createSerialSession', () => {
 
       await flushMicrotasks();
       expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        'error',
+        S.Error,
       );
     });
   });
@@ -499,7 +501,7 @@ describe('createSerialSession', () => {
       });
 
       expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        'connected',
+        S.Connected,
       );
     });
 
@@ -524,7 +526,7 @@ describe('createSerialSession', () => {
       const emitted = await errorsPromise;
       expect(emitted.code).toBe(SerialErrorCode.CONNECTION_LOST);
       expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        'error',
+        S.Error,
       );
     });
 
