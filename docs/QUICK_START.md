@@ -4,6 +4,19 @@ This is the **shortest path** to opening a serial port, receiving **newline-deli
 
 Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
 
+### SerialSessionState (quick reference)
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `SerialSessionState.Idle` | `'idle'` | No open port; initial when Web Serial is supported. |
+| `SerialSessionState.Connecting` | `'connecting'` | `connect$` in progress. |
+| `SerialSessionState.Connected` | `'connected'` | Port open; read pump running. |
+| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
+| `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
+| `SerialSessionState.Error` | `'error'` | Fatal failure; `disconnect$` or a new session. |
+
+Details and lifecycle: [API Reference – SerialSessionState](./API_REFERENCE.md#serialsessionstate).
+
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
 

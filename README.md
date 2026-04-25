@@ -89,6 +89,19 @@ pnpm add rxjs
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
 | `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
 
+### SerialSessionState (quick reference)
+
+`state$` uses the string union below. Prefer the **const object** (e.g. `SerialSessionState.Connected` → `'connected'`) in code. Full lifecycle diagram, transitions, and edge cases: [API Reference – SerialSessionState](docs/API_REFERENCE.md#serialsessionstate).
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `SerialSessionState.Idle` | `'idle'` | No open port; initial state when the browser supports Web Serial. |
+| `SerialSessionState.Connecting` | `'connecting'` | `connect$` in progress. |
+| `SerialSessionState.Connected` | `'connected'` | Port is open; internal read pump is running. |
+| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
+| `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
+| `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
+
 **`receive$` vs `lines$`:** prefer **`lines$`** for typical newline-framed text; use **`receive$`** when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in [Advanced Usage](docs/ADVANCED_USAGE.md#line-framing)).
 
 **`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `SerialSessionState.Connected` yourself. You can still derive your own boolean from `state$` with `map` if you need different rules.

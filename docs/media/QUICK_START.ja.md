@@ -4,6 +4,19 @@
 
 標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。独自区切りや別の分割ルールが必要なときは `receive$` 上に `scan` などで組み立てます（[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。接続の真偽は **`isConnected$`** を使うか、従来どおり `state$` から `map` しても構いません。
 
+### SerialSessionState（早見表）
+
+| 定数 | 値 | 意味 |
+| --- | --- | --- |
+| `SerialSessionState.Idle` | `'idle'` | ポート未接続。Web Serial 利用可能な場合の初期値。 |
+| `SerialSessionState.Connecting` | `'connecting'` | `connect$` 実行中。 |
+| `SerialSessionState.Connected` | `'connected'` | ポートが開き、read pump が動作中。 |
+| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
+| `SerialSessionState.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
+| `SerialSessionState.Error` | `'error'` | 致命的な失敗。`disconnect$` または新しいセッションで復帰。 |
+
+遷移・詳細は [API リファレンスの SerialSessionState](./API_REFERENCE.ja.md#serialsessionstate) を参照してください。
+
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
 
