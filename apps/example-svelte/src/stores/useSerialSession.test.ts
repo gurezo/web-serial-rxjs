@@ -4,7 +4,14 @@ import type {
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
-import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  distinctUntilChanged,
+  map,
+  of,
+  Subject,
+  throwError,
+} from 'rxjs';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialSession } from './useSerialSession';
@@ -15,6 +22,7 @@ interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<SerialSessionState>;
   receiveSubject: Subject<string>;
+  linesSubject: Subject<string>;
   errorsSubject: Subject<SerialError>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
@@ -25,7 +33,12 @@ interface MockSession {
 const createMockSession = (supported = true): MockSession => {
   const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
+  const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
+  const isConnected$ = stateSubject.pipe(
+    map((s) => s === SS.Connected),
+    distinctUntilChanged(),
+  );
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
@@ -39,12 +52,15 @@ const createMockSession = (supported = true): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    lines$: linesSubject.asObservable(),
+    isConnected$,
   };
 
   return {
     session,
     stateSubject,
     receiveSubject,
+    linesSubject,
     errorsSubject,
     connect$,
     disconnect$,
@@ -109,6 +125,7 @@ describe('useSerialSession', () => {
   it('初期状態は idle、receivedData は空、errorMessage は null、browserSupported は true', () => {
     const s = useSerialSession();
     expect(get(s.state)).toBe(SS.Idle);
+    expect(get(s.isConnected)).toBe(false);
     expect(get(s.receivedData)).toBe('');
     expect(get(s.errorMessage)).toBeNull();
     expect(get(s.browserSupported)).toBe(true);
@@ -130,11 +147,11 @@ describe('useSerialSession', () => {
     unsub();
   });
 
-  it('receive$ から派生した行が receivedData に累積する', () => {
+  it('lines$ の行が receivedData に累積する', () => {
     const s = useSerialSession();
     const unsub = s.receivedData.subscribe(() => void 0);
-    latestMock().receiveSubject.next('foo\n');
-    latestMock().receiveSubject.next('bar\n');
+    latestMock().linesSubject.next('foo');
+    latestMock().linesSubject.next('bar');
     expect(get(s.receivedData)).toBe('foo\nbar\n');
     unsub();
   });
@@ -160,7 +177,7 @@ describe('useSerialSession', () => {
   it('clearReceivedData で receivedData が空になる', () => {
     const s = useSerialSession();
     const unsub = s.receivedData.subscribe(() => void 0);
-    latestMock().receiveSubject.next('data\n');
+    latestMock().linesSubject.next('data');
     expect(get(s.receivedData)).toBe('data\n');
     s.clearReceivedData();
     expect(get(s.receivedData)).toBe('');

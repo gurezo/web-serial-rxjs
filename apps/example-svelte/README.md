@@ -1,6 +1,6 @@
 # Svelte Example
 
-This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `errors$` into `readable` stores and derives **newline-delimited lines** from `receive$` (same pattern as [Quick Start](../../docs/QUICK_START.md)).
+This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `isConnected$` / `errors$` into `readable` stores and receives **newline-delimited lines** from built-in `lines$` (same pattern as [Quick Start](../../docs/QUICK_START.md)).
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
 
@@ -12,7 +12,7 @@ This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSessi
 - Reactive session lifecycle driven by `state$` (`idle | connecting | connected | disconnecting | unsupported | error`)
 - Configuration option (baud rate)
 - Send data to the serial port through the library-owned FIFO send queue
-- Receive newline-delimited lines (derived from `receive$`)
+- Receive newline-delimited lines via `lines$`
 - Unified error channel via `errors$`
 - Full TypeScript type safety
 
@@ -62,9 +62,9 @@ The example uses the v2 `SerialSession` API directly:
 
 1. **Browser support check**: `useSerialSession` calls `session.isBrowserSupported()` once at creation time and exposes the result as the `browserSupported` store.
 2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`. When the baud rate changes between calls, the helper transparently creates a new `SerialSession` so subsequent streams reflect the new port configuration.
-3. **State UI**: The helper subscribes to `session.state$` and mirrors it into a `readable<SerialSessionState>` store. `App.svelte` branches on the string union (`connecting`, `connected`, `disconnecting`, …) through the `$state` auto-subscription, without maintaining its own boolean flags.
+3. **State UI**: The helper subscribes to `session.state$` and `session.isConnected$`. `App.svelte` branches on `SerialSessionState` for status and uses `$isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.
-5. **Receiving**: `session.receive$` is driven by the library's internal read pump, which is started eagerly in `connect$` — the helper simply appends each chunk to the `receivedData` store.
+5. **Receiving**: `session.lines$` emits one line at a time; the store appends each line for display. Raw chunk streaming uses `receive$` (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 6. **Errors**: All connect/read/write/close failures are multiplexed through `session.errors$` and surfaced as the `errorMessage` store. No per-call try/catch wrappers are needed.
 
 ## Code Structure
