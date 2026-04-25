@@ -77,8 +77,9 @@ pnpm add rxjs
 
 | 公開面 | 役割 |
 | --- | --- |
-| `state$` | **接続ライフサイクル** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`。購読時に現在値をリプレイ。 |
-| `isConnected$` | **接続中かどうか** — `state$` が `'connected'` のときだけ `true`、それ以外は `false`（`state$` から `distinctUntilChanged` 付きで派生）。 |
+| `state$` | **接続ライフサイクル** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`。購読時に現在値をリプレイ。分岐は文字列直書きではなく **`SerialSessionState`** との比較を推奨。 |
+| `SerialSessionState` | **状態定数** — エクスポートされる const object（例: `SerialSessionState.Connected`, `SerialSessionState.Idle`）。`state$` が emit する値と同じ。 |
+| `isConnected$` | **接続中かどうか** — `state$` が `SerialSessionState.Connected` のときだけ `true`、それ以外は `false`（`state$` から `distinctUntilChanged` 付きで派生）。 |
 | `receive$` | **受信 UTF-8 テキスト**（デコード済みの**チャンク**列。行区切りではない。マルチバイト安全）。 |
 | `lines$` | **行単位の受信** — 1 行完了ごとに emit。内部バッファで改行（`\n` / `\r\n` 等）を解釈。 |
 | `errors$` | **すべての `SerialError`**（接続・読み取り・書き込み・クローズ）の主チャネル。 |
@@ -87,14 +88,17 @@ pnpm add rxjs
 | `send$(string \| Uint8Array)` | 送信を **FIFO** で直列化（並行 `send$` も呼び出し順）。 |
 | `isBrowserSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
 
-**`isConnected$`（UI 用）** — 読み取り専用の `Observable<boolean>` です。`state$` と `'connected'` を毎回比較しなくても接続有無の UI 分岐に使えます。独自ルールが必要な場合は、従来どおり `state$` から `map` で派生しても構いません。
+**`receive$` と `lines$`:** 改行区切りの定番利用では **`lines$`** を優先。**`receive$`** はチャンクの到着タイミングをそのまま扱う場合や、独自区切り・自前バッファが必要なとき向け（[行単位のフレーミング](docs/ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
+
+**`isConnected$`（UI 用）** — 読み取り専用の `Observable<boolean>` です。`state$` を `SerialSessionState.Connected` と毎回比較しなくても接続有無の UI 分岐に使えます。独自ルールが必要な場合は、従来どおり `state$` から `map` で派生しても構いません。
 
 **`lines$`（行区切り）** — 組み込みです。独自区切りが欲しい場合のみ `receive$` でフレーミングします（[行単位のフレーミング](docs/ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
 
 ### 最小サンプル
 
 ```typescript
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
@@ -104,6 +108,11 @@ if (!session.isBrowserSupported()) {
 
 session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
+session.state$
+  .pipe(filter((s) => s === SerialSessionState.Connected))
+  .subscribe(() => {
+    /* 例: ポートが開いてから有効化する UI */
+  });
 session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```
