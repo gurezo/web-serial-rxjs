@@ -1,5 +1,9 @@
 # @gurezo/web-serial-rxjs
 
+<p align="center">
+  <img src="./web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
+</p>
+
 Web Serial API を最小限の Session 指向 RxJS 表面でラップする TypeScript ライブラリです。v2 では単一の `SerialSession` を公開し、`state$` / `isConnected$` / `receive$` / `lines$` / `errors$` を購読するだけで UI を駆動できます。read loop や送信キューの自前実装は不要です。
 
 ## ブラウザサポート
