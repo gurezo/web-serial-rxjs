@@ -6,7 +6,7 @@ import type {
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 
@@ -16,6 +16,7 @@ interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<SerialSessionState>;
   receiveSubject: Subject<string>;
+  linesSubject: Subject<string>;
   errorsSubject: Subject<SerialError>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
@@ -26,7 +27,12 @@ interface MockSession {
 const createMockSession = (): MockSession => {
   const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
+  const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
+  const isConnected$ = stateSubject.pipe(
+    map((s) => s === SS.Connected),
+    distinctUntilChanged(),
+  );
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
@@ -40,12 +46,15 @@ const createMockSession = (): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    lines$: linesSubject.asObservable(),
+    isConnected$,
   };
 
   return {
     session,
     stateSubject,
     receiveSubject,
+    linesSubject,
     errorsSubject,
     connect$,
     disconnect$,
@@ -125,7 +134,7 @@ describe('App', () => {
     expect(baudRateSelect).toHaveValue('115200');
   });
 
-  it('state$ が "connected" に遷移したら成功ステータスを表示する', async () => {
+  it('state$ が SerialSessionState.Connected なら成功ステータスを表示する', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -187,8 +196,8 @@ describe('App', () => {
     render(<App />);
 
     act(() => {
-      latestMock().receiveSubject.next('foo\n');
-      latestMock().receiveSubject.next('bar\n');
+      latestMock().linesSubject.next('foo');
+      latestMock().linesSubject.next('bar');
     });
 
     await waitFor(() => {
@@ -214,7 +223,7 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    act(() => latestMock().receiveSubject.next('data\n'));
+    act(() => latestMock().linesSubject.next('data'));
     await waitFor(() => {
       const textarea = screen.getByLabelText(
         '受信データ',

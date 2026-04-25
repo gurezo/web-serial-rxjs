@@ -10,6 +10,7 @@ export function App() {
   const {
     browserSupported,
     state,
+    isConnected,
     receivedData,
     errorMessage,
     connect$,
@@ -18,7 +19,6 @@ export function App() {
     clearReceivedData,
   } = useSerialSession(baudRate);
 
-  const connected = state === SerialSessionState.Connected;
   const connecting = state === SerialSessionState.Connecting;
   const disconnecting = state === SerialSessionState.Disconnecting;
 
@@ -28,7 +28,7 @@ export function App() {
       ? { type: 'info', message: '接続中...' }
       : disconnecting
         ? { type: 'info', message: '切断中...' }
-        : connected
+        : isConnected
           ? { type: 'success', message: 'シリアルポートに接続しました。' }
           : { type: 'info', message: 'シリアルポートに接続していません。' };
 
@@ -83,7 +83,7 @@ export function App() {
               className="form-control"
               value={baudRate}
               onChange={(e) => setBaudRate(Number(e.target.value))}
-              disabled={connected}
+              disabled={isConnected}
             >
               {[9600, 19200, 38400, 57600, 115200].map((v) => (
                 <option key={v} value={v}>
@@ -96,14 +96,14 @@ export function App() {
             <button
               className="btn btn-primary"
               onClick={handleConnect}
-              disabled={!browserSupported || connected || connecting}
+              disabled={!browserSupported || isConnected || connecting}
             >
               接続
             </button>
             <button
               className="btn btn-secondary"
               onClick={handleDisconnect}
-              disabled={!connected || disconnecting}
+              disabled={!isConnected || disconnecting}
             >
               切断
             </button>
@@ -122,13 +122,13 @@ export function App() {
                 value={sendInput}
                 onChange={(e) => setSendInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={!connected}
+                disabled={!isConnected}
                 placeholder="送信するテキストを入力..."
               />
               <button
                 className="btn btn-primary"
                 onClick={handleSend}
-                disabled={!connected || !sendInput.trim()}
+                disabled={!isConnected || !sendInput.trim()}
               >
                 送信
               </button>
