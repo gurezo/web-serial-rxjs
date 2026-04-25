@@ -1,7 +1,7 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
-import { filter, map, scan } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 
 const UNSUPPORTED_MSG =
   'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。';
@@ -42,31 +42,22 @@ export class App {
       supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
     );
     this.session.state$.subscribe((state) => {
-      const connected = state === 'connected';
-      const busy = state === 'connecting' || state === 'disconnecting';
+      const connected = state === SerialSessionState.Connected;
+      const busy =
+        state === SerialSessionState.Connecting ||
+        state === SerialSessionState.Disconnecting;
       connectBtn.disabled = !supported || connected || busy;
-      disconnectBtn.disabled = !connected;
-      sendInput.disabled = sendBtn.disabled = !connected;
       baudRateSelect.disabled = connected || busy;
       setStatus(status, ...STATUS[state]);
     });
-    this.session.receive$
-      .pipe(
-        scan(
-          (acc, chunk) => {
-            const combined = acc.buffer + chunk;
-            const parts = combined.split('\n');
-            return { buffer: parts.pop() ?? '', lines: parts };
-          },
-          { buffer: '', lines: [] },
-        ),
-        filter((x) => x.lines.length > 0),
-        map((x) => x.lines),
-      )
-      .subscribe((lines) => {
-        receiveOutput.value += lines.map((l) => `${l}\n`).join('');
-        receiveOutput.scrollTop = receiveOutput.scrollHeight;
-      });
+    this.session.isConnected$.subscribe((isConnected) => {
+      disconnectBtn.disabled = !isConnected;
+      sendInput.disabled = sendBtn.disabled = !isConnected;
+    });
+    this.session.lines$.subscribe((line) => {
+      receiveOutput.value += `${line}\n`;
+      receiveOutput.scrollTop = receiveOutput.scrollHeight;
+    });
     this.session.errors$.subscribe((error) => {
       setStatus(status, 'error', `エラー: ${error.message}`);
       console.error('Serial port error:', error);

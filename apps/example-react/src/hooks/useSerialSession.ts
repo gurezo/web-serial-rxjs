@@ -5,20 +5,13 @@ import {
   type SerialSession,
 } from '@gurezo/web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Observable,
-  ReplaySubject,
-  Subscription,
-  switchMap,
-  filter,
-  map,
-  scan,
-} from 'rxjs';
+import { Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 
-/** v2 `SerialSession` を薄くラップ。受信は `receive$` から行単位に派生（QUICK_START と同パターン）。 */
+/** v2 `SerialSession` を薄くラップ。受信は組み込み `lines$`。 */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
   state: SerialSessionState;
+  isConnected: boolean;
   receivedData: string;
   errorMessage: string | null;
   connect$: (baudRate?: number) => Observable<void>;
@@ -43,6 +36,7 @@ export function useSerialSession(
     (sessionRef.current as SerialSession).isBrowserSupported(),
   );
   const [state, setState] = useState<SerialSessionState>(SerialSessionState.Idle);
+  const [isConnected, setIsConnected] = useState(false);
   const [receivedData, setReceivedData] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -61,24 +55,14 @@ export function useSerialSession(
     );
     sub.add(
       sessions$
-        .pipe(
-          switchMap((s) =>
-            s.receive$.pipe(
-              scan(
-                (acc, chunk: string) => {
-                  const combined = acc.buffer + chunk;
-                  const parts = combined.split('\n');
-                  return { buffer: parts.pop() ?? '', lines: parts };
-                },
-                { buffer: '', lines: [] as string[] },
-              ),
-              filter((x) => x.lines.length > 0),
-              map((x) => x.lines),
-            ),
-          ),
-        )
-        .subscribe((lines) =>
-          setReceivedData((prev) => prev + lines.map((l) => `${l}\n`).join('')),
+        .pipe(switchMap((s) => s.isConnected$))
+        .subscribe((next) => setIsConnected(next)),
+    );
+    sub.add(
+      sessions$
+        .pipe(switchMap((s) => s.lines$))
+        .subscribe((line) =>
+          setReceivedData((prev) => prev + `${line}\n`),
         ),
     );
     sub.add(
@@ -114,6 +98,7 @@ export function useSerialSession(
   return {
     browserSupported,
     state,
+    isConnected,
     receivedData,
     errorMessage,
     connect$,

@@ -23,6 +23,7 @@ export class App {
 
   readonly browserSupported = this.serialService.isBrowserSupported();
   readonly state = signal<SerialSessionState>(SerialSessionState.Idle);
+  readonly isConnected = signal(false);
   readonly receivedData = signal('');
   readonly errorMessage = signal<string | null>(null);
 
@@ -36,11 +37,14 @@ export class App {
         }
       });
 
+    this.serialService.isConnected$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => this.isConnected.set(v));
+
     this.serialService.lines$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((lines) => {
-        const block = lines.map((l) => `${l}\n`).join('');
-        this.receivedData.update((prev) => prev + block);
+      .subscribe((line) => {
+        this.receivedData.update((prev) => prev + `${line}\n`);
       });
 
     this.serialService.errors$
@@ -48,10 +52,6 @@ export class App {
       .subscribe((error) => {
         this.errorMessage.set(error.message);
       });
-  }
-
-  get connected(): boolean {
-    return this.state() === SerialSessionState.Connected;
   }
 
   get connecting(): boolean {

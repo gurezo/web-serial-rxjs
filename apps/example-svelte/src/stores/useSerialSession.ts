@@ -4,15 +4,7 @@ import {
   type SerialError,
   type SerialSession,
 } from '@gurezo/web-serial-rxjs';
-import {
-  type Observable,
-  ReplaySubject,
-  Subscription,
-  switchMap,
-  filter,
-  map,
-  scan,
-} from 'rxjs';
+import { type Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 import { onDestroy } from 'svelte';
 import { readable, type Readable } from 'svelte/store';
 
@@ -20,6 +12,7 @@ import { readable, type Readable } from 'svelte/store';
 export interface UseSerialSessionReturn {
   browserSupported: Readable<boolean>;
   state: Readable<SerialSessionState>;
+  isConnected: Readable<boolean>;
   receivedData: Readable<string>;
   errorMessage: Readable<string | null>;
   connect$: (baudRate?: number) => Observable<void>;
@@ -47,29 +40,21 @@ export function useSerialSession(
     return () => sub.unsubscribe();
   });
 
+  const isConnected = readable<boolean>(false, (set) => {
+    const sub = sessions$
+      .pipe(switchMap((s) => s.isConnected$))
+      .subscribe((next) => set(next));
+    return () => sub.unsubscribe();
+  });
+
   let receivedAcc = '';
   let setReceived: ((value: string) => void) | null = null;
   const receivedData = readable<string>('', (set) => {
     setReceived = set;
     const sub = sessions$
-      .pipe(
-        switchMap((s) =>
-          s.receive$.pipe(
-            scan(
-              (acc, chunk: string) => {
-                const combined = acc.buffer + chunk;
-                const parts = combined.split('\n');
-                return { buffer: parts.pop() ?? '', lines: parts };
-              },
-              { buffer: '', lines: [] as string[] },
-            ),
-            filter((x) => x.lines.length > 0),
-            map((x) => x.lines),
-          ),
-        ),
-      )
-      .subscribe((lines) => {
-        receivedAcc += lines.map((l) => `${l}\n`).join('');
+      .pipe(switchMap((s) => s.lines$))
+      .subscribe((line) => {
+        receivedAcc += `${line}\n`;
         set(receivedAcc);
       });
     return () => {
@@ -125,6 +110,7 @@ export function useSerialSession(
   return {
     browserSupported,
     state,
+    isConnected,
     receivedData,
     errorMessage,
     connect$,

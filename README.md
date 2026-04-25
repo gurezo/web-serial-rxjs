@@ -78,8 +78,9 @@ pnpm add rxjs
 
 | Surface | Role |
 | --- | --- |
-| `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`. Replays the current state on subscribe. |
-| `isConnected$` | **Connected flag** — `true` only when `state$` is `'connected'`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
+| `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`. Replays the current state on subscribe. Compare with **`SerialSessionState`** instead of string literals. |
+| `SerialSessionState` | **State constants** — exported const object (e.g. `SerialSessionState.Connected`, `SerialSessionState.Idle`) with the same values `state$` emits. |
+| `isConnected$` | **Connected flag** — `true` only when `state$` is `SerialSessionState.Connected`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
 | `receive$` | **Raw incoming UTF-8 text** as decoded string **chunks** (not line-delimited; multi-byte safe). |
 | `lines$` | **Line-delimited UTF-8 text** — one string per complete line, using the built-in newline buffer (`\n` / `\r\n`). |
 | `errors$` | **All `SerialError` instances** from connect / read / write / close (primary error channel). |
@@ -88,14 +89,30 @@ pnpm add rxjs
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
 | `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
 
-**`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `'connected'`. You can still derive your own boolean from `state$` with `map` if you need different rules.
+### SerialSessionState (quick reference)
+
+`state$` uses the string union below. Prefer the **const object** (e.g. `SerialSessionState.Connected` → `'connected'`) in code. Full lifecycle diagram, transitions, and edge cases: [API Reference – SerialSessionState](docs/API_REFERENCE.md#serialsessionstate).
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `SerialSessionState.Idle` | `'idle'` | No open port; initial state when the browser supports Web Serial. |
+| `SerialSessionState.Connecting` | `'connecting'` | `connect$` in progress. |
+| `SerialSessionState.Connected` | `'connected'` | Port is open; internal read pump is running. |
+| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
+| `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
+| `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
+
+**`receive$` vs `lines$`:** prefer **`lines$`** for typical newline-framed text; use **`receive$`** when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in [Advanced Usage](docs/ADVANCED_USAGE.md#line-framing)).
+
+**`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `SerialSessionState.Connected` yourself. You can still derive your own boolean from `state$` with `map` if you need different rules.
 
 **`lines$` (newline framing)** — built in; for non-standard delimiters, frame on `receive$` (recipes in [Advanced Usage](docs/ADVANCED_USAGE.md#line-framing)).
 
 ### Minimal example
 
 ```typescript
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
@@ -105,6 +122,11 @@ if (!session.isBrowserSupported()) {
 
 session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
+session.state$
+  .pipe(filter((s) => s === SerialSessionState.Connected))
+  .subscribe(() => {
+    /* e.g. enable UI that must wait until the port is open */
+  });
 session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```

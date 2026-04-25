@@ -5,7 +5,7 @@ import type {
 } from '@gurezo/web-serial-rxjs';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { mount } from '@vue/test-utils';
-import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, map, of, Subject, throwError, distinctUntilChanged } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
 
@@ -15,6 +15,7 @@ interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<SerialSessionState>;
   receiveSubject: Subject<string>;
+  linesSubject: Subject<string>;
   errorsSubject: Subject<SerialError>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
@@ -25,7 +26,12 @@ interface MockSession {
 const createMockSession = (): MockSession => {
   const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
+  const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
+  const isConnected$ = stateSubject.pipe(
+    map((s) => s === SS.Connected),
+    distinctUntilChanged(),
+  );
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
@@ -39,12 +45,15 @@ const createMockSession = (): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    lines$: linesSubject.asObservable(),
+    isConnected$,
   };
 
   return {
     session,
     stateSubject,
     receiveSubject,
+    linesSubject,
     errorsSubject,
     connect$,
     disconnect$,
@@ -121,6 +130,7 @@ describe('useSerialClient', () => {
     const { api } = mountHarness();
     expect(api.browserSupported.value).toBe(true);
     expect(api.state.value).toBe(SS.Idle);
+    expect(api.isConnected.value).toBe(false);
     expect(api.receivedData.value).toBe('');
     expect(api.errorMessage.value).toBe(null);
   });
@@ -178,12 +188,12 @@ describe('useSerialClient', () => {
     expect(latestMock().send$).toHaveBeenCalledWith('hello');
   });
 
-  it('should append newline-delimited lines to receivedData', () => {
+  it('should append lines$ emissions to receivedData', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
-    mock.receiveSubject.next('chunk-1\n');
-    mock.receiveSubject.next('chunk-2\n');
+    mock.linesSubject.next('chunk-1');
+    mock.linesSubject.next('chunk-2');
 
     expect(api.receivedData.value).toBe('chunk-1\nchunk-2\n');
   });
@@ -211,7 +221,7 @@ describe('useSerialClient', () => {
   it('should clear received data', () => {
     const { api } = mountHarness();
     const mock = latestMock();
-    mock.receiveSubject.next('chunk-1\n');
+    mock.linesSubject.next('chunk-1');
 
     expect(api.receivedData.value).toBe('chunk-1\n');
     api.clearReceivedData();

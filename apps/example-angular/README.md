@@ -4,7 +4,7 @@ This is an Angular example application demonstrating how to use the `@gurezo/web
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../README.md#serialsession-v2-at-a-glance).
 
-**Scope**: Minimal smoke test—connect, line-delimited receive (`lines$` derived from `receive$`), send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Minimal smoke test—connect, line-delimited receive via built-in `lines$`, connection UI via `isConnected$`, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## Features
 
@@ -77,9 +77,9 @@ This example uses Angular Services and RxJS observables to handle serial port co
 
 3. **Configuration**: Users can select the baud rate before connecting. The baud rate is managed as component property.
 
-4. **Data Sending**: Users can type text in the input field and send it to the serial port. The text is encoded as UTF-8 and sent as `Uint8Array` through the service's `sendAsync` method.
+4. **Data Sending**: Users can type text in the input field and send it to the serial port via the service's `send$` method.
 
-5. **Data Receiving**: UTF-8 chunks are framed into newline-delimited lines (`lines$` in the service) and shown in the textarea.
+5. **Data Receiving**: The service exposes the session's `lines$` (one string per line); the component appends each line to the textarea. The UI uses `isConnected$` for enable/disable. Raw chunks use `receive$` (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 
 ## Code Structure
 

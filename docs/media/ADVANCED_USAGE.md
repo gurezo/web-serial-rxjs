@@ -37,6 +37,8 @@ customLines$
 
 Many embedded shells use `\r\n` line endings. The default `lines$` already normalises the common cases; the pattern above is for custom rules only.
 
+**Prompts and data without a newline:** `lines$` only emits when a line ending is recognised. If the device prints a **prompt** or **partial line** with no `\n` / `\r\n` yet, use accumulation on `receive$` (see [readUntil pattern](#readuntil-pattern-readuntil--prompt-style-reads) below) instead of waiting for `lines$`.
+
 ## Connected boolean (UI) (`isConnected$`)
 
 For a simple "is the port open?" flag for buttons or templates, prefer **`isConnected$`** (derived from `state$` with `distinctUntilChanged`):

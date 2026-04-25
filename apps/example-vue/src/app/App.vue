@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
 import { computed, ref } from 'vue';
 import { useSerialClient } from '../composables/useSerialClient';
 
@@ -10,6 +11,7 @@ const sendInput = ref('');
 const {
   browserSupported,
   state,
+  isConnected,
   receivedData,
   errorMessage,
   connect$,
@@ -18,28 +20,31 @@ const {
   clearReceivedData,
 } = useSerialClient(baudRate.value);
 
-const connected = computed(() => state.value === 'connected');
-const connecting = computed(() => state.value === 'connecting');
-const disconnecting = computed(() => state.value === 'disconnecting');
+const connecting = computed(
+  () => state.value === SerialSessionState.Connecting,
+);
+const disconnecting = computed(
+  () => state.value === SerialSessionState.Disconnecting,
+);
 
 const status = computed<{ type: StatusType; message: string }>(() => {
   if (errorMessage.value) {
     return { type: 'error', message: `エラー: ${errorMessage.value}` };
   }
   switch (state.value) {
-    case 'connecting':
+    case SerialSessionState.Connecting:
       return { type: 'info', message: '接続中...' };
-    case 'disconnecting':
+    case SerialSessionState.Disconnecting:
       return { type: 'info', message: '切断中...' };
-    case 'connected':
+    case SerialSessionState.Connected:
       return { type: 'success', message: 'シリアルポートに接続しました。' };
-    case 'unsupported':
+    case SerialSessionState.Unsupported:
       return {
         type: 'error',
         message:
           'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
       };
-    case 'error':
+    case SerialSessionState.Error:
       return { type: 'error', message: 'エラーが発生しました。' };
     default:
       return { type: 'info', message: 'シリアルポートに接続していません。' };
@@ -123,7 +128,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
             class="form-control"
             :value="baudRate"
             @change="(e) => (baudRate = Number((e.target as HTMLSelectElement).value))"
-            :disabled="connected"
+            :disabled="isConnected"
           >
             <option :value="9600">9600</option>
             <option :value="19200">19200</option>
@@ -136,14 +141,14 @@ const handleKeyDown = (e: KeyboardEvent) => {
           <button
             class="btn btn-primary"
             @click="handleConnect"
-            :disabled="!browserSupported || connected || connecting"
+            :disabled="!browserSupported || isConnected || connecting"
           >
             接続
           </button>
           <button
             class="btn btn-secondary"
             @click="handleDisconnect"
-            :disabled="!connected || disconnecting"
+            :disabled="!isConnected || disconnecting"
           >
             切断
           </button>
@@ -165,13 +170,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
               class="form-control"
               v-model="sendInput"
               @keydown="handleKeyDown"
-              :disabled="!connected"
+              :disabled="!isConnected"
               placeholder="送信するテキストを入力..."
             />
             <button
               class="btn btn-primary"
               @click="handleSend"
-              :disabled="!connected || !sendInput.trim()"
+              :disabled="!isConnected || !sendInput.trim()"
             >
               送信
             </button>

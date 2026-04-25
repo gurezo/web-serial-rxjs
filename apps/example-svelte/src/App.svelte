@@ -8,6 +8,7 @@
   const {
     browserSupported,
     state,
+    isConnected,
     receivedData,
     errorMessage,
     connect$,
@@ -46,7 +47,6 @@
   };
 
   $: status = statusFor($state, $errorMessage);
-  $: connected = $state === SerialSessionState.Connected;
   $: connecting = $state === SerialSessionState.Connecting;
   $: disconnecting = $state === SerialSessionState.Disconnecting;
 
@@ -112,7 +112,7 @@
           id="baud-rate"
           class="form-control"
           bind:value={baudRate}
-          disabled={connected}
+          disabled={$isConnected}
         >
           <option value={9600}>9600</option>
           <option value={19200}>19200</option>
@@ -125,14 +125,14 @@
         <button
           class="btn btn-primary"
           on:click={handleConnect}
-          disabled={!$browserSupported || connected || connecting}
+          disabled={!$browserSupported || $isConnected || connecting}
         >
           接続
         </button>
         <button
           class="btn btn-secondary"
           on:click={handleDisconnect}
-          disabled={!connected || disconnecting}
+          disabled={!$isConnected || disconnecting}
         >
           切断
         </button>
@@ -154,13 +154,13 @@
             class="form-control"
             bind:value={sendInput}
             on:keydown={handleKeyDown}
-            disabled={!connected}
+            disabled={!$isConnected}
             placeholder="送信するテキストを入力..."
           />
           <button
             class="btn btn-primary"
             on:click={handleSend}
-            disabled={!connected || !sendInput.trim()}
+            disabled={!$isConnected || !sendInput.trim()}
           >
             送信
           </button>

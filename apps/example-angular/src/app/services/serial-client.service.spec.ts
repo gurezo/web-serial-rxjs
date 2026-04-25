@@ -1,7 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import type { SerialSession } from '@gurezo/web-serial-rxjs';
-import { BehaviorSubject, firstValueFrom, of, Subject, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  distinctUntilChanged,
+  firstValueFrom,
+  map,
+  of,
+  Subject,
+  throwError,
+} from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialClientService } from './serial-client.service';
 
@@ -11,6 +19,7 @@ interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<webSerialRxjs.SerialSessionState>;
   receiveSubject: Subject<string>;
+  linesSubject: Subject<string>;
   errorsSubject: Subject<webSerialRxjs.SerialError>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
@@ -23,7 +32,12 @@ const createMockSession = (): MockSession => {
     SS.Idle,
   );
   const receiveSubject = new Subject<string>();
+  const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<webSerialRxjs.SerialError>();
+  const isConnected$ = stateSubject.pipe(
+    map((s) => s === SS.Connected),
+    distinctUntilChanged(),
+  );
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
@@ -37,12 +51,15 @@ const createMockSession = (): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    lines$: linesSubject.asObservable(),
+    isConnected$,
   };
 
   return {
     session,
     stateSubject,
     receiveSubject,
+    linesSubject,
     errorsSubject,
     connect$,
     disconnect$,
@@ -154,11 +171,11 @@ describe('SerialClientService', () => {
     await expect(firstValueFrom(service.connect$())).rejects.toBe(boom);
   });
 
-  it('should emit newline-delimited lines on lines$', async () => {
+  it('should emit each line on lines$', async () => {
     const mock = latestMock();
     const pending = firstValueFrom(service.lines$);
-    mock.receiveSubject.next('chunk-1\n');
-    await expect(pending).resolves.toEqual(['chunk-1']);
+    mock.linesSubject.next('chunk-1');
+    await expect(pending).resolves.toBe('chunk-1');
   });
 
   it('should forward errors$ emissions', async () => {

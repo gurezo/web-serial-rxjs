@@ -1,8 +1,21 @@
 # Quick Start
 
-This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `receive$`, `lines$`, `errors$`, and the imperative methods, read the [project README](../../../README.md#serialsession-v2-at-a-glance) first.
+This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, and the imperative methods, read the [project README](../../../README.md#serialsession-v2-at-a-glance) first.
 
 Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
+
+### SerialSessionState (quick reference)
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `SerialSessionState.Idle` | `'idle'` | No open port; initial when Web Serial is supported. |
+| `SerialSessionState.Connecting` | `'connecting'` | `connect$` in progress. |
+| `SerialSessionState.Connected` | `'connected'` | Port open; read pump running. |
+| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
+| `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
+| `SerialSessionState.Error` | `'error'` | Fatal failure; `disconnect$` or a new session. |
+
+Details and lifecycle: [API Reference – SerialSessionState](./API_REFERENCE.md#serialsessionstate).
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
@@ -28,6 +41,18 @@ session.connect$().subscribe({
     });
   },
   error: (e) => console.error('Connection error:', e),
+});
+```
+
+Prefer **`SerialSessionState`** for comparisons (not raw strings such as `'connected'`):
+
+```typescript
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((s) => {
+  if (s === SerialSessionState.Unsupported) {
+    console.warn('Web Serial is not available');
+  }
 });
 ```
 

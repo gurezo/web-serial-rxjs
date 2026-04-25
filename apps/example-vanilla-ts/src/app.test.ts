@@ -1,5 +1,5 @@
 import type { SerialError, SerialSession } from '@gurezo/web-serial-rxjs';
-import { BehaviorSubject, Subject, of } from 'rxjs';
+import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './app.js';
 
@@ -10,7 +10,12 @@ vi.mock('@gurezo/web-serial-rxjs', async (importOriginal) => {
     actual.SerialSessionState.Idle,
   );
   const receive$ = new Subject<string>();
+  const lines$ = new Subject<string>();
   const errors$ = new Subject<SerialError>();
+  const isConnected$ = state$.pipe(
+    map((s) => s === actual.SerialSessionState.Connected),
+    distinctUntilChanged(),
+  );
   const mockSession = {
     isBrowserSupported: vi.fn(() => true),
     connect$: vi.fn(() => of(undefined)),
@@ -18,7 +23,9 @@ vi.mock('@gurezo/web-serial-rxjs', async (importOriginal) => {
     send$: vi.fn(() => of(undefined)),
     state$,
     receive$,
+    lines$,
     errors$,
+    isConnected$,
   };
   return {
     ...actual,

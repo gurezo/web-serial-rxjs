@@ -1,8 +1,21 @@
 # クイックスタート
 
-**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `receive$` / `lines$` / `errors$` と各メソッドの一覧は、先に[リポジトリの README](../../../README.ja.md#serialsessionv2の全体像)を参照してください。
+**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `isConnected$` / `receive$` / `lines$` / `errors$` と各メソッドの一覧は、先に[リポジトリの README](../../../README.ja.md#serialsessionv2の全体像)を参照してください。
 
 標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。独自区切りや別の分割ルールが必要なときは `receive$` 上に `scan` などで組み立てます（[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。接続の真偽は **`isConnected$`** を使うか、従来どおり `state$` から `map` しても構いません。
+
+### SerialSessionState（早見表）
+
+| 定数 | 値 | 意味 |
+| --- | --- | --- |
+| `SerialSessionState.Idle` | `'idle'` | ポート未接続。Web Serial 利用可能な場合の初期値。 |
+| `SerialSessionState.Connecting` | `'connecting'` | `connect$` 実行中。 |
+| `SerialSessionState.Connected` | `'connected'` | ポートが開き、read pump が動作中。 |
+| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
+| `SerialSessionState.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
+| `SerialSessionState.Error` | `'error'` | 致命的な失敗。`disconnect$` または新しいセッションで復帰。 |
+
+遷移・詳細は [API リファレンスの SerialSessionState](./API_REFERENCE.ja.md#serialsessionstate) を参照してください。
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
@@ -26,6 +39,18 @@ session.connect$().subscribe({
     });
   },
   error: (e) => console.error('接続エラー:', e),
+});
+```
+
+`state$` の分岐は **`SerialSessionState`** の定数で比較します（`'connected'` などの文字列直書きは避けてください）:
+
+```typescript
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((s) => {
+  if (s === SerialSessionState.Unsupported) {
+    console.warn('このブラウザでは Web Serial を利用できません');
+  }
 });
 ```
 

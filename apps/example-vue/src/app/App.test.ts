@@ -5,7 +5,7 @@ import type {
 } from '@gurezo/web-serial-rxjs';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { mount } from '@vue/test-utils';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
@@ -16,6 +16,7 @@ interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<SerialSessionState>;
   receiveSubject: Subject<string>;
+  linesSubject: Subject<string>;
   errorsSubject: Subject<SerialError>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
@@ -26,7 +27,12 @@ interface MockSession {
 const createMockSession = (): MockSession => {
   const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
+  const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
+  const isConnected$ = stateSubject.pipe(
+    map((s) => s === SS.Connected),
+    distinctUntilChanged(),
+  );
   const connect$ = vi.fn(() => {
     stateSubject.next(SS.Connecting);
     stateSubject.next(SS.Connected);
@@ -48,12 +54,15 @@ const createMockSession = (): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    lines$: linesSubject.asObservable(),
+    isConnected$,
   };
 
   return {
     session,
     stateSubject,
     receiveSubject,
+    linesSubject,
     errorsSubject,
     connect$,
     disconnect$,
