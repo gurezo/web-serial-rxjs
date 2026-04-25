@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { distinctUntilChanged, map, Observable, Subject } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { buildRequestOptions } from './internal/build-request-options';
@@ -91,6 +91,11 @@ export function createSerialSession(
 
   const errors$ = errorsSubject.asObservable();
   const receive$ = receiveSubject.asObservable();
+
+  const isConnected$ = machine.state$.pipe(
+    map((state) => state === SerialSessionState.Connected),
+    distinctUntilChanged(),
+  );
 
   let activePort: SerialPort | null = null;
   let activePump: ReadPump | null = null;
@@ -346,6 +351,7 @@ export function createSerialSession(
       });
     },
     state$: machine.state$,
+    isConnected$,
     errors$,
     receive$,
   };

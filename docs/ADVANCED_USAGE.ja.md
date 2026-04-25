@@ -2,7 +2,7 @@
 
 v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[README](../../../README.ja.md#serialsessionv2の全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは README で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。
 
-本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`・`connected$`・`sendLine`・`readUntil`・`waitForState`** はいずれも既存 API の組み合わせであり、ライブラリに追加の export はありません。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
+本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`・`sendLine`・`readUntil`・`waitForState`** などはコア API の上に組み立てるパターンです（そのための追加 export はありません）。一方、よく使う**接続真偽**は **`isConnected$`** として `SerialSession` に用意されています。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
 
 ## 行単位のフレーミング（`receive$` からの `lines$`）
 
@@ -33,17 +33,17 @@ lines$.subscribe((lines) => lines.forEach((line) => console.log('行:', line)));
 
 組み込みシェルによっては行末が `\r\n` です。`'\n'` の代わりに `/\r?\n/` で分割する、または分割前にチャンクを正規化する方法があります。
 
-## 接続中フラグ（`state$` からの `connected$` 相当）
+## 接続中フラグ（`isConnected$`）
 
-`SerialSession` に `connected$` プロパティはありません。ボタンの有効／無効などに使う真偽値が欲しい場合は `state$` から派生します。
+ボタンの有効／無効など「接続済みかどうか」だけが欲しい場合は **`isConnected$`**（`state$` から `distinctUntilChanged` 付きで派生）を使います。
 
 ```typescript
-import { map } from 'rxjs';
-
-const connected$ = session.state$.pipe(map((s) => s === 'connected'));
+session.isConnected$.subscribe((isOpen) => {
+  // 操作の有効化など
+});
 ```
 
-接続中以外の段階（`connecting` など）も扱う UI では、真偽値ではなく下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
+独自の判定が必要な場合は、従来どおり `state$` から `map` しても構いません。`connecting` など多段階の UI では、真偽値ではなく下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
 
 ## 1 行送信（`sendLine` / `sendLine$` 相当）
 

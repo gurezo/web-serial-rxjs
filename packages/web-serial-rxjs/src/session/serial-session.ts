@@ -7,7 +7,7 @@ import type { SerialSessionState } from './serial-session-state';
  * minimal, session-oriented surface.
  *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
- * can drive their UI purely from `state$` + `receive$` + `errors$` and never
+ * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `errors$` and never
  * have to rebuild BehaviorSubjects, manage a read loop, or serialize writes
  * themselves.
  *
@@ -67,6 +67,14 @@ export interface SerialSession {
    * this stream instead of reconstructing their own BehaviorSubject.
    */
   readonly state$: Observable<SerialSessionState>;
+
+  /**
+   * `true` when {@link state$} is `'connected'`, `false` for all other states.
+   *
+   * Derived from `state$` with `distinctUntilChanged` so UIs can bind
+   * connect/disabled flags without reimplementing the comparison.
+   */
+  readonly isConnected$: Observable<boolean>;
 
   /**
    * Primary error channel.

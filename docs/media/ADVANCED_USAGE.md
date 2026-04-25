@@ -2,7 +2,7 @@
 
 The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../../../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
 
-This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): **`lines$`**, **`connected$`**, **`sendLine`**, **`readUntil`**, and **`waitForState`** are all patterns you build on top of the existing API—no extra library exports. For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
+This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): **`lines$`**, **`sendLine`**, **`readUntil`**, and **`waitForState`** are patterns you build on top of the core API (no extra exports for those). A built-in **`isConnected$`** is available on `SerialSession` for the common “is the port open?” boolean. For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 
 ## Line Framing (`lines$` from `receive$`)
 
@@ -33,17 +33,17 @@ lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)))
 
 Many embedded shells use `\r\n` line endings. You can split on `/\r?\n/` instead of `'\n'`, or normalize chunks before splitting.
 
-## Connected boolean (UI) (`connected$` from `state$`)
+## Connected boolean (UI) (`isConnected$`)
 
-There is no `connected$` on `SerialSession`. For a simple "is the port open?" flag for buttons or templates, derive from `state$`:
+For a simple "is the port open?" flag for buttons or templates, prefer **`isConnected$`** (derived from `state$` with `distinctUntilChanged`):
 
 ```typescript
-import { map } from 'rxjs';
-
-const connected$ = session.state$.pipe(map((s) => s === 'connected'));
+session.isConnected$.subscribe((isOpen) => {
+  // enable / disable actions
+});
 ```
 
-Prefer driving full UI from `state$` when you need spinners and multiple phases (see [State-driven UI](#state-driven-ui) below).
+If you need a custom rule, you can still derive from `state$` with `map`. Prefer driving full UI from `state$` when you need spinners and multiple phases (see [State-driven UI](#state-driven-ui) below).
 
 ## Send line (`sendLine` / `sendLine$` pattern)
 

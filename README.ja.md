@@ -4,7 +4,7 @@
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。v2 では単一の `SerialSession` を公開し、アプリケーション側は `state$` / `receive$` / `errors$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
+Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。v2 では単一の `SerialSession` を公開し、アプリケーション側は `state$` / `isConnected$` / `receive$` / `errors$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
 
 ## 目次
 
@@ -22,7 +22,7 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 
 ## 機能
 
-- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$` / `receive$` / `errors$` と `connect$` / `disconnect$` / `send$` を公開
+- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$` / `isConnected$` / `receive$` / `errors$` と `connect$` / `disconnect$` / `send$` を公開
 - **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます
 - **順序保証された送信キュー**: 並行する `send$` 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます
 - **統一エラーチャネル**: すべての I/O エラーは `SerialError` に正規化され `errors$` に多重化されます
@@ -73,11 +73,12 @@ pnpm add rxjs
 
 ## SerialSession（v2）の全体像
 
-`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、行区切りや「接続中」真偽値などは `state$` / `receive$` の上に RxJS で組み立てます（[高度な使用方法](docs/ADVANCED_USAGE.ja.md)）。
+`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、行区切りなどのパターンは `receive$` 上に RxJS で組み立てます（[高度な使用方法](docs/ADVANCED_USAGE.ja.md)）。接続真偽は `isConnected$` も利用できます。
 
 | 公開面 | 役割 |
 | --- | --- |
 | `state$` | **接続ライフサイクル** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`。購読時に現在値をリプレイ。 |
+| `isConnected$` | **接続中かどうか** — `state$` が `'connected'` のときだけ `true`、それ以外は `false`（`state$` から `distinctUntilChanged` 付きで派生）。 |
 | `receive$` | **受信 UTF-8 テキスト**（デコード済みの**チャンク**列。行区切りではない。マルチバイト安全）。 |
 | `errors$` | **すべての `SerialError`**（接続・読み取り・書き込み・クローズ）の主チャネル。 |
 | `connect$()` | ポート選択 → オープン → 内部 read pump 開始。 |
@@ -85,13 +86,7 @@ pnpm add rxjs
 | `send$(string \| Uint8Array)` | 送信を **FIFO** で直列化（並行 `send$` も呼び出し順）。 |
 | `isBrowserSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
 
-**`connected$`（UI 用）** — `SerialSession` のプロパティではありません。真偽の `Observable` が欲しい場合は `state$` から派生します。
-
-```typescript
-import { map } from 'rxjs';
-
-const connected$ = session.state$.pipe(map((s) => s === 'connected'));
-```
+**`isConnected$`（UI 用）** — 読み取り専用の `Observable<boolean>` です。`state$` と `'connected'` を毎回比較しなくても接続有無の UI 分岐に使えます。独自ルールが必要な場合は、従来どおり `state$` から `map` で派生しても構いません。
 
 **行単位の `lines$`** — ビルトインではありません。`receive$` の上にフレーミングします（[行単位のフレーミング](docs/ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
 

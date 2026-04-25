@@ -54,7 +54,7 @@ session.send$('hi').subscribe();
 | `createSerialClient(opts)`              | `createSerialSession(opts)`                                              |
 | `client.connect()`                      | `session.connect$()`                                                     |
 | `client.disconnect()`                   | `session.disconnect$()`                                                  |
-| `client.connected` / `client.connected$`| `session.state$` から導出（`state === 'connected'`）                     |
+| `client.connected` / `client.connected$`| `session.isConnected$`（または `session.state$` を `map`）               |
 | `client.state$`（discriminated object） | `session.state$`（`SerialSessionState` 文字列ユニオン）                 |
 | `client.text$` / `client.lines$`        | `session.receive$`（UTF-8 デコード済み）                                 |
 | `client.bytes$`                         | v2 では非公開。バイトが必要なら `new TextEncoder().encode(chunk)` などで変換するか issue でリクエストしてください |
