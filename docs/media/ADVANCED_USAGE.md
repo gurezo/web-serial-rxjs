@@ -2,11 +2,13 @@
 
 The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read the [README](../../../README.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the README defers on purpose.
 
-This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): **`lines$`**, **`sendLine`**, **`readUntil`**, and **`waitForState`** are patterns you build on top of the core API (no extra exports for those). A built-in **`isConnected$`** is available on `SerialSession` for the common “is the port open?” boolean. For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
+This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`**, **`isConnected$`**, and the imperative methods cover common cases. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 
-## Line Framing (`lines$` from `receive$`)
+## Line Framing (built-in `lines$` vs custom framing on `receive$`)
 
-`receive$` emits UTF-8 decoded chunks as they arrive from the underlying `TextDecoder`. Combine it with `scan` to frame by newline:
+**Default:** `lines$` emits one complete line at a time, handling `\n`, `\r\n`, and a lone interior `\r` the way the built-in line buffer does. It is the right choice for typical newline-delimited devices.
+
+`receive$` still emits raw UTF-8 decoded **chunks** as they arrive. Use `scan` (or a similar stateful transform) when you need a custom delimiter, regex split, or batching that differs from the built-in `lines$`:
 
 ```typescript
 import { filter, map, scan } from 'rxjs';
@@ -15,7 +17,8 @@ import { createSerialSession } from '@gurezo/web-serial-rxjs';
 const session = createSerialSession({ baudRate: 115200 });
 session.connect$().subscribe();
 
-const lines$ = session.receive$.pipe(
+// Custom framing: only when the built-in `lines$` is not enough.
+const customLines$ = session.receive$.pipe(
   scan(
     (acc, chunk) => {
       const combined = acc.buffer + chunk;
@@ -28,10 +31,11 @@ const lines$ = session.receive$.pipe(
   map((s) => s.lines),
 );
 
-lines$.subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
+customLines$
+  .subscribe((lines) => lines.forEach((line) => console.log('line:', line)));
 ```
 
-Many embedded shells use `\r\n` line endings. You can split on `/\r?\n/` instead of `'\n'`, or normalize chunks before splitting.
+Many embedded shells use `\r\n` line endings. The default `lines$` already normalises the common cases; the pattern above is for custom rules only.
 
 ## Connected boolean (UI) (`isConnected$`)
 

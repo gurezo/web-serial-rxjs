@@ -4,7 +4,7 @@
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single `SerialSession` so applications can drive their UI entirely from `state$` + `isConnected$` + `receive$` + `errors$`, without rebuilding state, read loops, or send queues themselves.
+A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single `SerialSession` so applications can drive their UI entirely from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$`, without rebuilding state, read loops, or send queues themselves.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 
 ## Features
 
-- **Session-oriented reactive API**: a single `SerialSession` exposes `state$`, `isConnected$`, `receive$`, `errors$`, plus `connect$`, `disconnect$`, and `send$`
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, plus `connect$`, `disconnect$`, and `send$`
 - **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
 - **Ordered send queue**: concurrent `send$` calls are serialised internally in call order, without the caller having to manage a writer
 - **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
@@ -74,13 +74,14 @@ pnpm add rxjs
 
 ## SerialSession (v2) at a glance
 
-`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; for example line framing is still composed with plain RxJS on top of the streams (see [Advanced Usage](docs/ADVANCED_USAGE.md)).
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; when you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](docs/ADVANCED_USAGE.md)).
 
 | Surface | Role |
 | --- | --- |
 | `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`. Replays the current state on subscribe. |
 | `isConnected$` | **Connected flag** — `true` only when `state$` is `'connected'`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
 | `receive$` | **Raw incoming UTF-8 text** as decoded string **chunks** (not line-delimited; multi-byte safe). |
+| `lines$` | **Line-delimited UTF-8 text** — one string per complete line, using the built-in newline buffer (`\n` / `\r\n`). |
 | `errors$` | **All `SerialError` instances** from connect / read / write / close (primary error channel). |
 | `connect$()` | **Open** a user-selected port and start the internal read pump. |
 | `disconnect$()` | **Close** the port and stop the pump. |
@@ -89,7 +90,7 @@ pnpm add rxjs
 
 **`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `'connected'`. You can still derive your own boolean from `state$` with `map` if you need different rules.
 
-**Line-delimited “lines$”** — not a built-in property. Frame on top of `receive$` (recipes in [Advanced Usage](docs/ADVANCED_USAGE.md#line-framing)).
+**`lines$` (newline framing)** — built in; for non-standard delimiters, frame on `receive$` (recipes in [Advanced Usage](docs/ADVANCED_USAGE.md#line-framing)).
 
 ### Minimal example
 
@@ -102,7 +103,7 @@ if (!session.isBrowserSupported()) {
   throw new Error('Web Serial is not available in this browser');
 }
 
-session.receive$.subscribe(console.log);
+session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
 session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
@@ -131,7 +132,7 @@ Examples are available for the following environments:
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
 - **[Vue](apps/example-vue/)** - Vue 3 example using Composition API
 
-Each sample is a **minimal smoke test** for **connect**, **receive** (newline-delimited lines derived from `receive$`), **send**, and **disconnect**. Deeper patterns live in [Advanced Usage](docs/ADVANCED_USAGE.md).
+Each sample is a **minimal smoke test** for **connect**, **receive** (typically newline-delimited lines via `lines$` or a derived stream from `receive$`), **send**, and **disconnect**. Deeper patterns live in [Advanced Usage](docs/ADVANCED_USAGE.md).
 
 Each example includes a README with setup and usage instructions.
 
