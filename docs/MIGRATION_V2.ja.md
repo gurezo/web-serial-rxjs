@@ -35,7 +35,7 @@ session.send$('hi').subscribe();
 | `createSerialClient`              | `createSerialSession`                                            |
 | `SerialClient`（型）              | `SerialSession`                                                  |
 | `SerialClientOptions`             | `SerialSessionOptions`（フィールドは同一）                       |
-| `SerialState`                     | `SerialSessionState`（フラットなユニオン。後述）                 |
+| `SerialState`                     | `SerialSessionState`（定数オブジェクト＋型。後述）                 |
 | `SerialSupport` / `SerialRequest` | _（内部詳細のため非公開）_                                       |
 | `createShellClient` / `ShellClient` / `ShellClientOptions` / `ShellExecResult` | `send$` + `receive$` の上でアプリ側が実装 |
 | `isBrowserSupported`（トップレベル）| `session.isBrowserSupported()`                                 |
@@ -55,7 +55,7 @@ session.send$('hi').subscribe();
 | `client.connect()`                      | `session.connect$()`                                                     |
 | `client.disconnect()`                   | `session.disconnect$()`                                                  |
 | `client.connected` / `client.connected$`| `session.state$` から導出（`state === 'connected'`）                     |
-| `client.state$`（discriminated object） | `session.state$`（フラットな `SerialSessionState` ユニオン）             |
+| `client.state$`（discriminated object） | `session.state$`（`SerialSessionState` 文字列ユニオン）                 |
 | `client.text$` / `client.lines$`        | `session.receive$`（UTF-8 デコード済み）                                 |
 | `client.bytes$`                         | v2 では非公開。バイトが必要なら `new TextEncoder().encode(chunk)` などで変換するか issue でリクエストしてください |
 | `client.write(bytes)`                   | `session.send$(bytes)`                                                   |
@@ -67,16 +67,20 @@ session.send$('hi').subscribe();
 
 ## `state$` の形の変更
 
-v1 の `SerialState` は `{ connected: true, connecting: false, ... }` のような discriminated object でした。v2 の `SerialSessionState` はフラットな文字列ユニオンなので UI 側で直接 switch できます。
+v1 の `SerialState` は `{ connected: true, connecting: false, ... }` のような discriminated object でした。v2 では同じ文字列を **const オブジェクト**と型エイリアスとして提供するため、`SerialSessionState.Connected` でも `'connected'` でも分岐・比較できます。
 
 ```typescript
-type SerialSessionState =
-  | 'idle'
-  | 'connecting'
-  | 'connected'
-  | 'disconnecting'
-  | 'unsupported'
-  | 'error';
+export const SerialSessionState = {
+  Idle: 'idle',
+  Connecting: 'connecting',
+  Connected: 'connected',
+  Disconnecting: 'disconnecting',
+  Unsupported: 'unsupported',
+  Error: 'error',
+} as const;
+
+export type SerialSessionState =
+  (typeof SerialSessionState)[keyof typeof SerialSessionState];
 ```
 
 ライフサイクル:

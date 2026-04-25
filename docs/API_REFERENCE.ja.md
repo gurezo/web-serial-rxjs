@@ -9,9 +9,9 @@ import {
   createSerialSession,
   SerialError,
   SerialErrorCode,
+  SerialSessionState,
   type SerialSession,
   type SerialSessionOptions,
-  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 ```
 
@@ -38,6 +38,8 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —         | ポート選択ダイアログに渡される `navigator.serial.requestPort` 用フィルタ     |
 
 ## SerialSessionState
+
+上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialSessionState`（例: `SerialSessionState.Connected` は `'connected'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。
 
 `state$` は以下のいずれかを emit します。
 

@@ -1,6 +1,6 @@
 # Quick Start
 
-This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `receive$`, `errors$`, and the imperative methods, read the [project README](../README.md#serialsession-v2-at-a-glance) first.
+This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `receive$`, `errors$`, and the imperative methods, read the [project README](../../../README.md#serialsession-v2-at-a-glance) first.
 
 `SerialSession` does not expose built-in `lines$` or `connected$`. Below they are **derived** from `receive$` and `state$` (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing) for the pattern).
 
