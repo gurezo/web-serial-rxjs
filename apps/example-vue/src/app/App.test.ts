@@ -3,11 +3,14 @@ import type {
   SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { mount } from '@vue/test-utils';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
+
+const SS = webSerialRxjs.SerialSessionState;
 
 interface MockSession {
   session: SerialSession;
@@ -21,17 +24,17 @@ interface MockSession {
 }
 
 const createMockSession = (): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>('idle');
+  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const connect$ = vi.fn(() => {
-    stateSubject.next('connecting');
-    stateSubject.next('connected');
+    stateSubject.next(SS.Connecting);
+    stateSubject.next(SS.Connected);
     return of(undefined);
   });
   const disconnect$ = vi.fn(() => {
-    stateSubject.next('disconnecting');
-    stateSubject.next('idle');
+    stateSubject.next(SS.Disconnecting);
+    stateSubject.next(SS.Idle);
     return of(undefined);
   });
   const send$ = vi.fn(() => of(undefined));

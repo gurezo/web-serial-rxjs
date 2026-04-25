@@ -3,8 +3,12 @@ import { BehaviorSubject, Subject, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './app.js';
 
-vi.mock('@gurezo/web-serial-rxjs', () => {
-  const state$ = new BehaviorSubject<string>('idle');
+vi.mock('@gurezo/web-serial-rxjs', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@gurezo/web-serial-rxjs')>();
+  const state$ = new BehaviorSubject<string>(
+    actual.SerialSessionState.Idle,
+  );
   const receive$ = new Subject<string>();
   const errors$ = new Subject<SerialError>();
   const mockSession = {
@@ -17,6 +21,7 @@ vi.mock('@gurezo/web-serial-rxjs', () => {
     errors$,
   };
   return {
+    ...actual,
     createSerialSession: vi.fn(() => mockSession as unknown as SerialSession),
   };
 });

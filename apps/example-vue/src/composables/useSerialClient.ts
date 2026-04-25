@@ -1,8 +1,8 @@
 import {
   createSerialSession,
+  SerialSessionState,
   type SerialError,
   type SerialSession,
-  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import {
   Observable,
@@ -35,7 +35,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
   sessions$.next(currentSession);
 
   const browserSupported = ref(currentSession.isBrowserSupported());
-  const state = ref<SerialSessionState>('idle');
+  const state = ref<SerialSessionState>(SerialSessionState.Idle);
   const receivedData = ref('');
   const errorMessage = ref<string | null>(null);
 
@@ -43,7 +43,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     .pipe(switchMap((session) => session.state$))
     .subscribe((next) => {
       state.value = next;
-      if (next === 'connected' || next === 'idle') {
+      if (next === SerialSessionState.Connected || next === SerialSessionState.Idle) {
         errorMessage.value = null;
       }
     });

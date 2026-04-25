@@ -9,6 +9,8 @@ import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
 
+const SS = webSerialRxjs.SerialSessionState;
+
 interface MockSession {
   session: SerialSession;
   stateSubject: BehaviorSubject<SerialSessionState>;
@@ -21,7 +23,7 @@ interface MockSession {
 }
 
 const createMockSession = (): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>('idle');
+  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const connect$ = vi.fn(() => of(undefined));
@@ -118,7 +120,7 @@ describe('useSerialClient', () => {
   it('should initialize with default refs', () => {
     const { api } = mountHarness();
     expect(api.browserSupported.value).toBe(true);
-    expect(api.state.value).toBe('idle');
+    expect(api.state.value).toBe(SS.Idle);
     expect(api.receivedData.value).toBe('');
     expect(api.errorMessage.value).toBe(null);
   });
@@ -127,11 +129,11 @@ describe('useSerialClient', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
-    mock.stateSubject.next('connecting');
-    expect(api.state.value).toBe('connecting');
+    mock.stateSubject.next(SS.Connecting);
+    expect(api.state.value).toBe(SS.Connecting);
 
-    mock.stateSubject.next('connected');
-    expect(api.state.value).toBe('connected');
+    mock.stateSubject.next(SS.Connected);
+    expect(api.state.value).toBe(SS.Connected);
   });
 
   it('should clear errorMessage when returning to idle or connected', () => {
@@ -141,7 +143,7 @@ describe('useSerialClient', () => {
     mock.errorsSubject.next({ message: 'boom' } as SerialError);
     expect(api.errorMessage.value).toBe('boom');
 
-    mock.stateSubject.next('connected');
+    mock.stateSubject.next(SS.Connected);
     expect(api.errorMessage.value).toBe(null);
   });
 

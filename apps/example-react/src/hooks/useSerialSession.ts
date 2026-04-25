@@ -1,8 +1,8 @@
 import {
   createSerialSession,
+  SerialSessionState,
   type SerialError,
   type SerialSession,
-  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -42,7 +42,7 @@ export function useSerialSession(
   const [browserSupported] = useState(() =>
     (sessionRef.current as SerialSession).isBrowserSupported(),
   );
-  const [state, setState] = useState<SerialSessionState>('idle');
+  const [state, setState] = useState<SerialSessionState>(SerialSessionState.Idle);
   const [receivedData, setReceivedData] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -52,7 +52,11 @@ export function useSerialSession(
     sub.add(
       sessions$.pipe(switchMap((s) => s.state$)).subscribe((next) => {
         setState(next);
-        if (next === 'connected' || next === 'idle') setErrorMessage(null);
+        if (
+          next === SerialSessionState.Connected ||
+          next === SerialSessionState.Idle
+        )
+          setErrorMessage(null);
       }),
     );
     sub.add(
