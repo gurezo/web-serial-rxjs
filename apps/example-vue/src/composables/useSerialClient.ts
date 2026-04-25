@@ -4,20 +4,14 @@ import {
   type SerialError,
   type SerialSession,
 } from '@gurezo/web-serial-rxjs';
-import {
-  Observable,
-  ReplaySubject,
-  switchMap,
-  filter,
-  map,
-  scan,
-} from 'rxjs';
+import { Observable, ReplaySubject, switchMap } from 'rxjs';
 import { onUnmounted, ref, type Ref } from 'vue';
 
-/** v2 `SerialSession` を薄くラップ。受信は `receive$` から行単位に派生。 */
+/** v2 `SerialSession` を薄くラップ。受信は組み込み `lines$`。 */
 export interface UseSerialClientReturn {
   browserSupported: Ref<boolean>;
   state: Ref<SerialSessionState>;
+  isConnected: Ref<boolean>;
   receivedData: Ref<string>;
   errorMessage: Ref<string | null>;
   connect$: (baudRate?: number) => Observable<void>;
@@ -36,6 +30,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   const browserSupported = ref(currentSession.isBrowserSupported());
   const state = ref<SerialSessionState>(SerialSessionState.Idle);
+  const isConnected = ref(false);
   const receivedData = ref('');
   const errorMessage = ref<string | null>(null);
 
@@ -47,26 +42,15 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
         errorMessage.value = null;
       }
     });
+  const isConnectedSub = sessions$
+    .pipe(switchMap((session) => session.isConnected$))
+    .subscribe((next) => {
+      isConnected.value = next;
+    });
   const receiveSub = sessions$
-    .pipe(
-      switchMap((session) =>
-        session.receive$.pipe(
-          scan(
-            (acc, chunk: string) => {
-              const combined = acc.buffer + chunk;
-              const parts = combined.split('\n');
-              return { buffer: parts.pop() ?? '', lines: parts };
-            },
-            { buffer: '', lines: [] as string[] },
-          ),
-          filter((x) => x.lines.length > 0),
-          map((x) => x.lines),
-        ),
-      ),
-    )
-    .subscribe((lines) => {
-      receivedData.value =
-        receivedData.value + lines.map((l) => `${l}\n`).join('');
+    .pipe(switchMap((session) => session.lines$))
+    .subscribe((line) => {
+      receivedData.value = `${receivedData.value}${line}\n`;
     });
   const errorsSub = sessions$
     .pipe(switchMap((session) => session.errors$))
@@ -92,6 +76,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   onUnmounted(() => {
     stateSub.unsubscribe();
+    isConnectedSub.unsubscribe();
     receiveSub.unsubscribe();
     errorsSub.unsubscribe();
     currentSession.disconnect$().subscribe({ error: () => void 0 });
@@ -101,6 +86,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
   return {
     browserSupported,
     state,
+    isConnected,
     receivedData,
     errorMessage,
     connect$,
