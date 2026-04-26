@@ -53,6 +53,7 @@ const createMockSession = (supported = true): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    receiveReplay$: receiveSubject.asObservable(),
     lines$: linesSubject.asObservable(),
     isConnected$,
     portInfo$: portInfoSubject.asObservable(),
