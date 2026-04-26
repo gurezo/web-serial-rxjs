@@ -4,7 +4,7 @@
   <img src="../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-This page is the **mental model** for the v2 public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. For options, error codes, and formal type details, see [API Reference](./API_REFERENCE.md).
+This page is the **mental model** for the v2 public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. For options, error codes, and formal type details, see [API Reference](modules.html).
 
 ## Table of Contents
 
@@ -34,7 +34,7 @@ This library is framework-agnostic and can be used with:
 
 ## SerialSession (v2) at a glance
 
-`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; when you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](./ADVANCED_USAGE.md)).
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; when you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 
 | Surface | Role |
 | --- | --- |
@@ -51,7 +51,7 @@ This library is framework-agnostic and can be used with:
 
 ### SerialSessionState (quick reference)
 
-`state$` uses the string union below. Prefer the **const object** (e.g. `SerialSessionState.Connected` → `'connected'`) in code. Full lifecycle diagram, transitions, and edge cases: [API Reference – SerialSessionState](./API_REFERENCE.md#serialsessionstate).
+`state$` uses the string union below. Prefer the **const object** (e.g. `SerialSessionState.Connected` → `'connected'`) in code. Full lifecycle diagram, transitions, and edge cases: [API Reference – SerialSessionState](variables/SerialSessionState.html).
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
@@ -62,11 +62,11 @@ This library is framework-agnostic and can be used with:
 | `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
 | `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
 
-**`receive$` vs `lines$`:** prefer **`lines$`** for typical newline-framed text; use **`receive$`** when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
+**`receive$` vs `lines$`:** prefer **`lines$`** for typical newline-framed text; use **`receive$`** when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
 
 **`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `SerialSessionState.Connected` yourself. You can still derive your own boolean from `state$` with `map` if you need different rules.
 
-**`lines$` (newline framing)** — built in; for non-standard delimiters, frame on `receive$` (recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
+**`lines$` (newline framing)** — built in; for non-standard delimiters, frame on `receive$` (recipes in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
 
 ### Minimal example
 
@@ -91,15 +91,15 @@ session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```
 
-In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](./QUICK_START.md).
+In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md).
 
 ## Documentation index
 
 | Doc | Use it for |
 | --- | --- |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
-| **[Quick Start](./QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
-| **[Advanced Usage](./ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
-| **[API Reference](./API_REFERENCE.md)** | Options, `SerialSessionState`, and `SerialError` details. |
-| **[v1 → v2 Migration Guide](./MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
-| **[Phase 5 archive (legacy v1 doc)](./archive/MIGRATION_PHASE5.md)** | Historical v1 context only. |
+| **[Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
+| **[Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
+| **[API Reference](modules.html)** | Options, `SerialSessionState`, and `SerialError` details (generated TypeDoc); narrative tables also on [GitHub](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/API_REFERENCE.md). |
+| **[v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
+| **[Phase 5 archive (legacy v1 doc)](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/archive/MIGRATION_PHASE5.md)** | Historical v1 context only. |
