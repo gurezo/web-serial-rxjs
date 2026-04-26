@@ -12,6 +12,7 @@ import {
   SerialSessionState,
   type SerialSession,
   type SerialSessionOptions,
+  type SerialSessionReceiveReplayOptions,
 } from '@gurezo/web-serial-rxjs';
 ```
 
@@ -36,6 +37,14 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `bufferSize`  | `number`                            | `255`    | Read-stream buffer size in bytes.                                 |
 | `flowControl` | `'none' \| 'hardware'`              | `'none'` | Flow control mode.                                                |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
+| `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
+
+### `SerialSessionReceiveReplayOptions`
+
+| Field         | Type      | Default | Description |
+| ------------- | --------- | ------- | ----------- |
+| `enabled`     | `boolean` | `false` | When `true`, `receiveReplay$` buffers the last N **chunks** (decoder emissions) for the current connection. When `false`, `receiveReplay$` is the same hot stream as `receive$`. |
+| `bufferSize`  | `number`  | `512`   | Max number of text chunks to retain in the replay buffer for the active connection. Not a character or byte count. |
 
 ## SerialSessionState
 
@@ -72,6 +81,7 @@ interface SerialSession {
   readonly isConnected$: Observable<boolean>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
+  readonly receiveReplay$: Observable<string>;
   readonly lines$: Observable<string>;
 
   send$(data: string | Uint8Array): Observable<void>;
@@ -105,6 +115,10 @@ Primary error channel. Every connect / read / write / close failure is normalise
 ### `receive$: Observable<string>`
 
 UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Prefer `lines$` for newline-framed protocols.
+
+### `receiveReplay$: Observable<string>`
+
+Same data path as `receive$`, but when `SerialSessionOptions.receiveReplay.enabled` is `true` it **replays** the last *N* **chunks** (decoder emissions) for the current connection to new subscribers. When `enabled` is `false` (default), this is the same observable instance as `receive$`. The replay buffer is reset when the port disconnects. Does not change `lines$` (line framing is not replayed here).
 
 ### `lines$: Observable<string>`
 
