@@ -2,7 +2,7 @@
 <p align="center">
   <img src="media/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
-<p>This page is the <strong>mental model</strong> for the v2 public API: what each <code>SerialSession</code> surface does, how <code>SerialSessionState</code> maps to <code>state$</code>, and how to choose between <code>receive$</code> and <code>lines$</code>. For options, error codes, and formal type details, see <a href="media/API_REFERENCE.md">API Reference</a>.</p>
+<p>This page is the <strong>mental model</strong> for the v2 public API: what each <code>SerialSession</code> surface does, how <code>SerialSessionState</code> maps to <code>state$</code>, and how to choose between <code>receive$</code> and <code>lines$</code>. For options, error codes, and formal type details, see <a href="modules.html">API Reference</a>.</p>
 <h2 id="table-of-contents" class="tsd-anchor-link">Table of Contents<a href="#table-of-contents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="#features">Features</a></li>
@@ -29,7 +29,7 @@
 <li>Vanilla JavaScript / TypeScript</li>
 </ul>
 <h2 id="serialsession-v2-at-a-glance" class="tsd-anchor-link">SerialSession (v2) at a glance<a href="#serialsession-v2-at-a-glance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<p><code>createSerialSession</code> returns a single <strong>SerialSession</strong>. All interaction goes through the fields below. The public API is intentionally small; when you need <strong>custom</strong> framing, compose plain RxJS on <code>receive$</code> (see <a href="media/ADVANCED_USAGE.md">Advanced Usage</a>).</p>
+<p><code>createSerialSession</code> returns a single <strong>SerialSession</strong>. All interaction goes through the fields below. The public API is intentionally small; when you need <strong>custom</strong> framing, compose plain RxJS on <code>receive$</code> (see <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md">Advanced Usage</a>).</p>
 <table>
 <thead>
 <tr>
@@ -81,7 +81,7 @@
 </tbody>
 </table>
 <h3 id="serialsessionstate-quick-reference" class="tsd-anchor-link">SerialSessionState (quick reference)<a href="#serialsessionstate-quick-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p><code>state$</code> uses the string union below. Prefer the <strong>const object</strong> (e.g. <code>SerialSessionState.Connected</code> → <code>'connected'</code>) in code. Full lifecycle diagram, transitions, and edge cases: <a href="media/API_REFERENCE.md#serialsessionstate">API Reference – SerialSessionState</a>.</p>
+<p><code>state$</code> uses the string union below. Prefer the <strong>const object</strong> (e.g. <code>SerialSessionState.Connected</code> → <code>'connected'</code>) in code. Full lifecycle diagram, transitions, and edge cases: <a href="variables/SerialSessionState.html">API Reference – SerialSessionState</a>.</p>
 <table>
 <thead>
 <tr>
@@ -123,14 +123,14 @@
 </tr>
 </tbody>
 </table>
-<p><strong><code>receive$</code> vs <code>lines$</code>:</strong> prefer <strong><code>lines$</code></strong> for typical newline-framed text; use <strong><code>receive$</code></strong> when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in <a href="media/ADVANCED_USAGE.md#line-framing">Advanced Usage</a>).</p>
+<p><strong><code>receive$</code> vs <code>lines$</code>:</strong> prefer <strong><code>lines$</code></strong> for typical newline-framed text; use <strong><code>receive$</code></strong> when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing">Advanced Usage</a>).</p>
 <p><strong><code>isConnected$</code> (for simple UIs)</strong> — a read-only <code>Observable&lt;boolean&gt;</code>. Use it for “port open?” toggles without comparing <code>state$</code> to <code>SerialSessionState.Connected</code> yourself. You can still derive your own boolean from <code>state$</code> with <code>map</code> if you need different rules.</p>
-<p><strong><code>lines$</code> (newline framing)</strong> — built in; for non-standard delimiters, frame on <code>receive$</code> (recipes in <a href="media/ADVANCED_USAGE.md#line-framing">Advanced Usage</a>).</p>
+<p><strong><code>lines$</code> (newline framing)</strong> — built in; for non-standard delimiters, frame on <code>receive$</code> (recipes in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing">Advanced Usage</a>).</p>
 <h3 id="minimal-example" class="tsd-anchor-link">Minimal example<a href="#minimal-example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">createSerialSession</span><span class="hl-1">, </span><span class="hl-2">SerialSessionState</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">filter</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">session</span><span class="hl-1"> = </span><span class="hl-6">createSerialSession</span><span class="hl-1">({ </span><span class="hl-2">baudRate:</span><span class="hl-1"> </span><span class="hl-7">115200</span><span class="hl-1"> });</span><br/><br/><span class="hl-0">if</span><span class="hl-1"> (!</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">isBrowserSupported</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-0">throw</span><span class="hl-1"> </span><span class="hl-4">new</span><span class="hl-1"> </span><span class="hl-6">Error</span><span class="hl-1">(</span><span class="hl-3">&#39;Web Serial is not available in this browser&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">lines$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">log</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><br/><span class="hl-1">  .</span><span class="hl-6">pipe</span><span class="hl-1">(</span><span class="hl-6">filter</span><span class="hl-1">((</span><span class="hl-2">s</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">s</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionState</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">))</span><br/><span class="hl-1">  .</span><span class="hl-6">subscribe</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-8">/* e.g. enable UI that must wait until the port is open */</span><br/><span class="hl-1">  });</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">connect$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">();</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-3">&#39;hello</span><span class="hl-9">\r\n</span><span class="hl-3">&#39;</span><span class="hl-1">).</span><span class="hl-6">subscribe</span><span class="hl-1">();</span>
 </code><button type="button">Copy</button></pre>
 
-<p>In real apps, handle <code>connect$().subscribe({ next, error })</code> and <code>send$().subscribe({ error })</code> (errors are also on <code>errors$</code>). A fuller walkthrough is in <a href="media/QUICK_START.md">Quick Start</a>.</p>
+<p>In real apps, handle <code>connect$().subscribe({ next, error })</code> and <code>send$().subscribe({ error })</code> (errors are also on <code>errors$</code>). A fuller walkthrough is in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md">Quick Start</a>.</p>
 <h2 id="documentation-index" class="tsd-anchor-link">Documentation index<a href="#documentation-index" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <table>
 <thead>
@@ -145,23 +145,23 @@
 <td>Monorepo overview, examples index, and contribution links.</td>
 </tr>
 <tr>
-<td><strong><a href="media/QUICK_START.md">Quick Start</a></strong></td>
+<td><strong><a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md">Quick Start</a></strong></td>
 <td>Shortest path to a working open port and subscriptions.</td>
 </tr>
 <tr>
-<td><strong><a href="media/ADVANCED_USAGE.md">Advanced Usage</a></strong></td>
+<td><strong><a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md">Advanced Usage</a></strong></td>
 <td>Line framing, request/response-style flows, and recovery.</td>
 </tr>
 <tr>
-<td><strong><a href="media/API_REFERENCE.md">API Reference</a></strong></td>
-<td>Options, <code>SerialSessionState</code>, and <code>SerialError</code> details.</td>
+<td><strong><a href="modules.html">API Reference</a></strong></td>
+<td>Options, <code>SerialSessionState</code>, and <code>SerialError</code> details (generated TypeDoc); narrative tables also on <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/API_REFERENCE.md">GitHub</a>.</td>
 </tr>
 <tr>
-<td><strong><a href="media/MIGRATION_V2.md">v1 → v2 Migration Guide</a></strong></td>
+<td><strong><a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md">v1 → v2 Migration Guide</a></strong></td>
 <td>Replacing the removed v1 <code>SerialClient</code> / <code>ShellClient</code> API.</td>
 </tr>
 <tr>
-<td><strong><a href="media/MIGRATION_PHASE5.md">Phase 5 archive (legacy v1 doc)</a></strong></td>
+<td><strong><a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/archive/MIGRATION_PHASE5.md">Phase 5 archive (legacy v1 doc)</a></strong></td>
 <td>Historical v1 context only.</td>
 </tr>
 </tbody>
