@@ -77,6 +77,32 @@ export interface SerialSession {
   readonly isConnected$: Observable<boolean>;
 
   /**
+   * The active port’s {@link SerialPort.getInfo} snapshot, or `null` when no
+   * port is open (including {@link SerialSessionState.Idle},
+   * {@link SerialSessionState.Error}, and {@link SerialSessionState.Unsupported}).
+   *
+   * Emits the current value on subscribe. Use with {@link state$} to know when
+   * the value is valid for your UI.
+   */
+  readonly portInfo$: Observable<SerialPortInfo | null>;
+
+  /**
+   * Synchronous read of the last {@link portInfo$} value.
+   *
+   * @returns The same as {@link SerialPort.getInfo} for the open port, or
+   *   `null` when not connected.
+   */
+  getPortInfo(): SerialPortInfo | null;
+
+  /**
+   * The underlying `SerialPort` while connected, or `null` otherwise.
+   *
+   * Avoid calling `port.close()` or replacing streams yourself; that conflicts
+   * with session lifecycle. Prefer {@link getPortInfo} for identification.
+   */
+  getCurrentPort(): SerialPort | null;
+
+  /**
    * Primary error channel.
    *
    * All {@link SerialError} instances produced by the session (connect /
