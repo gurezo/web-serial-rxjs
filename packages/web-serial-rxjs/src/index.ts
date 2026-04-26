@@ -50,7 +50,11 @@
  */
 
 export { createSerialSession, SerialSessionState } from './session';
-export type { SerialSession, SerialSessionOptions } from './session';
+export type {
+  SerialSession,
+  SerialSessionOptions,
+  SerialSessionReceiveReplayOptions,
+} from './session';
 
 export { SerialError } from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';

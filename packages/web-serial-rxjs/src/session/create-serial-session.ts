@@ -3,7 +3,10 @@ import {
   distinctUntilChanged,
   map,
   Observable,
+  ReplaySubject,
+  share,
   Subject,
+  switchMap,
 } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
@@ -88,6 +91,10 @@ export function createSerialSession(
     ...DEFAULT_SERIAL_SESSION_OPTIONS,
     ...options,
     filters: options?.filters,
+    receiveReplay: {
+      ...DEFAULT_SERIAL_SESSION_OPTIONS.receiveReplay,
+      ...options?.receiveReplay,
+    },
   };
 
   const supported = hasWebSerialSupport();
@@ -113,6 +120,38 @@ export function createSerialSession(
   const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
   const portInfo$ = portInfoSubject.asObservable();
 
+  const receiveReplayStream$ = resolvedOptions.receiveReplay.enabled
+    ? new BehaviorSubject<Observable<string>>(receive$)
+    : null;
+  let activeReceiveReplay: ReplaySubject<string> | null = null;
+
+  const clearLiveReceiveReplay = (): void => {
+    if (receiveReplayStream$) {
+      if (activeReceiveReplay) {
+        activeReceiveReplay.complete();
+        activeReceiveReplay = null;
+      }
+      receiveReplayStream$.next(receive$);
+    }
+  };
+
+  const startLiveReceiveReplay = (): void => {
+    if (!receiveReplayStream$) {
+      return;
+    }
+    if (activeReceiveReplay) {
+      activeReceiveReplay.complete();
+      activeReceiveReplay = null;
+    }
+    const rs = new ReplaySubject<string>(resolvedOptions.receiveReplay.bufferSize);
+    activeReceiveReplay = rs;
+    receiveReplayStream$.next(rs.asObservable());
+  };
+
+  const receiveReplay$ = receiveReplayStream$
+    ? receiveReplayStream$.pipe(switchMap((inner) => inner), share())
+    : receive$;
+
   let activePort: SerialPort | null = null;
   let activePump: ReadPump | null = null;
 
@@ -122,6 +161,7 @@ export function createSerialSession(
   };
 
   const teardownPump = async (): Promise<void> => {
+    clearLiveReceiveReplay();
     const pump = activePump;
     activePump = null;
     lineBuffer.clear();
@@ -271,9 +311,15 @@ export function createSerialSession(
 
           setActivePort(selectedPort);
           lineBuffer.clear();
+          if (resolvedOptions.receiveReplay.enabled) {
+            startLiveReceiveReplay();
+          }
           activePump = createReadPump(selectedPort, {
             onChunk: (text) => {
               receiveSubject.next(text);
+              if (activeReceiveReplay) {
+                activeReceiveReplay.next(text);
+              }
               for (const line of lineBuffer.feed(text)) {
                 linesSubject.next(line);
               }
@@ -388,6 +434,7 @@ export function createSerialSession(
     },
     errors$,
     receive$,
+    receiveReplay$,
     lines$,
   };
 }

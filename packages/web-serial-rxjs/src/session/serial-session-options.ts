@@ -74,7 +74,44 @@ export interface SerialSessionOptions {
    * `usbProductId`.
    */
   filters?: SerialPortFilter[];
+
+  /**
+   * Optional receive replay: retain recent decoded text **chunks** so late
+   * subscribers to {@link SerialSession.receiveReplay$} can read buffered
+   * data while a connection is active. Does not change {@link SerialSession.receive$}.
+   *
+   * @default `{ enabled: false, bufferSize: 512 }` (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
+   */
+  receiveReplay?: SerialSessionReceiveReplayOptions;
 }
+
+/**
+ * Options for {@link SerialSessionOptions.receiveReplay}.
+ *
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/265 | Issue #265}
+ */
+export interface SerialSessionReceiveReplayOptions {
+  /**
+   * When `true`, the session uses a replay buffer for {@link SerialSession.receiveReplay$}
+   * for each open connection. When `false` (default), `receiveReplay$` is
+   * the same hot stream as {@link SerialSession.receive$} (no chunk replay).
+   */
+  enabled?: boolean;
+
+  /**
+   * Retains the last **N** decoded text chunks (one emission per `onChunk`
+   * from the read pump) in the replay buffer. Not the character count. Higher
+   * `bufferSize` uses more memory.
+   *
+   * @default 512
+   */
+  bufferSize?: number;
+}
+
+const DEFAULT_RECEIVE_REPLAY: Required<SerialSessionReceiveReplayOptions> = {
+  enabled: false,
+  bufferSize: 512,
+};
 
 /**
  * Default values applied to omitted {@link SerialSessionOptions} fields.
@@ -82,8 +119,8 @@ export interface SerialSessionOptions {
  * @internal
  */
 export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
-  Omit<SerialSessionOptions, 'filters'>
-> & { filters?: SerialPortFilter[] } = {
+  Omit<SerialSessionOptions, 'filters' | 'receiveReplay'>
+> & { filters?: SerialPortFilter[]; receiveReplay: Required<SerialSessionReceiveReplayOptions> } = {
   baudRate: 9600,
   dataBits: 8,
   stopBits: 1,
@@ -91,4 +128,5 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
   bufferSize: 255,
   flowControl: 'none',
   filters: undefined,
+  receiveReplay: { ...DEFAULT_RECEIVE_REPLAY },
 };

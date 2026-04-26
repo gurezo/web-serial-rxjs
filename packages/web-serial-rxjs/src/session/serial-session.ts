@@ -141,6 +141,19 @@ export interface SerialSession {
   readonly receive$: Observable<string>;
 
   /**
+   * Same source data as {@link receive$} but, when
+   * {@link SerialSessionOptions.receiveReplay} has `enabled: true`, it uses a
+   * replay buffer **per open connection** so new subscribers can receive the
+   * last N decoded text **chunks** from that connection. When receive replay
+   * is off (default), this is the same hot stream as {@link receive$}.
+   *
+   * Does not change {@link lines$} (line framing is not replayed here).
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/265 | Issue #265}
+   */
+  readonly receiveReplay$: Observable<string>;
+
+  /**
    * Decoded text split into **complete lines** using `\n`, `\r\n`, and
    * lone interior `\r` (see implementation). A trailing fragment without
    * a line terminator is buffered until a later chunk completes a line, or
