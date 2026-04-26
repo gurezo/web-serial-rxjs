@@ -38,6 +38,7 @@ const createMockSession = (
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => supported);
+  const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
 
   const session: SerialSession = {
     isBrowserSupported,
@@ -49,6 +50,9 @@ const createMockSession = (
     receive$: receiveSubject.asObservable(),
     lines$: linesSubject.asObservable(),
     isConnected$,
+    portInfo$: portInfoSubject.asObservable(),
+    getPortInfo: () => portInfoSubject.getValue(),
+    getCurrentPort: () => null,
   };
 
   return {
