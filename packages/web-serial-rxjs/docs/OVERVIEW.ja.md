@@ -4,7 +4,7 @@
   <img src="../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-このページは v2 公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。オプション、エラーコード、型の詳細は [API リファレンス](./API_REFERENCE.ja.md) を参照してください。
+このページは v2 公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。オプション、エラーコード、型の詳細は [API リファレンス](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。
 
 ## 目次
 
@@ -34,7 +34,7 @@
 
 ## SerialSession（v2）の全体像
 
-`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、**標準の改行区切り**は組み込み `lines$`、独自区切りが必要なときだけ `receive$` 上に RxJS で組み立てます（[高度な使用方法](./ADVANCED_USAGE.ja.md)）。接続真偽は `isConnected$` も利用できます。
+`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、**標準の改行区切り**は組み込み `lines$`、独自区切りが必要なときだけ `receive$` 上に RxJS で組み立てます（[高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)）。接続真偽は `isConnected$` も利用できます。
 
 | 公開面 | 役割 |
 | --- | --- |
@@ -51,7 +51,7 @@
 
 ### SerialSessionState（早見表）
 
-`state$` が emit する文字列のユニオンです。コードでは **const オブジェクト**（例: `SerialSessionState.Connected` → `'connected'`）での比較を推奨します。有効な遷移・例外系の扱いの詳細は [API リファレンスの SerialSessionState](./API_REFERENCE.ja.md#serialsessionstate) を参照してください。
+`state$` が emit する文字列のユニオンです。コードでは **const オブジェクト**（例: `SerialSessionState.Connected` → `'connected'`）での比較を推奨します。有効な遷移・例外系の扱いの詳細は [API リファレンスの SerialSessionState](https://gurezo.github.io/web-serial-rxjs/variables/SerialSessionState.html) および [GitHub 上の表・図](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/API_REFERENCE.ja.md#serialsessionstate) を参照してください。
 
 | 定数 | 値 | 意味 |
 | --- | --- | --- |
@@ -62,11 +62,11 @@
 | `SerialSessionState.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
 | `SerialSessionState.Error` | `'error'` | 接続まわりの致命エラー。`disconnect$` か新しいセッションで復帰。 |
 
-**`receive$` と `lines$`:** 改行区切りの定番利用では **`lines$`** を優先。**`receive$`** はチャンクの到着タイミングをそのまま扱う場合や、独自区切り・自前バッファが必要なとき向け（[行単位のフレーミング](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
+**`receive$` と `lines$`:** 改行区切りの定番利用では **`lines$`** を優先。**`receive$`** はチャンクの到着タイミングをそのまま扱う場合や、独自区切り・自前バッファが必要なとき向け（[高度な使用方法 — 行単位のフレーミング](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)）。
 
 **`isConnected$`（UI 用）** — 読み取り専用の `Observable<boolean>` です。`state$` を `SerialSessionState.Connected` と毎回比較しなくても接続有無の UI 分岐に使えます。独自ルールが必要な場合は、従来どおり `state$` から `map` で派生しても構いません。
 
-**`lines$`（行区切り）** — 組み込みです。独自区切りが欲しい場合のみ `receive$` でフレーミングします（[行単位のフレーミング](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。
+**`lines$`（行区切り）** — 組み込みです。独自区切りが欲しい場合のみ `receive$` でフレーミングします（[高度な使用方法 — 行単位のフレーミング](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)）。
 
 ### 最小サンプル
 
@@ -91,15 +91,15 @@ session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```
 
-実アプリでは `connect$` / `send$` の `subscribe` で `error` も扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](./QUICK_START.ja.md) を参照してください。
+実アプリでは `connect$` / `send$` の `subscribe` で `error` も扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.ja.md) を参照してください。
 
 ## ドキュメント索引
 
 | ドキュメント | 用途 |
 | --- | --- |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
-| **[クイックスタート](./QUICK_START.ja.md)** | 最短でポートを開いて購読するところまで。 |
-| **[高度な使用方法](./ADVANCED_USAGE.ja.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
-| **[API リファレンス](./API_REFERENCE.ja.md)** | オプション、`SerialSessionState`、`SerialError` の詳細。 |
-| **[v1 → v2 マイグレーション](./MIGRATION_V2.ja.md)**（[English](./MIGRATION_V2.md)） | 削除された v1 API からの対応表。 |
-| **[Phase 5（アーカイブ）](./archive/MIGRATION_PHASE5.ja.md)** | 旧 v1 ドキュメントの参照用。 |
+| **[クイックスタート](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.ja.md)** | 最短でポートを開いて購読するところまで。 |
+| **[高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
+| **[API リファレンス](https://gurezo.github.io/web-serial-rxjs/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細（TypeDoc）。表・図は [GitHub](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/API_REFERENCE.ja.md) も参照。 |
+| **[v1 → v2 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.ja.md)**（[English](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md)） | 削除された v1 API からの対応表。 |
+| **[Phase 5（アーカイブ）](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/archive/MIGRATION_PHASE5.ja.md)** | 旧 v1 ドキュメントの参照用。 |
