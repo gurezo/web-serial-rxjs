@@ -23,6 +23,7 @@ vi.mock('@gurezo/web-serial-rxjs', async (importOriginal) => {
     send$: vi.fn(() => of(undefined)),
     state$,
     receive$,
+    receiveReplay$: receive$,
     lines$,
     errors$,
     isConnected$,

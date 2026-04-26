@@ -136,6 +136,7 @@ describe('createSerialSession', () => {
       expect(session.portInfo$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
+      expect(session.receiveReplay$).toBeDefined();
       expect(session.lines$).toBeDefined();
     });
 
@@ -474,6 +475,84 @@ describe('createSerialSession', () => {
       expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
         S.Error,
       );
+    });
+  });
+
+  describe('receiveReplay$', () => {
+    it('is the same observable as receive$ when receive replay is disabled', () => {
+      const session = createSerialSession();
+
+      expect(session.receiveReplay$).toBe(session.receive$);
+    });
+
+    it('replays recent chunks to late subscribers when enabled', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        receiveReplay: { enabled: true, bufferSize: 2 },
+      });
+      await firstValueFrom(session.connect$());
+
+      controller.enqueue(new TextEncoder().encode('a'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('b'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('c'));
+      await flushMicrotasks();
+
+      const replayed = await firstValueFrom(
+        session.receiveReplay$.pipe(take(2), toArray()),
+      );
+      expect(replayed).toEqual(['b', 'c']);
+    });
+
+    it('does not change receive$ late-subscriber behavior when replay is enabled', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        receiveReplay: { enabled: true, bufferSize: 512 },
+      });
+      await firstValueFrom(session.connect$());
+
+      controller.enqueue(new TextEncoder().encode('early'));
+      await flushMicrotasks();
+
+      const late = firstValueFrom(session.receive$.pipe(take(1)));
+      controller.enqueue(new TextEncoder().encode('late'));
+      await flushMicrotasks();
+
+      await expect(late).resolves.toBe('late');
+    });
+
+    it('resets replay after disconnect and uses a new buffer on the next connect', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        receiveReplay: { enabled: true, bufferSize: 5 },
+      });
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('old'));
+      await flushMicrotasks();
+      await firstValueFrom(session.disconnect$());
+
+      const { stream: stream2, controller: c2 } = makeStream();
+      const port2 = makeMockPort(stream2);
+      installNavigator(port2);
+      await firstValueFrom(session.connect$());
+
+      const firstFromReplay = firstValueFrom(
+        session.receiveReplay$.pipe(take(1)),
+      );
+      c2.enqueue(new TextEncoder().encode('new'));
+      await flushMicrotasks();
+
+      await expect(firstFromReplay).resolves.toBe('new');
     });
   });
 

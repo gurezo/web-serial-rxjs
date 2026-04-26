@@ -16,6 +16,10 @@ Web Serial API は **Chromium 系**のブラウザ（**Chrome** 89+、**Edge** 8
 
 `connect$` 成功後は `getPortInfo()` または `portInfo$` で `SerialPort.getInfo()` と同じスナップショット（例: 利用可能な場合の USB ベンダ/プロダクト ID）を取得できます。未接続時は `null` です。`getCurrentPort()` は接続中のみ内部の `SerialPort` を返します。`close()` は直接呼ばず、ライフサイクルは `disconnect$` に任せてください。
 
+## 受信の replay（`receive$` と `receiveReplay$`）
+
+`receive$` は **non-replay** のままです。購読後に届くチャンクだけが見えます。接続ごとに直近 *N* 件のデコード済みテキスト**チャンク**（read pump の 1 回の `onChunk` あたり 1 件。文字数ではありません）を遅延購読者にも渡したい場合は、`createSerialSession` に `receiveReplay: { enabled: true, bufferSize: 512 }` を指定し、`receiveReplay$` を購読します。`bufferSize` を大きくするとメモリ負荷が増えます。receive replay が **無効**（既定）のとき、`receiveReplay$` は `receive$` と同じ hot ストリームです。`lines$` の行分割に replay は付きません。生チャンクの `receiveReplay$` のみが対象です。
+
 ## インストール
 
 ```bash
