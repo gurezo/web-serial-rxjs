@@ -16,6 +16,10 @@ The Web Serial API is only available in **Chromium-based** browsers: **Chrome** 
 
 After a successful `connect$`, use `getPortInfo()` or subscribe to `portInfo$` for the `SerialPort.getInfo()` snapshot (e.g. USB vendor/product IDs when the device exposes them). Both yield `null` when disconnected. `getCurrentPort()` returns the underlying `SerialPort` while connected; do not call `close()` on it—use `disconnect$` for lifecycle.
 
+## Receive replay (`receive$` vs `receiveReplay$`)
+
+`receive$` is **non-replay**: late subscribers only see chunks emitted after they subscribe. To retain the last *N* decoded text **chunks** per open connection (same bytes as `receive$`, e.g. for boot logs), pass `receiveReplay: { enabled: true, bufferSize: 512 }` to `createSerialSession` and subscribe to `receiveReplay$`. Larger `bufferSize` uses more memory. When receive replay is **off** (default), `receiveReplay$` is the same hot stream as `receive$`. This option does not add replay to `lines$`—only raw decoder chunks on `receiveReplay$`.
+
 ## Installation
 
 ```bash
