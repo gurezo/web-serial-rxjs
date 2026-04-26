@@ -12,6 +12,10 @@ The Web Serial API is only available in **Chromium-based** browsers: **Chrome** 
 
 `SerialSession.isBrowserSupported()` returns a synchronous `boolean` for feature detection before `connect$`.
 
+## Port info (device identification)
+
+After a successful `connect$`, use `getPortInfo()` or subscribe to `portInfo$` for the `SerialPort.getInfo()` snapshot (e.g. USB vendor/product IDs when the device exposes them). Both yield `null` when disconnected. `getCurrentPort()` returns the underlying `SerialPort` while connected; do not call `close()` on it—use `disconnect$` for lifecycle.
+
 ## Installation
 
 ```bash
