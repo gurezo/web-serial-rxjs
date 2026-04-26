@@ -1,4 +1,10 @@
-import { distinctUntilChanged, map, Observable, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  distinctUntilChanged,
+  map,
+  Observable,
+  Subject,
+} from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { buildRequestOptions } from './internal/build-request-options';
@@ -104,8 +110,16 @@ export function createSerialSession(
     distinctUntilChanged(),
   );
 
+  const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
+  const portInfo$ = portInfoSubject.asObservable();
+
   let activePort: SerialPort | null = null;
   let activePump: ReadPump | null = null;
+
+  const setActivePort = (port: SerialPort | null): void => {
+    activePort = port;
+    portInfoSubject.next(port ? port.getInfo() : null);
+  };
 
   const teardownPump = async (): Promise<void> => {
     const pump = activePump;
@@ -155,7 +169,7 @@ export function createSerialSession(
       machine.toError();
       sendQueue.clear();
       const portToClose = activePort;
-      activePort = null;
+      setActivePort(null);
       void teardownPump().then(() => closePortSafely(portToClose));
     }
     return serialError;
@@ -240,7 +254,6 @@ export function createSerialSession(
             if (selectedPort) {
               await closePortSafely(selectedPort);
             }
-            activePort = null;
             const serialError = reportError(error, 'fatal', {
               fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
               messagePrefix: 'Failed to open port',
@@ -256,7 +269,7 @@ export function createSerialSession(
             return;
           }
 
-          activePort = selectedPort;
+          setActivePort(selectedPort);
           lineBuffer.clear();
           activePump = createReadPump(selectedPort, {
             onChunk: (text) => {
@@ -325,7 +338,7 @@ export function createSerialSession(
               try {
                 await portToClose.close();
               } catch (error) {
-                activePort = null;
+                setActivePort(null);
                 const serialError = reportError(error, 'fatal', {
                   fallbackCode: SerialErrorCode.CONNECTION_LOST,
                   messagePrefix: 'Failed to close port',
@@ -334,7 +347,7 @@ export function createSerialSession(
                 return;
               }
             }
-            activePort = null;
+            setActivePort(null);
             machine.toIdle();
             subscriber.next();
             subscriber.complete();
@@ -366,6 +379,13 @@ export function createSerialSession(
     },
     state$: machine.state$,
     isConnected$,
+    portInfo$,
+    getPortInfo(): SerialPortInfo | null {
+      return portInfoSubject.getValue();
+    },
+    getCurrentPort(): SerialPort | null {
+      return activePort;
+    },
     errors$,
     receive$,
     lines$,

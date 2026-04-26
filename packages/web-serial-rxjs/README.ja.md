@@ -12,6 +12,10 @@ Web Serial API は **Chromium 系**のブラウザ（**Chrome** 89+、**Edge** 8
 
 `connect$` の前の feature detection には `SerialSession.isBrowserSupported()`（同期的に `boolean`）を使います。
 
+## 接続中のポート情報（デバイス識別）
+
+`connect$` 成功後は `getPortInfo()` または `portInfo$` で `SerialPort.getInfo()` と同じスナップショット（例: 利用可能な場合の USB ベンダ/プロダクト ID）を取得できます。未接続時は `null` です。`getCurrentPort()` は接続中のみ内部の `SerialPort` を返します。`close()` は直接呼ばず、ライフサイクルは `disconnect$` に任せてください。
+
 ## インストール
 
 ```bash

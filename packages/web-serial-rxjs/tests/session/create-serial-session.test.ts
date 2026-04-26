@@ -1,4 +1,5 @@
 import {
+  filter,
   firstValueFrom,
   lastValueFrom,
   take,
@@ -13,11 +14,17 @@ import { SerialSessionState } from '../../src/session/serial-session-state';
 
 const S = SerialSessionState;
 
+const stubPortInfo: SerialPortInfo = {
+  usbVendorId: 0x1a86,
+  usbProductId: 0x7523,
+};
+
 type MockPort = {
   readable: ReadableStream<Uint8Array> | null;
   writable: WritableStream<Uint8Array> | null;
   open: ReturnType<typeof vi.fn>;
   close: ReturnType<typeof vi.fn>;
+  getInfo: ReturnType<typeof vi.fn>;
 };
 
 type StreamHandle = {
@@ -44,6 +51,7 @@ const makeMockPort = (
   writable,
   open: vi.fn().mockResolvedValue(undefined),
   close,
+  getInfo: vi.fn().mockReturnValue(stubPortInfo),
 });
 
 type WritableHarness = {
@@ -121,8 +129,11 @@ describe('createSerialSession', () => {
       expect(typeof session.connect$).toBe('function');
       expect(typeof session.disconnect$).toBe('function');
       expect(typeof session.send$).toBe('function');
+      expect(typeof session.getPortInfo).toBe('function');
+      expect(typeof session.getCurrentPort).toBe('function');
       expect(session.state$).toBeDefined();
       expect(session.isConnected$).toBeDefined();
+      expect(session.portInfo$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
       expect(session.lines$).toBeDefined();
@@ -343,6 +354,70 @@ describe('createSerialSession', () => {
         S.Idle,
       ]);
       expect(close).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('portInfo$ and getPortInfo', () => {
+    it('replays null before connect', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (globalThis as any).navigator = { serial: {} };
+
+      const session = createSerialSession();
+
+      expect(session.getPortInfo()).toBeNull();
+      expect(session.getCurrentPort()).toBeNull();
+      expect(await firstValueFrom(session.portInfo$)).toBeNull();
+    });
+
+    it('exposes SerialPort.getInfo after connect and clears on disconnect', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const infoDuringConnect = firstValueFrom(
+        session.portInfo$.pipe(take(2), toArray()),
+      );
+
+      await firstValueFrom(session.connect$());
+
+      expect(port.getInfo).toHaveBeenCalled();
+      expect(session.getPortInfo()).toEqual(stubPortInfo);
+      expect(session.getCurrentPort()).toBe(port as unknown as SerialPort);
+
+      const infos = await infoDuringConnect;
+      expect(infos[0]).toBeNull();
+      expect(infos[1]).toEqual(stubPortInfo);
+
+      const nullAfterDisconnect = firstValueFrom(
+        session.portInfo$.pipe(
+          filter((p): p is null => p === null),
+          take(1),
+        ),
+      );
+      await firstValueFrom(session.disconnect$());
+
+      expect(session.getPortInfo()).toBeNull();
+      expect(session.getCurrentPort()).toBeNull();
+      expect(await nullAfterDisconnect).toBeNull();
+    });
+
+    it('clears port info when the read pump errors fatally', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+      expect(session.getPortInfo()).toEqual(stubPortInfo);
+
+      const errorPromise = firstValueFrom(session.errors$);
+      controller.error(new Error('device unplugged'));
+      await errorPromise;
+
+      expect(session.getPortInfo()).toBeNull();
+      expect(session.getCurrentPort()).toBeNull();
+      expect(await firstValueFrom(session.portInfo$)).toBeNull();
     });
   });
 
