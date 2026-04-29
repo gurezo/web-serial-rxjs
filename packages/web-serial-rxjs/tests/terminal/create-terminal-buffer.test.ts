@@ -74,6 +74,22 @@ describe('createTerminalBuffer', () => {
     expect(last).not.toContain('alice');
   });
 
+  it('shows shell prompt ($ / #) after carriage-return redraw', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$);
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+    receive$.next('login: user\r');
+    receive$.next('$ ');
+    expect(last).toBe('$ ');
+    receive$.next('whoami\r\n');
+    receive$.next('user\r\n');
+    receive$.next('# ');
+    expect(last.endsWith('# ')).toBe(true);
+  });
+
   it('shares replayed text$ across subscribers', async () => {
     const receive$ = new Subject<string>();
     const { text$ } = createTerminalBuffer(receive$);
