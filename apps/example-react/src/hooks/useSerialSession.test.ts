@@ -126,7 +126,7 @@ describe('useSerialSession', () => {
     expect(result.current.state).toBe(SS.Connected);
   });
 
-  it('receive$ のチャンクが receivedData に累積する', () => {
+  it('receive$ のチャンクは createTerminalBuffer 経由で receivedData に反映される', () => {
     const { result } = renderHook(() => useSerialSession());
     act(() => {
       latestMock().receiveSubject.next('foo');
