@@ -80,6 +80,8 @@ The **canonical** v2 map (feature list, the `SerialSession` / `SerialSessionStat
 
 The [npm `README` for `@gurezo/web-serial-rxjs`](packages/web-serial-rxjs/README.md) is a short index; for a first connection, follow [Quick Start](packages/web-serial-rxjs/docs/QUICK_START.md).
 
+Choosing **`receive$`** versus **`lines$`**—terminal-style mirrors and buffering versus newline-delimited logs and parsing—is spelled out in [that package README](packages/web-serial-rxjs/README.md) (`receive$` vs `lines$`).
+
 ## Documentation
 
 | Doc | Use it for |
