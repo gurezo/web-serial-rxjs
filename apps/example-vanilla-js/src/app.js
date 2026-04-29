@@ -1,7 +1,6 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   createSerialSession,
-  createTerminalBuffer,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { BehaviorSubject, combineLatest, ReplaySubject, switchMap } from 'rxjs';
@@ -69,7 +68,7 @@ export class App {
       });
 
     combineLatest([this.sessions$, this.terminalBufferEpoch$])
-      .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+      .pipe(switchMap(([s]) => s.terminalText$))
       .subscribe((text) => {
         receiveOutput.value = text;
         receiveOutput.scrollTop = receiveOutput.scrollHeight;
