@@ -10,7 +10,7 @@
  *
  * The v2 public API intentionally exposes a single, session-oriented surface
  * so that apps (Angular, Vue, React, Svelte, vanilla JS/TS) can drive their
- * UI entirely from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$` without rebuilding any
+ * UI entirely from `state$` + `isConnected$` + `receive$` + `terminalText$` + `lines$` + `errors$` without rebuilding any
  * state, read loops, or write queues themselves.
  *
  * - {@link createSerialSession} - factory for a {@link SerialSession}

@@ -10,6 +10,7 @@ import {
 } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
+import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
 import { buildRequestOptions } from './internal/build-request-options';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
 import { createLineBuffer } from './internal/line-buffer';
@@ -111,6 +112,7 @@ export function createSerialSession(
   const errors$ = errorsSubject.asObservable();
   const receive$ = receiveSubject.asObservable();
   const lines$ = linesSubject.asObservable();
+  const terminalText$ = createTerminalBuffer(receive$).text$;
 
   const isConnected$ = machine.state$.pipe(
     map((state) => state === SerialSessionState.Connected),
@@ -434,6 +436,7 @@ export function createSerialSession(
     },
     errors$,
     receive$,
+    terminalText$,
     receiveReplay$,
     lines$,
   };

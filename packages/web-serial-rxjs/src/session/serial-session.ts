@@ -7,7 +7,7 @@ import type { SerialSessionState } from './serial-session-state';
  * minimal, session-oriented surface.
  *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
- * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$` and never
+ * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `terminalText$` + `lines$` + `errors$` and never
  * have to rebuild BehaviorSubjects, manage a read loop, or serialize writes
  * themselves.
  *
@@ -148,6 +148,21 @@ export interface SerialSession {
   readonly receive$: Observable<string>;
 
   /**
+   * Terminal-display oriented cumulative text derived from {@link receive$}.
+   *
+   * This stream collapses carriage-return redraws (`\r`) and keeps normal
+   * newline behavior (`\n`, `\r\n`) so apps can bind terminal-like output
+   * directly without wrapping {@link createTerminalBuffer} in every consumer.
+   *
+   * Equivalent behavior:
+   *
+   * ```typescript
+   * createTerminalBuffer(receive$).text$
+   * ```
+   */
+  readonly terminalText$: Observable<string>;
+
+  /**
    * Same source data as {@link receive$} but, when
    * {@link SerialSessionOptions.receiveReplay} has `enabled: true`, it uses a
    * replay buffer **per open connection** so new subscribers can receive the
@@ -164,7 +179,8 @@ export interface SerialSession {
    * Decoded text split into **complete lines** using `\n`, `\r\n`, and
    * lone interior `\r` (see implementation). Intended for **logs**,
    * newline-framed command responses, and parsers—not for mirroring raw
-   * terminal output where `\r` must be preserved for progress/redraw.
+   * terminal output where `\r` must be preserved for progress/redraw. For
+   * rendering terminal text, prefer {@link terminalText$}.
    *
    * A trailing fragment without a line terminator is buffered until a later
    * chunk completes a line, or discarded on disconnect. It is **not**
