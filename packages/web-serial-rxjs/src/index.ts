@@ -14,6 +14,7 @@
  * state, read loops, or write queues themselves.
  *
  * - {@link createSerialSession} - factory for a {@link SerialSession}
+ * - {@link createTerminalBuffer} - terminal-style display text from {@link SerialSession.receive$}
  * - {@link SerialSession} - the runtime interface
  * - {@link SerialSessionOptions} - connection options
  * - {@link SerialSessionState} - `state$` payload values (const + type)
@@ -58,3 +59,6 @@ export type {
 
 export { SerialError } from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';
+
+export { createTerminalBuffer } from './terminal/create-terminal-buffer';
+export type { TerminalBuffer } from './terminal/create-terminal-buffer';
