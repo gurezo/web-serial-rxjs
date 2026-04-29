@@ -193,14 +193,14 @@ describe('useSerialClient', () => {
     expect(latestMock().send$).toHaveBeenCalledWith('hello');
   });
 
-  it('should append lines$ emissions to receivedData', () => {
+  it('should append receive$ emissions to receivedData', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
-    mock.linesSubject.next('chunk-1');
-    mock.linesSubject.next('chunk-2');
+    mock.receiveSubject.next('chunk-1');
+    mock.receiveSubject.next('chunk-2');
 
-    expect(api.receivedData.value).toBe('chunk-1\nchunk-2\n');
+    expect(api.receivedData.value).toBe('chunk-1chunk-2');
   });
 
   it('should set errorMessage from errors$ emissions', () => {
@@ -226,9 +226,9 @@ describe('useSerialClient', () => {
   it('should clear received data', () => {
     const { api } = mountHarness();
     const mock = latestMock();
-    mock.linesSubject.next('chunk-1');
+    mock.receiveSubject.next('chunk-1');
 
-    expect(api.receivedData.value).toBe('chunk-1\n');
+    expect(api.receivedData.value).toBe('chunk-1');
     api.clearReceivedData();
     expect(api.receivedData.value).toBe('');
   });
