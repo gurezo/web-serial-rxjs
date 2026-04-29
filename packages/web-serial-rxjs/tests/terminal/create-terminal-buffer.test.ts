@@ -9,7 +9,9 @@ import {
 
 const empty: TerminalBufferState = { completed: '', currentLine: '' };
 
+/** Issue #279: terminal 表示の再発防止用テストケース群 */
 describe('applyTerminalChunk', () => {
+  // A\rB → B（同一行の carriage-return 上書き）
   it('treats A\\rB as B on one chunk', () => {
     const s = applyTerminalChunk(empty, 'A\rB');
     expect(terminalDisplayText(s)).toBe('B');
@@ -22,12 +24,14 @@ describe('applyTerminalChunk', () => {
     expect(terminalDisplayText(s)).toBe('B');
   });
 
-  it('treats CRLF as one line end', () => {
+  // A\r\nB → 正常改行（CRLF は 1 行末として扱う）
+  it('renders A\\r\\nB as normal newline (issue #279)', () => {
     const s = applyTerminalChunk(empty, 'a\r\nb');
     expect(terminalDisplayText(s)).toBe('a\nb');
   });
 
-  it('treats lone LF as line end', () => {
+  // A\nB → 2 行表示（論理行が LF で区切られる）
+  it('renders A\\nB as two display lines (issue #279)', () => {
     const s = applyTerminalChunk(empty, 'a\nb');
     expect(terminalDisplayText(s)).toBe('a\nb');
   });
@@ -41,7 +45,8 @@ describe('applyTerminalChunk', () => {
 });
 
 describe('createTerminalBuffer', () => {
-  it('emits cumulative display text with carriage-return collapse', () => {
+  // A\rB → B（text$ 経由でも累積表示が一致すること）
+  it('emits cumulative display text with carriage-return collapse (issue #279)', () => {
     const receive$ = new Subject<string>();
     const { text$ } = createTerminalBuffer(receive$);
     const out: string[] = [];
@@ -61,7 +66,8 @@ describe('createTerminalBuffer', () => {
     expect(out.at(-1)).toBe('line1\nx\nz\n');
   });
 
-  it('simulates ls-style same-line redraw without horizontal drift', () => {
+  // ls -la 形式: 同一行の \r 上書きで列がずれないこと
+  it('simulates ls-style same-line redraw without horizontal drift (issue #279)', () => {
     const receive$ = new Subject<string>();
     const { text$ } = createTerminalBuffer(receive$);
     let last = '';
