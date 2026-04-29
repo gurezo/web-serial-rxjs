@@ -193,7 +193,7 @@ describe('useSerialClient', () => {
     expect(latestMock().send$).toHaveBeenCalledWith('hello');
   });
 
-  it('should append receive$ emissions to receivedData', () => {
+  it('should map receive$ via createTerminalBuffer to receivedData', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 

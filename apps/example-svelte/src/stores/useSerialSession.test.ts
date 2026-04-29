@@ -152,7 +152,7 @@ describe('useSerialSession', () => {
     unsub();
   });
 
-  it('receive$ のチャンクが receivedData に累積する', () => {
+  it('receive$ のチャンクは createTerminalBuffer 経由で receivedData に反映される', () => {
     const s = useSerialSession();
     const unsub = s.receivedData.subscribe(() => void 0);
     latestMock().receiveSubject.next('foo');

@@ -41,11 +41,9 @@ export class App {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((v) => this.isConnected.set(v));
 
-    this.serialService.receive$
+    this.serialService.terminalText$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((chunk) => {
-        this.receivedData.update((prev) => prev + chunk);
-      });
+      .subscribe((text) => this.receivedData.set(text));
 
     this.serialService.errors$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -93,6 +91,7 @@ export class App {
 
   handleConnect(): void {
     this.receivedData.set('');
+    this.serialService.bumpTerminalBufferEpoch();
     this.errorMessage.set(null);
     this.serialService.connect$(this.baudRate).subscribe({
       error: (error: unknown) => {
@@ -132,6 +131,7 @@ export class App {
   }
 
   clearReceivedData(): void {
+    this.serialService.bumpTerminalBufferEpoch();
     this.receivedData.set('');
   }
 }

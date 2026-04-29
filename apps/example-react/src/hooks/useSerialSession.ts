@@ -1,13 +1,14 @@
 import {
   createSerialSession,
+  createTerminalBuffer,
   SerialSessionState,
   type SerialError,
   type SerialSession,
 } from '@gurezo/web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
-import { Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 
-/** v2 `SerialSession` を薄くラップ。ターミナル表示向けに生受信 `receive$` を連結。 */
+/** v2 `SerialSession` を薄くラップ。表示は `createTerminalBuffer(receive$).text$`（再接続時は世代でリセット）。 */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
   state: SerialSessionState;
@@ -25,6 +26,7 @@ export function useSerialSession(
 ): UseSerialSessionReturn {
   const sessionsRef = useRef<ReplaySubject<SerialSession> | null>(null);
   const sessionRef = useRef<SerialSession | null>(null);
+  const terminalBufferEpoch$ = useRef(new BehaviorSubject(0));
   const baudRateRef = useRef<number>(initialBaudRate);
   if (sessionsRef.current === null) {
     sessionRef.current = createSerialSession({ baudRate: initialBaudRate });
@@ -59,11 +61,12 @@ export function useSerialSession(
         .subscribe((next) => setIsConnected(next)),
     );
     sub.add(
-      sessions$
-        .pipe(switchMap((s) => s.receive$))
-        .subscribe((chunk) =>
-          setReceivedData((prev) => prev + chunk),
-        ),
+      combineLatest([
+        sessions$,
+        terminalBufferEpoch$.current,
+      ])
+        .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+        .subscribe(setReceivedData),
     );
     sub.add(
       sessions$
@@ -79,13 +82,19 @@ export function useSerialSession(
     };
   }, []);
 
+  const bumpTerminalBufferEpoch = (): void => {
+    const b = terminalBufferEpoch$.current;
+    b.next(b.value + 1);
+  };
+
   const connect$ = (baudRate?: number): Observable<void> => {
+    setReceivedData('');
+    bumpTerminalBufferEpoch();
     if (baudRate !== undefined && baudRate !== baudRateRef.current) {
       baudRateRef.current = baudRate;
       const next = createSerialSession({ baudRate });
       sessionRef.current = next;
       sessionsRef.current?.next(next);
-      setReceivedData('');
     }
     return (sessionRef.current as SerialSession).connect$();
   };
@@ -93,7 +102,10 @@ export function useSerialSession(
     (sessionRef.current as SerialSession).disconnect$();
   const send$ = (data: string | Uint8Array): Observable<void> =>
     (sessionRef.current as SerialSession).send$(data);
-  const clearReceivedData = (): void => setReceivedData('');
+  const clearReceivedData = (): void => {
+    bumpTerminalBufferEpoch();
+    setReceivedData('');
+  };
 
   return {
     browserSupported,
