@@ -6,6 +6,25 @@ This is a minimal React example for the v2 `SerialSession` API (Web Serial). The
 
 **Scope**: Connect, display from `terminalText$`, send, and disconnect. Use built-in `lines$` only when you need newline-delimited parsing or logging—not for interactive terminal mirrors. For richer recipes, see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
+## API Guide
+
+### Quick Start
+
+- `terminalText$`: terminal/CLI表示向け（`\r` を含む再描画に対応）
+- `lines$`: 行単位イベント処理向け（ログ表示・簡易パーサ）
+- `connect$()` / `disconnect$()`
+- `send$()`
+
+### Advanced Usage
+
+- `receive$`: rawチャンクをそのまま扱う低レイヤー入力
+- `state$`
+- `isConnected$`
+- `errors$`
+- `createTerminalBuffer()`
+
+`receive$` / `lines$` / `terminalText$` は用途が異なります。terminal 表示には `terminalText$` を使ってください。`lines$` は改行区切り処理向けであり、terminal ミラー用途には使わないでください。
+
 ## Features
 
 - Browser support detection (`session.isBrowserSupported()`)
