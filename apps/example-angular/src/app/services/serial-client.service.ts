@@ -7,7 +7,7 @@ import {
 } from '@gurezo/web-serial-rxjs';
 import { Observable, ReplaySubject, switchMap } from 'rxjs';
 
-/** v2 SerialSession を薄くラップ。受信は組み込み `lines$`。 */
+/** v2 SerialSession を薄くラップ。ターミナル表示向けに生受信 `receive$` を公開。 */
 @Injectable({ providedIn: 'root' })
 export class SerialClientService implements OnDestroy {
   private readonly sessions$ = new ReplaySubject<SerialSession>(1);
@@ -15,8 +15,8 @@ export class SerialClientService implements OnDestroy {
   private currentBaudRate: number;
 
   readonly state$: Observable<SerialSessionState>;
-  /** 組み込みの行区切りストリーム（1 行ごとに 1 件）。 */
-  readonly lines$: Observable<string>;
+  /** デコード済み生チャンク（ターミナルミラー向け）。 */
+  readonly receive$: Observable<string>;
   readonly isConnected$: Observable<boolean>;
   readonly errors$: Observable<SerialError>;
 
@@ -28,7 +28,9 @@ export class SerialClientService implements OnDestroy {
     this.sessions$.next(this.currentSession);
 
     this.state$ = this.sessions$.pipe(switchMap((session) => session.state$));
-    this.lines$ = this.sessions$.pipe(switchMap((session) => session.lines$));
+    this.receive$ = this.sessions$.pipe(
+      switchMap((session) => session.receive$),
+    );
     this.isConnected$ = this.sessions$.pipe(
       switchMap((session) => session.isConnected$),
     );

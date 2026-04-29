@@ -1,10 +1,10 @@
 # Svelte Example
 
-This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `isConnected$` / `errors$` into `readable` stores and receives **newline-delimited lines** from built-in `lines$` (same pattern as [Quick Start](../../docs/QUICK_START.md)).
+This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `isConnected$` / `errors$` into `readable` stores and appends **raw decoder chunks** from `receive$` for terminal-like output.
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
-**Scope**: Connect, line-delimited receive, send, disconnect only. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Connect, receive via `receive$`, send, disconnect only. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## Features
 
@@ -12,7 +12,7 @@ This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSessi
 - Reactive session lifecycle driven by `state$` (`idle | connecting | connected | disconnecting | unsupported | error`)
 - Configuration option (baud rate)
 - Send data to the serial port through the library-owned FIFO send queue
-- Receive newline-delimited lines via `lines$`
+- Receive terminal-oriented output via `receive$` (raw chunks)
 - Unified error channel via `errors$`
 - Full TypeScript type safety
 

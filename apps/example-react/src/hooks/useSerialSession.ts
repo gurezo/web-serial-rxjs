@@ -7,7 +7,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 
-/** v2 `SerialSession` を薄くラップ。受信は組み込み `lines$`。 */
+/** v2 `SerialSession` を薄くラップ。ターミナル表示向けに生受信 `receive$` を連結。 */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
   state: SerialSessionState;
@@ -60,9 +60,9 @@ export function useSerialSession(
     );
     sub.add(
       sessions$
-        .pipe(switchMap((s) => s.lines$))
-        .subscribe((line) =>
-          setReceivedData((prev) => prev + `${line}\n`),
+        .pipe(switchMap((s) => s.receive$))
+        .subscribe((chunk) =>
+          setReceivedData((prev) => prev + chunk),
         ),
     );
     sub.add(

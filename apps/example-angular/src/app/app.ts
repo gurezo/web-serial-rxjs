@@ -41,10 +41,10 @@ export class App {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((v) => this.isConnected.set(v));
 
-    this.serialService.lines$
+    this.serialService.receive$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((line) => {
-        this.receivedData.update((prev) => prev + `${line}\n`);
+      .subscribe((chunk) => {
+        this.receivedData.update((prev) => prev + chunk);
       });
 
     this.serialService.errors$

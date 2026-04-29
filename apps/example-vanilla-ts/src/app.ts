@@ -62,8 +62,8 @@ export class App {
       disconnectBtn.disabled = !isConnected;
       sendInput.disabled = sendBtn.disabled = !isConnected;
     });
-    this.session.lines$.subscribe((line) => {
-      receiveOutput.value += `${line}\n`;
+    this.session.receive$.subscribe((chunk) => {
+      receiveOutput.value += chunk;
       receiveOutput.scrollTop = receiveOutput.scrollHeight;
     });
     this.session.errors$.subscribe((error) => {

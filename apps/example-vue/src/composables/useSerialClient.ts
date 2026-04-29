@@ -7,7 +7,7 @@ import {
 import { Observable, ReplaySubject, switchMap } from 'rxjs';
 import { onUnmounted, ref, type Ref } from 'vue';
 
-/** v2 `SerialSession` を薄くラップ。受信は組み込み `lines$`。 */
+/** v2 `SerialSession` を薄くラップ。ターミナル表示向けに生受信 `receive$` を連結。 */
 export interface UseSerialClientReturn {
   browserSupported: Ref<boolean>;
   state: Ref<SerialSessionState>;
@@ -48,9 +48,9 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       isConnected.value = next;
     });
   const receiveSub = sessions$
-    .pipe(switchMap((session) => session.lines$))
-    .subscribe((line) => {
-      receivedData.value = `${receivedData.value}${line}\n`;
+    .pipe(switchMap((session) => session.receive$))
+    .subscribe((chunk) => {
+      receivedData.value = `${receivedData.value}${chunk}`;
     });
   const errorsSub = sessions$
     .pipe(switchMap((session) => session.errors$))
