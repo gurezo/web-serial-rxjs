@@ -1,7 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import {
   createSerialSession,
-  createTerminalBuffer,
   SerialError,
   SerialSession,
   SerialSessionState,
@@ -14,7 +13,7 @@ import {
   switchMap,
 } from 'rxjs';
 
-/** v2 SerialSession を薄くラップ。表示は `terminalText$`（`createTerminalBuffer`）、`receive$` は raw。 */
+/** v2 SerialSession を薄くラップ。表示は `terminalText$`、`receive$` は raw。 */
 @Injectable({ providedIn: 'root' })
 export class SerialClientService implements OnDestroy {
   private readonly sessions$ = new ReplaySubject<SerialSession>(1);
@@ -46,7 +45,7 @@ export class SerialClientService implements OnDestroy {
       this.sessions$,
       this.terminalBufferEpoch$,
     ]).pipe(
-      switchMap(([session]) => createTerminalBuffer(session.receive$).text$),
+      switchMap(([session]) => session.terminalText$),
     );
     this.isConnected$ = this.sessions$.pipe(
       switchMap((session) => session.isConnected$),
@@ -80,7 +79,7 @@ export class SerialClientService implements OnDestroy {
     return this.currentSession.send$(data);
   }
 
-  /** `createTerminalBuffer` の累積を捨て、以降の受信のみ表示する（textarea クリア・再接続時）。 */
+  /** `terminalText$` の表示累積をリセットし、以降の受信のみ表示する（textarea クリア・再接続時）。 */
   bumpTerminalBufferEpoch(): void {
     this.terminalBufferEpoch$.next(this.terminalBufferEpoch$.value + 1);
   }
