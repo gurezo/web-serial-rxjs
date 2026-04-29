@@ -1,6 +1,5 @@
 import {
   createSerialSession,
-  createTerminalBuffer,
   SerialSessionState,
   type SerialError,
   type SerialSession,
@@ -14,7 +13,7 @@ import {
 } from 'rxjs';
 import { onUnmounted, ref, type Ref } from 'vue';
 
-/** v2 `SerialSession` を薄くラップ。表示は `createTerminalBuffer(receive$).text$`（再接続は世代でリセット）。 */
+/** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続は世代でリセット）。 */
 export interface UseSerialClientReturn {
   browserSupported: Ref<boolean>;
   state: Ref<SerialSessionState>;
@@ -60,7 +59,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
       isConnected.value = next;
     });
   const receiveSub = combineLatest([sessions$, terminalBufferEpoch$])
-    .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+    .pipe(switchMap(([s]) => s.terminalText$))
     .subscribe((text) => {
       receivedData.value = text;
     });

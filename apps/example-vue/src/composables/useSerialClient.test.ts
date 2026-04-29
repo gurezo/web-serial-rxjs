@@ -46,6 +46,7 @@ const createMockSession = (): MockSession => {
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable()).text$,
     receiveReplay$: receiveSubject.asObservable(),
     lines$: linesSubject.asObservable(),
     isConnected$,
@@ -193,7 +194,7 @@ describe('useSerialClient', () => {
     expect(latestMock().send$).toHaveBeenCalledWith('hello');
   });
 
-  it('should map receive$ via createTerminalBuffer to receivedData', () => {
+  it('should map terminalText$ updates to receivedData', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
