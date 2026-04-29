@@ -9,29 +9,29 @@ import {
 
 const empty: TerminalBufferState = { completed: '', currentLine: '' };
 
-/** Issue #279: terminal 表示の再発防止用テストケース群 */
+/** Issue #290: terminal 表示の再発防止用テストケース群 */
 describe('applyTerminalChunk', () => {
-  // A\rB → B（同一行の carriage-return 上書き）
-  it('treats A\\rB as B on one chunk', () => {
+  // #290: A\rB
+  it('issue #290: A\\rB を同一チャンクで B に畳み込む', () => {
     const s = applyTerminalChunk(empty, 'A\rB');
     expect(terminalDisplayText(s)).toBe('B');
   });
 
-  it('treats A\\rB when split across chunks', () => {
+  it('issue #290: A\\rB を分割チャンクでも B に畳み込む', () => {
     let s = applyTerminalChunk(empty, 'A');
     expect(terminalDisplayText(s)).toBe('A');
     s = applyTerminalChunk(s, '\rB');
     expect(terminalDisplayText(s)).toBe('B');
   });
 
-  // A\r\nB → 正常改行（CRLF は 1 行末として扱う）
-  it('renders A\\r\\nB as normal newline (issue #279)', () => {
+  // #290: A\r\nB
+  it('issue #290: A\\r\\nB を通常改行として扱う', () => {
     const s = applyTerminalChunk(empty, 'a\r\nb');
     expect(terminalDisplayText(s)).toBe('a\nb');
   });
 
-  // A\nB → 2 行表示（論理行が LF で区切られる）
-  it('renders A\\nB as two display lines (issue #279)', () => {
+  // #290: A\nB
+  it('issue #290: A\\nB を2行表示として扱う', () => {
     const s = applyTerminalChunk(empty, 'a\nb');
     expect(terminalDisplayText(s)).toBe('a\nb');
   });
@@ -45,8 +45,8 @@ describe('applyTerminalChunk', () => {
 });
 
 describe('createTerminalBuffer', () => {
-  // A\rB → B（text$ 経由でも累積表示が一致すること）
-  it('emits cumulative display text with carriage-return collapse (issue #279)', () => {
+  // #290: A\rB
+  it('issue #290: text$ でも A\\rB を B に畳み込む', () => {
     const receive$ = new Subject<string>();
     const { text$ } = createTerminalBuffer(receive$);
     const out: string[] = [];
@@ -66,8 +66,8 @@ describe('createTerminalBuffer', () => {
     expect(out.at(-1)).toBe('line1\nx\nz\n');
   });
 
-  // ls -la 形式: 同一行の \r 上書きで列がずれないこと
-  it('simulates ls-style same-line redraw without horizontal drift (issue #279)', () => {
+  // #290: ls -la 形式
+  it('issue #290: ls -la 形式の同一行 redraw で古い行を残さない', () => {
     const receive$ = new Subject<string>();
     const { text$ } = createTerminalBuffer(receive$);
     let last = '';
@@ -80,7 +80,8 @@ describe('createTerminalBuffer', () => {
     expect(last).not.toContain('alice');
   });
 
-  it('shows shell prompt ($ / #) after carriage-return redraw', () => {
+  // #290: prompt 表示
+  it('issue #290: carriage-return redraw 後に shell prompt を正しく表示する', () => {
     const receive$ = new Subject<string>();
     const { text$ } = createTerminalBuffer(receive$);
     let last = '';

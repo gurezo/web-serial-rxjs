@@ -697,6 +697,59 @@ describe('createSerialSession', () => {
       await expect(rawChunk).resolves.toBe('A\rB');
       await expect(terminalText).resolves.toBe('B');
     });
+
+    it('covers issue #290 ls -la style redraw on terminalText$', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const latest = firstValueFrom(session.terminalText$.pipe(take(2), toArray()));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(
+        new TextEncoder().encode('-rw-r--r--  1 alice  staff  123 ./foo\r'),
+      );
+      await flushMicrotasks();
+      controller.enqueue(
+        new TextEncoder().encode('-rw-r--r--  1 bob    staff  123 ./foo\n'),
+      );
+      await flushMicrotasks();
+
+      await expect(latest).resolves.toEqual([
+        '',
+        '-rw-r--r--  1 bob    staff  123 ./foo\n',
+      ]);
+    });
+
+    it('covers issue #290 prompt redraw flow on terminalText$', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const latest = firstValueFrom(session.terminalText$.pipe(take(5), toArray()));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('login: user\r'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('$ '));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('whoami\r\n'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('user\r\n'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('# '));
+      await flushMicrotasks();
+
+      await expect(latest).resolves.toEqual([
+        '',
+        '$ ',
+        '$ whoami\n',
+        '$ whoami\nuser\n',
+        '$ whoami\nuser\n# ',
+      ]);
+    });
   });
 
   describe('send$', () => {
