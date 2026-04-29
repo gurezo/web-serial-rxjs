@@ -1,9 +1,16 @@
 import {
   createSerialSession,
+  createTerminalBuffer,
   SerialSessionState,
   type SerialSession,
 } from '@gurezo/web-serial-rxjs';
-import { fromEvent } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  fromEvent,
+  ReplaySubject,
+  switchMap,
+} from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 type StatusType = 'info' | 'success' | 'error';
@@ -34,6 +41,12 @@ const setStatus = (el: HTMLElement, type: StatusType, msg: string): void => {
 export class App {
   private session: SerialSession;
   private baudRate: number;
+  private readonly sessions$ = new ReplaySubject<SerialSession>(1);
+  private readonly terminalBufferEpoch$ = new BehaviorSubject(0);
+
+  private bumpTerminalBufferEpoch(): void {
+    this.terminalBufferEpoch$.next(this.terminalBufferEpoch$.value + 1);
+  }
 
   constructor() {
     const connectBtn = $<HTMLButtonElement>('connect-btn');
@@ -45,43 +58,60 @@ export class App {
     const receiveOutput = $<HTMLTextAreaElement>('receive-output');
     this.baudRate = parseInt(baudRateSelect.value, 10);
     this.session = createSerialSession({ baudRate: this.baudRate });
+    this.sessions$.next(this.session);
+
     const supported = this.session.isBrowserSupported();
     setStatus(
       $<HTMLElement>('browser-support-status'),
       supported ? 'success' : 'error',
       supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
     );
-    this.session.state$.subscribe((state) => {
+
+    this.sessions$.pipe(switchMap((s) => s.state$)).subscribe((state) => {
       const connected = state === S.Connected;
       const busy = state === S.Connecting || state === S.Disconnecting;
       connectBtn.disabled = !supported || connected || busy;
       baudRateSelect.disabled = connected || busy;
       setStatus(status, ...STATUS[state]);
     });
-    this.session.isConnected$.subscribe((isConnected) => {
-      disconnectBtn.disabled = !isConnected;
-      sendInput.disabled = sendBtn.disabled = !isConnected;
-    });
-    this.session.receive$.subscribe((chunk) => {
-      receiveOutput.value += chunk;
-      receiveOutput.scrollTop = receiveOutput.scrollHeight;
-    });
-    this.session.errors$.subscribe((error) => {
-      setStatus(status, 'error', `エラー: ${error.message}`);
-      console.error('Serial port error:', error);
-    });
+
+    this.sessions$
+      .pipe(switchMap((s) => s.isConnected$))
+      .subscribe((isConnected) => {
+        disconnectBtn.disabled = !isConnected;
+        sendInput.disabled = sendBtn.disabled = !isConnected;
+      });
+
+    combineLatest([this.sessions$, this.terminalBufferEpoch$])
+      .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+      .subscribe((text) => {
+        receiveOutput.value = text;
+        receiveOutput.scrollTop = receiveOutput.scrollHeight;
+      });
+
+    this.sessions$
+      .pipe(switchMap((s) => s.errors$))
+      .subscribe((error) => {
+        setStatus(status, 'error', `エラー: ${error.message}`);
+        console.error('Serial port error:', error);
+      });
+
     fromEvent(connectBtn, 'click').subscribe(() => {
       const baudRate = parseInt(baudRateSelect.value, 10);
+      this.bumpTerminalBufferEpoch();
+      receiveOutput.value = '';
       if (baudRate !== this.baudRate) {
         this.baudRate = baudRate;
         this.session = createSerialSession({ baudRate });
+        this.sessions$.next(this.session);
       }
-      receiveOutput.value = '';
       this.session.connect$().subscribe({ error: () => void 0 });
     });
+
     fromEvent(disconnectBtn, 'click').subscribe(() =>
       this.session.disconnect$().subscribe({ error: () => void 0 }),
     );
+
     const send = () => {
       const text = sendInput.value.trim();
       if (!text) return;
@@ -90,6 +120,7 @@ export class App {
         error: () => void 0,
       });
     };
+
     fromEvent(sendBtn, 'click').subscribe(send);
     fromEvent<KeyboardEvent>(sendInput, 'keydown')
       .pipe(filter((e) => e.key === 'Enter' && !e.shiftKey))
@@ -97,8 +128,10 @@ export class App {
         e.preventDefault();
         send();
       });
-    fromEvent($<HTMLButtonElement>('clear-receive-btn'), 'click').subscribe(
-      () => (receiveOutput.value = ''),
-    );
+
+    fromEvent($<HTMLButtonElement>('clear-receive-btn'), 'click').subscribe(() => {
+      this.bumpTerminalBufferEpoch();
+      receiveOutput.value = '';
+    });
   }
 }
