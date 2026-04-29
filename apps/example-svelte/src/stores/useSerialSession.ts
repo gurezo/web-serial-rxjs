@@ -1,6 +1,5 @@
 import {
   createSerialSession,
-  createTerminalBuffer,
   SerialSessionState,
   type SerialError,
   type SerialSession,
@@ -16,7 +15,7 @@ import {
 import { onDestroy } from 'svelte';
 import { readable, type Readable } from 'svelte/store';
 
-/** v2 `SerialSession` を Svelte store に薄く写す。表示は `createTerminalBuffer(receive$).text$`（再接続は世代でリセット）。 */
+/** v2 `SerialSession` を Svelte store に薄く写す。表示は `terminalText$`（再接続は世代でリセット）。 */
 export interface UseSerialSessionReturn {
   browserSupported: Readable<boolean>;
   state: Readable<SerialSessionState>;
@@ -64,7 +63,7 @@ export function useSerialSession(
   const receivedData = readable<string>('', (set) => {
     setReceived = set;
     const sub = combineLatest([sessions$, terminalBufferEpoch$])
-      .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+      .pipe(switchMap(([s]) => s.terminalText$))
       .subscribe(set);
     return () => {
       sub.unsubscribe();
