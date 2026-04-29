@@ -21,9 +21,9 @@ export function applyTerminalChunk(
   const len = chunk.length;
 
   for (let i = 0; i < len; i++) {
-    const c = chunk[i]!;
+    const c = chunk.charAt(i);
     if (c === '\r') {
-      const next = i + 1 < len ? chunk[i + 1]! : '';
+      const next = i + 1 < len ? chunk.charAt(i + 1) : '';
       if (next === '\n') {
         completed += currentLine + '\n';
         currentLine = '';
