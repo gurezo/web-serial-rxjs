@@ -4,7 +4,7 @@ RxJS-based session surface.</p>
 <h2 id="public-api-v2" class="tsd-anchor-link">Public API (v2)<a href="#public-api-v2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>The v2 public API intentionally exposes a single, session-oriented surface
 so that apps (Angular, Vue, React, Svelte, vanilla JS/TS) can drive their
-UI entirely from <code>state$</code> + <code>isConnected$</code> + <code>receive$</code> + <code>lines$</code> + <code>errors$</code> without rebuilding any
+UI entirely from <code>state$</code> + <code>isConnected$</code> + <code>receive$</code> + <code>terminalText$</code> + <code>lines$</code> + <code>errors$</code> without rebuilding any
 state, read loops, or write queues themselves.</p>
 <ul>
 <li><a href="functions/createSerialSession.html" class="tsd-kind-function">createSerialSession</a> - factory for a <a href="interfaces/SerialSession.html" class="tsd-kind-interface">SerialSession</a></li>
