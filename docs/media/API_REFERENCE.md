@@ -114,7 +114,7 @@ Primary error channel. Every connect / read / write / close failure is normalise
 
 ### `receive$: Observable<string>`
 
-UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Prefer `lines$` for newline-framed protocols.
+UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Carriage returns and other control characters are preserved. Use **`receive$`** for terminal-like mirrors and any output that depends on `\r` (for example interactive shells or progress lines). Use **`lines$`** for newline-framed logs and line-by-line parsing.
 
 ### `receiveReplay$: Observable<string>`
 
@@ -122,7 +122,7 @@ Same data path as `receive$`, but when `SerialSessionOptions.receiveReplay.enabl
 
 ### `lines$: Observable<string>`
 
-The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. **Not subscription-lazy** with respect to the read pump, like `receive$`.
+The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. **Not subscription-lazy** with respect to the read pump, like `receive$`. Choose **`lines$`** for logs and parsers; for raw terminal display where `\r` redraw semantics matter, subscribe to **`receive$`** instead.
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 

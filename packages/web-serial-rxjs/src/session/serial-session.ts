@@ -134,9 +134,16 @@ export interface SerialSession {
    * subscription-lazy: emissions happen regardless of whether a consumer
    * is currently subscribed, so late subscribers see only new data.
    *
-   * Emits **raw decoder chunks** (not line-aligned). For newline-framed
-   * protocols, use {@link lines$} or derive your own framing from
-   * `receive$`.
+   * Emits **raw decoder chunks** (not line-aligned): carriage returns and
+   * other control characters from the peer are preserved. Use this for
+   * terminal-like mirrors, progress output that relies on `\r`, or raw
+   * inspection. Do **not** drive those UIs from {@link lines$}, which may
+   * split on interior `\r` and break redraw semantics.
+   *
+   * For newline-framed protocols, logs, or line-by-line parsing, prefer
+   * {@link lines$} or derive custom framing from `receive$`.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/273 | Issue #273}
    */
   readonly receive$: Observable<string>;
 
@@ -155,11 +162,16 @@ export interface SerialSession {
 
   /**
    * Decoded text split into **complete lines** using `\n`, `\r\n`, and
-   * lone interior `\r` (see implementation). A trailing fragment without
-   * a line terminator is buffered until a later chunk completes a line, or
-   * discarded on disconnect. It is **not** subscription-lazy: the same
-   * framing runs whenever the read pump is active, independent of
-   * subscribers.
+   * lone interior `\r` (see implementation). Intended for **logs**,
+   * newline-framed command responses, and parsers—not for mirroring raw
+   * terminal output where `\r` must be preserved for progress/redraw.
+   *
+   * A trailing fragment without a line terminator is buffered until a later
+   * chunk completes a line, or discarded on disconnect. It is **not**
+   * subscription-lazy: the same framing runs whenever the read pump is active,
+   * independent of subscribers.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/273 | Issue #273}
    */
   readonly lines$: Observable<string>;
 

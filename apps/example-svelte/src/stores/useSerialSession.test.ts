@@ -152,12 +152,12 @@ describe('useSerialSession', () => {
     unsub();
   });
 
-  it('lines$ の行が receivedData に累積する', () => {
+  it('receive$ のチャンクが receivedData に累積する', () => {
     const s = useSerialSession();
     const unsub = s.receivedData.subscribe(() => void 0);
-    latestMock().linesSubject.next('foo');
-    latestMock().linesSubject.next('bar');
-    expect(get(s.receivedData)).toBe('foo\nbar\n');
+    latestMock().receiveSubject.next('foo');
+    latestMock().receiveSubject.next('bar');
+    expect(get(s.receivedData)).toBe('foobar');
     unsub();
   });
 
@@ -182,8 +182,8 @@ describe('useSerialSession', () => {
   it('clearReceivedData で receivedData が空になる', () => {
     const s = useSerialSession();
     const unsub = s.receivedData.subscribe(() => void 0);
-    latestMock().linesSubject.next('data');
-    expect(get(s.receivedData)).toBe('data\n');
+    latestMock().receiveSubject.next('data');
+    expect(get(s.receivedData)).toBe('data');
     s.clearReceivedData();
     expect(get(s.receivedData)).toBe('');
     unsub();

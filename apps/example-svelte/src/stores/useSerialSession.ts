@@ -8,7 +8,7 @@ import { type Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 import { onDestroy } from 'svelte';
 import { readable, type Readable } from 'svelte/store';
 
-/** v2 `SerialSession` を Svelte store に薄く写す。受信は行単位に派生。 */
+/** v2 `SerialSession` を Svelte store に薄く写す。ターミナル表示は `receive$` を連結。 */
 export interface UseSerialSessionReturn {
   browserSupported: Readable<boolean>;
   state: Readable<SerialSessionState>;
@@ -52,9 +52,9 @@ export function useSerialSession(
   const receivedData = readable<string>('', (set) => {
     setReceived = set;
     const sub = sessions$
-      .pipe(switchMap((s) => s.lines$))
-      .subscribe((line) => {
-        receivedAcc += `${line}\n`;
+      .pipe(switchMap((s) => s.receive$))
+      .subscribe((chunk) => {
+        receivedAcc += chunk;
         set(receivedAcc);
       });
     return () => {

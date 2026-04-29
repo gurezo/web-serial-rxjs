@@ -197,19 +197,19 @@ describe('App', () => {
     expect(latestMock().send$).toHaveBeenCalledWith('hello\n');
   });
 
-  it('行区切り受信が受信データ欄に蓄積される', async () => {
+  it('receive$ のチャンクが受信データ欄に蓄積される', async () => {
     render(<App />);
 
     act(() => {
-      latestMock().linesSubject.next('foo');
-      latestMock().linesSubject.next('bar');
+      latestMock().receiveSubject.next('foo');
+      latestMock().receiveSubject.next('bar');
     });
 
     await waitFor(() => {
       const textarea = screen.getByLabelText(
         '受信データ',
       ) as HTMLTextAreaElement;
-      expect(textarea.value).toBe('foo\nbar\n');
+      expect(textarea.value).toBe('foobar');
     });
   });
 
@@ -228,12 +228,12 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    act(() => latestMock().linesSubject.next('data'));
+    act(() => latestMock().receiveSubject.next('data'));
     await waitFor(() => {
       const textarea = screen.getByLabelText(
         '受信データ',
       ) as HTMLTextAreaElement;
-      expect(textarea.value).toBe('data\n');
+      expect(textarea.value).toBe('data');
     });
 
     await user.click(screen.getByText('クリア'));

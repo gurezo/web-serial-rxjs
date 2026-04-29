@@ -456,6 +456,20 @@ describe('createSerialSession', () => {
       await expect(lateArrival).resolves.toBe('late');
     });
 
+    it('preserves interior carriage returns in a single decoded chunk', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const receivedPromise = firstValueFrom(session.receive$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('A\rB'));
+
+      await expect(receivedPromise).resolves.toBe('A\rB');
+    });
+
     it('routes pump errors to errors$ and moves state$ to error', async () => {
       const { stream, controller } = makeStream();
       const port = makeMockPort(stream);
@@ -607,6 +621,23 @@ describe('createSerialSession', () => {
       await flushMicrotasks();
 
       expect(lineCount).toBe(0);
+    });
+
+    it('emits two lines when interior CR splits content before LF', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const twoLines = firstValueFrom(
+        session.lines$.pipe(take(2), toArray()),
+      );
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('A\rB\n'));
+      await flushMicrotasks();
+
+      await expect(twoLines).resolves.toEqual(['A', 'B']);
     });
   });
 

@@ -126,13 +126,13 @@ describe('useSerialSession', () => {
     expect(result.current.state).toBe(SS.Connected);
   });
 
-  it('lines$ の行が receivedData に累積する', () => {
+  it('receive$ のチャンクが receivedData に累積する', () => {
     const { result } = renderHook(() => useSerialSession());
     act(() => {
-      latestMock().linesSubject.next('foo');
-      latestMock().linesSubject.next('bar');
+      latestMock().receiveSubject.next('foo');
+      latestMock().receiveSubject.next('bar');
     });
-    expect(result.current.receivedData).toBe('foo\nbar\n');
+    expect(result.current.receivedData).toBe('foobar');
   });
 
   it('errors$ の値が errorMessage に反映される', () => {
@@ -155,8 +155,8 @@ describe('useSerialSession', () => {
 
   it('clearReceivedData で receivedData が空になる', () => {
     const { result } = renderHook(() => useSerialSession());
-    act(() => latestMock().linesSubject.next('data'));
-    expect(result.current.receivedData).toBe('data\n');
+    act(() => latestMock().receiveSubject.next('data'));
+    expect(result.current.receivedData).toBe('data');
     act(() => result.current.clearReceivedData());
     expect(result.current.receivedData).toBe('');
   });
