@@ -42,6 +42,7 @@ This library is framework-agnostic and can be used with:
 | `SerialSessionState` | **State constants** — exported const object (e.g. `SerialSessionState.Connected`, `SerialSessionState.Idle`) with the same values `state$` emits. |
 | `isConnected$` | **Connected flag** — `true` only when `state$` is `SerialSessionState.Connected`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
 | `receive$` | **Raw decoder chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
+| `terminalText$` | **Terminal-ready cumulative text** — display-oriented text derived from `receive$` that folds carriage-return redraws while keeping normal newline behavior. Use when you want to bind one string directly to a terminal-like viewport. |
 | `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring raw terminal streams where `\r` must stay intact. |
 | `errors$` | **All `SerialError` instances** from connect / read / write / close (primary error channel). |
 | `connect$()` | **Open** a user-selected port and start the internal read pump. |
