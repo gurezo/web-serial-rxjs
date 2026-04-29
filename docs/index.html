@@ -55,6 +55,10 @@
 <td><strong>Raw decoder chunks</strong> — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves <code>\r</code> and other control characters. Use for <strong>terminal-like mirrors</strong> and progress output that relies on carriage-return redraws.</td>
 </tr>
 <tr>
+<td><code>terminalText$</code></td>
+<td><strong>Terminal-ready cumulative text</strong> — display-oriented text derived from <code>receive$</code> that folds carriage-return redraws while keeping normal newline behavior. Use when you want to bind one string directly to a terminal-like viewport.</td>
+</tr>
+<tr>
 <td><code>lines$</code></td>
 <td><strong>Line-delimited UTF-8 text</strong> — one string per complete line via the built-in buffer (<code>\n</code>, <code>\r\n</code>, interior <code>\r</code>). Use for <strong>logs</strong> and <strong>line-by-line parsing</strong>, not for mirroring raw terminal streams where <code>\r</code> must stay intact.</td>
 </tr>
