@@ -136,6 +136,7 @@ describe('createSerialSession', () => {
       expect(session.portInfo$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
+      expect(session.terminalText$).toBeDefined();
       expect(session.receiveReplay$).toBeDefined();
       expect(session.lines$).toBeDefined();
     });
@@ -638,6 +639,63 @@ describe('createSerialSession', () => {
       await flushMicrotasks();
 
       await expect(twoLines).resolves.toEqual(['A', 'B']);
+    });
+  });
+
+  describe('terminalText$', () => {
+    it('collapses carriage-return redraw (A\\rB -> B)', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const textPromise = firstValueFrom(session.terminalText$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('A\rB'));
+      await flushMicrotasks();
+
+      await expect(textPromise).resolves.toBe('B');
+    });
+
+    it('handles mixed newline styles (\\n and \\r\\n)', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const latest = firstValueFrom(session.terminalText$.pipe(take(3), toArray()));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('line1\n'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('line2\r\n'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('line3\n'));
+      await flushMicrotasks();
+
+      await expect(latest).resolves.toEqual([
+        'line1\n',
+        'line1\nline2\n',
+        'line1\nline2\nline3\n',
+      ]);
+    });
+
+    it('does not alter receive$ raw chunk semantics', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const rawChunk = firstValueFrom(session.receive$.pipe(take(1)));
+      const terminalText = firstValueFrom(session.terminalText$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('A\rB'));
+      await flushMicrotasks();
+
+      await expect(rawChunk).resolves.toBe('A\rB');
+      await expect(terminalText).resolves.toBe('B');
     });
   });
 
