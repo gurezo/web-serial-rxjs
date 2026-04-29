@@ -183,6 +183,27 @@ describe('SerialClientService', () => {
     await expect(pending).resolves.toBe('chunk-1');
   });
 
+  it('should fold carriage returns in terminalText$', () => {
+    const mock = latestMock();
+    const values: string[] = [];
+    const sub = service.terminalText$.subscribe((t) => values.push(t));
+    mock.receiveSubject.next('A\r');
+    mock.receiveSubject.next('B');
+    expect(values.at(-1)).toBe('B');
+    sub.unsubscribe();
+  });
+
+  it('bumpTerminalBufferEpoch starts a fresh terminal fold for the same session', () => {
+    const mock = latestMock();
+    const values: string[] = [];
+    const sub = service.terminalText$.subscribe((t) => values.push(t));
+    mock.receiveSubject.next('leftover');
+    service.bumpTerminalBufferEpoch();
+    mock.receiveSubject.next('new');
+    expect(values.at(-1)).toBe('new');
+    sub.unsubscribe();
+  });
+
   it('should forward errors$ emissions', async () => {
     const mock = latestMock();
     const pending = firstValueFrom(service.errors$);
