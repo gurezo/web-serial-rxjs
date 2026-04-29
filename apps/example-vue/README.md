@@ -4,7 +4,7 @@ This is a Vue example application demonstrating how to use the `@gurezo/web-seri
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
-**Scope**: Minimal smoke test—connect, terminal display via `createTerminalBuffer(receive$)`, connection toggles via `isConnected$`, send, disconnect. Use `lines$` only for line-based logging. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Minimal smoke test—connect, terminal display via `terminalText$`, connection toggles via `isConnected$`, send, disconnect. Use `lines$` only for line-based logging. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## Features
 
@@ -79,7 +79,7 @@ This example uses Vue 3 Composition API and RxJS observables to handle serial po
 
 4. **Data Sending**: Users can type text in the input field and send it to the serial port. The text is encoded as UTF-8 and sent as `Uint8Array` through the composable's `send` method.
 
-5. **Data Receiving**: Incoming bytes are decoded as UTF-8; the composable surfaces **`createTerminalBuffer(session.receive$).text$`** into the textarea-bound ref. Use **`lines$`** for newline-delimited logs—not for interactive shell mirrors where `\r` redraw matters.
+5. **Data Receiving**: Incoming bytes are decoded as UTF-8; the composable surfaces **`session.terminalText$`** into the textarea-bound ref. Use **`lines$`** for newline-delimited logs—not for interactive shell mirrors where `\r` redraw matters.
 
 ## Code Structure
 

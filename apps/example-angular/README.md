@@ -4,7 +4,7 @@ This is an Angular example application demonstrating how to use the `@gurezo/web
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
-**Scope**: Minimal smoke test—connect, display via `terminalText$` (`createTerminalBuffer(session.receive$).text$` for `\r`-safe shells), optional line logging with `lines$`, UI via `isConnected$`, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Minimal smoke test—connect, display via `terminalText$` (`\r`-safe shells), optional line logging with `lines$`, UI via `isConnected$`, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## Features
 
@@ -79,7 +79,7 @@ This example uses Angular Services and RxJS observables to handle serial port co
 
 4. **Data Sending**: Users can type text in the input field and send it to the serial port via the service's `send$` method.
 
-5. **Data Receiving**: The service exposes **`terminalText$`** (`createTerminalBuffer` over `receive$`) for textarea display (carriage-return redraws collapsed). **`lines$`** is for newline-delimited logging or parsers only—not for raw terminal mirrors. Raw chunks use **`receive$`** directly (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+5. **Data Receiving**: The service exposes **`terminalText$`** for textarea display (carriage-return redraws collapsed). **`lines$`** is for newline-delimited logging or parsers only—not for raw terminal mirrors. Raw chunks use **`receive$`** directly (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 
 ## Code Structure
 

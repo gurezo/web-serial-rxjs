@@ -1,6 +1,5 @@
 import {
   createSerialSession,
-  createTerminalBuffer,
   SerialSessionState,
   type SerialSession,
 } from '@gurezo/web-serial-rxjs';
@@ -83,7 +82,7 @@ export class App {
       });
 
     combineLatest([this.sessions$, this.terminalBufferEpoch$])
-      .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+      .pipe(switchMap(([s]) => s.terminalText$))
       .subscribe((text) => {
         receiveOutput.value = text;
         receiveOutput.scrollTop = receiveOutput.scrollHeight;

@@ -48,6 +48,7 @@ const createMockSession = (
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
+    terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable()).text$,
     receiveReplay$: receiveSubject.asObservable(),
     lines$: linesSubject.asObservable(),
     isConnected$,
@@ -126,7 +127,7 @@ describe('useSerialSession', () => {
     expect(result.current.state).toBe(SS.Connected);
   });
 
-  it('receive$ のチャンクは createTerminalBuffer 経由で receivedData に反映される', () => {
+  it('terminalText$ の更新が receivedData に反映される', () => {
     const { result } = renderHook(() => useSerialSession());
     act(() => {
       latestMock().receiveSubject.next('foo');
