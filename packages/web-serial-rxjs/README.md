@@ -22,8 +22,37 @@ After a successful `connect$`, use `getPortInfo()` or subscribe to `portInfo$` f
 
 ## `receive$` vs `lines$`
 
-- **`receive$`** — UTF-8 **decoder chunks** as they arrive (not line-aligned). Preserves `\r` and other control characters. Use for **terminal mirrors**, shells, and progress output that relies on carriage-return redraws.
-- **`lines$`** — Split into **complete lines** (`\n`, `\r\n`, interior `\r` per implementation). Use for **logs** and **line-by-line parsing**. Do not wire **`lines$`** to a terminal widget when the peer uses `\r` for in-place updates—you will lose redraw semantics ([overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md)).
+Pick the stream that matches your use case. Using **`lines$`** for a terminal mirror drops `\r` and redraw behaviour, which breaks shells and tools that rely on carriage-return updates ([overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md)).
+
+### `receive$` (raw stream)
+
+- UTF-8 **decoder chunks** as they arrive—not line-aligned.
+- Preserves `\r`, partial lines, and other control characters.
+- Use for: **terminal display**, **prompt detection**, **buffering** / scrollback you control, and other **raw-stream** handling.
+
+### `lines$` (line-delimited events)
+
+- Emits **complete lines** (`\n`, `\r\n`, interior `\r` per implementation).
+- Use for **logs**, **structured parsing**, and protocols framed on newlines.
+- **Not suitable** for mirroring interactive CLI output when peers use `\r` for in-place redraws—you lose those semantics.
+
+### Avoid / Prefer
+
+**Avoid**—appending **`lines$`** strings for a terminal-style view hides redraws and corrupts layouts.
+
+```ts
+session.lines$.subscribe((line) => {
+  output += line + '\n';
+});
+```
+
+**Prefer**—concatenate **chunks** from **`receive$`** for mirrors and shell-style buffers.
+
+```ts
+session.receive$.subscribe((chunk) => {
+  output += chunk;
+});
+```
 
 ## Installation
 

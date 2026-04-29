@@ -79,6 +79,8 @@ pnpm add rxjs
 
 npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md) は短い目次に留め、初回接続の手順は [クイックスタート](packages/web-serial-rxjs/docs/QUICK_START.ja.md) を参照してください。
 
+**`receive$`** と **`lines$`** をいつ使うか（ターミナル表示・バッファと、改行区切りログ・解析の違い）は [パッケージ README](packages/web-serial-rxjs/README.ja.md) の「`receive$` と `lines$`」にまとめています。
+
 ## ドキュメント
 
 | ドキュメント | 用途 |
