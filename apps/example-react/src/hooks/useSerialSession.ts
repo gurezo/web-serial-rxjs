@@ -1,6 +1,5 @@
 import {
   createSerialSession,
-  createTerminalBuffer,
   SerialSessionState,
   type SerialError,
   type SerialSession,
@@ -8,7 +7,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { BehaviorSubject, combineLatest, Observable, ReplaySubject, Subscription, switchMap } from 'rxjs';
 
-/** v2 `SerialSession` を薄くラップ。表示は `createTerminalBuffer(receive$).text$`（再接続時は世代でリセット）。 */
+/** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続時は世代でリセット）。 */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
   state: SerialSessionState;
@@ -65,7 +64,7 @@ export function useSerialSession(
         sessions$,
         terminalBufferEpoch$.current,
       ])
-        .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+        .pipe(switchMap(([s]) => s.terminalText$))
         .subscribe(setReceivedData),
     );
     sub.add(
