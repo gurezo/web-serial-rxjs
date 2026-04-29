@@ -1,5 +1,10 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { createSerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import {
+  createSerialSession,
+  createTerminalBuffer,
+  SerialSessionState,
+} from '@gurezo/web-serial-rxjs';
+import { BehaviorSubject, combineLatest, ReplaySubject, switchMap } from 'rxjs';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -35,13 +40,18 @@ export class App {
     const receiveOutput = $('receive-output');
     this.baudRate = parseInt(baudRateSelect.value, 10);
     this.session = createSerialSession({ baudRate: this.baudRate });
+    this.sessions$ = new ReplaySubject(1);
+    this.terminalBufferEpoch$ = new BehaviorSubject(0);
+    this.sessions$.next(this.session);
+
     const supported = this.session.isBrowserSupported();
     setStatus(
       $('browser-support-status'),
       supported ? 'success' : 'error',
       supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
     );
-    this.session.state$.subscribe((state) => {
+
+    this.sessions$.pipe(switchMap((s) => s.state$)).subscribe((state) => {
       const connected = state === SerialSessionState.Connected;
       const busy =
         state === SerialSessionState.Connecting ||
@@ -50,30 +60,44 @@ export class App {
       baudRateSelect.disabled = connected || busy;
       setStatus(status, ...STATUS[state]);
     });
-    this.session.isConnected$.subscribe((isConnected) => {
-      disconnectBtn.disabled = !isConnected;
-      sendInput.disabled = sendBtn.disabled = !isConnected;
-    });
-    this.session.receive$.subscribe((chunk) => {
-      receiveOutput.value += chunk;
-      receiveOutput.scrollTop = receiveOutput.scrollHeight;
-    });
-    this.session.errors$.subscribe((error) => {
-      setStatus(status, 'error', `エラー: ${error.message}`);
-      console.error('Serial port error:', error);
-    });
+
+    this.sessions$
+      .pipe(switchMap((s) => s.isConnected$))
+      .subscribe((isConnected) => {
+        disconnectBtn.disabled = !isConnected;
+        sendInput.disabled = sendBtn.disabled = !isConnected;
+      });
+
+    combineLatest([this.sessions$, this.terminalBufferEpoch$])
+      .pipe(switchMap(([s]) => createTerminalBuffer(s.receive$).text$))
+      .subscribe((text) => {
+        receiveOutput.value = text;
+        receiveOutput.scrollTop = receiveOutput.scrollHeight;
+      });
+
+    this.sessions$
+      .pipe(switchMap((s) => s.errors$))
+      .subscribe((error) => {
+        setStatus(status, 'error', `エラー: ${error.message}`);
+        console.error('Serial port error:', error);
+      });
+
     fromEvent(connectBtn, 'click').subscribe(() => {
       const baudRate = parseInt(baudRateSelect.value, 10);
+      this.terminalBufferEpoch$.next(this.terminalBufferEpoch$.value + 1);
+      receiveOutput.value = '';
       if (baudRate !== this.baudRate) {
         this.baudRate = baudRate;
         this.session = createSerialSession({ baudRate });
+        this.sessions$.next(this.session);
       }
-      receiveOutput.value = '';
       this.session.connect$().subscribe({ error: () => void 0 });
     });
+
     fromEvent(disconnectBtn, 'click').subscribe(() =>
       this.session.disconnect$().subscribe({ error: () => void 0 }),
     );
+
     const send = () => {
       const text = sendInput.value.trim();
       if (!text) return;
@@ -82,6 +106,7 @@ export class App {
         error: () => void 0,
       });
     };
+
     fromEvent(sendBtn, 'click').subscribe(send);
     fromEvent(sendInput, 'keydown')
       .pipe(filter((e) => e.key === 'Enter' && !e.shiftKey))
@@ -89,8 +114,10 @@ export class App {
         e.preventDefault();
         send();
       });
-    fromEvent($('clear-receive-btn'), 'click').subscribe(
-      () => (receiveOutput.value = ''),
-    );
+
+    fromEvent($('clear-receive-btn'), 'click').subscribe(() => {
+      this.terminalBufferEpoch$.next(this.terminalBufferEpoch$.value + 1);
+      receiveOutput.value = '';
+    });
   }
 }
