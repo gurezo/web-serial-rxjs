@@ -34,15 +34,15 @@ This library is framework-agnostic and can be used with:
 
 ## SerialSession (v2) at a glance
 
-`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; when you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 
 | Surface | Role |
 | --- | --- |
 | `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`. Replays the current state on subscribe. Compare with **`SerialSessionState`** instead of string literals. |
 | `SerialSessionState` | **State constants** — exported const object (e.g. `SerialSessionState.Connected`, `SerialSessionState.Idle`) with the same values `state$` emits. |
 | `isConnected$` | **Connected flag** — `true` only when `state$` is `SerialSessionState.Connected`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
-| `receive$` | **Raw incoming UTF-8 text** as decoded string **chunks** (not line-delimited; multi-byte safe). |
-| `lines$` | **Line-delimited UTF-8 text** — one string per complete line, using the built-in newline buffer (`\n` / `\r\n`). |
+| `receive$` | **Raw decoder chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
+| `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring raw terminal streams where `\r` must stay intact. |
 | `errors$` | **All `SerialError` instances** from connect / read / write / close (primary error channel). |
 | `connect$()` | **Open** a user-selected port and start the internal read pump. |
 | `disconnect$()` | **Close** the port and stop the pump. |
@@ -62,11 +62,11 @@ This library is framework-agnostic and can be used with:
 | `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
 | `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
 
-**`receive$` vs `lines$`:** prefer **`lines$`** for typical newline-framed text; use **`receive$`** when you need raw chunk timing, a custom delimiter, or a rolling buffer you control (recipes in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
+**`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
 
 **`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `SerialSessionState.Connected` yourself. You can still derive your own boolean from `state$` with `map` if you need different rules.
 
-**`lines$` (newline framing)** — built in; for non-standard delimiters, frame on `receive$` (recipes in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
+**`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
 
 ### Minimal example
 

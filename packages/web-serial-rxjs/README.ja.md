@@ -20,6 +20,11 @@ Web Serial API は **Chromium 系**のブラウザ（**Chrome** 89+、**Edge** 8
 
 `receive$` は **non-replay** のままです。購読後に届くチャンクだけが見えます。接続ごとに直近 *N* 件のデコード済みテキスト**チャンク**（read pump の 1 回の `onChunk` あたり 1 件。文字数ではありません）を遅延購読者にも渡したい場合は、`createSerialSession` に `receiveReplay: { enabled: true, bufferSize: 512 }` を指定し、`receiveReplay$` を購読します。`bufferSize` を大きくするとメモリ負荷が増えます。receive replay が **無効**（既定）のとき、`receiveReplay$` は `receive$` と同じ hot ストリームです。`lines$` の行分割に replay は付きません。生チャンクの `receiveReplay$` のみが対象です。
 
+## `receive$` と `lines$`
+
+- **`receive$`** — UTF-8 の**デコードチャンク**をそのまま（行揃えではない）。`\r` を含む制御文字も保持。**ターミナル表示**や `\r` で行を更新する出力向け。
+- **`lines$`** — **完了した行**に分割（`\n` / `\r\n` / 実装どおり内部の `\r`）。**ログ・1 行ずつの解析**向け。対話シェルで `\r` に依存する出力を **`lines$`** でミラーしないでください（上書き表示が壊れることがあります）。詳しくは [概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.ja.md) を参照してください。
+
 ## インストール
 
 ```bash

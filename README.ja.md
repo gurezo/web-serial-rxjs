@@ -101,7 +101,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - RxJS を使用した TypeScript の例
 - **[Vue](apps/example-vue/)** - Composition API を使用した Vue 3 の例
 
-各サンプルは **connect・受信（多くの例は `lines$` または `receive$` 派生の行区切り）・send・disconnect** の最小動作確認用です。行フレーミングや応用パターンの詳細は [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md) に集約しています。
+各サンプルは **connect・受信（ターミナル表示は `\r` を保持するため `receive$` で連結）・send・disconnect** の最小動作確認用です。**`lines$`** は改行区切りログや解析向けであり、対話的シェル出力のミラーには **`receive$`** を使ってください。行フレーミングや応用パターンの詳細は [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md) に集約しています。
 
 各例には、セットアップと使用方法の説明を含む README が含まれています。
 

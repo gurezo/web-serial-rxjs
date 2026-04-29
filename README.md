@@ -102,7 +102,7 @@ Examples are available for the following environments:
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
 - **[Vue](apps/example-vue/)** - Vue 3 example using Composition API
 
-Each sample is a **minimal smoke test** for **connect**, **receive** (typically newline-delimited lines via `lines$` or a derived stream from `receive$`), **send**, and **disconnect**. Deeper patterns live in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md).
+Each sample is a **minimal smoke test** for **connect**, **receive** (terminal-style append via **`receive$`** so `\r` redraws stay intact), **send**, and **disconnect**. Use **`lines$`** only when you want newline-delimited logging or parsing—not for mirroring interactive terminal output; deeper patterns live in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md).
 
 Each example includes a README with setup and usage instructions.
 

@@ -20,6 +20,11 @@ After a successful `connect$`, use `getPortInfo()` or subscribe to `portInfo$` f
 
 `receive$` is **non-replay**: late subscribers only see chunks emitted after they subscribe. To retain the last *N* decoded text **chunks** per open connection (same bytes as `receive$`, e.g. for boot logs), pass `receiveReplay: { enabled: true, bufferSize: 512 }` to `createSerialSession` and subscribe to `receiveReplay$`. Larger `bufferSize` uses more memory. When receive replay is **off** (default), `receiveReplay$` is the same hot stream as `receive$`. This option does not add replay to `lines$`—only raw decoder chunks on `receiveReplay$`.
 
+## `receive$` vs `lines$`
+
+- **`receive$`** — UTF-8 **decoder chunks** as they arrive (not line-aligned). Preserves `\r` and other control characters. Use for **terminal mirrors**, shells, and progress output that relies on carriage-return redraws.
+- **`lines$`** — Split into **complete lines** (`\n`, `\r\n`, interior `\r` per implementation). Use for **logs** and **line-by-line parsing**. Do not wire **`lines$`** to a terminal widget when the peer uses `\r` for in-place updates—you will lose redraw semantics ([overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md)).
+
 ## Installation
 
 ```bash
