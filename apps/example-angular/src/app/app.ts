@@ -90,8 +90,7 @@ export class App {
   }
 
   handleConnect(): void {
-    this.receivedData.set('');
-    this.serialService.bumpTerminalBufferEpoch();
+    this.resetTerminalView();
     this.errorMessage.set(null);
     this.serialService.connect$(this.baudRate).subscribe({
       error: (error: unknown) => {
@@ -131,6 +130,10 @@ export class App {
   }
 
   clearReceivedData(): void {
+    this.resetTerminalView();
+  }
+
+  private resetTerminalView(): void {
     this.serialService.bumpTerminalBufferEpoch();
     this.receivedData.set('');
   }

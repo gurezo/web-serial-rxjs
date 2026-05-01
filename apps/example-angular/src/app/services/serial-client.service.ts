@@ -1,26 +1,15 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import {
-  createSerialSession,
-  SerialError,
-  SerialSession,
-  SerialSessionState,
-} from '@gurezo/web-serial-rxjs';
-import {
-  BehaviorSubject,
-  combineLatest,
-  Observable,
-  ReplaySubject,
-  switchMap,
-} from 'rxjs';
+  createSerialClientCore,
+  type SerialClientCore,
+} from '@gurezo/serial-client-core';
+import { type SerialError, type SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { type Observable } from 'rxjs';
 
 /** v2 SerialSession を薄くラップ。表示は `terminalText$`、`receive$` は raw。 */
 @Injectable({ providedIn: 'root' })
 export class SerialClientService implements OnDestroy {
-  private readonly sessions$ = new ReplaySubject<SerialSession>(1);
-  /** 同一セッションでも表示バッファだけ切り替え（クリア・再接続）するための世代。 */
-  private readonly terminalBufferEpoch$ = new BehaviorSubject(0);
-  private currentSession: SerialSession;
-  private currentBaudRate: number;
+  private readonly core: SerialClientCore = createSerialClientCore();
 
   readonly state$: Observable<SerialSessionState>;
   /** デコード済み raw チャンク。textarea には `terminalText$` を参照。 */
@@ -31,56 +20,35 @@ export class SerialClientService implements OnDestroy {
   readonly errors$: Observable<SerialError>;
 
   constructor() {
-    this.currentBaudRate = 9600;
-    this.currentSession = createSerialSession({
-      baudRate: this.currentBaudRate,
-    });
-    this.sessions$.next(this.currentSession);
-
-    this.state$ = this.sessions$.pipe(switchMap((session) => session.state$));
-    this.receive$ = this.sessions$.pipe(
-      switchMap((session) => session.receive$),
-    );
-    this.terminalText$ = combineLatest([
-      this.sessions$,
-      this.terminalBufferEpoch$,
-    ]).pipe(
-      switchMap(([session]) => session.terminalText$),
-    );
-    this.isConnected$ = this.sessions$.pipe(
-      switchMap((session) => session.isConnected$),
-    );
-    this.errors$ = this.sessions$.pipe(switchMap((session) => session.errors$));
+    this.state$ = this.core.state$;
+    this.receive$ = this.core.receive$;
+    this.terminalText$ = this.core.terminalText$;
+    this.isConnected$ = this.core.isConnected$;
+    this.errors$ = this.core.errors$;
   }
 
   ngOnDestroy(): void {
-    this.currentSession.disconnect$().subscribe({ error: () => void 0 });
-    this.sessions$.complete();
+    this.core.dispose$().subscribe({ error: () => void 0 });
   }
 
   isBrowserSupported(): boolean {
-    return this.currentSession.isBrowserSupported();
+    return this.core.isBrowserSupported();
   }
 
   connect$(baudRate?: number): Observable<void> {
-    if (baudRate !== undefined && baudRate !== this.currentBaudRate) {
-      this.currentBaudRate = baudRate;
-      this.currentSession = createSerialSession({ baudRate });
-      this.sessions$.next(this.currentSession);
-    }
-    return this.currentSession.connect$();
+    return this.core.connect$(baudRate);
   }
 
   disconnect$(): Observable<void> {
-    return this.currentSession.disconnect$();
+    return this.core.disconnect$();
   }
 
   send$(data: string | Uint8Array): Observable<void> {
-    return this.currentSession.send$(data);
+    return this.core.send$(data);
   }
 
   /** `terminalText$` の表示累積をリセットし、以降の受信のみ表示する（textarea クリア・再接続時）。 */
   bumpTerminalBufferEpoch(): void {
-    this.terminalBufferEpoch$.next(this.terminalBufferEpoch$.value + 1);
+    this.core.clearTerminalText();
   }
 }
