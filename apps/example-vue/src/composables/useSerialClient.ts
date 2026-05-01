@@ -1,19 +1,15 @@
 import {
-  createSerialSession,
+  createSerialClientCore,
+  type SerialClientCore,
+} from '@gurezo/serial-client-core';
+import {
   SerialSessionState,
   type SerialError,
-  type SerialSession,
 } from '@gurezo/web-serial-rxjs';
-import {
-  BehaviorSubject,
-  combineLatest,
-  Observable,
-  ReplaySubject,
-  switchMap,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { onUnmounted, ref, type Ref } from 'vue';
 
-/** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続は世代でリセット）。 */
+/** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続時は世代でリセット）。 */
 export interface UseSerialClientReturn {
   browserSupported: Ref<boolean>;
   state: Ref<SerialSessionState>;
@@ -27,63 +23,40 @@ export interface UseSerialClientReturn {
 }
 
 export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
-  const sessions$ = new ReplaySubject<SerialSession>(1);
-  let currentSession: SerialSession = createSerialSession({
-    baudRate: initialBaudRate,
-  });
-  let currentBaudRate = initialBaudRate;
-  sessions$.next(currentSession);
+  const core: SerialClientCore = createSerialClientCore(initialBaudRate);
 
-  const terminalBufferEpoch$ = new BehaviorSubject(0);
-  const bumpTerminalBufferEpoch = (): void => {
-    terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
-  };
-
-  const browserSupported = ref(currentSession.isBrowserSupported());
+  const browserSupported = ref(core.isBrowserSupported());
   const state = ref<SerialSessionState>(SerialSessionState.Idle);
   const isConnected = ref(false);
   const receivedData = ref('');
   const errorMessage = ref<string | null>(null);
 
-  const stateSub = sessions$
-    .pipe(switchMap((session) => session.state$))
-    .subscribe((next) => {
-      state.value = next;
-      if (next === SerialSessionState.Connected || next === SerialSessionState.Idle) {
-        errorMessage.value = null;
-      }
-    });
-  const isConnectedSub = sessions$
-    .pipe(switchMap((session) => session.isConnected$))
-    .subscribe((next) => {
-      isConnected.value = next;
-    });
-  const receiveSub = combineLatest([sessions$, terminalBufferEpoch$])
-    .pipe(switchMap(([s]) => s.terminalText$))
-    .subscribe((text) => {
-      receivedData.value = text;
-    });
-  const errorsSub = sessions$
-    .pipe(switchMap((session) => session.errors$))
-    .subscribe((error: SerialError) => {
-      errorMessage.value = error.message;
-    });
+  const stateSub = core.state$.subscribe((next) => {
+    state.value = next;
+    if (next === SerialSessionState.Connected || next === SerialSessionState.Idle) {
+      errorMessage.value = null;
+    }
+  });
+  const isConnectedSub = core.isConnected$.subscribe((next) => {
+    isConnected.value = next;
+  });
+  const receiveSub = core.terminalText$.subscribe((text) => {
+    receivedData.value = text;
+  });
+  const errorsSub = core.errors$.subscribe((error: SerialError) => {
+    errorMessage.value = error.message;
+  });
 
   const connect$ = (baudRate?: number): Observable<void> => {
-    bumpTerminalBufferEpoch();
     receivedData.value = '';
-    if (baudRate !== undefined && baudRate !== currentBaudRate) {
-      currentBaudRate = baudRate;
-      currentSession = createSerialSession({ baudRate });
-      sessions$.next(currentSession);
-    }
-    return currentSession.connect$();
+    core.clearTerminalText();
+    return core.connect$(baudRate);
   };
-  const disconnect$ = (): Observable<void> => currentSession.disconnect$();
+  const disconnect$ = (): Observable<void> => core.disconnect$();
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    currentSession.send$(data);
+    core.send$(data);
   const clearReceivedData = (): void => {
-    bumpTerminalBufferEpoch();
+    core.clearTerminalText();
     receivedData.value = '';
   };
 
@@ -92,8 +65,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     isConnectedSub.unsubscribe();
     receiveSub.unsubscribe();
     errorsSub.unsubscribe();
-    currentSession.disconnect$().subscribe({ error: () => void 0 });
-    sessions$.complete();
+    core.dispose$().subscribe({ error: () => void 0 });
   });
 
   return {
