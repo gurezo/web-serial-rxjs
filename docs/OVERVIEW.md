@@ -32,6 +32,8 @@ This library is framework-agnostic and can be used with:
 - Svelte
 - Vanilla JavaScript / TypeScript
 
+In this monorepo, the example apps use `@gurezo/serial-client-core` as a thin shared wrapper over `SerialSession` so UI bindings stay framework-specific while connection behavior stays consistent.
+
 ## SerialSession (v2) at a glance
 
 `createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).

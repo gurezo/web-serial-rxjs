@@ -32,6 +32,8 @@
 - Svelte
 - Vanilla JavaScript / TypeScript
 
+このモノレポの example アプリでは、`SerialSession` の薄い共通ラッパーとして `@gurezo/serial-client-core` を利用し、接続ロジックを共通化しつつ UI バインディングは各フレームワーク側で扱います。
+
 ## SerialSession（v2）の全体像
 
 `createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、**ターミナルにそのまま出す出力**は **`receive$`**、**改行区切りのログや解析**は **`lines$`** が担当します。独自区切りが必要なときは **`receive$`** 上に RxJS で組み立てます（[高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)）。接続真偽は `isConnected$` も利用できます。
