@@ -191,6 +191,19 @@ describe('useSerialClient', () => {
     ).toHaveBeenCalledTimes(1);
   });
 
+  it('should reset terminal text state before connect$', () => {
+    const { api } = mountHarness();
+    const mock = latestMock();
+
+    mock.receiveSubject.next('stale-data');
+    expect(api.receivedData.value).toBe('stale-data');
+
+    api.connect$().subscribe();
+
+    expect(mock.clearTerminalText).toHaveBeenCalledTimes(1);
+    expect(api.receivedData.value).toBe('');
+  });
+
   it('should disconnect through the core', () => {
     const { api } = mountHarness();
     api.disconnect$().subscribe();
