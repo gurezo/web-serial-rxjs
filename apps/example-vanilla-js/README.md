@@ -90,13 +90,13 @@ This example uses RxJS observables to handle serial port communication reactivel
 
 1. **Browser Support Check**: On initialization, the app checks if the browser supports the Web Serial API.
 
-2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses `createSerialSession()` to create a session instance.
+2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses `createSerialClientCore()` and delegates connect/disconnect/send through the shared core.
 
 3. **Configuration**: Users can select the baud rate before connecting.
 
 4. **Data Sending**: Users can type text in the input field and send it to the serial port. The text is encoded as UTF-8 and sent as `Uint8Array`.
 
-5. **Data Receiving**: Data is decoded as UTF-8; the app mirrors **`session.terminalText$`** into the textarea. **`lines$`** is for line-oriented logs, not raw `\r`-heavy shell output.
+5. **Data Receiving**: Data is decoded as UTF-8; the app mirrors **`core.terminalText$`** into the textarea. **`lines$`** is for line-oriented logs, not raw `\r`-heavy shell output.
 
 ## Code Structure
 

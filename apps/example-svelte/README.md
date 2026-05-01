@@ -77,20 +77,20 @@ pnpm exec nx lint example-svelte
 
 ## How It Works
 
-The example uses the v2 `SerialSession` API directly:
+The example uses `@gurezo/serial-client-core` through `useSerialSession`:
 
 1. **Browser support check**: `useSerialSession` calls `session.isBrowserSupported()` once at creation time and exposes the result as the `browserSupported` store.
-2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`. When the baud rate changes between calls, the helper transparently creates a new `SerialSession` so subsequent streams reflect the new port configuration.
-3. **State UI**: The helper subscribes to `session.state$` and `session.isConnected$`. `App.svelte` branches on `SerialSessionState` for status and uses `$isConnected` for button enablement.
+2. **Connection**: Clicking "接続" invokes `connect$(baudRate)` on the shared core wrapper. When the baud rate changes between calls, the core transparently re-creates the underlying session so subsequent streams reflect the new port configuration.
+3. **State UI**: The helper subscribes to `core.state$` and `core.isConnected$`. `App.svelte` branches on `SerialSessionState` for status and uses `$isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.
-5. **Receiving**: The store reflects **`session.terminalText$`** in `receivedData`. **`lines$`** is for one-line-at-a-time logging or newline-only parsing; raw chunk streaming without terminal folding uses `receive$` (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
-6. **Errors**: All connect/read/write/close failures are multiplexed through `session.errors$` and surfaced as the `errorMessage` store. No per-call try/catch wrappers are needed.
+5. **Receiving**: The store reflects **`core.terminalText$`** in `receivedData`. **`lines$`** is for one-line-at-a-time logging or newline-only parsing; raw chunk streaming without terminal folding uses `receive$` (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+6. **Errors**: All connect/read/write/close failures are multiplexed through `core.errors$` and surfaced as the `errorMessage` store. No per-call try/catch wrappers are needed.
 
 ## Code Structure
 
 - `src/main.ts`: Application entry point
 - `src/App.svelte`: Main component; renders UI from the `useSerialSession` stores
-- `src/stores/useSerialSession.ts`: Svelte helper wrapping `createSerialSession`
+- `src/stores/useSerialSession.ts`: Svelte helper wrapping `createSerialClientCore`
 - `src/stores/useSerialSession.test.ts`: Store unit tests (Vitest)
 - `src/App.test.ts`: Smoke test for the component
 - `src/styles.css`: Styling

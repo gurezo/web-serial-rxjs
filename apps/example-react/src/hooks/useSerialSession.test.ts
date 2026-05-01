@@ -209,6 +209,19 @@ describe('useSerialSession', () => {
     expect(result.current.state).toBe(SS.Connecting);
   });
 
+  it('connect$ 実行時に terminalText の表示状態をリセットする', () => {
+    const { result } = renderHook(() => useSerialSession());
+    act(() => latestMock().receiveSubject.next('stale-data'));
+    expect(result.current.receivedData).toBe('stale-data');
+
+    act(() => {
+      result.current.connect$().subscribe();
+    });
+
+    expect(latestMock().clearTerminalText).toHaveBeenCalledTimes(1);
+    expect(result.current.receivedData).toBe('');
+  });
+
   it('connect$ が失敗すると subscriber にエラーが渡る', () => {
     const { result } = renderHook(() => useSerialSession());
     const err = new Error('no port');
