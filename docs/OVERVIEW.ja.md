@@ -32,7 +32,7 @@
 - Svelte
 - Vanilla JavaScript / TypeScript
 
-このモノレポの example アプリでは、`SerialSession` の薄い共通ラッパーとして `@gurezo/serial-client-core` を利用し、接続ロジックを共通化しつつ UI バインディングは各フレームワーク側で扱います。
+このモノレポの example アプリでは、`createSerialSession` を直接利用し、各アプリ単体で最小利用方法が読み取れる構成にしています。
 
 ## SerialSession（v2）の全体像
 

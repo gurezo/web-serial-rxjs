@@ -77,20 +77,20 @@ pnpm exec nx lint example-react
 
 ## How It Works
 
-The example uses `@gurezo/serial-client-core` through `useSerialSession`:
+The example uses `createSerialSession` directly through `useSerialSession`:
 
 1. **Browser support check**: `useSerialSession` calls `session.isBrowserSupported()` once on mount and exposes the result as `browserSupported`.
-2. **Connection**: Clicking "接続" invokes `connect$(baudRate)` on the shared core wrapper. When the baud rate changes between calls, the core transparently re-creates the underlying session so subsequent streams reflect the new port configuration.
-3. **State UI**: The hook subscribes to `core.state$` and `core.isConnected$`. `App.tsx` uses `SerialSessionState` for status text and `isConnected` for button enablement.
+2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`; when baud rate changes, the hook creates a new `SerialSession` with the selected baud rate and connects it.
+3. **State UI**: The hook subscribes to `session.state$` and `session.isConnected$`. `App.tsx` uses `SerialSessionState` for status text and `isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.
-5. **Receiving**: The hook subscribes to **`core.terminalText$`** and mirrors the result in `receivedData` (carriage-return safe). Use **`lines$`** for complete-line logging or simple parsers; it drops lone `\r` behavior (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
-6. **Errors**: All connect/read/write/close failures are multiplexed through `core.errors$` and surfaced as the hook's `errorMessage` state. No per-call try/catch wrappers are needed.
+5. **Receiving**: The hook subscribes to **`session.terminalText$`** and mirrors the result in `receivedData` (carriage-return safe). Use **`lines$`** for complete-line logging or simple parsers; it drops lone `\r` behavior (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+6. **Errors**: All connect/read/write/close failures are multiplexed through `session.errors$` and surfaced as the hook's `errorMessage` state. No per-call try/catch wrappers are needed.
 
 ## Code Structure
 
 - `src/main.tsx`: Application entry point (React 18 `createRoot` API)
 - `src/App.tsx`: Main component; renders UI from `useSerialSession` state
-- `src/hooks/useSerialSession.ts`: Custom hook wrapping `createSerialClientCore`
+- `src/hooks/useSerialSession.ts`: Custom hook wrapping `createSerialSession`
 - `src/hooks/useSerialSession.test.ts`: Hook unit tests (Testing Library + Vitest)
 - `src/App.test.tsx`: Component-level tests
 - `src/styles.css`: Styling

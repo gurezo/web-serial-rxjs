@@ -92,7 +92,7 @@ This example uses Angular Services and RxJS observables to handle serial port co
 
 1. **Browser Support Check**: On initialization, the app checks if the browser supports the Web Serial API using the `SerialClientService`.
 
-2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses the `SerialClientService`, which internally wraps `createSerialClientCore()`.
+2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses the `SerialClientService`, which internally uses `createSerialSession()` directly.
 
 3. **Configuration**: Users can select the baud rate before connecting. The baud rate is managed as component property.
 

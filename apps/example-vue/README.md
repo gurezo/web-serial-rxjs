@@ -92,13 +92,13 @@ This example uses Vue 3 Composition API and RxJS observables to handle serial po
 
 1. **Browser Support Check**: On initialization, the app checks if the browser supports the Web Serial API using the `useSerialClient` composable.
 
-2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses the `useSerialClient` composable, which internally wraps `createSerialClientCore()`.
+2. **Connection**: Users can connect to a serial port by clicking the "接続" (Connect) button. The app uses the `useSerialClient` composable, which internally uses `createSerialSession()` directly.
 
 3. **Configuration**: Users can select the baud rate before connecting. The baud rate is managed as Vue reactive state using `ref`.
 
 4. **Data Sending**: Users can type text in the input field and send it to the serial port. The text is encoded as UTF-8 and sent as `Uint8Array` through the composable's `send` method.
 
-5. **Data Receiving**: Incoming bytes are decoded as UTF-8; the composable surfaces **`core.terminalText$`** into the textarea-bound ref. Use **`lines$`** for newline-delimited logs—not for interactive shell mirrors where `\r` redraw matters.
+5. **Data Receiving**: Incoming bytes are decoded as UTF-8; the composable surfaces **`session.terminalText$`** into the textarea-bound ref. Use **`lines$`** for newline-delimited logs—not for interactive shell mirrors where `\r` redraw matters.
 
 ## Code Structure
 
