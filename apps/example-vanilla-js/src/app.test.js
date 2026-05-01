@@ -1,5 +1,6 @@
 import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createSerialClientCore } from '@gurezo/serial-client-core';
 import { App } from './app.js';
 
 vi.mock('@gurezo/serial-client-core', () => {
@@ -64,8 +65,7 @@ describe('App', () => {
     expect(app).toBeInstanceOf(App);
   });
 
-  it('should create serial client core on init', async () => {
-    const { createSerialClientCore } = await import('@gurezo/serial-client-core');
+  it('should create serial client core on init', () => {
     app = new App();
     expect(createSerialClientCore).toHaveBeenCalled();
   });

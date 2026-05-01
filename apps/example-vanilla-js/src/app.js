@@ -1,4 +1,3 @@
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
