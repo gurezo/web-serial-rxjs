@@ -1,19 +1,14 @@
 import {
-  createSerialSession,
+  createSerialClientCore,
+  type SerialClientCore,
+} from '@gurezo/serial-client-core';
+import {
   SerialSessionState,
   type SerialError,
-  type SerialSession,
 } from '@gurezo/web-serial-rxjs';
-import {
-  BehaviorSubject,
-  combineLatest,
-  type Observable,
-  ReplaySubject,
-  Subscription,
-  switchMap,
-} from 'rxjs';
+import { type Observable, Subscription } from 'rxjs';
 import { onDestroy } from 'svelte';
-import { readable, type Readable } from 'svelte/store';
+import { readable, writable, type Readable } from 'svelte/store';
 
 /** v2 `SerialSession` を Svelte store に薄く写す。表示は `terminalText$`（再接続は世代でリセット）。 */
 export interface UseSerialSessionReturn {
@@ -31,88 +26,58 @@ export interface UseSerialSessionReturn {
 export function useSerialSession(
   initialBaudRate = 9600,
 ): UseSerialSessionReturn {
-  let currentBaudRate = initialBaudRate;
-  let currentSession: SerialSession = createSerialSession({
-    baudRate: initialBaudRate,
-  });
-  const sessions$ = new ReplaySubject<SerialSession>(1);
-  const terminalBufferEpoch$ = new BehaviorSubject(0);
-  sessions$.next(currentSession);
+  const core: SerialClientCore = createSerialClientCore(initialBaudRate);
 
-  const browserSupported = readable(currentSession.isBrowserSupported());
+  const browserSupported = readable(core.isBrowserSupported());
 
   const state = readable<SerialSessionState>(SerialSessionState.Idle, (set) => {
-    const sub = sessions$
-      .pipe(switchMap((s) => s.state$))
-      .subscribe((next) => set(next));
+    const sub = core.state$.subscribe((next) => set(next));
     return () => sub.unsubscribe();
   });
 
   const isConnected = readable<boolean>(false, (set) => {
-    const sub = sessions$
-      .pipe(switchMap((s) => s.isConnected$))
-      .subscribe((next) => set(next));
+    const sub = core.isConnected$.subscribe((next) => set(next));
     return () => sub.unsubscribe();
   });
 
-  const bumpTerminalBufferEpoch = (): void => {
-    terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
-  };
-
-  let setReceived: ((value: string) => void) | null = null;
-  const receivedData = readable<string>('', (set) => {
-    setReceived = set;
-    const sub = combineLatest([sessions$, terminalBufferEpoch$])
-      .pipe(switchMap(([s]) => s.terminalText$))
-      .subscribe(set);
-    return () => {
-      sub.unsubscribe();
-      setReceived = null;
-    };
+  const receivedData = writable('');
+  const terminalSub = core.terminalText$.subscribe((t) => {
+    receivedData.set(t);
   });
 
   const errorMessage = readable<string | null>(null, (set) => {
     const subs = new Subscription();
     subs.add(
-      sessions$
-        .pipe(switchMap((s) => s.errors$))
-        .subscribe((e: SerialError) => set(e.message)),
+      core.errors$.subscribe((e: SerialError) => set(e.message)),
     );
     subs.add(
-      sessions$
-        .pipe(switchMap((s) => s.state$))
-        .subscribe((next) => {
-          if (next === SerialSessionState.Connected || next === SerialSessionState.Idle)
-            set(null);
-        }),
+      core.state$.subscribe((next) => {
+        if (next === SerialSessionState.Connected || next === SerialSessionState.Idle)
+          set(null);
+      }),
     );
     return () => subs.unsubscribe();
   });
 
   onDestroy(() => {
-    currentSession.disconnect$().subscribe({ error: () => void 0 });
-    sessions$.complete();
+    terminalSub.unsubscribe();
+    core.dispose$().subscribe({ error: () => void 0 });
   });
 
   const connect$ = (baudRate?: number): Observable<void> => {
-    bumpTerminalBufferEpoch();
-    setReceived?.('');
-    if (baudRate !== undefined && baudRate !== currentBaudRate) {
-      currentBaudRate = baudRate;
-      currentSession = createSerialSession({ baudRate });
-      sessions$.next(currentSession);
-    }
-    return currentSession.connect$();
+    receivedData.set('');
+    core.clearTerminalText();
+    return core.connect$(baudRate);
   };
 
-  const disconnect$ = (): Observable<void> => currentSession.disconnect$();
+  const disconnect$ = (): Observable<void> => core.disconnect$();
 
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    currentSession.send$(data);
+    core.send$(data);
 
   const clearReceivedData = (): void => {
-    bumpTerminalBufferEpoch();
-    setReceived?.('');
+    core.clearTerminalText();
+    receivedData.set('');
   };
 
   return {
