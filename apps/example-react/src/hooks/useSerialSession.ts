@@ -1,13 +1,19 @@
 import {
+  createSerialSession,
+  type SerialSession,
   SerialSessionState,
   type SerialError,
 } from '@gurezo/web-serial-rxjs';
-import {
-  createSerialClientCore,
-  type SerialClientCore,
-} from '@gurezo/serial-client-core';
 import { useEffect, useRef, useState } from 'react';
-import { Observable, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  Observable,
+  ReplaySubject,
+  shareReplay,
+  Subscription,
+  switchMap,
+} from 'rxjs';
 
 /** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続時は世代でリセット）。 */
 export interface UseSerialSessionReturn {
@@ -25,13 +31,24 @@ export interface UseSerialSessionReturn {
 export function useSerialSession(
   initialBaudRate = 9600,
 ): UseSerialSessionReturn {
-  const coreRef = useRef<SerialClientCore | null>(null);
-  if (coreRef.current === null) {
-    coreRef.current = createSerialClientCore(initialBaudRate);
+  const sessionsRef = useRef<ReplaySubject<SerialSession> | null>(null);
+  const terminalBufferEpochRef = useRef<BehaviorSubject<number> | null>(null);
+  const currentBaudRateRef = useRef(initialBaudRate);
+  const sessionRef = useRef<SerialSession | null>(null);
+
+  if (sessionsRef.current === null) {
+    sessionsRef.current = new ReplaySubject<SerialSession>(1);
+  }
+  if (terminalBufferEpochRef.current === null) {
+    terminalBufferEpochRef.current = new BehaviorSubject(0);
+  }
+  if (sessionRef.current === null) {
+    sessionRef.current = createSerialSession({ baudRate: initialBaudRate });
+    sessionsRef.current.next(sessionRef.current);
   }
 
   const [browserSupported] = useState(() =>
-    (coreRef.current as SerialClientCore).isBrowserSupported(),
+    (sessionRef.current as SerialSession).isBrowserSupported(),
   );
   const [state, setState] = useState<SerialSessionState>(SerialSessionState.Idle);
   const [isConnected, setIsConnected] = useState(false);
@@ -39,10 +56,16 @@ export function useSerialSession(
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const core = coreRef.current as SerialClientCore;
+    const sessions$ = sessionsRef.current as ReplaySubject<SerialSession>;
+    const terminalBufferEpoch$ = terminalBufferEpochRef.current as BehaviorSubject<number>;
     const sub = new Subscription();
     sub.add(
-      core.state$.subscribe((next) => {
+      sessions$
+        .pipe(
+          switchMap((session) => session.state$),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+        .subscribe((next) => {
         setState(next);
         if (
           next === SerialSessionState.Connected ||
@@ -52,30 +75,65 @@ export function useSerialSession(
       }),
     );
     sub.add(
-      core.isConnected$.subscribe((next) => setIsConnected(next)),
+      sessions$
+        .pipe(
+          switchMap((session) => session.isConnected$),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+        .subscribe((next) => setIsConnected(next)),
     );
-    sub.add(core.terminalText$.subscribe(setReceivedData));
     sub.add(
-      core.errors$.subscribe((e: SerialError) => setErrorMessage(e.message)),
+      combineLatest([sessions$, terminalBufferEpoch$])
+        .pipe(
+          switchMap(([session]) => session.terminalText$),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+        .subscribe(setReceivedData),
+    );
+    sub.add(
+      sessions$
+        .pipe(
+          switchMap((session) => session.errors$),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+        .subscribe((e: SerialError) => setErrorMessage(e.message)),
     );
     return () => {
       sub.unsubscribe();
-      core.dispose$().subscribe({ error: () => void 0 });
-      coreRef.current = null;
+      (sessionRef.current as SerialSession).disconnect$().subscribe({
+        error: () => void 0,
+      });
+      sessions$.complete();
+      terminalBufferEpoch$.complete();
+      sessionRef.current = null;
+      sessionsRef.current = null;
+      terminalBufferEpochRef.current = null;
     };
   }, []);
 
   const connect$ = (baudRate?: number): Observable<void> => {
     setReceivedData('');
-    (coreRef.current as SerialClientCore).clearTerminalText();
-    return (coreRef.current as SerialClientCore).connect$(baudRate);
+    const terminalBufferEpoch$ = terminalBufferEpochRef.current as BehaviorSubject<number>;
+    terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
+    if (
+      baudRate !== undefined &&
+      baudRate !== currentBaudRateRef.current
+    ) {
+      currentBaudRateRef.current = baudRate;
+      sessionRef.current = createSerialSession({ baudRate });
+      (sessionsRef.current as ReplaySubject<SerialSession>).next(
+        sessionRef.current,
+      );
+    }
+    return (sessionRef.current as SerialSession).connect$();
   };
   const disconnect$ = (): Observable<void> =>
-    (coreRef.current as SerialClientCore).disconnect$();
+    (sessionRef.current as SerialSession).disconnect$();
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    (coreRef.current as SerialClientCore).send$(data);
+    (sessionRef.current as SerialSession).send$(data);
   const clearReceivedData = (): void => {
-    (coreRef.current as SerialClientCore).clearTerminalText();
+    const terminalBufferEpoch$ = terminalBufferEpochRef.current as BehaviorSubject<number>;
+    terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
     setReceivedData('');
   };
 

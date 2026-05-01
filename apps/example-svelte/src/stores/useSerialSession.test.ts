@@ -1,13 +1,11 @@
 import type {
   SerialError,
+  SerialSession,
   SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import * as serialClientCore from '@gurezo/serial-client-core';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import {
   BehaviorSubject,
-  distinctUntilChanged,
-  map,
   of,
   Subject,
   throwError,
@@ -19,15 +17,14 @@ import { useSerialSession } from './useSerialSession';
 const SS = webSerialRxjs.SerialSessionState;
 
 interface MockCore {
-  core: serialClientCore.SerialClientCore;
+  session: SerialSession;
   stateSubject: BehaviorSubject<SerialSessionState>;
   receiveSubject: Subject<string>;
   errorsSubject: Subject<SerialError>;
+  isConnectedSubject: BehaviorSubject<boolean>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  clearTerminalText: ReturnType<typeof vi.fn>;
-  dispose$: ReturnType<typeof vi.fn>;
   isBrowserSupported: ReturnType<typeof vi.fn>;
 }
 
@@ -35,18 +32,13 @@ const createMockCore = (supported = true): MockCore => {
   const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
-  const isConnected$ = stateSubject.pipe(
-    map((s) => s === SS.Connected),
-    distinctUntilChanged(),
-  );
+  const isConnectedSubject = new BehaviorSubject(false);
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
-  const clearTerminalText = vi.fn();
-  const dispose$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => supported);
 
-  const core: serialClientCore.SerialClientCore = {
+  const session: SerialSession = {
     isBrowserSupported,
     connect$,
     disconnect$,
@@ -55,21 +47,18 @@ const createMockCore = (supported = true): MockCore => {
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
     terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable()).text$,
-    isConnected$,
-    clearTerminalText,
-    dispose$,
+    isConnected$: isConnectedSubject.asObservable(),
   };
 
   return {
-    core,
+    session,
     stateSubject,
     receiveSubject,
     errorsSubject,
+    isConnectedSubject,
     connect$,
     disconnect$,
     send$,
-    clearTerminalText,
-    dispose$,
     isBrowserSupported,
   };
 };
@@ -88,24 +77,24 @@ vi.mock('svelte', async () => {
   };
 });
 
-vi.mock('@gurezo/serial-client-core', async () => {
+vi.mock('@gurezo/web-serial-rxjs', async () => {
   const actual =
-    await vi.importActual<typeof import('@gurezo/serial-client-core')>(
-      '@gurezo/serial-client-core',
+    await vi.importActual<typeof import('@gurezo/web-serial-rxjs')>(
+      '@gurezo/web-serial-rxjs',
     );
   return {
     ...actual,
-    createSerialClientCore: vi.fn(() => {
+    createSerialSession: vi.fn(() => {
       const mock = createMockCore(nextSupported);
       mockCores.push(mock);
-      return mock.core;
+      return mock.session;
     }),
   };
 });
 
 const latestMock = (): MockCore => {
   const mock = mockCores.at(-1);
-  if (!mock) throw new Error('createSerialClientCore was not called');
+  if (!mock) throw new Error('createSerialSession was not called');
   return mock;
 };
 
@@ -136,11 +125,11 @@ describe('useSerialSession', () => {
     expect(get(s.browserSupported)).toBe(true);
   });
 
-  it('createSerialClientCore に初期ボーレートを渡す', () => {
+  it('createSerialSession に初期ボーレートを渡す', () => {
     useSerialSession(9600);
     expect(
-      vi.mocked(serialClientCore.createSerialClientCore),
-    ).toHaveBeenCalledWith(9600);
+      vi.mocked(webSerialRxjs.createSerialSession),
+    ).toHaveBeenCalledWith({ baudRate: 9600 });
   });
 
   it('browserSupported は session.isBrowserSupported() の結果を反映する', () => {
@@ -192,12 +181,11 @@ describe('useSerialSession', () => {
     latestMock().receiveSubject.next('data');
     expect(get(s.receivedData)).toBe('data');
     s.clearReceivedData();
-    expect(latestMock().clearTerminalText).toHaveBeenCalled();
     expect(get(s.receivedData)).toBe('');
     unsub();
   });
 
-  it('connect$ / disconnect$ / send$ は core の対応メソッドへ委譲する', () => {
+  it('connect$ / disconnect$ / send$ は session の対応メソッドへ委譲する', () => {
     const s = useSerialSession();
 
     s.connect$().subscribe();
@@ -210,16 +198,18 @@ describe('useSerialSession', () => {
     expect(latestMock().disconnect$).toHaveBeenCalled();
   });
 
-  it('connect$(baudRate) は core.connect$ にボーレートを渡す', () => {
+  it('connect$(baudRate) は新しい session を作成する', () => {
     const s = useSerialSession(9600);
     expect(mockCores).toHaveLength(1);
+    const first = mockCores[0];
 
     const unsub = s.state.subscribe(() => void 0);
     s.connect$(115200).subscribe();
-    expect(latestMock().connect$).toHaveBeenCalledWith(115200);
+    expect(first.connect$).not.toHaveBeenCalled();
+    expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(
-      vi.mocked(serialClientCore.createSerialClientCore),
-    ).toHaveBeenCalledTimes(1);
+      vi.mocked(webSerialRxjs.createSerialSession),
+    ).toHaveBeenLastCalledWith({ baudRate: 115200 });
 
     latestMock().stateSubject.next(SS.Connecting);
     expect(get(s.state)).toBe(SS.Connecting);
@@ -236,13 +226,13 @@ describe('useSerialSession', () => {
     expect(onError).toHaveBeenCalledWith(err);
   });
 
-  it('onDestroy で core.dispose$ が呼ばれる', () => {
+  it('onDestroy で session.disconnect$ が呼ばれる', () => {
     useSerialSession();
     const mock = latestMock();
     const cleanup = (
       globalThis as unknown as { __svelteCleanup?: () => void }
     ).__svelteCleanup;
     cleanup?.();
-    expect(mock.dispose$).toHaveBeenCalled();
+    expect(mock.disconnect$).toHaveBeenCalled();
   });
 });

@@ -1,12 +1,18 @@
 import {
-  createSerialClientCore,
-  type SerialClientCore,
-} from '@gurezo/serial-client-core';
-import {
+  createSerialSession,
   SerialSessionState,
   type SerialError,
+  type SerialSession,
 } from '@gurezo/web-serial-rxjs';
-import { type Observable, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  type Observable,
+  ReplaySubject,
+  shareReplay,
+  Subscription,
+  switchMap,
+} from 'rxjs';
 import { onDestroy } from 'svelte';
 import { readable, writable, type Readable } from 'svelte/store';
 
@@ -26,57 +32,96 @@ export interface UseSerialSessionReturn {
 export function useSerialSession(
   initialBaudRate = 9600,
 ): UseSerialSessionReturn {
-  const core: SerialClientCore = createSerialClientCore(initialBaudRate);
+  const sessions$ = new ReplaySubject<SerialSession>(1);
+  const terminalBufferEpoch$ = new BehaviorSubject(0);
+  let currentBaudRate = initialBaudRate;
+  let currentSession = createSerialSession({ baudRate: initialBaudRate });
+  sessions$.next(currentSession);
 
-  const browserSupported = readable(core.isBrowserSupported());
+  const browserSupported = readable(currentSession.isBrowserSupported());
 
   const state = readable<SerialSessionState>(SerialSessionState.Idle, (set) => {
-    const sub = core.state$.subscribe((next) => set(next));
+    const sub = sessions$
+      .pipe(
+        switchMap((session) => session.state$),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      )
+      .subscribe((next) => set(next));
     return () => sub.unsubscribe();
   });
 
   const isConnected = readable<boolean>(false, (set) => {
-    const sub = core.isConnected$.subscribe((next) => set(next));
+    const sub = sessions$
+      .pipe(
+        switchMap((session) => session.isConnected$),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      )
+      .subscribe((next) => set(next));
     return () => sub.unsubscribe();
   });
 
   const receivedData = writable('');
-  const terminalSub = core.terminalText$.subscribe((t) => {
+  const terminalSub = combineLatest([sessions$, terminalBufferEpoch$])
+    .pipe(
+      switchMap(([session]) => session.terminalText$),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    )
+    .subscribe((t) => {
     receivedData.set(t);
   });
 
   const errorMessage = readable<string | null>(null, (set) => {
     const subs = new Subscription();
     subs.add(
-      core.errors$.subscribe((e: SerialError) => set(e.message)),
+      sessions$
+        .pipe(
+          switchMap((session) => session.errors$),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+        .subscribe((e: SerialError) => set(e.message)),
     );
     subs.add(
-      core.state$.subscribe((next) => {
-        if (next === SerialSessionState.Connected || next === SerialSessionState.Idle)
-          set(null);
-      }),
+      sessions$
+        .pipe(
+          switchMap((session) => session.state$),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+        .subscribe((next) => {
+          if (
+            next === SerialSessionState.Connected ||
+            next === SerialSessionState.Idle
+          )
+            set(null);
+        }),
     );
     return () => subs.unsubscribe();
   });
 
   onDestroy(() => {
     terminalSub.unsubscribe();
-    core.dispose$().subscribe({ error: () => void 0 });
+    currentSession.disconnect$().subscribe({ error: () => void 0 });
+    sessions$.complete();
+    terminalBufferEpoch$.complete();
   });
 
   const connect$ = (baudRate?: number): Observable<void> => {
     receivedData.set('');
-    core.clearTerminalText();
-    return core.connect$(baudRate);
+    terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
+    if (baudRate !== undefined && baudRate !== currentBaudRate) {
+      currentBaudRate = baudRate;
+      currentSession = createSerialSession({ baudRate });
+      sessions$.next(currentSession);
+    }
+    return currentSession.connect$();
   };
 
-  const disconnect$ = (): Observable<void> => core.disconnect$();
+  const disconnect$ = (): Observable<void> => currentSession.disconnect$();
 
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    core.send$(data);
+    currentSession.send$(data);
 
   const clearReceivedData = (): void => {
-    core.clearTerminalText();
+    terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
     receivedData.set('');
   };
 

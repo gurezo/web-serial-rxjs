@@ -32,7 +32,7 @@ This library is framework-agnostic and can be used with:
 - Svelte
 - Vanilla JavaScript / TypeScript
 
-In this monorepo, the example apps use `@gurezo/serial-client-core` as a thin shared wrapper over `SerialSession` so UI bindings stay framework-specific while connection behavior stays consistent.
+In this monorepo, the example apps use `createSerialSession` directly so each app is self-contained and the minimum integration surface is visible in place.
 
 ## SerialSession (v2) at a glance
 
