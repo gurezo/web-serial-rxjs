@@ -15,8 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@gurezo/web-serial-rxjs": ["packages/web-serial-rxjs/src/index.ts"],
-      "@gurezo/serial-client-core": ["./libs/serial-client-core/src/index.ts"]
+      "@gurezo/web-serial-rxjs": ["packages/web-serial-rxjs/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
