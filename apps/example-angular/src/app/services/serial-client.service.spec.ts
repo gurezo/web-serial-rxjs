@@ -1,11 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import * as serialClientCore from '@gurezo/serial-client-core';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import {
   BehaviorSubject,
-  distinctUntilChanged,
   firstValueFrom,
-  map,
   of,
   Subject,
   throwError,
@@ -16,15 +13,14 @@ import { SerialClientService } from './serial-client.service';
 const SS = webSerialRxjs.SerialSessionState;
 
 interface MockCore {
-  core: serialClientCore.SerialClientCore;
+  session: webSerialRxjs.SerialSession;
   stateSubject: BehaviorSubject<webSerialRxjs.SerialSessionState>;
   receiveSubject: Subject<string>;
   errorsSubject: Subject<webSerialRxjs.SerialError>;
+  isConnectedSubject: BehaviorSubject<boolean>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  clearTerminalText: ReturnType<typeof vi.fn>;
-  dispose$: ReturnType<typeof vi.fn>;
   isBrowserSupported: ReturnType<typeof vi.fn>;
 }
 
@@ -34,18 +30,13 @@ const createMockCore = (): MockCore => {
   );
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<webSerialRxjs.SerialError>();
-  const isConnected$ = stateSubject.pipe(
-    map((s) => s === SS.Connected),
-    distinctUntilChanged(),
-  );
+  const isConnectedSubject = new BehaviorSubject(false);
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
-  const clearTerminalText = vi.fn();
-  const dispose$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => true);
 
-  const core: serialClientCore.SerialClientCore = {
+  const session: webSerialRxjs.SerialSession = {
     isBrowserSupported,
     connect$,
     disconnect$,
@@ -54,45 +45,42 @@ const createMockCore = (): MockCore => {
     errors$: errorsSubject.asObservable(),
     receive$: receiveSubject.asObservable(),
     terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable()).text$,
-    isConnected$,
-    clearTerminalText,
-    dispose$,
+    isConnected$: isConnectedSubject.asObservable(),
   };
 
   return {
-    core,
+    session,
     stateSubject,
     receiveSubject,
     errorsSubject,
+    isConnectedSubject,
     connect$,
     disconnect$,
     send$,
-    clearTerminalText,
-    dispose$,
     isBrowserSupported,
   };
 };
 
-let mockCores: MockCore[] = [];
+let mockSessions: MockCore[] = [];
 
-vi.mock('@gurezo/serial-client-core', async () => {
-  const actual = await vi.importActual<typeof import('@gurezo/serial-client-core')>(
-    '@gurezo/serial-client-core',
+vi.mock('@gurezo/web-serial-rxjs', async () => {
+  const actual = await vi.importActual<typeof import('@gurezo/web-serial-rxjs')>(
+    '@gurezo/web-serial-rxjs',
   );
   return {
     ...actual,
-    createSerialClientCore: vi.fn(() => {
+    createSerialSession: vi.fn(() => {
       const mock = createMockCore();
-      mockCores.push(mock);
-      return mock.core;
+      mockSessions.push(mock);
+      return mock.session;
     }),
   };
 });
 
 const latestMock = (): MockCore => {
-  const mock = mockCores.at(-1);
+  const mock = mockSessions.at(-1);
   if (!mock) {
-    throw new Error('createSerialClientCore was not called');
+    throw new Error('createSerialSession was not called');
   }
   return mock;
 };
@@ -102,7 +90,7 @@ describe('SerialClientService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCores = [];
+    mockSessions = [];
     TestBed.configureTestingModule({});
     service = TestBed.inject(SerialClientService);
   });
@@ -111,9 +99,9 @@ describe('SerialClientService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should create core on construction', () => {
+  it('should create session on construction', () => {
     expect(
-      vi.mocked(serialClientCore.createSerialClientCore),
+      vi.mocked(webSerialRxjs.createSerialSession),
     ).toHaveBeenCalledTimes(1);
     expect(service).toBeTruthy();
   });
@@ -137,15 +125,17 @@ describe('SerialClientService', () => {
     expect(state).toBe(SS.Connected);
   });
 
-  it('should connect through the core', async () => {
+  it('should connect through the session', async () => {
     await firstValueFrom(service.connect$());
     expect(latestMock().connect$).toHaveBeenCalledTimes(1);
   });
 
-  it('should pass baud rate to core connect$', async () => {
+  it('should recreate session when baud rate changes', async () => {
     await firstValueFrom(service.connect$(115200));
-
-    expect(latestMock().connect$).toHaveBeenCalledWith(115200);
+    expect(latestMock().connect$).toHaveBeenCalledWith();
+    expect(vi.mocked(webSerialRxjs.createSerialSession)).toHaveBeenLastCalledWith({
+      baudRate: 115200,
+    });
   });
 
   it('should disconnect through the session', async () => {
@@ -183,9 +173,14 @@ describe('SerialClientService', () => {
     sub.unsubscribe();
   });
 
-  it('bumpTerminalBufferEpoch delegates to clearTerminalText', () => {
+  it('bumpTerminalBufferEpoch resets terminalText$ emission chain', () => {
+    const values: string[] = [];
+    const sub = service.terminalText$.subscribe((t) => values.push(t));
+    latestMock().receiveSubject.next('before-clear');
     service.bumpTerminalBufferEpoch();
-    expect(latestMock().clearTerminalText).toHaveBeenCalledTimes(1);
+    latestMock().receiveSubject.next('after-clear');
+    expect(values.at(-1)).toBe('after-clear');
+    sub.unsubscribe();
   });
 
   it('should forward errors$ emissions', async () => {
@@ -199,8 +194,8 @@ describe('SerialClientService', () => {
     await expect(pending).resolves.toBe(error);
   });
 
-  it('should dispose core on destroy', () => {
+  it('should disconnect session on destroy', () => {
     service.ngOnDestroy();
-    expect(latestMock().dispose$).toHaveBeenCalledTimes(1);
+    expect(latestMock().disconnect$).toHaveBeenCalledTimes(1);
   });
 });

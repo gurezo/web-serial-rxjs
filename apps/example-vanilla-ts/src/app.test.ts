@@ -1,9 +1,12 @@
 import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSerialClientCore } from '@gurezo/serial-client-core';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
 import { App } from './app.js';
 
-vi.mock('@gurezo/serial-client-core', () => {
+vi.mock('@gurezo/web-serial-rxjs', async () => {
+  const actual = await vi.importActual<typeof import('@gurezo/web-serial-rxjs')>(
+    '@gurezo/web-serial-rxjs',
+  );
   const state$ = new BehaviorSubject<string>('idle');
   const receive$ = new Subject<string>();
   const errors$ = new Subject<{ message: string }>();
@@ -21,11 +24,10 @@ vi.mock('@gurezo/serial-client-core', () => {
     terminalText$: receive$,
     errors$,
     isConnected$,
-    clearTerminalText: vi.fn(),
-    dispose$: vi.fn(() => of(undefined)),
   };
   return {
-    createSerialClientCore: vi.fn(() => core),
+    ...actual,
+    createSerialSession: vi.fn(() => core),
   };
 });
 
@@ -65,9 +67,9 @@ describe('App', () => {
     expect(app).toBeInstanceOf(App);
   });
 
-  it('should create serial client core on init', () => {
+  it('should create serial session on init', () => {
     app = new App();
-    expect(createSerialClientCore).toHaveBeenCalled();
+    expect(createSerialSession).toHaveBeenCalled();
   });
 
   it('should render browser support status based on session.isBrowserSupported', () => {
