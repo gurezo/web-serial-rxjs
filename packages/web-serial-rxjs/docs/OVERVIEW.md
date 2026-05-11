@@ -34,7 +34,7 @@ This library is framework-agnostic and can be used with:
 
 ## SerialSession (v2) at a glance
 
-`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](./ADVANCED_USAGE.md)).
 
 | Surface | Role |
 | --- | --- |
@@ -63,11 +63,11 @@ This library is framework-agnostic and can be used with:
 | `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
 | `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
 
-**`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
+**`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 
 **`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `SerialSessionState.Connected` yourself. You can still derive your own boolean from `state$` with `map` if you need different rules.
 
-**`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md#line-framing)).
+**`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 
 ### Minimal example
 
@@ -92,15 +92,15 @@ session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```
 
-In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md).
+In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](./QUICK_START.md).
 
 ## Documentation index
 
 | Doc | Use it for |
 | --- | --- |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
-| **[Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
-| **[Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
-| **[API Reference](modules.html)** | Options, `SerialSessionState`, and `SerialError` details (generated TypeDoc); narrative tables also on [GitHub](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/API_REFERENCE.md). |
-| **[v1 → v2 Migration Guide](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
-| **[Phase 5 archive (legacy v1 doc)](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/archive/MIGRATION_PHASE5.md)** | Historical v1 context only. |
+| **[Quick Start](./QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
+| **[Advanced Usage](./ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
+| **[API Reference](modules.html)** | Options, `SerialSessionState`, and `SerialError` details (generated TypeDoc); narrative tables also on [GitHub](./API_REFERENCE.md). |
+| **[v1 → v2 Migration Guide](./MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
+| **[Phase 5 archive (legacy v1 doc)](./archive/MIGRATION_PHASE5.md)** | Historical v1 context only. |
