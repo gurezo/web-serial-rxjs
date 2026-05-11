@@ -8,10 +8,20 @@
 
 ## 目次
 
+- [ドキュメント](#ドキュメント)
 - [機能](#機能)
 - [対応フレームワーク](#対応フレームワーク)
 - [SerialSession（v2）の全体像](#serialsessionv2の全体像)
 - [ドキュメント索引](#ドキュメント索引)
+
+## ドキュメント
+
+TypeDoc のトップページから、まず以下を参照してください。
+
+- [クイックスタート](./QUICK_START.ja.md)
+- [高度な使用方法](./ADVANCED_USAGE.ja.md)
+- [API の概念と設計メモ](./API_REFERENCE.ja.md)
+- [v1 から v2 への移行ガイド](./MIGRATION_V2.ja.md)
 
 ## 機能
 

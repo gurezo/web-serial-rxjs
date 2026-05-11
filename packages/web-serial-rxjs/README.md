@@ -76,11 +76,13 @@ pnpm add rxjs
 
 - Full **v2 API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession (v2) overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.ja.md))
 - Shortest path to an open port: [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md)
+- Browse as one integrated site (TypeDoc): [web-serial-rxjs API Documentation](https://gurezo.github.io/web-serial-rxjs/)
 
 ## Documentation
 
 | Doc | Use it for |
 | --- | --- |
+| [TypeDoc top page](https://gurezo.github.io/web-serial-rxjs/) | Start from OVERVIEW and move to guides/API in one site |
 | [Overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) | Features and the v2 `SerialSession` / `SerialSessionState` map |
 | [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md) | Open a port and wire subscriptions end-to-end |
 | [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) | Line framing, request/response-style flows, recovery |
