@@ -8,10 +8,20 @@ This page is the **mental model** for the v2 public API: what each `SerialSessio
 
 ## Table of Contents
 
+- [Documentation](#documentation)
 - [Features](#features)
 - [Framework support](#framework-support)
 - [SerialSession (v2) at a glance](#serialsession-v2-at-a-glance)
 - [Documentation index](#documentation-index)
+
+## Documentation
+
+Start here from the TypeDoc top page:
+
+- [Quick Start](./QUICK_START.md)
+- [Advanced Usage](./ADVANCED_USAGE.md)
+- [API Concepts and design notes](./API_REFERENCE.md)
+- [v1 to v2 Migration Guide](./MIGRATION_V2.md)
 
 ## Features
 
