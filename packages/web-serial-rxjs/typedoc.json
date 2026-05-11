@@ -22,5 +22,7 @@
   "gitRevision": "main",
   "projectDocuments": ["./docs/**/*.md"],
   "searchInDocuments": true,
+  "sourceLinkExternal": true,
+  "markdownLinkExternal": true,
   "plugin": ["typedoc-rhineai-theme"]
 }
