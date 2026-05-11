@@ -20,5 +20,7 @@
   "name": "web-serial-rxjs API Documentation",
   "includeVersion": false,
   "gitRevision": "main",
+  "projectDocuments": ["./docs/**/*.md"],
+  "searchInDocuments": true,
   "plugin": ["typedoc-rhineai-theme"]
 }
