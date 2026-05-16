@@ -5,6 +5,7 @@ import type {
 } from '@gurezo/web-serial-rxjs';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { act, renderHook } from '@testing-library/react';
+import { createElement, StrictMode, type ReactNode } from 'react';
 import {
   BehaviorSubject,
   of,
@@ -228,5 +229,19 @@ describe('useSerialSession', () => {
     const mock = latestMock();
     unmount();
     expect(mock.disconnect$).toHaveBeenCalled();
+  });
+
+  it('StrictMode の二重マウントでも例外なくセッションを購読できる (issue #328)', () => {
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(StrictMode, null, children);
+
+    // StrictMode 配下では effect が「setup → cleanup → setup」と二重実行される。
+    // renderHook 自体が throw しないこと（pipe を null 参照しないこと）を確認する。
+    const { result } = renderHook(() => useSerialSession(), { wrapper });
+
+    // StrictMode の再 setup で active な subscription は最後の mock セッション側に
+    // 切り替わるため、その state$ を更新したらフックの state に反映される。
+    act(() => latestMock().stateSubject.next(SS.Connecting));
+    expect(result.current.state).toBe(SS.Connecting);
   });
 });
