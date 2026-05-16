@@ -36,16 +36,22 @@ export function useSerialSession(
   const currentBaudRateRef = useRef(initialBaudRate);
   const sessionRef = useRef<SerialSession | null>(null);
 
-  if (sessionsRef.current === null) {
-    sessionsRef.current = new ReplaySubject<SerialSession>(1);
-  }
-  if (terminalBufferEpochRef.current === null) {
-    terminalBufferEpochRef.current = new BehaviorSubject(0);
-  }
-  if (sessionRef.current === null) {
-    sessionRef.current = createSerialSession({ baudRate: initialBaudRate });
-    sessionsRef.current.next(sessionRef.current);
-  }
+  // StrictMode の二重マウントでクリーンアップが ref を null に戻した後でも、
+  // useEffect の再 setup から呼び出されたときに subject / session を作り直す。
+  const ensureRefs = (baudRate: number) => {
+    if (sessionsRef.current === null) {
+      sessionsRef.current = new ReplaySubject<SerialSession>(1);
+    }
+    if (terminalBufferEpochRef.current === null) {
+      terminalBufferEpochRef.current = new BehaviorSubject(0);
+    }
+    if (sessionRef.current === null) {
+      sessionRef.current = createSerialSession({ baudRate });
+      sessionsRef.current.next(sessionRef.current);
+    }
+  };
+
+  ensureRefs(initialBaudRate);
 
   const [browserSupported] = useState(() =>
     (sessionRef.current as SerialSession).isBrowserSupported(),
@@ -56,6 +62,7 @@ export function useSerialSession(
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    ensureRefs(currentBaudRateRef.current);
     const sessions$ = sessionsRef.current as ReplaySubject<SerialSession>;
     const terminalBufferEpoch$ = terminalBufferEpochRef.current as BehaviorSubject<number>;
     const sub = new Subscription();
@@ -100,9 +107,11 @@ export function useSerialSession(
     );
     return () => {
       sub.unsubscribe();
-      (sessionRef.current as SerialSession).disconnect$().subscribe({
-        error: () => void 0,
-      });
+      if (sessionRef.current !== null) {
+        sessionRef.current.disconnect$().subscribe({
+          error: () => void 0,
+        });
+      }
       sessions$.complete();
       terminalBufferEpoch$.complete();
       sessionRef.current = null;
