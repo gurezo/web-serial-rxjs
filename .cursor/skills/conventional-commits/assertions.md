@@ -1,66 +1,61 @@
-# Conventional Commits 検証項目
+# Assertions
 
-`web-serial-rxjs` 用に生成された commit message / PR title を、コミット前・PR 作成前に AI が自己検証するためのチェックリスト。
+commit message / PR title を Conventional Commits に準拠させるための検証項目。AI が生成または検証するときに使うチェックリスト。
 
-## 検証項目（必須）
+## 検証項目
 
-1. Conventional Commits 形式（`<type>(<scope>): <summary>`）になっているか
-2. `type` が許可リスト（`feat` / `fix` / `docs` / `style` / `refactor` / `perf` / `test` / `build` / `ci` / `chore` / `revert`）のいずれかか
-3. `scope` が以下のいずれかか
-   - `apps/**/project.json` または `packages/**/project.json` の `name`
-   - fallback scope（`workspace` / `docs` / `readme` / `release` / `ci` / `build` / `nx` / `deps` / `repo` / `test`）
-4. `scope` が [commitlint.config.js](../../../commitlint.config.js) の `scope-enum` に存在するか
-5. `summary` が命令形・現在形か
-6. `summary` の冒頭が lowercase か
-7. `summary` の末尾にピリオドが付いていないか
-8. `summary` が 72 文字以内か
-9. `type` と変更内容が一致しているか（リファクタを `feat` にしない等）
-10. Public API 変更時に `!` または `BREAKING CHANGE:` が付与されているか
+1. **形式**: `<type>(<scope>): <summary>` の形式になっているか。
+2. **type**: 許可された値 (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`) のいずれかで、小文字か。
+3. **scope**: `commitlint.config.js` の `scope-enum` に含まれる値か。`scopes.md` と一致するか。小文字でハイフン区切りか。
+4. **summary**: 簡潔で命令形 (imperative mood) か。
+5. **summary 先頭**: 小文字か。
+6. **summary 末尾**: ピリオドが付いていないか。
+7. **summary 長さ**: 72 文字以内か。
+8. **整合性**: type と変更対象が一致しているか (例: ドキュメントのみ変更で `feat` を使っていないか)。
+9. **scope と変更対象の一致**: 変更ファイルが scope に対応するディレクトリと一致しているか。
+10. **breaking change**: 破壊的変更がある場合、footer に `BREAKING CHANGE: ` が記載されているか (`!` 表記を使っていないか)。
+11. **混在**: 関連性のない変更を 1 つのコミットにまとめていないか。
 
-## 検証ステップ
+## Valid 例
 
-1. メッセージを 1 行目（header）と body / footer に分解する
-2. 上記 1〜10 を順にチェックする
-3. いずれかに違反していたら修正してから再検証する
-4. 通過したらコミット / PR を進める
-
-## Valid サンプル
-
-以下はいずれも全項目を満たす。
-
-```text
+```
 feat(web-serial-rxjs): add SerialSession API
 fix(web-serial-rxjs): prevent duplicated receive stream
-feat(example-angular): add Signals example
+feat(example-angular): add disconnect smoke test
 fix(example-react): handle StrictMode remount in useSerialSession
-refactor(web-serial-rxjs): simplify connection lifecycle
-docs(workspace): update quick start guide
+docs(workspace): update readme quick start
+test(web-serial-rxjs): add disconnect tests
 ci(workspace): update npm publish workflow
 chore(workspace): bump pnpm dependencies
-feat(web-serial-rxjs)!: change SerialSession.connect signature
 ```
 
-## Invalid サンプル
+破壊的変更を含む Valid 例:
 
-各サンプルがどの項目に違反しているかを示す。
+```
+feat(web-serial-rxjs): change SerialSession connect api
 
-| メッセージ | 違反 |
-| --- | --- |
-| `feat(core): add api` | 3 / 4（`core` は project.json に存在せず scope-enum にもない） |
-| `fix(serial): fix bug` | 3 / 4（`serial` は scope に存在しない）+ 9（内容曖昧） |
-| `refactor(utils): cleanup` | 3 / 4（`utils` は存在しない） |
-| `update files` | 1（形式違反） |
-| `WIP` | 1 |
-| `fix issue` | 1 + 2 |
-| `feat: Added New Feature.` | 5（過去形）/ 6（大文字）/ 7（末尾ピリオド） |
-| `feat(web-serial-rxjs): Add SerialSession API.` | 6 / 7 |
-| `feat(web-serial-rxjs): fix typo in README` | 9（実態は `docs`） |
-| `refactor(web-serial-rxjs): add new method` | 9（実態は `feat`） |
+BREAKING CHANGE: connect が Observable を返さなくなりました
+```
 
-## 自動検証との関係
+## Invalid 例と修正案
 
-- ローカル: [.husky/commit-msg](../../../.husky/commit-msg) が `commitlint` を起動
-- CI: [.github/workflows/commitlint.yml](../../../.github/workflows/commitlint.yml) が PR 内のコミットを検証
-- 設定: [commitlint.config.js](../../../commitlint.config.js)
+| Invalid | 違反項目 | 修正案 |
+| --- | --- | --- |
+| `fix stuff` | 1, 3, 4 | `fix(web-serial-rxjs): correct reconnect timing` |
+| `update console` | 1, 2, 3 | `refactor(example-react): update debug logging` |
+| `Added new feature` | 1, 5 | `feat(web-serial-rxjs): add new feature` |
+| `WIP` | 1, 2, 3, 4 | コミットを分割し具体的なメッセージにする |
+| `feat: Added New Feature.` | 4, 5, 6 | `feat(web-serial-rxjs): add new feature` |
+| `feat(WEB): add helper` | 3 | `feat(example-react): add helper` |
+| `feat(web-serial-rxjs)!: change api` | 10 | `feat(web-serial-rxjs): change api` + footer に `BREAKING CHANGE: ...` |
 
-AI が生成するメッセージは、上記の自動検証を **通過する前提** で出力する。違反すると commit / push が失敗する。
+## 自動検証
+
+ローカル: `.husky/commit-msg` が `pnpm exec commitlint --edit "$1"` を実行する。
+CI: `.github/workflows/commitlint.yml` が PR の全コミットを検証する。
+
+## 参照
+
+- [`SKILL.md`](SKILL.md)
+- [`examples.md`](examples.md)
+- [`scopes.md`](scopes.md)

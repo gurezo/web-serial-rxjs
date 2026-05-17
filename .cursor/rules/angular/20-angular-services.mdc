@@ -1,0 +1,15 @@
+---
+description: Angular service rules for wrapping web-serial-rxjs.
+globs:
+  - "apps/**/*.service.ts"
+  - "examples/**/*.service.ts"
+alwaysApply: false
+---
+
+# Angular Service Rules
+
+- Use services to wrap `web-serial-rxjs` usage.
+- Keep services responsible for connection, send, receive, and error stream orchestration.
+- Expose read-only Observables or Signals to components.
+- Do not expose writable Subjects.
+- Keep service APIs small and example-friendly.

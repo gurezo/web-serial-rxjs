@@ -1,0 +1,19 @@
+---
+description: Angular component rules.
+globs:
+  - "apps/**/*.component.ts"
+  - "apps/**/*.component.html"
+  - "examples/**/*.component.ts"
+  - "examples/**/*.component.html"
+alwaysApply: false
+---
+
+# Angular Component Rules
+
+- Components should focus on presentation and user interaction.
+- Avoid placing connection lifecycle logic directly in components.
+- Prefer injecting services for library integration.
+- Prefer `ChangeDetectionStrategy.OnPush`.
+- Prefer `input()` and `output()` for component inputs and outputs.
+- Keep templates readable and simple.
+- Avoid large components.

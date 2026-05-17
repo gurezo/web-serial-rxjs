@@ -83,12 +83,12 @@ This project includes MCP (Model Context Protocol) server configuration for AI-a
 
 When you open this repository in [Cursor](https://www.cursor.com/), the following rules and skills are automatically applied so the AI generates Conventional Commits compliant commit messages and PR titles:
 
-- `.cursor/rules/conventional-commits.mdc`: Conventional Commits base rule
-- `.cursor/rules/pull-request-title.mdc`: PR title convention
-- `.cursor/rules/nx-project-scope.mdc`: Resolve scope from `project.json` `name`
+- `.cursor/rules/commits/40-conventional-commits.mdc`: Conventional Commits base rule
+- `.cursor/rules/commits/41-pull-request-title.mdc`: PR title convention
+- `.cursor/rules/nx/30-nx-project-scope.mdc`: Resolve scope from `project.json` `name`
 - `.cursor/skills/conventional-commits/`: Examples / assertions / scope list
 
-When you add or rename a `project.json`, keep `commitlint.config.js` (`scope-enum`) and `.cursor/skills/conventional-commits/scopes.md` in sync.
+When you add or rename a `project.json`, keep `commitlint.config.js` (`scope-enum`), `.cursor/skills/conventional-commits/scopes.md`, and `.cursor/rules/nx/30-nx-project-scope.mdc` in sync.
 
 ## Branch Strategy
 

@@ -1,0 +1,14 @@
+---
+description: Nx generator rules.
+globs:
+  - "apps/**"
+  - "libs/**"
+alwaysApply: false
+---
+
+# Nx Generator Rules
+
+- Prefer Nx generators when creating projects, libraries, components, or services.
+- Check existing generator conventions before adding files manually.
+- Keep generated code aligned with the existing workspace structure.
+- Do not introduce new folder conventions without explicit reason.

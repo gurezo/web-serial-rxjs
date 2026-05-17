@@ -1,0 +1,16 @@
+---
+description: Framework example rules.
+globs:
+  - "apps/**"
+  - "examples/**"
+alwaysApply: false
+---
+
+# Framework Example Rules
+
+- Examples must demonstrate the same `SerialSession` behavior.
+- Keep examples minimal.
+- Avoid framework-specific API divergence.
+- Update examples when public API changes.
+- Angular examples are included in this Issue.
+- React / Svelte / Vue.js examples are handled in separate Issues.

@@ -1,0 +1,18 @@
+---
+description: Angular baseline rules for web-serial-rxjs examples.
+globs:
+  - "apps/**/*.{ts,html,scss,css}"
+  - "examples/**/*.{ts,html,scss,css}"
+alwaysApply: false
+---
+
+# Angular Baseline Rules
+
+- Prefer Standalone Components.
+- Prefer strict TypeScript.
+- Prefer Angular Signals for local UI state.
+- Use RxJS for asynchronous streams from `web-serial-rxjs`.
+- Do not put library integration logic directly in components.
+- Keep Angular examples small and easy to understand.
+- Avoid framework-specific changes to the library Public API.
+- Keep examples aligned with the current `web-serial-rxjs` API.

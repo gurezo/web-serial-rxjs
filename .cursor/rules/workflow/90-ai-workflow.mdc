@@ -1,0 +1,14 @@
+---
+description: AI workflow rules.
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# AI Workflow Rules
+
+- Inspect nearby files before editing.
+- Keep diffs small.
+- Preserve architecture unless explicitly refactoring.
+- Update tests and docs with behavior changes.
+- Avoid unrelated changes.

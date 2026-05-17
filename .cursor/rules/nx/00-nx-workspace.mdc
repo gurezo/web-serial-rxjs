@@ -1,0 +1,15 @@
+---
+description: Nx workspace baseline rules.
+globs:
+  - "nx.json"
+  - "project.json"
+  - "package.json"
+alwaysApply: false
+---
+
+# Nx Workspace Rules
+
+- Use Nx commands for build/test/lint.
+- Keep project boundaries clear.
+- Prefer incremental changes.
+- Avoid unrelated refactoring.

@@ -1,23 +1,21 @@
 ---
 name: conventional-commits
-description: web-serial-rxjs（TypeScript + RxJS + Nx Workspace）用に Conventional Commits 準拠の commit message と PR title を生成・検証する。git commit を作成するとき、PR タイトルを決めるとき、コミットメッセージのレビューを求められたとき、もしくは scope 選定が必要なときに自動的に適用する。
+description: Generates Conventional Commits messages and pull request titles for web-serial-rxjs (TypeScript + RxJS + Nx monorepo). Trigger when authoring commit messages, PR titles, or release notes, or when reviewing existing commit history for compliance.
 ---
 
 # Conventional Commits for web-serial-rxjs
 
-`web-serial-rxjs` における Conventional Commits の運用を AI に教えるためのスキル。`.cursor/rules/conventional-commits.mdc` / `.cursor/rules/pull-request-title.mdc` / `.cursor/rules/nx-project-scope.mdc` と組み合わせて利用する。
+このリポジトリ（TypeScript ライブラリ + RxJS + Nx Workspace）向けに、Conventional Commits 準拠の commit message / PR title を生成・検証するための Skill。
 
-## 前提
+## 目的
 
-- TypeScript ライブラリ（`packages/web-serial-rxjs`）
-- RxJS ベースの公開 API（`SerialSession` ほか）
-- Nx Workspace（`apps/example-*` を含む）
-- npm package として公開（`@gurezo/web-serial-rxjs`）
-- commitlint + husky でローカル・CI 両方で検証
+- commit message と PR title を [Conventional Commits](https://www.conventionalcommits.org/) に統一する。
+- `packages/web-serial-rxjs` と `apps/example-*` の構成に整合する scope を選ぶ。
+- AI が生成するメッセージの品質を安定化させる。
 
 ## 形式
 
-```text
+```
 <type>(<scope>): <summary>
 
 [optional body]
@@ -25,67 +23,39 @@ description: web-serial-rxjs（TypeScript + RxJS + Nx Workspace）用に Convent
 [optional footer(s)]
 ```
 
-- `type` / `scope` は lowercase
-- `summary` は命令形・現在形、末尾ピリオド禁止、72 文字以内
-- `summary` の冒頭は大文字にしない
+## 適用ルール
 
-## 許可される type
+1. **type は小文字** で、許可された値のみを使う (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`)。
+2. **scope は小文字、ハイフン区切り**。`commitlint.config.js` の `scope-enum` または `scopes.md` から選ぶ。
+3. **summary は英語、命令形 (imperative mood)**。先頭は小文字、末尾にピリオドを付けない。
+4. **summary は 72 文字以内**。
+5. **type と変更内容を一致させる**。フォーマット変更のみは `style`、CI 設定は `ci`。
+6. **関連性のない変更を 1 つのコミットに混在させない**。
+7. **breaking change** は footer に `BREAKING CHANGE: ` を記載する (`type!` 表記は使わない)。
 
-`feat` / `fix` / `docs` / `style` / `refactor` / `perf` / `test` / `build` / `ci` / `chore` / `revert`
+## Nx を踏まえた scope 選択
 
-## scope の決定方法
+- ライブラリ本体 (`packages/web-serial-rxjs`) の変更 → `web-serial-rxjs`。
+- 各 example アプリの変更 → 対応する `example-*` scope。
+- ルート設定・複数 project に跨る変更 → `workspace`。
+- ドキュメント全般 → `docs` / `readme`。
+- GitHub Actions → `ci`。
+- 依存・ビルド設定 → `build` / `chore` / `deps`。
 
-1. 変更対象ファイルの最も近い `project.json` を探す
-2. その `project.json` の `name` を scope に使う
-3. project に紐付かない変更は fallback scope（`workspace` / `docs` / `ci` など）を使う
-4. 最終的な許可リストは [commitlint.config.js](../../../commitlint.config.js) の `scope-enum` と一致させる
+詳細は `scopes.md` と `.cursor/rules/nx/30-nx-project-scope.mdc` を参照。
 
-詳細は [scopes.md](scopes.md) を参照。
+## docs / ci / build / chore の使い分け
 
-## 分類のガイド
-
-| 変更内容 | type | 補足 |
+| 種別 | type | 例 |
 | --- | --- | --- |
-| Public API の追加（`SerialSession` の新メソッド等） | `feat` | 互換性に影響する場合は `!` |
-| Public API のシグネチャ変更・削除 | `feat!` / `refactor!` | `BREAKING CHANGE:` を併記 |
-| 内部実装のリファクタリング（API 変更なし） | `refactor` | |
-| RxJS stream の挙動修正 | `fix` | |
-| example アプリの修正・追加 | `feat` / `fix`（scope は `example-*`） | |
-| ドキュメント・README・OVERVIEW など | `docs` | scope: `docs` / `readme` / `workspace` |
-| テスト追加 | `test` | |
-| 依存関係更新 | `chore`（または `build`） | scope: `deps` / `workspace` |
-| CI ワークフロー | `ci` | scope: `ci` / `workspace` |
-| パフォーマンス改善 | `perf` | |
+| README / CONTRIBUTING 等のドキュメント | `docs` | `docs(workspace): update readme quick start` |
+| GitHub Actions ワークフロー追加・変更 | `ci` | `ci(workspace): update npm publish workflow` |
+| 依存追加・更新、ビルド設定 | `build` | `build(workspace): bump nx dependency` |
+| 上記に当てはまらない雑務 | `chore` | `chore(workspace): remove unused script` |
 
-## breaking change
+## 参照ファイル
 
-破壊的変更は次のいずれかで明示する。
-
-- `type(scope)!: summary`（`!` を付ける）
-- footer に `BREAKING CHANGE: <description>` を記載
-
-```text
-feat(web-serial-rxjs)!: change SerialSession.connect signature
-
-BREAKING CHANGE: connect() now returns Observable<SerialSession> instead of Promise.
-```
-
-## 生成ワークフロー
-
-1. `git status` / `git diff` で変更ファイルを把握
-2. 変更ファイルから [nx-project-scope.mdc](../../rules/nx-project-scope.mdc) のルールで scope を解決
-3. 変更内容から `type` を選ぶ（上の分類表を参照）
-4. 命令形 72 文字以内の `summary` を書く
-5. 必要に応じて body / footer を追加
-6. [assertions.md](assertions.md) の Valid 例と照合し、Invalid パターンに該当しないか確認
-
-## 関連リソース
-
-- [examples.md](examples.md): Good / Bad の具体例
-- [assertions.md](assertions.md): 検証項目と Valid / Invalid 一覧
-- [scopes.md](scopes.md): scope 一覧と同期方針
-- [.cursor/rules/conventional-commits.mdc](../../rules/conventional-commits.mdc)
-- [.cursor/rules/pull-request-title.mdc](../../rules/pull-request-title.mdc)
-- [.cursor/rules/nx-project-scope.mdc](../../rules/nx-project-scope.mdc)
-- [commitlint.config.js](../../../commitlint.config.js)
-- [CONTRIBUTING.ja.md](../../../CONTRIBUTING.ja.md) / [CONTRIBUTING.md](../../../CONTRIBUTING.md)
+- [`examples.md`](examples.md): 良い例と悪い例
+- [`assertions.md`](assertions.md): 検証項目と Valid / Invalid サンプル
+- [`scopes.md`](scopes.md): scope 一覧と用途
+- リポジトリ側: `.cursor/rules/commits/`, `commitlint.config.js`, `CONTRIBUTING.md`

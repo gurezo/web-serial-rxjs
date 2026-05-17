@@ -1,0 +1,17 @@
+---
+description: TypeScript library baseline rules for web-serial-rxjs.
+globs:
+  - "packages/**/*.ts"
+  - "tools/**/*.ts"
+  - "tsconfig*.json"
+alwaysApply: false
+---
+
+# TypeScript Library Rules
+
+- Prefer explicit public types.
+- Keep implementation details out of the public API.
+- Avoid `any` unless there is a clear interoperability reason.
+- Preserve tree-shakable library design.
+- Keep the core package framework-agnostic.
+- Run typecheck, lint, and tests after meaningful changes.

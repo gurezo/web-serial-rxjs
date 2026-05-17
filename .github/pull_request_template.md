@@ -4,12 +4,12 @@
   形式: <type>(<scope>): <summary>
   scope は apps/**/project.json または packages/**/project.json の name を優先
   project 非依存の変更は workspace / docs / ci / build / deps などを使用
-  詳細: .cursor/rules/pull-request-title.mdc / .cursor/skills/conventional-commits/
+  詳細: .cursor/rules/commits/41-pull-request-title.mdc / .cursor/rules/nx/30-nx-project-scope.mdc / .cursor/skills/conventional-commits/
 English: PR title MUST follow Conventional Commits.
   Format: <type>(<scope>): <summary>
   Prefer scope from apps/**/project.json or packages/**/project.json (name field).
   Use workspace / docs / ci / build / deps for project-agnostic changes.
-  See: .cursor/rules/pull-request-title.mdc / .cursor/skills/conventional-commits/
+  See: .cursor/rules/commits/41-pull-request-title.mdc / .cursor/rules/nx/30-nx-project-scope.mdc / .cursor/skills/conventional-commits/
 
 例 / Examples:
   feat(web-serial-rxjs): add SerialSession API

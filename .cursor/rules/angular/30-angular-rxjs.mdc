@@ -1,0 +1,16 @@
+---
+description: Angular and RxJS integration rules.
+globs:
+  - "apps/**/*.ts"
+  - "examples/**/*.ts"
+alwaysApply: false
+---
+
+# Angular RxJS Rules
+
+- Use `takeUntilDestroyed()` for subscriptions tied to Angular lifecycles.
+- Prefer `toSignal()` when exposing Observable state to templates.
+- Avoid nested subscriptions.
+- Prefer async pipe or Signals in templates.
+- Keep Observable pipelines readable.
+- Handle errors explicitly.
