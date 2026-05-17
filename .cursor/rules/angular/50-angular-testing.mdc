@@ -1,0 +1,13 @@
+---
+description: Angular testing rules.
+globs:
+  - "**/*.spec.ts"
+alwaysApply: false
+---
+
+# Angular Testing Rules
+
+- Test behavior, not implementation details.
+- Keep mocks minimal.
+- Add regression tests for bug fixes.
+- Avoid testing private fields.

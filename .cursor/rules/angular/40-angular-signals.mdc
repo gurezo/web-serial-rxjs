@@ -1,0 +1,15 @@
+---
+description: Angular Signals rules.
+globs:
+  - "**/*.ts"
+alwaysApply: false
+---
+
+# Angular Signals Rules
+
+- Use signal for local mutable state.
+- Use computed for derived state.
+- Avoid effect for ordinary propagation.
+- Do not mutate signal values directly.
+- Shared state belongs in services/stores.
+- Avoid unnecessary RxJS → Signal conversions.
