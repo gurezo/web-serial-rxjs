@@ -1,0 +1,17 @@
+---
+description: RxJS baseline rules.
+globs:
+  - "**/*.ts"
+alwaysApply: false
+---
+
+# RxJS Core Rules
+
+- Use Observables for async streams and serial communication events.
+- Use Promises only when they better represent one-shot async operations.
+- Avoid nested subscriptions.
+- Prefer RxJS operators over manual async orchestration when appropriate.
+- Ensure subscriptions are cleaned up.
+- Avoid leaking internal Subjects.
+- Expose Observables rather than writable Subjects.
+- Keep error handling explicit.
