@@ -1,0 +1,86 @@
+---
+description: web-serial-rxjs における Conventional Commits の基本ルール。コミットメッセージ・PR タイトル生成時に常時適用する。
+globs:
+alwaysApply: true
+---
+
+# Conventional Commits 基本ルール
+
+`web-serial-rxjs` リポジトリにおける commit message と PR title は、Conventional Commits 仕様に厳密に準拠する。
+
+## 形式
+
+```text
+<type>(<scope>): <summary>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- `type` と `scope` は lowercase
+- `summary` は命令形（imperative mood）の現在形（例: `add`, `fix`, `update`）
+- `summary` 末尾にピリオド（`.`）を付けない
+- `summary` は 72 文字以内に収める
+- `summary` の冒頭は大文字にしない
+- 変更内容と `type` が一致するように選ぶ（リファクタリングを `feat` にしない、など）
+
+## 許可される type
+
+| type | 用途 |
+| --- | --- |
+| `feat` | 新機能の追加 |
+| `fix` | バグ修正 |
+| `docs` | ドキュメントのみの変更 |
+| `style` | フォーマット・空白等、コードの意味に影響しない変更 |
+| `refactor` | バグ修正でも機能追加でもないコード変更 |
+| `perf` | パフォーマンス改善 |
+| `test` | テストの追加・修正 |
+| `build` | ビルドシステム・外部依存に関する変更 |
+| `ci` | CI 設定・スクリプトの変更 |
+| `chore` | 補助的な変更（依存更新・ツール設定など） |
+| `revert` | 既存コミットの取り消し |
+
+## scope の選び方
+
+- scope は [nx-project-scope](mdc:.cursor/rules/nx-project-scope.mdc) に従い、`apps/**/project.json` / `packages/**/project.json` の `name` を優先する
+- project 非依存の変更は `workspace` / `docs` / `ci` / `build` / `deps` などの fallback scope を使う
+
+## breaking change
+
+破壊的変更は次のいずれかで明示する。
+
+- `type(scope)!: summary` のように `!` を付ける
+- もしくは body / footer に `BREAKING CHANGE: <description>` を記載
+
+例:
+
+```text
+feat(web-serial-rxjs)!: change SerialSession interface
+
+BREAKING CHANGE: SerialSession.connect() now returns Observable<SerialSession>.
+```
+
+## 良い例 / 悪い例
+
+詳細は [.cursor/skills/conventional-commits/examples.md](mdc:.cursor/skills/conventional-commits/examples.md) を参照する。
+
+### 良い例
+
+```text
+feat(web-serial-rxjs): add SerialSession API
+fix(example-react): handle StrictMode remount in useSerialSession
+docs(workspace): update quick start guide
+ci(workspace): update npm publish workflow
+```
+
+### 悪い例
+
+```text
+update files
+WIP
+fix bug
+feat(core): add api      # core は project.json に存在しない
+fix(serial): fix bug     # serial は project.json に存在しない
+Added New Feature.       # 大文字始まり・末尾ピリオド・非命令形
+```

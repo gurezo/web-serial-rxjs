@@ -1,0 +1,63 @@
+---
+description: PR タイトルを Conventional Commits に統一するためのルール。PR 作成・更新時に常時適用する。
+globs:
+alwaysApply: true
+---
+
+# Pull Request タイトル規約
+
+`web-serial-rxjs` の Pull Request タイトルは、コミットメッセージと同様に Conventional Commits 仕様に準拠する。
+
+## 形式
+
+```text
+<type>(<scope>): <summary>
+```
+
+- 基本ルールは [conventional-commits](mdc:.cursor/rules/conventional-commits.mdc) と同じ
+- `scope` は [nx-project-scope](mdc:.cursor/rules/nx-project-scope.mdc) に従い、`project.json` の `name` を優先する
+- `summary` は命令形・現在形・末尾ピリオド禁止・72 文字以内
+
+## 良い例
+
+```text
+feat(web-serial-rxjs): add SerialSession API
+fix(web-serial-rxjs): prevent duplicated receive stream
+refactor(web-serial-rxjs): simplify connection lifecycle
+docs(workspace): update README quick start
+test(example-angular): add disconnect tests
+ci(workspace): update npm publish workflow
+build(workspace): optimize affected build
+chore(workspace): bump pnpm dependencies
+```
+
+## 悪い例（不採用とする）
+
+```text
+Update files
+fix issue
+WIP: add some changes
+feat(core): add api          # core は project.json に存在しない
+fix(serial): fix bug         # serial は project.json に存在しない
+feat(web-serial-rxjs): Add SerialSession API.   # 大文字 + 末尾ピリオド
+```
+
+## breaking change を含む PR
+
+破壊的変更を含む PR タイトルは `!` を付与する。
+
+```text
+feat(web-serial-rxjs)!: change SerialSession interface
+```
+
+本文では PR テンプレートの "API / Compatibility" セクションで Migration notes を必ず記載する。
+
+## 複数 scope にまたがる PR
+
+- 影響の大きい project を 1 つ選ぶ
+- どの project にも限定できない workspace 横断的な変更は `workspace` を使う
+
+```text
+chore(workspace): bump nx and angular dependencies
+docs(workspace): align contributing guide across packages
+```

@@ -75,6 +75,17 @@ pnpm run prepare
 
 これにより、コミット時に Conventional Commits に準拠しているかが自動的にチェックされます。
 
+### 5. Cursor を使う場合（任意）
+
+[Cursor](https://www.cursor.com/) でこのリポジトリを開くと、以下の Rules / Skills が自動的に適用され、AI が Conventional Commits 準拠の commit message / PR タイトルを生成できるようになります。
+
+- `.cursor/rules/conventional-commits.mdc`: Conventional Commits の基本ルール
+- `.cursor/rules/pull-request-title.mdc`: PR タイトル規約
+- `.cursor/rules/nx-project-scope.mdc`: `project.json` の `name` を scope として解決
+- `.cursor/skills/conventional-commits/`: 例集 / 検証項目 / scope 一覧
+
+新しい `project.json` を追加・リネームしたときは、`commitlint.config.js` の `scope-enum` と `.cursor/skills/conventional-commits/scopes.md` も同時に更新してください。
+
 ## ブランチ戦略
 
 このプロジェクトは、npmライブラリプロジェクトに適した**trunk-based開発**アプローチに従います。

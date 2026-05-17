@@ -1,0 +1,83 @@
+---
+description: Nx Workspace の project.json の name をコミット scope として解決するためのルール。
+globs:
+alwaysApply: true
+---
+
+# Nx Project Scope ルール
+
+`web-serial-rxjs` は Nx Workspace 構成で運用されている。コミットメッセージ・PR タイトルの `scope` は、**ハードコードされた固定文字列ではなく** Workspace 内の `project.json` の `name` プロパティを参照して決定する。
+
+## 基本方針
+
+1. 変更対象ファイルから最も近い `project.json` を特定する
+2. その `project.json` の `name` を `scope` として利用する
+3. 複数 project にまたがる変更は、影響の大きい project を優先する。判別不能な場合は `workspace` を使う
+4. project に紐付かない変更（CI / docs / deps など）は fallback scope を使う
+
+## scope source
+
+scope は以下のパスから動的に同期される。
+
+```text
+apps/**/project.json
+libs/**/project.json
+packages/**/project.json
+```
+
+現時点で実在する project（→ scope）:
+
+| パス | scope |
+| --- | --- |
+| `packages/web-serial-rxjs/project.json` | `web-serial-rxjs` |
+| `apps/example-angular/project.json` | `example-angular` |
+| `apps/example-react/project.json` | `example-react` |
+| `apps/example-vue/project.json` | `example-vue` |
+| `apps/example-svelte/project.json` | `example-svelte` |
+| `apps/example-vanilla-js/project.json` | `example-vanilla-js` |
+| `apps/example-vanilla-ts/project.json` | `example-vanilla-ts` |
+
+`libs/` は現状未使用だが、将来追加された場合も `project.json` の `name` を scope として採用する。
+
+> Note: scope の正規ソースは [commitlint.config.js](mdc:commitlint.config.js) の `scope-enum` であり、Cursor Skills の [scopes.md](mdc:.cursor/skills/conventional-commits/scopes.md) と同期する。
+
+## fallback scope（project 非依存変更のみ）
+
+```text
+workspace   # ルート設定・複数 project に跨る変更
+docs        # ドキュメント全般
+readme      # README 単体
+release     # リリース運用
+ci          # GitHub Actions など CI 関連
+build       # ビルドシステム
+nx          # nx.json / nx 設定
+deps        # 依存関係更新
+repo        # リポジトリ運用
+test        # クロスプロジェクトのテスト
+```
+
+## 解決ステップ
+
+1. 変更対象のファイルパスを取得する
+2. 上位ディレクトリを辿って最も近い `project.json` を探す
+3. 見つかれば、その `project.json` の `name` を scope とする
+4. 見つからない場合（ルート直下の設定変更など）は適切な fallback scope を選ぶ
+
+## 例
+
+| 変更対象 | 選ぶべき scope |
+| --- | --- |
+| `packages/web-serial-rxjs/src/session/serial-session.ts` | `web-serial-rxjs` |
+| `apps/example-react/src/hooks/useSerialSession.ts` | `example-react` |
+| `apps/example-angular/src/app/app.component.ts` | `example-angular` |
+| `nx.json` / `tsconfig.base.json` | `workspace` |
+| `.github/workflows/ci.yml` | `ci`（または `workspace`） |
+| `README.md` / `CONTRIBUTING.md` | `docs` または `readme` |
+| `package.json` の依存関係更新 | `deps` または `workspace` |
+| 複数 example の横断的な修正 | `workspace` |
+
+## 禁止事項
+
+- `core` / `serial` / `utils` のように `project.json` に存在しない scope を作らない
+- scope を省略する場合は、本当に project に紐付かない変更であることを確認する
+- 既存の `scope-enum`（[commitlint.config.js](mdc:commitlint.config.js)）に存在しない scope を新規に使わない（必要なら同 enum と本ルールを同時に更新する）
