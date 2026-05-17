@@ -79,6 +79,17 @@ This will ensure that commit messages are automatically checked for Conventional
 
 This project includes MCP (Model Context Protocol) server configuration for AI-assisted development. See the [AI Assistant (MCP)](README.md#ai-assistant-mcp) section in the README for available servers (Nx, Angular CLI, Svelte) and configuration details.
 
+### 6. Cursor Rules / Skills - Optional
+
+When you open this repository in [Cursor](https://www.cursor.com/), the following rules and skills are automatically applied so the AI generates Conventional Commits compliant commit messages and PR titles:
+
+- `.cursor/rules/conventional-commits.mdc`: Conventional Commits base rule
+- `.cursor/rules/pull-request-title.mdc`: PR title convention
+- `.cursor/rules/nx-project-scope.mdc`: Resolve scope from `project.json` `name`
+- `.cursor/skills/conventional-commits/`: Examples / assertions / scope list
+
+When you add or rename a `project.json`, keep `commitlint.config.js` (`scope-enum`) and `.cursor/skills/conventional-commits/scopes.md` in sync.
+
 ## Branch Strategy
 
 This project follows a **trunk-based development** approach, which is well-suited for npm library projects.
