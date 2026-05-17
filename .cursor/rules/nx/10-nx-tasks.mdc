@@ -1,0 +1,17 @@
+---
+description: Nx task execution rules.
+globs:
+  - "nx.json"
+  - "project.json"
+  - "package.json"
+  - "pnpm-lock.yaml"
+alwaysApply: false
+---
+
+# Nx Task Rules
+
+- Use pnpm for package management.
+- Use Nx for build, test, lint, and affected commands.
+- Prefer running the smallest relevant task.
+- Run tests or type checks after meaningful code changes.
+- Avoid changing lockfiles unless dependency changes are required.

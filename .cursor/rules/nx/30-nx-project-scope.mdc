@@ -1,0 +1,72 @@
+---
+description: web-serial-rxjs scope rules for Conventional Commits.
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# web-serial-rxjs Scope Rules
+
+`scope` は Nx project 単位を優先する。各プロジェクトの `project.json` の `name` プロパティ、または `commitlint.config.js` の `scope-enum` に列挙された値だけを使用する。
+
+## 推奨 scope (`commitlint.config.js` と一致)
+
+| scope | 対象 | 説明 |
+| --- | --- | --- |
+| `web-serial-rxjs` | `packages/web-serial-rxjs` | ライブラリ本体 |
+| `example-angular` | `apps/example-angular` | Angular サンプル |
+| `example-react` | `apps/example-react` | React サンプル |
+| `example-vue` | `apps/example-vue` | Vue サンプル |
+| `example-svelte` | `apps/example-svelte` | Svelte サンプル |
+| `example-vanilla-js` | `apps/example-vanilla-js` | Vanilla JS サンプル |
+| `example-vanilla-ts` | `apps/example-vanilla-ts` | Vanilla TS サンプル |
+| `workspace` | ルート設定・複数 project | `nx.json` / `tsconfig.base.json` / `.cursor/` 等 |
+| `docs` | ドキュメント全般 | README / CONTRIBUTING / docs 等 |
+| `readme` | README 単体 | |
+| `release` | リリース運用 | |
+| `ci` | `.github/workflows/` | CI |
+| `build` | ビルドシステム | |
+| `nx` | nx.json / Nx 設定 | |
+| `deps` | 依存関係更新 | |
+| `repo` | リポジトリ運用 | |
+| `test` | クロスプロジェクトのテスト | |
+
+## scope source
+
+scope は以下のパスから動的に同期される。
+
+```text
+apps/**/project.json
+libs/**/project.json
+packages/**/project.json
+```
+
+`libs/` は現状未使用だが、将来追加された場合も `project.json` の `name` を scope として採用する。
+
+## scope 選択方針
+
+1. 変更が単一プロジェクトに収まる場合は、その `project.json` の `name` を scope に使う。
+2. 変更が複数プロジェクトに跨る場合は、最も影響範囲の広い project、または `workspace` を使う。
+3. project に紐付かない変更（CI / docs / deps など）は fallback scope を使う。
+4. 新しい project を追加した場合は、`commitlint.config.js` の `scope-enum` と本ファイル、`.cursor/skills/conventional-commits/scopes.md`、`CONTRIBUTING.md` を同時に更新する。
+
+## 例
+
+| 変更対象 | 選ぶべき scope |
+| --- | --- |
+| `packages/web-serial-rxjs/src/session/serial-session.ts` | `web-serial-rxjs` |
+| `apps/example-react/src/hooks/useSerialSession.ts` | `example-react` |
+| `nx.json` / `tsconfig.base.json` | `workspace` |
+| `.github/workflows/ci.yml` | `ci`（または `workspace`） |
+| `README.md` / `CONTRIBUTING.md` | `docs` または `readme` |
+
+## 禁止事項
+
+- `project.json` に存在しない scope を使わない。
+- 既存の `scope-enum` に存在しない scope を新規に使わない（必要なら enum と本ルールを同時に更新する）。
+
+## 参照
+
+- `commitlint.config.js`
+- `.cursor/skills/conventional-commits/scopes.md`
+- `CONTRIBUTING.md`
