@@ -1,0 +1,68 @@
+---
+description: Conventional Commits rules for commit messages.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Conventional Commits Rules
+
+すべてのコミットメッセージは [Conventional Commits](https://www.conventionalcommits.org/) に準拠する。
+
+## 形式
+
+```
+<type>(<scope>): <summary>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+## ルール
+
+- `type` は小文字。
+- `scope` は小文字、ハイフン区切り。プロジェクトの `commitlint.config.js` の `scope-enum` から選ぶ。
+- `summary` は簡潔な英語、命令形 (imperative mood)。
+- `summary` の先頭は小文字。
+- `summary` の末尾にピリオドを付けない。
+- `summary` は 72 文字以内に収める。
+- `type` と変更内容を一致させる。
+- 関連性のない変更を 1 つのコミットに混在させない。
+
+## 許可される type
+
+| type | 用途 |
+| --- | --- |
+| `feat` | 新機能の追加 |
+| `fix` | バグ修正 |
+| `docs` | ドキュメントのみの変更 |
+| `style` | コードフォーマット (動作に影響しない) |
+| `refactor` | リファクタリング (機能変更なし) |
+| `perf` | パフォーマンス改善 |
+| `test` | テスト追加・修正 |
+| `build` | ビルド・依存・設定の変更 |
+| `ci` | CI 設定の変更 |
+| `chore` | その他の雑務 |
+| `revert` | 過去のコミットの取り消し |
+
+## scope の選び方
+
+- scope は [.cursor/rules/nx/30-nx-project-scope.mdc](mdc:.cursor/rules/nx/30-nx-project-scope.mdc) に従い、`apps/**/project.json` / `packages/**/project.json` の `name` を優先する。
+- project 非依存の変更は `workspace` / `docs` / `ci` / `build` / `deps` などの fallback scope を使う。
+
+## Breaking Change
+
+破壊的変更は footer に `BREAKING CHANGE: ` を記載する。`type!` 表記は使わない。
+
+```
+feat(web-serial-rxjs): change SerialSession connect api
+
+BREAKING CHANGE: SerialSession の API が変更されました
+```
+
+## 参照
+
+- `.cursor/skills/conventional-commits/SKILL.md`
+- `commitlint.config.js`
+- `CONTRIBUTING.md`

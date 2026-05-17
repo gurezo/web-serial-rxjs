@@ -1,0 +1,58 @@
+---
+description: Pull request title rules (Conventional Commits).
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# Pull Request Title Rules
+
+PR タイトルは Conventional Commits に統一する。GitHub Actions の `commitlint` ワークフローは PR に含まれる全コミットを検証するが、PR タイトル自体も同じ形式で揃える。
+
+## 形式
+
+```
+<type>(<scope>): <summary>
+```
+
+- 小文字の `type` / `scope`。
+- `summary` は英語、命令形、末尾ピリオドなし。
+- `summary` は 72 文字以内。
+- 複数の変更を含む PR では代表的な type / scope を選ぶ。
+
+## scope の選び方
+
+- [.cursor/rules/commits/40-conventional-commits.mdc](mdc:.cursor/rules/commits/40-conventional-commits.mdc) と [.cursor/rules/nx/30-nx-project-scope.mdc](mdc:.cursor/rules/nx/30-nx-project-scope.mdc) に従う。
+
+## breaking change を含む PR
+
+破壊的変更がある場合は PR 本文の footer に `BREAKING CHANGE: ` を記載する。PR タイトルに `!` は付けない。
+
+本文では PR テンプレートの "API / Compatibility" セクションで Migration notes を必ず記載する。
+
+## 良い例
+
+```
+feat(web-serial-rxjs): add SerialSession API
+fix(example-react): handle StrictMode remount in useSerialSession
+docs(workspace): update readme quick start
+test(example-angular): add disconnect tests
+ci(workspace): update npm publish workflow
+```
+
+## 悪い例
+
+```
+update files
+fix issue
+WIP
+Added new component
+feat: Added New Feature.
+feat(web-serial-rxjs)!: change api
+```
+
+## 参照
+
+- `.cursor/rules/commits/40-conventional-commits.mdc`
+- `.cursor/rules/nx/30-nx-project-scope.mdc`
+- `.github/pull_request_template.md`
