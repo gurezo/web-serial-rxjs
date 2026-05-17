@@ -1,14 +1,30 @@
-# Conventional Commits Scope 一覧
+# Scopes
 
-`web-serial-rxjs` で利用可能な scope の正本。`apps/**/project.json` および `packages/**/project.json` の `name` プロパティに同期させる。
+web-serial-rxjs で使用可能な scope の一覧と用途。`commitlint.config.js` の `scope-enum` と完全に一致させる。
 
-## 基本方針
+## 一覧
 
-- scope は hand-written な固定文字列ではなく、Nx Workspace の `project.json` の `name` から決定する
-- 最終的な許可リストは [commitlint.config.js](../../../commitlint.config.js) の `scope-enum`
-- Cursor / AI が scope を選ぶときは、変更対象ファイルから最も近い `project.json` を辿る
+| scope | 対象パス | プロジェクト名 (`project.json`) | 用途 |
+| --- | --- | --- | --- |
+| `web-serial-rxjs` | `packages/web-serial-rxjs` | `web-serial-rxjs` | `@gurezo/web-serial-rxjs` ライブラリ |
+| `example-angular` | `apps/example-angular` | `example-angular` | Angular サンプル |
+| `example-react` | `apps/example-react` | `example-react` | React サンプル |
+| `example-vue` | `apps/example-vue` | `example-vue` | Vue サンプル |
+| `example-svelte` | `apps/example-svelte` | `example-svelte` | Svelte サンプル |
+| `example-vanilla-js` | `apps/example-vanilla-js` | `example-vanilla-js` | Vanilla JS サンプル |
+| `example-vanilla-ts` | `apps/example-vanilla-ts` | `example-vanilla-ts` | Vanilla TS サンプル |
+| `workspace` | リポジトリルート | (該当なし) | `package.json` / `nx.json` / `.husky/` / `commitlint.config.js` / `.cursor/` / README / CONTRIBUTING 等 |
+| `docs` | ドキュメント全般 | (該当なし) | ドキュメント横断 |
+| `readme` | README 単体 | (該当なし) | README のみ |
+| `release` | リリース運用 | (該当なし) | |
+| `ci` | `.github/workflows/` | (該当なし) | GitHub Actions |
+| `build` | ビルドシステム | (該当なし) | |
+| `nx` | nx.json / Nx 設定 | (該当なし) | |
+| `deps` | 依存関係更新 | (該当なし) | |
+| `repo` | リポジトリ運用 | (該当なし) | |
+| `test` | クロスプロジェクトのテスト | (該当なし) | |
 
-## Scope source
+## scope source
 
 ```text
 apps/**/project.json
@@ -16,56 +32,27 @@ libs/**/project.json
 packages/**/project.json
 ```
 
-## 現在の Project スコープ
+`libs/` は現状未使用。追加時は `name` を scope にし、`commitlint.config.js` を更新する。
 
-| パス | `project.json` の `name` | scope |
-| --- | --- | --- |
-| `packages/web-serial-rxjs/project.json` | `web-serial-rxjs` | `web-serial-rxjs` |
-| `apps/example-angular/project.json` | `example-angular` | `example-angular` |
-| `apps/example-react/project.json` | `example-react` | `example-react` |
-| `apps/example-vue/project.json` | `example-vue` | `example-vue` |
-| `apps/example-svelte/project.json` | `example-svelte` | `example-svelte` |
-| `apps/example-vanilla-js/project.json` | `example-vanilla-js` | `example-vanilla-js` |
-| `apps/example-vanilla-ts/project.json` | `example-vanilla-ts` | `example-vanilla-ts` |
+## scope 選択の考え方
 
-> `libs/` は現状未使用。今後 `libs/<name>/project.json` が追加された場合は、その `name` を scope として利用する（commitlint の `scope-enum` も同時に更新する）。
+1. **単一プロジェクトに収まる変更**: その `project.json` の `name` を scope に使う。
+2. **複数プロジェクトに跨る変更**: 最も影響の広い project を優先。判断できない場合は `workspace`。
+3. **ルート設定・ツール変更**: `workspace`。
+4. **GitHub Actions**: `ci`。
 
-## Fallback scope（project 非依存変更のみ）
+## 新規プロジェクト追加時の手順
 
-以下は `project.json` に対応しない、Workspace 横断の変更で利用する。
+新しい app / lib を追加した場合、以下を **同時に** 更新する。
 
-| scope | 用途 |
-| --- | --- |
-| `workspace` | ルート設定・複数 project に跨る変更 |
-| `docs` | ドキュメント全般 |
-| `readme` | README 単体 |
-| `release` | リリース運用 |
-| `ci` | GitHub Actions など CI 関連 |
-| `build` | ビルドシステム |
-| `nx` | nx.json / nx 設定 |
-| `deps` | 依存関係更新 |
-| `repo` | リポジトリ運用 |
-| `test` | クロスプロジェクトのテスト |
+1. `commitlint.config.js` の `scope-enum` に新しい scope を追加。
+2. このファイル (`scopes.md`) に新しい行を追加。
+3. `.cursor/rules/nx/30-nx-project-scope.mdc` の推奨 scope 表を更新。
+4. `CONTRIBUTING.md` / `CONTRIBUTING.ja.md` の記載があれば更新。
 
-## 使用例
+## 参照
 
-```text
-feat(web-serial-rxjs): add receive stream helper
-fix(web-serial-rxjs): handle reconnect timing
-feat(example-angular): add Angular Signals example
-fix(example-react): handle StrictMode remount in useSerialSession
-test(web-serial-rxjs): add disconnect tests
-docs(workspace): update README quick start
-ci(workspace): update npm publish workflow
-chore(workspace): bump pnpm dependencies
-```
-
-## 同期ルール
-
-新しい `project.json` を追加・リネーム・削除したときは、以下を同時に更新する。
-
-1. `apps/<name>/project.json` または `packages/<name>/project.json` の `name`
-2. [commitlint.config.js](../../../commitlint.config.js) の `scope-enum`
-3. 本ファイル（`scopes.md`）と [.cursor/rules/nx-project-scope.mdc](../../rules/nx-project-scope.mdc)
-
-3 つの整合が取れていないと commitlint が失敗する。
+- [`SKILL.md`](SKILL.md)
+- [`examples.md`](examples.md)
+- [`assertions.md`](assertions.md)
+- [`../../../commitlint.config.js`](../../../commitlint.config.js)

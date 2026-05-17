@@ -1,104 +1,90 @@
-# Conventional Commits 例集
+# Examples
 
-`web-serial-rxjs` における commit message / PR title の良い例・悪い例。
+web-serial-rxjs における Conventional Commits の良い例と悪い例。
 
-## 良い例（Good）
+## 良い例
 
-### Public ライブラリ（`packages/web-serial-rxjs`）
+### feat
 
-```text
+```
 feat(web-serial-rxjs): add SerialSession API
 feat(web-serial-rxjs): add receive stream helper
+feat(example-react): add useSerialSession hook options
+```
+
+### fix
+
+```
 fix(web-serial-rxjs): prevent duplicated disconnect events
-fix(web-serial-rxjs): handle reconnect timing
-refactor(web-serial-rxjs): simplify connection lifecycle
-perf(web-serial-rxjs): reduce allocations in receive stream
-test(web-serial-rxjs): add disconnect tests
-docs(web-serial-rxjs): regenerate typedoc output
-```
-
-### Example アプリ
-
-```text
-feat(example-angular): add Signals example
 fix(example-react): handle StrictMode remount in useSerialSession
-refactor(example-vue): simplify composable structure
-test(example-react): cover StrictMode double mount for useSerialSession
-docs(example-svelte): update README quick start
+fix(example-angular): correct disconnect cleanup timing
 ```
 
-### Workspace 横断・project 非依存
+### refactor
 
-```text
-docs(workspace): update quick start guide
-docs(readme): align CONTRIBUTING with Cursor skills
+```
+refactor(web-serial-rxjs): simplify connection lifecycle
+refactor(example-vue): simplify composable structure
+```
+
+### docs
+
+```
+docs(workspace): update readme quick start
+docs(workspace): document cursor rules structure
+docs(example-svelte): update readme usage notes
+```
+
+### test
+
+```
+test(web-serial-rxjs): add disconnect tests
+test(example-react): cover StrictMode double mount for useSerialSession
+```
+
+### ci
+
+```
 ci(workspace): update npm publish workflow
+ci(workspace): update github actions workflow
+```
+
+### build
+
+```
 build(workspace): optimize affected build
 chore(workspace): bump pnpm dependencies
-chore(workspace): bump package version to 2.3.2
 ```
 
-### Breaking change
+### chore
 
-```text
-feat(web-serial-rxjs)!: change SerialSession interface
-
-BREAKING CHANGE: SerialSession.connect() now returns Observable<SerialSession>.
+```
+chore(workspace): remove unused script
 ```
 
-## 悪い例（Bad）
+### breaking change
 
-### 形式違反
+```
+feat(web-serial-rxjs): change SerialSession connect api
 
-```text
-update files                       # type/scope/summary がない
-fix issue                          # type/scope なし、内容も曖昧
-WIP                                # 一時的なメッセージは禁止
-refactoring                        # type なし
-Added serial feature               # 過去形・大文字始まり
-feat: Added New Feature.           # 大文字始まり + 末尾ピリオド
-fix bug                            # type なし・内容曖昧
+BREAKING CHANGE: SerialSession の公開メソッドのシグネチャが変更されました
 ```
 
-### scope 違反（`project.json` の `name` と不一致）
+## 悪い例
 
-```text
-feat(core): add api               # core は workspace に存在しない
-fix(serial): fix bug              # serial は workspace に存在しない
-refactor(utils): cleanup          # utils は workspace に存在しない
-feat(lib): add helper             # lib は scope-enum に存在しない
-```
+| メッセージ | 理由 |
+| --- | --- |
+| `update files` | type / scope が無く、内容も曖昧 |
+| `fix issue` | scope が無く、内容も曖昧 |
+| `WIP` | 完成していない作業を表す不適切なメッセージ |
+| `Added new API` | type が無く、命令形でなく、大文字始まり |
+| `feat: Added New Feature.` | summary が大文字始まりで末尾にピリオド |
+| `feat(CORE): add api` | scope が大文字 |
+| `fix(serial): fix bug` | 存在しない scope |
+| `feat(web-serial-rxjs)!: change api` | `!` 表記は使わず footer に `BREAKING CHANGE:` を書く |
 
-### 内容と type の不一致
+## 参照
 
-```text
-feat(web-serial-rxjs): fix typo in README       # 実態は docs
-refactor(web-serial-rxjs): add new method       # 実態は feat
-chore(example-react): fix StrictMode bug        # 実態は fix
-```
-
-## PR タイトル例
-
-PR タイトルも同じ規約に従う。
-
-### 良い PR タイトル
-
-```text
-feat(web-serial-rxjs): add SerialSession API
-fix(example-react): handle StrictMode remount in useSerialSession
-refactor(web-serial-rxjs): simplify parser
-docs(workspace): update README quick start
-test(web-serial-rxjs): add disconnect tests
-ci(workspace): update npm publish workflow
-build(workspace): optimize affected build
-```
-
-### 悪い PR タイトル
-
-```text
-Update files
-WIP: testing some changes
-fix issue #123
-feat(core): add api                # core は project.json になし
-feat(web-serial-rxjs): Add SerialSession API.   # 大文字 + 末尾ピリオド
-```
+- [`SKILL.md`](SKILL.md)
+- [`assertions.md`](assertions.md)
+- [`scopes.md`](scopes.md)
