@@ -136,6 +136,14 @@ This project includes [Model Context Protocol (MCP)](https://modelcontextprotoco
 
 To use MCP servers in Cursor, the configuration is automatically loaded from `.cursor/mcp.json`. For VS Code, add the MCP extension and configure it to use `.mcp.json`, or add the server definitions to your MCP settings.
 
+### Cursor rules and agents
+
+This repository also ships [Cursor](https://www.cursor.com/) rules under `.cursor/rules/` (grouped by topic: `commits/` for Conventional Commits and PR titles, `typescript/`, `rxjs/`, `angular/`, `nx/` including Nx workspace tasks and **commit scope** guidance, `examples/`, and `workflow/`). Rules are split into small `.mdc` files by responsibility to reduce overlap and keep prompts focused.
+
+- `.cursor/agents/ci-monitor-subagent.md` — optional CI helper used with `/monitor-ci` and the Nx MCP `ci_information` / `update_self_healing_fix` tools when Nx Cloud CI monitoring is enabled.
+
+Commit scope tables stay aligned with `commitlint.config.js`; see `.cursor/skills/conventional-commits/` for examples and the scope list.
+
 ## Development and Release Strategy
 
 This project follows a **trunk-based development** approach:
