@@ -9,6 +9,10 @@ allowBuilds:
   msgpackr-extract: true
   nx: true
 
+minimumReleaseAgeExclude:
+  - '@vue/language-core@3.3.3'
+  - vue-tsc@3.3.3
+
 # Malicious releases are often detected and removed within a week.
 # config = 7 day x 24h x 60 min
 # minimumReleaseAge: 10080
