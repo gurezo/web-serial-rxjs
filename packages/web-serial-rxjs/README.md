@@ -8,7 +8,16 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 
 ## Browser support
 
-The Web Serial API is only available in **Chromium-based** browsers: **Chrome** 89+, **Edge** 89+, **Opera** 75+.
+The Web Serial API is supported on **desktop** browsers only. Smartphones and other mobile browsers are not supported.
+
+Supported desktop browsers:
+
+- **Chrome** 89+
+- **Edge** 89+
+- **Opera** 75+
+- **Firefox** 151+
+
+**Safari** does not currently support the Web Serial API.
 
 `SerialSession.isBrowserSupported()` returns a synchronous `boolean` for feature detection before `connect$`.
 

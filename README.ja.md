@@ -41,11 +41,16 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 
 ## ブラウザサポート
 
-Web Serial API は現在、Chromium ベースのブラウザでのみサポートされています：
+Web Serial API は**デスクトップ**ブラウザでのみサポートされています。スマートフォンなどのモバイルブラウザには対応していません。
+
+対応しているデスクトップブラウザ：
 
 - **Chrome** 89+
 - **Edge** 89+
 - **Opera** 75+
+- **Firefox** 151+
+
+**Safari** は現時点で Web Serial API をサポートしていません。
 
 `connect$` を呼ぶ前の feature detection には `SerialSession.isBrowserSupported()` が使えます（同期的に `boolean` を返します）。
 

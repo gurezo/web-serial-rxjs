@@ -42,11 +42,16 @@ This library is framework-agnostic and can be used with:
 
 ## Browser Support
 
-The Web Serial API is currently only supported in Chromium-based browsers:
+The Web Serial API is supported on **desktop** browsers only. Smartphones and other mobile browsers are not supported.
+
+Supported desktop browsers:
 
 - **Chrome** 89+
 - **Edge** 89+
 - **Opera** 75+
+- **Firefox** 151+
+
+**Safari** does not currently support the Web Serial API.
 
 `SerialSession.isBrowserSupported()` returns a synchronous boolean for feature detection before calling `connect$`.
 

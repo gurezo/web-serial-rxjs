@@ -102,11 +102,13 @@ The example uses `createSerialSession` directly through `useSerialSession`:
 
 ## Browser Compatibility
 
-This example requires a browser that supports the Web Serial API:
+This example requires a browser that supports the Web Serial API on **desktop** only. Smartphones and other mobile browsers are not supported.
+
+Supported desktop browsers:
 
 - Chrome 89+
 - Edge 89+
 - Opera 75+
-- Chrome Android 89+
+- Firefox 151+
 
-Safari and Firefox do not currently support the Web Serial API.
+Safari does not currently support the Web Serial API.
