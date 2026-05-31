@@ -22,11 +22,17 @@
  *
  * ## Browser Support
  *
- * The Web Serial API is only available in Chromium-based browsers:
+ * The Web Serial API is supported on **desktop** browsers only. Smartphones and
+ * other mobile browsers are not supported.
+ *
+ * Supported desktop browsers:
  *
  * - Chrome 89+
  * - Edge 89+
  * - Opera 75+
+ * - Firefox 151+
+ *
+ * **Safari** does not currently support the Web Serial API.
  *
  * Use {@link SerialSession.isBrowserSupported} for a synchronous feature
  * check before calling {@link SerialSession.connect$}.

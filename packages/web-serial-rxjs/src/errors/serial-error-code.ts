@@ -13,7 +13,7 @@
  *   if (error instanceof SerialError) {
  *     switch (error.code) {
  *       case SerialErrorCode.BROWSER_NOT_SUPPORTED:
- *         console.error('Please use a Chromium-based browser');
+ *         console.error('Please use a supported desktop browser (Chrome, Edge, Opera, or Firefox 151+)');
  *         break;
  *       case SerialErrorCode.OPERATION_CANCELLED:
  *         console.log('User cancelled port selection');
@@ -29,8 +29,8 @@ export enum SerialErrorCode {
    * Browser does not support the Web Serial API.
    *
    * This error occurs when attempting to use serial port functionality in a browser
-   * that doesn't support the Web Serial API. Only Chromium-based browsers (Chrome,
-   * Edge, Opera) support this API.
+   * that doesn't support the Web Serial API. Supported desktop browsers are Chrome,
+   * Edge, Opera, and Firefox 151+. Safari and mobile browsers are not supported.
    *
    * **Suggested action**: Inform the user to use a supported browser.
    */
