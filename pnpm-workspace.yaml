@@ -10,26 +10,29 @@ allowBuilds:
   nx: true
 
 minimumReleaseAgeExclude:
-  # Nx migration (#340): allow recently published deps until they mature (7 days)
+  # Allow recently published deps from toolchain migrations until they mature (7 days)
   - '@angular/*'
   - '@angular-devkit/*'
   - '@commitlint/*'
+  - '@esbuild/*'
   - '@eslint/*'
   - '@inquirer/*'
   - '@nx/*'
+  - '@playwright/*'
   - '@schematics/*'
   - '@sveltejs/*'
   - '@swc/*'
-  - '@types/node'
-  - '@types/react'
+  - '@types/*'
   - '@typescript-eslint/*'
   - '@vitest/*'
   - '@vue/*'
-  - esrap
+  - esbuild
   - eslint
-  - eslint-plugin-playwright
-  - eslint-plugin-svelte
+  - eslint-plugin-*
+  - esrap
   - nx
+  - playwright
+  - playwright-core
   - react
   - react-dom
   - svelte
@@ -42,8 +45,6 @@ minimumReleaseAgeExclude:
   - vitest
   - vue
   - vue-tsc
-  - '@esbuild/*'
-  - esbuild
 
 # Malicious releases are often detected and removed within a week.
 # config = 7 day x 24h x 60 min
