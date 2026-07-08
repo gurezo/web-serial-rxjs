@@ -30,21 +30,20 @@ minimumReleaseAgeExclude:
   - eslint
   - eslint-plugin-*
   - esrap
+  - linkify-it
+  - markdown-it
   - nx
-  - playwright
-  - playwright-core
+  - playwright*
   - react
   - react-dom
-  - svelte
-  - svelte-check
-  - svelte-eslint-parser
+  - svelte*
   - tinyglobby
   - tmp
+  - typedoc
   - typescript-eslint
   - vite
   - vitest
-  - vue
-  - vue-tsc
+  - vue*
 
 # Malicious releases are often detected and removed within a week.
 # config = 7 day x 24h x 60 min
