@@ -76,3 +76,4 @@ __screenshots__/
 .claude/settings.local.json
 .nx/polygraph
 .nx/self-healing
+.nx/migrate-runs
