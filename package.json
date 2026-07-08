@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
-    "test": "nx run-many --target=test --all --exclude=@gurezo/web-serial-rxjs/workspace",
+    "test": "nx run-many --target=test --all",
     "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json",
     "docs:clean": "rm -rf docs",
     "docs": "pnpm run docs:clean && pnpm run docs:generate",
@@ -92,7 +92,15 @@
     "vitest": "^4.1.10",
     "vue-tsc": "3.3.7"
   },
-  "nx": {},
+  "nx": {
+    "includedScripts": [
+      "docs",
+      "docs:generate",
+      "docs:clean",
+      "publish",
+      "publish:test"
+    ]
+  },
   "dependencies": {
     "@angular/common": "22.0.5",
     "@angular/compiler": "22.0.5",
