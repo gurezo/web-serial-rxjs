@@ -7,12 +7,15 @@ The v2 public surface consists of a single factory (`createSerialSession`), the 
 ```typescript
 import {
   createSerialSession,
+  createTerminalBuffer,
+  DEFAULT_TERMINAL_BUFFER_OPTIONS,
   SerialError,
   SerialErrorCode,
   SerialSessionState,
   type SerialSession,
   type SerialSessionOptions,
   type SerialSessionReceiveReplayOptions,
+  type TerminalBufferOptions,
 } from '@gurezo/web-serial-rxjs';
 ```
 
@@ -38,6 +41,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `flowControl` | `'none' \| 'hardware'`              | `'none'` | Flow control mode.                                                |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
 | `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
+| `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576 }` | Memory limits for `terminalText$`; see `createTerminalBuffer`. |
 
 ### `SerialSessionReceiveReplayOptions`
 
@@ -45,6 +49,26 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | ------------- | --------- | ------- | ----------- |
 | `enabled`     | `boolean` | `false` | When `true`, `receiveReplay$` buffers the last N **chunks** (decoder emissions) for the current connection. When `false`, `receiveReplay$` is the same hot stream as `receive$`. |
 | `bufferSize`  | `number`  | `512`   | Max number of text chunks to retain in the replay buffer for the active connection. Not a character or byte count. |
+
+### `TerminalBufferOptions`
+
+Used by `createTerminalBuffer` and `SerialSessionOptions.terminalBuffer`. When a limit is exceeded, the **oldest** completed lines or leading characters are dropped so long-running terminal views do not grow without bound. Pass `0` for either field to disable that constraint.
+
+| Field      | Type     | Default    | Description |
+| ---------- | -------- | ---------- | ----------- |
+| `maxLines` | `number` | `10000`    | Max number of completed lines retained in the cumulative display text. |
+| `maxChars` | `number` | `1048576`  | Max total characters in the display text (`completed` + current line). |
+
+## createTerminalBuffer(receive$, options?)
+
+Builds a terminal-oriented cumulative text stream from any `Observable<string>` of decoded chunks (typically `SerialSession.receive$`). Folds `\r` redraws while preserving normal newline behavior. Defaults match `DEFAULT_TERMINAL_BUFFER_OPTIONS`.
+
+```typescript
+function createTerminalBuffer(
+  receive$: Observable<string>,
+  options?: TerminalBufferOptions,
+): TerminalBuffer;
+```
 
 ## SerialSessionState
 
@@ -82,6 +106,7 @@ interface SerialSession {
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
   readonly receiveReplay$: Observable<string>;
+  readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
 
   send$(data: string | Uint8Array): Observable<void>;
@@ -119,6 +144,10 @@ UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not l
 ### `receiveReplay$: Observable<string>`
 
 Same data path as `receive$`, but when `SerialSessionOptions.receiveReplay.enabled` is `true` it **replays** the last *N* **chunks** (decoder emissions) for the current connection to new subscribers. When `enabled` is `false` (default), this is the same observable instance as `receive$`. The replay buffer is reset when the port disconnects. Does not change `lines$` (line framing is not replayed here).
+
+### `terminalText$: Observable<string>`
+
+Terminal-display oriented cumulative text derived from `receive$`. Collapses `\r` redraws while keeping normal newline behavior. Equivalent to `createTerminalBuffer(receive$, options.terminalBuffer).text$`. By default retains at most 10,000 completed lines and 1,048,576 characters; configure via `SerialSessionOptions.terminalBuffer` or pass `{ maxLines: 0, maxChars: 0 }` for unlimited growth.
 
 ### `lines$: Observable<string>`
 

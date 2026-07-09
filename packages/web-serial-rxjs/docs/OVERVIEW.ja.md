@@ -52,7 +52,7 @@ TypeDoc のトップページから、まず以下を参照してください。
 | `SerialSessionState` | **状態定数** — エクスポートされる const object（例: `SerialSessionState.Connected`, `SerialSessionState.Idle`）。`state$` が emit する値と同じ。 |
 | `isConnected$` | **接続中かどうか** — `state$` が `SerialSessionState.Connected` のときだけ `true`、それ以外は `false`（`state$` から `distinctUntilChanged` 付きで派生）。 |
 | `receive$` | **生のデコードチャンク** — UTF-8 テキストを read pump が返すとおりに受け取る（行揃えではない。マルチバイト安全）。`\r` 等も保持。**ターミナル風の表示**や `\r` による上書き表示向け。 |
-| `terminalText$` | **ターミナル表示向けの累積テキスト** — `receive$` 由来の表示用テキスト。`\r` による上書きを折りたたみつつ通常の改行挙動は維持するため、ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。 |
+| `terminalText$` | **ターミナル表示向けの累積テキスト** — `receive$` 由来の表示用テキスト。`\r` による上書きを折りたたみつつ通常の改行挙動は維持するため、ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持します（`SerialSessionOptions.terminalBuffer` で変更可能）。 |
 | `lines$` | **行単位の受信** — `\n` / `\r\n` / 内部の `\r` など実装に従い 1 行ずつ emit。**ログ・1 行ごとの解析**向け。`\r` をそのまま残す必要がある raw ターミナル表示には向かない。 |
 | `errors$` | **すべての `SerialError`**（接続・読み取り・書き込み・クローズ）の主チャネル。 |
 | `connect$()` | ポート選択 → オープン → 内部 read pump 開始。 |
