@@ -162,4 +162,54 @@ describe('createTerminalBuffer', () => {
     expect(late).toBe('only');
     expect(first).toEqual(['only']);
   });
+
+  it('drops oldest lines when maxLines option is set', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$, { maxLines: 2, maxChars: 0 });
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+    receive$.next('line1\nline2\nline3\nline4');
+    expect(last).toBe('line2\nline3\nline4');
+  });
+
+  it('drops leading chars when maxChars option is set', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$, { maxLines: 0, maxChars: 6 });
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+    receive$.next('abcdef\nghij');
+    expect(last).toBe('f\nghij');
+  });
+
+  it('keeps unlimited growth when maxLines and maxChars are zero', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$, {
+      maxLines: 0,
+      maxChars: 0,
+    });
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+    receive$.next('line1\nline2\nline3\n');
+    expect(last).toBe('line1\nline2\nline3\n');
+  });
+
+  it('issue #290: preserves redraw after maxLines trim', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$, { maxLines: 1, maxChars: 0 });
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+    receive$.next('old\n');
+    receive$.next('-rw-r--r--  1 alice  staff  123 ./foo\r');
+    receive$.next('-rw-r--r--  1 bob    staff  123 ./foo\n');
+    expect(last).toBe('-rw-r--r--  1 bob    staff  123 ./foo\n');
+    expect(last).not.toContain('alice');
+  });
 });

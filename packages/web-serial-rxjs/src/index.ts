@@ -66,5 +66,5 @@ export type {
 export { SerialError } from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';
 
-export { createTerminalBuffer } from './terminal/create-terminal-buffer';
-export type { TerminalBuffer } from './terminal/create-terminal-buffer';
+export { createTerminalBuffer, DEFAULT_TERMINAL_BUFFER_OPTIONS } from './terminal/create-terminal-buffer';
+export type { TerminalBuffer, TerminalBufferOptions } from './terminal/create-terminal-buffer';

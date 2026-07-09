@@ -134,6 +134,40 @@ export interface TerminalBuffer {
   readonly text$: Observable<string>;
 }
 
+/** Options for {@link createTerminalBuffer} memory limits. `0` means unlimited. */
+export interface TerminalBufferOptions {
+  /**
+   * Maximum number of completed lines to retain in the display buffer.
+   *
+   * @default 10000
+   */
+  maxLines?: number;
+
+  /**
+   * Maximum total characters in the cumulative display text
+   * (`completed` + `currentLine`). Oldest content is dropped first.
+   *
+   * @default 1048576
+   */
+  maxChars?: number;
+}
+
+/** Default limits applied when options are omitted. */
+export const DEFAULT_TERMINAL_BUFFER_OPTIONS: Required<TerminalBufferOptions> =
+  {
+    maxLines: 10_000,
+    maxChars: 1_048_576,
+  };
+
+function resolveTerminalBufferLimits(
+  options?: TerminalBufferOptions,
+): TerminalBufferLimits {
+  return {
+    ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
+    ...options,
+  };
+}
+
 const initialTerminalState: TerminalBufferState = {
   completed: '',
   currentLine: '',
@@ -143,15 +177,25 @@ const initialTerminalState: TerminalBufferState = {
  * Builds a terminal-oriented text stream from {@link SerialSession.receive$} (or any
  * `Observable<string>` of decoded chunks). Uses internal buffering so callers need not
  * implement carriage-return collapse themselves.
+ *
+ * By default, retains at most {@link DEFAULT_TERMINAL_BUFFER_OPTIONS.maxLines}
+ * completed lines and {@link DEFAULT_TERMINAL_BUFFER_OPTIONS.maxChars} characters
+ * so long-running sessions do not grow memory without bound. Pass `0` for either
+ * limit to disable that constraint.
+ *
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/370 | Issue #370}
  */
 export function createTerminalBuffer(
   receive$: Observable<string>,
+  options?: TerminalBufferOptions,
 ): TerminalBuffer {
+  const limits = resolveTerminalBufferLimits(options);
+
   const text$ = receive$.pipe(
-    scan(
-      (state, chunk: string) => applyTerminalChunk(state, chunk),
-      initialTerminalState,
-    ),
+    scan((state, chunk: string) => {
+      const next = applyTerminalChunk(state, chunk);
+      return trimTerminalState(next, limits);
+    }, initialTerminalState),
     map(terminalDisplayText),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
