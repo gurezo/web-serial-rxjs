@@ -58,7 +58,8 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
  * - `connect$()` opens a user-selected port, starts the internal read pump,
  *   and transitions `idle -> connecting -> connected`.
  * - `disconnect$()` stops the read pump, closes the port, and transitions
- *   `connected -> disconnecting -> idle`.
+ *   `connected -> disconnecting -> idle`. When called during `connecting`,
+ *   it cancels the in-flight `connect$()` and returns to `idle`.
  * - `receive$` emits UTF-8 decoded text chunks pushed by the pump. It is
  *   **not** subscription-lazy - the pump is started by `connect$` and
  *   decoded text is multicast to all subscribers; late subscribers see only
@@ -156,6 +157,13 @@ export function createSerialSession(
 
   let activePort: SerialPort | null = null;
   let activePump: ReadPump | null = null;
+  let activeConnectCancel: (() => void) | null = null;
+
+  const clearActiveConnectCancel = (cancel: () => void): void => {
+    if (activeConnectCancel === cancel) {
+      activeConnectCancel = null;
+    }
+  };
 
   const setActivePort = (port: SerialPort | null): void => {
     activePort = port;
@@ -276,6 +284,13 @@ export function createSerialSession(
         }
 
         let cancelled = false;
+        const cancelInFlightConnect = (): void => {
+          cancelled = true;
+          if (machine.current === SerialSessionState.Connecting) {
+            machine.toIdle();
+          }
+        };
+        activeConnectCancel = cancelInFlightConnect;
         machine.toConnecting();
 
         const run = async (): Promise<void> => {
@@ -357,10 +372,8 @@ export function createSerialSession(
         void run();
 
         return () => {
-          cancelled = true;
-          if (machine.current === SerialSessionState.Connecting) {
-            machine.toIdle();
-          }
+          clearActiveConnectCancel(cancelInFlightConnect);
+          cancelInFlightConnect();
         };
       });
     },
@@ -370,8 +383,16 @@ export function createSerialSession(
 
         if (
           current === SerialSessionState.Idle ||
-          current === SerialSessionState.Unsupported
+          current === SerialSessionState.Unsupported ||
+          current === SerialSessionState.Disconnecting
         ) {
+          subscriber.next();
+          subscriber.complete();
+          return;
+        }
+
+        if (current === SerialSessionState.Connecting) {
+          activeConnectCancel?.();
           subscriber.next();
           subscriber.complete();
           return;
