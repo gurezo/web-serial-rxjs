@@ -25,6 +25,14 @@ export type ReadPumpChunkHandler = (text: string) => void;
 export type ReadPumpErrorHandler = (error: SerialError) => void;
 
 /**
+ * Callback invoked when the read loop ends naturally (`reader.read()`
+ * resolved with `done: true`) while the pump is still active.
+ *
+ * @internal
+ */
+export type ReadPumpDoneHandler = () => void;
+
+/**
  * Options accepted by {@link createReadPump}.
  *
  * @internal
@@ -32,6 +40,7 @@ export type ReadPumpErrorHandler = (error: SerialError) => void;
 export interface ReadPumpOptions {
   onChunk: ReadPumpChunkHandler;
   onError: ReadPumpErrorHandler;
+  onDone?: ReadPumpDoneHandler;
 }
 
 /**
@@ -79,7 +88,7 @@ export interface ReadPump {
  */
 export function createReadPump(
   port: SerialPort,
-  { onChunk, onError }: ReadPumpOptions,
+  { onChunk, onError, onDone }: ReadPumpOptions,
 ): ReadPump {
   let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   let running = false;
@@ -105,6 +114,9 @@ export function createReadPump(
       while (!stopped) {
         const { done, value } = await reader.read();
         if (done) {
+          if (!stopped) {
+            onDone?.();
+          }
           break;
         }
         if (value && value.byteLength > 0) {
