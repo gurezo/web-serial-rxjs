@@ -343,6 +343,9 @@ export function createSerialSession(
 
         return () => {
           cancelled = true;
+          if (machine.current === SerialSessionState.Connecting) {
+            machine.toIdle();
+          }
         };
       });
     },
