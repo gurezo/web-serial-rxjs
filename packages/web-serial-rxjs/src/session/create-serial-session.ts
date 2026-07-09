@@ -58,7 +58,8 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
  * - `connect$()` opens a user-selected port, starts the internal read pump,
  *   and transitions `idle -> connecting -> connected`.
  * - `disconnect$()` stops the read pump, closes the port, and transitions
- *   `connected -> disconnecting -> idle`.
+ *   `connected -> disconnecting -> idle`. When called during `connecting`,
+ *   it cancels the in-flight `connect$()` and returns to `idle`.
  * - `receive$` emits UTF-8 decoded text chunks pushed by the pump. It is
  *   **not** subscription-lazy - the pump is started by `connect$` and
  *   decoded text is multicast to all subscribers; late subscribers see only

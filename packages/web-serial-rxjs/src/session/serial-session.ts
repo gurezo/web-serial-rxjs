@@ -54,7 +54,10 @@ export interface SerialSession {
   /**
    * Close the active serial port and stop the internal read pump.
    *
-   * Safe to call when already disconnected.
+   * Safe to call when already disconnected or while a disconnect is already
+   * in progress. When called during `'connecting'`, cancels the in-flight
+   * `connect$()` (closes any opened port) and returns the session to
+   * `'idle'` without reaching `'connected'`.
    *
    * @returns An Observable that completes when the port is fully closed.
    */

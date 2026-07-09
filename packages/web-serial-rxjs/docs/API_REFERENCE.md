@@ -98,7 +98,7 @@ Opens a user-selected serial port and starts the internal read pump. Completes o
 
 ### `disconnect$(): Observable<void>`
 
-Stops the read pump and closes the port. Safe to call when already idle. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`.
+Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`.
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -138,7 +138,7 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 | `PORT_NOT_AVAILABLE`     | Requested port cannot be accessed.                                  |
 | `PORT_OPEN_FAILED`       | `port.open()` rejected.                                             |
 | `PORT_ALREADY_OPEN`      | `connect$` called while not in `'idle'` / `'error'`.                |
-| `PORT_NOT_OPEN`          | `send$` / `disconnect$` called in a state that disallows it.        |
+| `PORT_NOT_OPEN`          | `send$` called while not `'connected'`.                             |
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
