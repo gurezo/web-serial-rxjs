@@ -348,6 +348,132 @@ describe('createSerialSession', () => {
       expect(port.close).toHaveBeenCalledTimes(1);
     });
 
+    it('returns to idle when disconnect$ is called before requestPort resolves', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+
+      let resolveRequestPort!: (value: MockPort) => void;
+      const requestPort = vi.fn().mockImplementation(
+        () =>
+          new Promise<MockPort>((resolve) => {
+            resolveRequestPort = resolve;
+          }),
+      );
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+      const stateAfterConnecting = firstValueFrom(session.state$.pipe(skip(1), take(1)));
+
+      session.connect$().subscribe({ error: () => undefined });
+      expect(await stateAfterConnecting).toBe<SerialSessionState>(S.Connecting);
+
+      await expect(firstValueFrom(session.disconnect$())).resolves.toBeUndefined();
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+
+      resolveRequestPort(port);
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(port.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not reach connected after disconnect$ while connect$ is still in flight', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+
+      let resolveRequestPort!: (value: MockPort) => void;
+      const requestPort = vi.fn().mockImplementation(
+        () =>
+          new Promise<MockPort>((resolve) => {
+            resolveRequestPort = resolve;
+          }),
+      );
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+      const connectComplete = vi.fn();
+      const stateAfterConnecting = firstValueFrom(
+        session.state$.pipe(filter((s) => s === S.Connecting), take(1)),
+      );
+      session.connect$().subscribe({
+        next: connectComplete,
+        error: () => undefined,
+      });
+      await stateAfterConnecting;
+
+      await firstValueFrom(session.disconnect$());
+      resolveRequestPort(port);
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(connectComplete).not.toHaveBeenCalled();
+      expect(port.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns to idle when disconnect$ is called after open resolves but before connect completes', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+
+      let resolveOpen!: () => void;
+      port.open.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveOpen = resolve;
+          }),
+      );
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const connectComplete = vi.fn();
+      const stateAfterConnecting = firstValueFrom(
+        session.state$.pipe(filter((s) => s === S.Connecting), take(1)),
+      );
+      session.connect$().subscribe({
+        next: connectComplete,
+        error: () => undefined,
+      });
+      await stateAfterConnecting;
+
+      await firstValueFrom(session.disconnect$());
+      resolveOpen();
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(connectComplete).not.toHaveBeenCalled();
+      expect(port.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('completes immediately when disconnect$ is called while already disconnecting', async () => {
+      const { stream } = makeStream();
+      let resolveClose!: () => void;
+      const close = vi.fn().mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveClose = resolve;
+          }),
+      );
+      const port = makeMockPort(stream, close);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const firstDisconnect = firstValueFrom(session.disconnect$());
+      await expect(firstValueFrom(session.disconnect$())).resolves.toBeUndefined();
+
+      resolveClose();
+      await expect(firstDisconnect).resolves.toBeUndefined();
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+    });
+
     it('rejects connect$ with BROWSER_NOT_SUPPORTED when navigator.serial is missing', async () => {
       const session = createSerialSession();
 
