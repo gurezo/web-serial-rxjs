@@ -156,6 +156,13 @@ export function createSerialSession(
 
   let activePort: SerialPort | null = null;
   let activePump: ReadPump | null = null;
+  let activeConnectCancel: (() => void) | null = null;
+
+  const clearActiveConnectCancel = (cancel: () => void): void => {
+    if (activeConnectCancel === cancel) {
+      activeConnectCancel = null;
+    }
+  };
 
   const setActivePort = (port: SerialPort | null): void => {
     activePort = port;
@@ -276,6 +283,13 @@ export function createSerialSession(
         }
 
         let cancelled = false;
+        const cancelInFlightConnect = (): void => {
+          cancelled = true;
+          if (machine.current === SerialSessionState.Connecting) {
+            machine.toIdle();
+          }
+        };
+        activeConnectCancel = cancelInFlightConnect;
         machine.toConnecting();
 
         const run = async (): Promise<void> => {
@@ -357,10 +371,8 @@ export function createSerialSession(
         void run();
 
         return () => {
-          cancelled = true;
-          if (machine.current === SerialSessionState.Connecting) {
-            machine.toIdle();
-          }
+          clearActiveConnectCancel(cancelInFlightConnect);
+          cancelInFlightConnect();
         };
       });
     },
@@ -370,8 +382,16 @@ export function createSerialSession(
 
         if (
           current === SerialSessionState.Idle ||
-          current === SerialSessionState.Unsupported
+          current === SerialSessionState.Unsupported ||
+          current === SerialSessionState.Disconnecting
         ) {
+          subscriber.next();
+          subscriber.complete();
+          return;
+        }
+
+        if (current === SerialSessionState.Connecting) {
+          activeConnectCancel?.();
           subscriber.next();
           subscriber.complete();
           return;
