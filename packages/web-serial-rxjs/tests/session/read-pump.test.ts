@@ -120,6 +120,27 @@ describe('createReadPump', () => {
     expect(pump.isRunning).toBe(false);
   });
 
+  it('notifies onDone when the stream ends with done:true', async () => {
+    const { stream, controller } = makeStream();
+    const port = makePort({ readable: stream });
+    const onDone = vi.fn();
+    const onError = vi.fn();
+
+    const pump = createReadPump(port, {
+      onChunk: vi.fn(),
+      onError,
+      onDone,
+    });
+    pump.start();
+
+    controller.close();
+    await flushMicrotasks();
+
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onError).not.toHaveBeenCalled();
+    expect(pump.isRunning).toBe(false);
+  });
+
   it('stop() cancels the reader and suppresses further onError emissions', async () => {
     const { stream, controller } = makeStream();
     const port = makePort({ readable: stream });

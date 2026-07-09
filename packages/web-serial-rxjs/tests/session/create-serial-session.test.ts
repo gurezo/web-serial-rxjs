@@ -525,6 +525,27 @@ describe('createSerialSession', () => {
         S.Error,
       );
     });
+
+    it('treats done:true stream completion as connection lost and leaves connected', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errorPromise = firstValueFrom(session.errors$);
+      controller.close();
+
+      const received = await errorPromise;
+      expect(received).toBeInstanceOf(SerialError);
+      expect(received.code).toBe(SerialErrorCode.CONNECTION_LOST);
+
+      await flushMicrotasks();
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
+        S.Error,
+      );
+    });
   });
 
   describe('receiveReplay$', () => {
