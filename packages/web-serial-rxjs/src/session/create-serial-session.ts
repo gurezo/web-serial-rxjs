@@ -331,6 +331,21 @@ export function createSerialSession(
                 fallbackCode: SerialErrorCode.READ_FAILED,
                 messagePrefix: 'Read pump failed',
               }),
+            onDone: () => {
+              if (machine.current !== SerialSessionState.Connected) {
+                return;
+              }
+              reportError(
+                new SerialError(
+                  SerialErrorCode.CONNECTION_LOST,
+                  'Read pump ended unexpectedly: stream closed while connected',
+                ),
+                'fatal',
+                {
+                  fallbackCode: SerialErrorCode.CONNECTION_LOST,
+                },
+              );
+            },
           });
           activePump.start();
           sendQueue.clear();
