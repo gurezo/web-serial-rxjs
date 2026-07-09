@@ -1,3 +1,6 @@
+import type { TerminalBufferOptions } from '../terminal/create-terminal-buffer';
+import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../terminal/create-terminal-buffer';
+
 /**
  * Options for creating a {@link SerialSession} via {@link createSerialSession}.
  *
@@ -83,6 +86,15 @@ export interface SerialSessionOptions {
    * @default `{ enabled: false, bufferSize: 512 }` (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
    */
   receiveReplay?: SerialSessionReceiveReplayOptions;
+
+  /**
+   * Limits for {@link SerialSession.terminalText$} display memory. Oldest
+   * completed lines and leading characters are dropped when exceeded.
+   *
+   * @default `{ maxLines: 10000, maxChars: 1048576 }` (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/370 | Issue #370}
+   */
+  terminalBuffer?: TerminalBufferOptions;
 }
 
 /**
@@ -119,8 +131,12 @@ const DEFAULT_RECEIVE_REPLAY: Required<SerialSessionReceiveReplayOptions> = {
  * @internal
  */
 export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
-  Omit<SerialSessionOptions, 'filters' | 'receiveReplay'>
-> & { filters?: SerialPortFilter[]; receiveReplay: Required<SerialSessionReceiveReplayOptions> } = {
+  Omit<SerialSessionOptions, 'filters' | 'receiveReplay' | 'terminalBuffer'>
+> & {
+  filters?: SerialPortFilter[];
+  receiveReplay: Required<SerialSessionReceiveReplayOptions>;
+  terminalBuffer: Required<TerminalBufferOptions>;
+} = {
   baudRate: 9600,
   dataBits: 8,
   stopBits: 1,
@@ -129,4 +145,5 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
   flowControl: 'none',
   filters: undefined,
   receiveReplay: { ...DEFAULT_RECEIVE_REPLAY },
+  terminalBuffer: { ...DEFAULT_TERMINAL_BUFFER_OPTIONS },
 };

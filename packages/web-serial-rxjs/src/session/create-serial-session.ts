@@ -97,6 +97,10 @@ export function createSerialSession(
       ...DEFAULT_SERIAL_SESSION_OPTIONS.receiveReplay,
       ...options?.receiveReplay,
     },
+    terminalBuffer: {
+      ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
+      ...options?.terminalBuffer,
+    },
   };
 
   const supported = hasWebSerialSupport();
@@ -113,7 +117,10 @@ export function createSerialSession(
   const errors$ = errorsSubject.asObservable();
   const receive$ = receiveSubject.asObservable();
   const lines$ = linesSubject.asObservable();
-  const terminalText$ = createTerminalBuffer(receive$).text$;
+  const terminalText$ = createTerminalBuffer(
+    receive$,
+    resolvedOptions.terminalBuffer,
+  ).text$;
 
   const isConnected$ = machine.state$.pipe(
     map((state) => state === SerialSessionState.Connected),

@@ -931,6 +931,40 @@ describe('createSerialSession', () => {
         '$ whoami\nuser\n# ',
       ]);
     });
+
+    it('applies terminalBuffer.maxLines from SerialSessionOptions', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        terminalBuffer: { maxLines: 2, maxChars: 0 },
+      });
+      const latest = firstValueFrom(session.terminalText$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('line1\nline2\nline3\nline4'));
+      await flushMicrotasks();
+
+      await expect(latest).resolves.toBe('line2\nline3\nline4');
+    });
+
+    it('applies terminalBuffer.maxChars from SerialSessionOptions', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        terminalBuffer: { maxLines: 0, maxChars: 6 },
+      });
+      const latest = firstValueFrom(session.terminalText$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('abcdef\nghij'));
+      await flushMicrotasks();
+
+      await expect(latest).resolves.toBe('f\nghij');
+    });
   });
 
   describe('send$', () => {

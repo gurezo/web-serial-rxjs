@@ -15,6 +15,7 @@
  *
  * - {@link createSerialSession} - factory for a {@link SerialSession}
  * - {@link createTerminalBuffer} - terminal-style display text from {@link SerialSession.receive$}
+ * - {@link TerminalBufferOptions} - memory limits for terminal display text
  * - {@link SerialSession} - the runtime interface
  * - {@link SerialSessionOptions} - connection options
  * - {@link SerialSessionState} - `state$` payload values (const + type)
@@ -66,5 +67,5 @@ export type {
 export { SerialError } from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';
 
-export { createTerminalBuffer } from './terminal/create-terminal-buffer';
-export type { TerminalBuffer } from './terminal/create-terminal-buffer';
+export { createTerminalBuffer, DEFAULT_TERMINAL_BUFFER_OPTIONS } from './terminal/create-terminal-buffer';
+export type { TerminalBuffer, TerminalBufferOptions } from './terminal/create-terminal-buffer';

@@ -156,6 +156,8 @@ export interface SerialSession {
    * This stream collapses carriage-return redraws (`\r`) and keeps normal
    * newline behavior (`\n`, `\r\n`) so apps can bind terminal-like output
    * directly without wrapping {@link createTerminalBuffer} in every consumer.
+   * By default, retains at most 10,000 completed lines and 1,048,576
+   * characters; configure via {@link SerialSessionOptions.terminalBuffer}.
    *
    * Equivalent behavior:
    *
