@@ -2,6 +2,7 @@ import {
   filter,
   firstValueFrom,
   lastValueFrom,
+  skip,
   take,
   toArray,
 } from 'rxjs';
@@ -312,6 +313,39 @@ describe('createSerialSession', () => {
 
       const emitted = await errorsPromise;
       expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+    });
+
+    it('returns to idle when connect$ is unsubscribed before requestPort resolves', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+
+      let resolveRequestPort!: (value: MockPort) => void;
+      const requestPort = vi.fn().mockImplementation(
+        () =>
+          new Promise<MockPort>((resolve) => {
+            resolveRequestPort = resolve;
+          }),
+      );
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+      const stateAfterConnecting = firstValueFrom(session.state$.pipe(skip(1), take(1)));
+
+      const subscription = session.connect$().subscribe({
+        error: () => undefined,
+      });
+      expect(await stateAfterConnecting).toBe<SerialSessionState>(S.Connecting);
+
+      subscription.unsubscribe();
+      resolveRequestPort(port);
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(port.close).toHaveBeenCalledTimes(1);
     });
 
     it('rejects connect$ with BROWSER_NOT_SUPPORTED when navigator.serial is missing', async () => {
