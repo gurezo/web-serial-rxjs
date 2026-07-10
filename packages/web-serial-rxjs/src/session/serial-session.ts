@@ -188,11 +188,16 @@ export interface SerialSession {
    * rendering terminal text, prefer {@link terminalText$}.
    *
    * A trailing fragment without a line terminator is buffered until a later
-   * chunk completes a line, or discarded on disconnect. It is **not**
+   * chunk completes a line, or discarded on disconnect. The incomplete tail is
+   * bounded by {@link SerialSessionOptions.lineBuffer} `maxChars` (default
+   * 1,048,576); when exceeded, leading characters are discarded and a
+   * non-fatal {@link SerialErrorCode.LINE_BUFFER_OVERFLOW} is emitted on
+   * {@link errors$}. Pass `{ maxChars: 0 }` for unlimited growth. It is **not**
    * subscription-lazy: the same framing runs whenever the read pump is active,
    * independent of subscribers.
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/273 | Issue #273}
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/371 | Issue #371}
    */
   readonly lines$: Observable<string>;
 
