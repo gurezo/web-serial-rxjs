@@ -101,6 +101,10 @@ export function createSerialSession(
       ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
       ...options?.terminalBuffer,
     },
+    lineBuffer: {
+      ...DEFAULT_SERIAL_SESSION_OPTIONS.lineBuffer,
+      ...options?.lineBuffer,
+    },
   };
 
   const supported = hasWebSerialSupport();
@@ -112,7 +116,7 @@ export function createSerialSession(
   const linesSubject = new Subject<string>();
   const sendQueue = createSendQueue();
   const textEncoder = new TextEncoder();
-  const lineBuffer = createLineBuffer();
+  const lineBuffer = createLineBuffer(resolvedOptions.lineBuffer);
 
   const errors$ = errorsSubject.asObservable();
   const receive$ = receiveSubject.asObservable();
@@ -344,7 +348,18 @@ export function createSerialSession(
               if (activeReceiveReplay) {
                 activeReceiveReplay.next(text);
               }
-              for (const line of lineBuffer.feed(text)) {
+              const { lines, overflowed } = lineBuffer.feed(text);
+              if (overflowed) {
+                reportError(
+                  new SerialError(
+                    SerialErrorCode.LINE_BUFFER_OVERFLOW,
+                    `Line buffer exceeded maxChars (${resolvedOptions.lineBuffer.maxChars}); leading data was discarded`,
+                  ),
+                  'non-fatal',
+                  { fallbackCode: SerialErrorCode.LINE_BUFFER_OVERFLOW },
+                );
+              }
+              for (const line of lines) {
                 linesSubject.next(line);
               }
             },

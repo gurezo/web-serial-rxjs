@@ -138,6 +138,18 @@ export enum SerialErrorCode {
   OPERATION_TIMEOUT = 'OPERATION_TIMEOUT',
 
   /**
+   * Internal line buffer exceeded its configured size limit.
+   *
+   * This error occurs when the incomplete line tail held by the {@link SerialSession.lines$}
+   * framing buffer grows beyond {@link SerialSessionOptions.lineBuffer} `maxChars`.
+   * Leading characters are discarded to bound memory; the session remains connected.
+   *
+   * **Suggested action**: Increase `lineBuffer.maxChars`, handle framing on `receive$`,
+   * or ensure the device sends line terminators.
+   */
+  LINE_BUFFER_OVERFLOW = 'LINE_BUFFER_OVERFLOW',
+
+  /**
    * Unknown error occurred.
    *
    * This error code is used for errors that don't fit into any other category.

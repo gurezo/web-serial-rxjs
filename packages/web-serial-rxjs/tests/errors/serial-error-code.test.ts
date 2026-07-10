@@ -15,6 +15,8 @@ describe('SerialErrorCode', () => {
       'INVALID_FILTER_OPTIONS',
     );
     expect(SerialErrorCode.OPERATION_CANCELLED).toBe('OPERATION_CANCELLED');
+    expect(SerialErrorCode.OPERATION_TIMEOUT).toBe('OPERATION_TIMEOUT');
+    expect(SerialErrorCode.LINE_BUFFER_OVERFLOW).toBe('LINE_BUFFER_OVERFLOW');
     expect(SerialErrorCode.UNKNOWN).toBe('UNKNOWN');
   });
 

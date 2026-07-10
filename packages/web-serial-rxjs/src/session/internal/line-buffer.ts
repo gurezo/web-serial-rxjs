@@ -1,4 +1,31 @@
 /**
+ * Options for {@link createLineBuffer}.
+ *
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/371 | Issue #371}
+ */
+export interface LineBufferOptions {
+  /**
+   * Maximum characters retained in the incomplete line tail (no line terminator yet).
+   * When exceeded, leading characters are discarded. `0` means unlimited.
+   *
+   * @default 1048576
+   */
+  maxChars?: number;
+}
+
+/** Default limits applied when {@link LineBufferOptions} fields are omitted. */
+export const DEFAULT_LINE_BUFFER_OPTIONS: Required<LineBufferOptions> = {
+  maxChars: 1_048_576,
+};
+
+/** Result of {@link createLineBuffer.feed}. */
+export interface LineBufferFeedResult {
+  lines: string[];
+  /** `true` when leading characters were discarded due to `maxChars`. */
+  overflowed: boolean;
+}
+
+/**
  * Streaming UTF-16 text to newline-delimited lines for {@link createSerialSession}.
  * Supports `\r\n` and `\n` per #237; a lone `\r` that is not the last character
  * in the buffer is treated as a line end (compatibility with some devices). A
@@ -7,18 +34,32 @@
  *
  * @internal
  */
-export function createLineBuffer(): {
-  feed(chunk: string): string[];
+export function createLineBuffer(options?: LineBufferOptions): {
+  feed(chunk: string): LineBufferFeedResult;
   clear(): void;
 } {
+  const limits: Required<LineBufferOptions> = {
+    ...DEFAULT_LINE_BUFFER_OPTIONS,
+    ...options,
+  };
+
   let buffer = '';
 
   const clear = (): void => {
     buffer = '';
   };
 
-  const feed = (chunk: string): string[] => {
+  const trimIncompleteTail = (): boolean => {
+    if (limits.maxChars <= 0 || buffer.length <= limits.maxChars) {
+      return false;
+    }
+    buffer = buffer.slice(buffer.length - limits.maxChars);
+    return true;
+  };
+
+  const feed = (chunk: string): LineBufferFeedResult => {
     buffer += chunk;
+    let overflowed = false;
     const out: string[] = [];
 
     for (;;) {
@@ -52,7 +93,11 @@ export function createLineBuffer(): {
       break;
     }
 
-    return out;
+    if (trimIncompleteTail()) {
+      overflowed = true;
+    }
+
+    return { lines: out, overflowed };
   };
 
   return { feed, clear };

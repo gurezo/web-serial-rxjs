@@ -42,6 +42,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
 | `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576 }` | Memory limits for `terminalText$`; see `createTerminalBuffer`. |
+| `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | Memory limit for the incomplete line tail used by `lines$`; see below. |
 
 ### `SerialSessionReceiveReplayOptions`
 
@@ -58,6 +59,14 @@ Used by `createTerminalBuffer` and `SerialSessionOptions.terminalBuffer`. When a
 | ---------- | -------- | ---------- | ----------- |
 | `maxLines` | `number` | `10000`    | Max number of completed lines retained in the cumulative display text. |
 | `maxChars` | `number` | `1048576`  | Max total characters in the display text (`completed` + current line). |
+
+### `LineBufferOptions`
+
+Used by `SerialSessionOptions.lineBuffer` for the **incomplete line tail** held while framing `lines$`. When `maxChars` is exceeded, **leading** characters of the tail are discarded and a non-fatal `SerialError` with `SerialErrorCode.LINE_BUFFER_OVERFLOW` is emitted on `errors$`. Completed lines are emitted in full before the tail is trimmed. Pass `0` to disable the limit.
+
+| Field      | Type     | Default    | Description |
+| ---------- | -------- | ---------- | ----------- |
+| `maxChars` | `number` | `1048576`  | Max characters retained in the incomplete line tail (no line terminator yet). |
 
 ## createTerminalBuffer(receive$, options?)
 
@@ -151,7 +160,7 @@ Terminal-display oriented cumulative text derived from `receive$`. Collapses `\r
 
 ### `lines$: Observable<string>`
 
-The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. **Not subscription-lazy** with respect to the read pump, like `receive$`. Choose **`lines$`** for logs and parsers; for raw terminal display where `\r` redraw semantics matter, subscribe to **`receive$`** instead.
+The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. By default the incomplete tail is capped at 1,048,576 characters via `SerialSessionOptions.lineBuffer`; overflow discards leading tail data and emits `LINE_BUFFER_OVERFLOW` on `errors$` without disconnecting. **Not subscription-lazy** with respect to the read pump, like `receive$`. Choose **`lines$`** for logs and parsers; for raw terminal display where `\r` redraw semantics matter, subscribe to **`receive$`** instead.
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
@@ -170,6 +179,7 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 | `PORT_NOT_OPEN`          | `send$` called while not `'connected'`.                             |
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
+| `LINE_BUFFER_OVERFLOW`   | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
 | `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry.                               |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
