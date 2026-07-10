@@ -57,11 +57,12 @@
  * ```
  */
 
-export { createSerialSession, SerialSessionState } from './session';
+export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS } from './session';
 export type {
   SerialSession,
   SerialSessionOptions,
   SerialSessionReceiveReplayOptions,
+  LineBufferOptions,
 } from './session';
 
 export { SerialError } from './errors/serial-error';

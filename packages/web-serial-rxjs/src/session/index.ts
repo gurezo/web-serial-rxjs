@@ -5,3 +5,7 @@ export type {
   SerialSessionReceiveReplayOptions,
 } from './serial-session-options';
 export { SerialSessionState } from './serial-session-state';
+export {
+  DEFAULT_LINE_BUFFER_OPTIONS,
+  type LineBufferOptions,
+} from './internal/line-buffer';

@@ -821,6 +821,63 @@ describe('createSerialSession', () => {
 
       await expect(twoLines).resolves.toEqual(['A', 'B']);
     });
+
+    it('applies lineBuffer.maxChars from SerialSessionOptions', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        lineBuffer: { maxChars: 4 },
+      });
+      const oneLine = firstValueFrom(session.lines$.pipe(take(1)));
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('abcdef'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('\n'));
+      await flushMicrotasks();
+
+      await expect(oneLine).resolves.toBe('cdef');
+    });
+
+    it('emits LINE_BUFFER_OVERFLOW on errors$ when line buffer overflows', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        lineBuffer: { maxChars: 4 },
+      });
+      const errorPromise = firstValueFrom(session.errors$);
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('abcdef'));
+      await flushMicrotasks();
+
+      const error = await errorPromise;
+      expect(error.code).toBe(SerialErrorCode.LINE_BUFFER_OVERFLOW);
+    });
+
+    it('does not mutate state$ when line buffer overflows (non-fatal)', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        lineBuffer: { maxChars: 4 },
+      });
+      const errorPromise = firstValueFrom(session.errors$);
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('abcdef'));
+      await flushMicrotasks();
+
+      await errorPromise;
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
+        S.Connected,
+      );
+    });
   });
 
   describe('terminalText$', () => {
