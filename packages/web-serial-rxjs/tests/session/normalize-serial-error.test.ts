@@ -27,6 +27,7 @@ describe('normalizeSerialError', () => {
     expect(normalized).toBeInstanceOf(SerialError);
     expect(normalized.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
     expect(normalized.originalError).toBe(dom);
+    expect(normalized.context).toEqual({ cause: dom });
   });
 
   it('wraps arbitrary Error instances using the provided fallback code', () => {
@@ -40,6 +41,7 @@ describe('normalizeSerialError', () => {
     expect(normalized.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
     expect(normalized.message).toBe('Failed to open port: cannot open');
     expect(normalized.originalError).toBe(cause);
+    expect(normalized.context).toEqual({ cause });
   });
 
   it('wraps non-Error values into Error causes so originalError is always an Error', () => {

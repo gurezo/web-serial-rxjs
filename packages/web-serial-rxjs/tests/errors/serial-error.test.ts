@@ -15,9 +15,10 @@ describe('SerialError', () => {
       expect(error.code).toBe(SerialErrorCode.PORT_NOT_AVAILABLE);
       expect(error.message).toBe('Port is not available');
       expect(error.originalError).toBeUndefined();
+      expect(error.context).toBeUndefined();
     });
 
-    it('should create an error with original error', () => {
+    it('should derive cause context from originalError for cause-bearing codes', () => {
       const originalError = new Error('Original error');
       const error = new SerialError(
         SerialErrorCode.READ_FAILED,
@@ -28,6 +29,19 @@ describe('SerialError', () => {
       expect(error.code).toBe(SerialErrorCode.READ_FAILED);
       expect(error.message).toBe('Failed to read');
       expect(error.originalError).toBe(originalError);
+      expect(error.context).toEqual({ cause: originalError });
+    });
+
+    it('should accept explicit structured context', () => {
+      const error = new SerialError(
+        SerialErrorCode.LINE_BUFFER_OVERFLOW,
+        'Line buffer overflow',
+        undefined,
+        { maxChars: 128 },
+      );
+
+      expect(error.context).toEqual({ maxChars: 128 });
+      expect(error.originalError).toBeUndefined();
     });
 
     it('should have correct error name', () => {
@@ -64,6 +78,22 @@ describe('SerialError', () => {
       );
 
       expect(error.is(SerialErrorCode.PORT_ALREADY_OPEN)).toBe(false);
+    });
+
+    it('should narrow error.code and context when is() returns true', () => {
+      const error = new SerialError(
+        SerialErrorCode.LINE_BUFFER_OVERFLOW,
+        'Line buffer overflow',
+        undefined,
+        { maxChars: 64 },
+      );
+
+      if (error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)) {
+        expect(error.code).toBe(SerialErrorCode.LINE_BUFFER_OVERFLOW);
+        expect(error.context.maxChars).toBe(64);
+      } else {
+        expect.fail('is() should have returned true');
+      }
     });
 
     it('should narrow error.code when is() returns true', () => {
@@ -124,6 +154,7 @@ describe('SerialError', () => {
       );
 
       expect(error.originalError).toBe(originalError);
+      expect(error.context).toEqual({ cause: originalError });
       expect(error.originalError?.message).toBe('Type error');
       expect(error.originalError).toBeInstanceOf(TypeError);
     });
