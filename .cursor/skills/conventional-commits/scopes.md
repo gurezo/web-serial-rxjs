@@ -13,6 +13,7 @@ web-serial-rxjs で使用可能な scope の一覧と用途。`commitlint.config
 | `example-svelte` | `apps/example-svelte` | `example-svelte` | Svelte サンプル |
 | `example-vanilla-js` | `apps/example-vanilla-js` | `example-vanilla-js` | Vanilla JS サンプル |
 | `example-vanilla-ts` | `apps/example-vanilla-ts` | `example-vanilla-ts` | Vanilla TS サンプル |
+| `examples-shared` | `libs/examples-shared` | `examples-shared` | example 用 shared adapter |
 | `workspace` | リポジトリルート | (該当なし) | `package.json` / `nx.json` / `.husky/` / `commitlint.config.js` / `.cursor/` / README / CONTRIBUTING 等 |
 | `docs` | ドキュメント全般 | (該当なし) | ドキュメント横断 |
 | `readme` | README 単体 | (該当なし) | README のみ |
@@ -32,7 +33,7 @@ libs/**/project.json
 packages/**/project.json
 ```
 
-`libs/` は現状未使用。追加時は `name` を scope にし、`commitlint.config.js` を更新する。
+`libs/` の project は `name` を scope にし、`commitlint.config.js` を更新する。
 
 ## scope 選択の考え方
 
