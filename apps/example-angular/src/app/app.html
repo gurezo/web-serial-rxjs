@@ -41,20 +41,20 @@
         <button
           class="btn btn-primary"
           (click)="handleConnect()"
-          [disabled]="!browserSupported || isConnected() || connecting"
+          [disabled]="!browserSupported || isConnected() || connecting()"
         >
           接続
         </button>
         <button
           class="btn btn-secondary"
           (click)="handleDisconnect()"
-          [disabled]="!isConnected() || disconnecting"
+          [disabled]="!isConnected() || disconnecting()"
         >
           切断
         </button>
       </div>
-      <div class="status-message" [ngClass]="status.type">
-        {{ status.message }}
+      <div class="status-message" [ngClass]="status().type">
+        {{ status().message }}
       </div>
     </section>
 
@@ -101,7 +101,7 @@
         <button
           class="btn btn-secondary"
           (click)="clearReceivedData()"
-          [disabled]="!hasReceivedData"
+          [disabled]="!hasReceivedData()"
         >
           クリア
         </button>
