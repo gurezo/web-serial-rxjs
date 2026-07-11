@@ -80,9 +80,13 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     receivedData.value = '';
     terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
     if (baudRate !== undefined && baudRate !== currentBaudRate) {
+      const previousSession = currentSession;
       currentBaudRate = baudRate;
       currentSession = createSerialSession({ baudRate });
       sessions$.next(currentSession);
+      return previousSession
+        .dispose$()
+        .pipe(switchMap(() => currentSession.connect$()));
     }
     return currentSession.connect$();
   };
@@ -99,7 +103,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     isConnectedSub.unsubscribe();
     receiveSub.unsubscribe();
     errorsSub.unsubscribe();
-    currentSession.disconnect$().subscribe({ error: () => void 0 });
+    currentSession.dispose$().subscribe({ error: () => void 0 });
     sessions$.complete();
     terminalBufferEpoch$.complete();
   });
