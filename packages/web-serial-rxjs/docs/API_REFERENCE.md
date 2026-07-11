@@ -40,7 +40,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `bufferSize`  | `number`                            | `255`    | Read-stream buffer size in bytes.                                 |
 | `flowControl` | `'none' \| 'hardware'`              | `'none'` | Flow control mode.                                                |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
-| `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
+| `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512, maxChars: 0 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576 }` | Memory limits for `terminalText$`; see `createTerminalBuffer`. |
 | `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | Memory limit for the incomplete line tail used by `lines$`; see below. |
 
@@ -49,7 +49,10 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | Field         | Type      | Default | Description |
 | ------------- | --------- | ------- | ----------- |
 | `enabled`     | `boolean` | `false` | When `true`, `receiveReplay$` buffers the last N **chunks** (decoder emissions) for the current connection. When `false`, `receiveReplay$` is the same hot stream as `receive$`. |
-| `bufferSize`  | `number`  | `512`   | Max number of text chunks to retain in the replay buffer for the active connection. Not a character or byte count. |
+| `bufferSize`  | `number`  | `512`   | Max number of text chunks to retain in the replay buffer for the active connection (1–65536). Not a character or byte count. |
+| `maxChars`    | `number`  | `0`     | Max total characters across retained replay chunks. When exceeded, **oldest** chunks are discarded and `RECEIVE_REPLAY_BUFFER_OVERFLOW` is emitted on `errors$` (non-fatal). `0` disables the limit. |
+
+Invalid `bufferSize` or `maxChars` values cause `createSerialSession` to throw `SerialError` with `INVALID_RECEIVE_REPLAY_OPTIONS`.
 
 ### `TerminalBufferOptions`
 
@@ -152,7 +155,7 @@ UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not l
 
 ### `receiveReplay$: Observable<string>`
 
-Same data path as `receive$`, but when `SerialSessionOptions.receiveReplay.enabled` is `true` it **replays** the last *N* **chunks** (decoder emissions) for the current connection to new subscribers. When `enabled` is `false` (default), this is the same observable instance as `receive$`. The replay buffer is reset when the port disconnects. Does not change `lines$` (line framing is not replayed here).
+Same data path as `receive$`, but when `SerialSessionOptions.receiveReplay.enabled` is `true` it **replays** the last *N* **chunks** (decoder emissions) for the current connection to new subscribers. When `enabled` is `false` (default), this is the same observable instance as `receive$`. The replay buffer is reset when the port disconnects. Optional `maxChars` bounds total buffered characters by discarding oldest chunks. Does not change `lines$` (line framing is not replayed here).
 
 ### `terminalText$: Observable<string>`
 
@@ -180,8 +183,10 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
 | `LINE_BUFFER_OVERFLOW`   | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
 | `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry.                               |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `OPERATION_TIMEOUT`      | Internal operation timed out.                                       |
 | `UNKNOWN`                | Unclassified failure; see `originalError`.                          |

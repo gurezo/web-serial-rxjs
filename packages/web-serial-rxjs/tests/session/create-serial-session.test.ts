@@ -750,6 +750,94 @@ describe('createSerialSession', () => {
 
       await expect(firstFromReplay).resolves.toBe('new');
     });
+
+    it('throws INVALID_RECEIVE_REPLAY_OPTIONS for invalid bufferSize', () => {
+      expect(() =>
+        createSerialSession({
+          receiveReplay: { enabled: true, bufferSize: -1 },
+        }),
+      ).toThrow(SerialError);
+
+      try {
+        createSerialSession({
+          receiveReplay: { enabled: true, bufferSize: 0 },
+        });
+      } catch (error) {
+        expect(error).toBeInstanceOf(SerialError);
+        expect((error as SerialError).code).toBe(
+          SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
+        );
+      }
+    });
+
+    it('applies receiveReplay.maxChars from SerialSessionOptions', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        receiveReplay: { enabled: true, bufferSize: 10, maxChars: 4 },
+      });
+      await firstValueFrom(session.connect$());
+
+      controller.enqueue(new TextEncoder().encode('ab'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('cd'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('ef'));
+      await flushMicrotasks();
+
+      const replayed = await firstValueFrom(
+        session.receiveReplay$.pipe(take(2), toArray()),
+      );
+      expect(replayed).toEqual(['cd', 'ef']);
+    });
+
+    it('emits RECEIVE_REPLAY_BUFFER_OVERFLOW on errors$ when receive replay overflows', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        receiveReplay: { enabled: true, bufferSize: 10, maxChars: 4 },
+      });
+      const errorPromise = firstValueFrom(session.errors$);
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('ab'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('cd'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('ef'));
+      await flushMicrotasks();
+
+      const error = await errorPromise;
+      expect(error.code).toBe(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW);
+    });
+
+    it('does not mutate state$ when receive replay overflows (non-fatal)', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession({
+        receiveReplay: { enabled: true, bufferSize: 2, maxChars: 0 },
+      });
+      const errorPromise = firstValueFrom(session.errors$);
+
+      await firstValueFrom(session.connect$());
+      controller.enqueue(new TextEncoder().encode('a'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('b'));
+      await flushMicrotasks();
+      controller.enqueue(new TextEncoder().encode('c'));
+      await flushMicrotasks();
+
+      await errorPromise;
+      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
+        S.Connected,
+      );
+    });
   });
 
   describe('lines$', () => {

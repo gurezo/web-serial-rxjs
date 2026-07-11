@@ -1,5 +1,7 @@
 import type { TerminalBufferOptions } from '../terminal/create-terminal-buffer';
 import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../terminal/create-terminal-buffer';
+import { SerialError } from '../errors/serial-error';
+import { SerialErrorCode } from '../errors/serial-error-code';
 import {
   DEFAULT_LINE_BUFFER_OPTIONS,
   type LineBufferOptions,
@@ -115,6 +117,7 @@ export interface SerialSessionOptions {
  * Options for {@link SerialSessionOptions.receiveReplay}.
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/265 | Issue #265}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/372 | Issue #372}
  */
 export interface SerialSessionReceiveReplayOptions {
   /**
@@ -132,12 +135,69 @@ export interface SerialSessionReceiveReplayOptions {
    * @default 512
    */
   bufferSize?: number;
+
+  /**
+   * Maximum total characters retained across buffered replay chunks for the
+   * active connection. When exceeded, oldest chunks are discarded. `0` means
+   * unlimited (only `bufferSize` applies).
+   *
+   * @default 0
+   */
+  maxChars?: number;
 }
+
+/** Maximum allowed {@link SerialSessionReceiveReplayOptions.bufferSize}. */
+export const MAX_RECEIVE_REPLAY_BUFFER_SIZE = 65_536;
+
+/** Maximum allowed {@link SerialSessionReceiveReplayOptions.maxChars}. */
+export const MAX_RECEIVE_REPLAY_MAX_CHARS = 1_048_576;
 
 const DEFAULT_RECEIVE_REPLAY: Required<SerialSessionReceiveReplayOptions> = {
   enabled: false,
   bufferSize: 512,
+  maxChars: 0,
 };
+
+/**
+ * Merge and validate {@link SerialSessionReceiveReplayOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS}
+ *         when `bufferSize` or `maxChars` are out of range.
+ */
+export function resolveReceiveReplayOptions(
+  options?: SerialSessionReceiveReplayOptions,
+): Required<SerialSessionReceiveReplayOptions> {
+  const merged: Required<SerialSessionReceiveReplayOptions> = {
+    ...DEFAULT_RECEIVE_REPLAY,
+    ...options,
+  };
+
+  const { bufferSize, maxChars } = merged;
+
+  if (
+    !Number.isSafeInteger(bufferSize) ||
+    bufferSize < 1 ||
+    bufferSize > MAX_RECEIVE_REPLAY_BUFFER_SIZE
+  ) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
+      `Invalid receiveReplay.bufferSize: ${bufferSize}. Must be a safe integer between 1 and ${MAX_RECEIVE_REPLAY_BUFFER_SIZE}.`,
+    );
+  }
+
+  if (
+    !Number.isSafeInteger(maxChars) ||
+    maxChars < 0 ||
+    maxChars > MAX_RECEIVE_REPLAY_MAX_CHARS
+  ) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
+      `Invalid receiveReplay.maxChars: ${maxChars}. Must be a safe integer between 0 and ${MAX_RECEIVE_REPLAY_MAX_CHARS}.`,
+    );
+  }
+
+  return merged;
+}
 
 /**
  * Default values applied to omitted {@link SerialSessionOptions} fields.

@@ -3,7 +3,6 @@ import {
   distinctUntilChanged,
   map,
   Observable,
-  ReplaySubject,
   share,
   Subject,
   switchMap,
@@ -15,6 +14,10 @@ import { buildRequestOptions } from './internal/build-request-options';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
 import { createLineBuffer } from './internal/line-buffer';
 import {
+  createReceiveReplayBuffer,
+  type ReceiveReplayBuffer,
+} from './internal/receive-replay-buffer';
+import {
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
 } from './normalize-serial-error';
@@ -23,6 +26,7 @@ import { createSendQueue } from './send-queue';
 import type { SerialSession } from './serial-session';
 import {
   DEFAULT_SERIAL_SESSION_OPTIONS,
+  resolveReceiveReplayOptions,
   type SerialSessionOptions,
 } from './serial-session-options';
 import { SerialSessionState } from './serial-session-state';
@@ -93,10 +97,7 @@ export function createSerialSession(
     ...DEFAULT_SERIAL_SESSION_OPTIONS,
     ...options,
     filters: options?.filters,
-    receiveReplay: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.receiveReplay,
-      ...options?.receiveReplay,
-    },
+    receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
     terminalBuffer: {
       ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
       ...options?.terminalBuffer,
@@ -137,7 +138,7 @@ export function createSerialSession(
   const receiveReplayStream$ = resolvedOptions.receiveReplay.enabled
     ? new BehaviorSubject<Observable<string>>(receive$)
     : null;
-  let activeReceiveReplay: ReplaySubject<string> | null = null;
+  let activeReceiveReplay: ReceiveReplayBuffer | null = null;
 
   const clearLiveReceiveReplay = (): void => {
     if (receiveReplayStream$) {
@@ -157,9 +158,12 @@ export function createSerialSession(
       activeReceiveReplay.complete();
       activeReceiveReplay = null;
     }
-    const rs = new ReplaySubject<string>(resolvedOptions.receiveReplay.bufferSize);
-    activeReceiveReplay = rs;
-    receiveReplayStream$.next(rs.asObservable());
+    const buffer = createReceiveReplayBuffer({
+      bufferSize: resolvedOptions.receiveReplay.bufferSize,
+      maxChars: resolvedOptions.receiveReplay.maxChars,
+    });
+    activeReceiveReplay = buffer;
+    receiveReplayStream$.next(buffer.asObservable());
   };
 
   const receiveReplay$ = receiveReplayStream$
@@ -346,7 +350,19 @@ export function createSerialSession(
             onChunk: (text) => {
               receiveSubject.next(text);
               if (activeReceiveReplay) {
-                activeReceiveReplay.next(text);
+                const { overflowed } = activeReceiveReplay.next(text);
+                if (overflowed) {
+                  reportError(
+                    new SerialError(
+                      SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
+                      `Receive replay buffer exceeded configured limits; oldest chunks were discarded`,
+                    ),
+                    'non-fatal',
+                    {
+                      fallbackCode: SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
+                    },
+                  );
+                }
               }
               const { lines, overflowed } = lineBuffer.feed(text);
               if (overflowed) {

@@ -27,7 +27,7 @@ After a successful `connect$`, use `getPortInfo()` or subscribe to `portInfo$` f
 
 ## Receive replay (`receive$` vs `receiveReplay$`)
 
-`receive$` is **non-replay**: late subscribers only see chunks emitted after they subscribe. To retain the last *N* decoded text **chunks** per open connection (same bytes as `receive$`, e.g. for boot logs), pass `receiveReplay: { enabled: true, bufferSize: 512 }` to `createSerialSession` and subscribe to `receiveReplay$`. Larger `bufferSize` uses more memory. When receive replay is **off** (default), `receiveReplay$` is the same hot stream as `receive$`. This option does not add replay to `lines$`—only raw decoder chunks on `receiveReplay$`.
+`receive$` is **non-replay**: late subscribers only see chunks emitted after they subscribe. To retain the last *N* decoded text **chunks** per open connection (same bytes as `receive$`, e.g. for boot logs), pass `receiveReplay: { enabled: true, bufferSize: 512 }` to `createSerialSession` and subscribe to `receiveReplay$`. `bufferSize` must be a positive safe integer up to 65536. Optional `maxChars` bounds total buffered characters by discarding oldest chunks (non-fatal `RECEIVE_REPLAY_BUFFER_OVERFLOW` on `errors$`). Larger `bufferSize` or chunk sizes use more memory. When receive replay is **off** (default), `receiveReplay$` is the same hot stream as `receive$`. This option does not add replay to `lines$`—only raw decoder chunks on `receiveReplay$`.
 
 ## `receive$` vs `lines$`
 
