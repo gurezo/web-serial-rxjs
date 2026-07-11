@@ -173,6 +173,70 @@ export function createSerialSession(
   let activePort: SerialPort | null = null;
   let activePump: ReadPump | null = null;
   let activeConnectCancel: (() => void) | null = null;
+  let disposed = false;
+
+  const createDisposedError = (): SerialError =>
+    new SerialError(
+      SerialErrorCode.SESSION_DISPOSED,
+      'SerialSession has been disposed',
+    );
+
+  const completeSession = async (): Promise<void> => {
+    const current = machine.current;
+
+    if (current === SerialSessionState.Connecting) {
+      activeConnectCancel?.();
+    }
+
+    sendQueue.clear();
+
+    if (
+      current === SerialSessionState.Connected ||
+      current === SerialSessionState.Error ||
+      current === SerialSessionState.Disconnecting
+    ) {
+      const portToClose = activePort;
+      await teardownPump();
+      await closePortSafely(portToClose);
+      setActivePort(null);
+    }
+
+    lineBuffer.clear();
+    machine.toDisposed();
+    machine.complete();
+    errorsSubject.complete();
+    receiveSubject.complete();
+    linesSubject.complete();
+    portInfoSubject.complete();
+    receiveReplayStream$?.complete();
+  };
+
+  const dispose$ = (): Observable<void> =>
+    new Observable<void>((subscriber) => {
+      if (disposed) {
+        subscriber.next();
+        subscriber.complete();
+        return;
+      }
+
+      disposed = true;
+
+      const run = async (): Promise<void> => {
+        try {
+          await completeSession();
+          subscriber.next();
+          subscriber.complete();
+        } catch (error) {
+          const serialError = normalizeSerialError(error, {
+            fallbackCode: SerialErrorCode.UNKNOWN,
+            messagePrefix: 'Unexpected dispose failure',
+          });
+          subscriber.error(serialError);
+        }
+      };
+
+      void run();
+    });
 
   const clearActiveConnectCancel = (cancel: () => void): void => {
     if (activeConnectCancel === cancel) {
@@ -229,6 +293,9 @@ export function createSerialSession(
     options: NormalizeSerialErrorOptions,
   ): SerialError => {
     const serialError = normalizeSerialError(error, options);
+    if (disposed) {
+      return serialError;
+    }
     errorsSubject.next(serialError);
     if (severity === 'fatal') {
       machine.toError();
@@ -268,6 +335,11 @@ export function createSerialSession(
     },
     connect$(): Observable<void> {
       return new Observable<void>((subscriber) => {
+        if (disposed) {
+          subscriber.error(createDisposedError());
+          return;
+        }
+
         if (!hasWebSerialSupport()) {
           const error = reportError(
             new SerialError(
@@ -336,7 +408,7 @@ export function createSerialSession(
             return;
           }
 
-          if (cancelled) {
+          if (cancelled || disposed) {
             await closePortSafely(selectedPort);
             return;
           }
@@ -402,6 +474,12 @@ export function createSerialSession(
           });
           activePump.start();
           sendQueue.clear();
+          if (disposed) {
+            await teardownPump();
+            await closePortSafely(selectedPort);
+            setActivePort(null);
+            return;
+          }
           machine.toConnected();
           subscriber.next();
           subscriber.complete();
@@ -417,6 +495,12 @@ export function createSerialSession(
     },
     disconnect$(): Observable<void> {
       return new Observable<void>((subscriber) => {
+        if (disposed) {
+          subscriber.next();
+          subscriber.complete();
+          return;
+        }
+
         const current = machine.current;
 
         if (
@@ -473,7 +557,9 @@ export function createSerialSession(
               }
             }
             setActivePort(null);
-            machine.toIdle();
+            if (!disposed) {
+              machine.toIdle();
+            }
             subscriber.next();
             subscriber.complete();
           } catch (error) {
@@ -488,7 +574,15 @@ export function createSerialSession(
         void run();
       });
     },
+    dispose$,
+    destroy$: dispose$,
     send$(data: string | Uint8Array): Observable<void> {
+      if (disposed) {
+        return new Observable<void>((subscriber) => {
+          subscriber.error(createDisposedError());
+        });
+      }
+
       return sendQueue.enqueue(async () => {
         const payload =
           typeof data === 'string' ? textEncoder.encode(data) : data;

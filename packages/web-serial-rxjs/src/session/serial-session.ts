@@ -64,6 +64,31 @@ export interface SerialSession {
   disconnect$(): Observable<void>;
 
   /**
+   * Permanently tear down the session and complete all observables.
+   *
+   * Unlike {@link disconnect$}, which returns the session to `'idle'` for
+   * reuse, `dispose$` closes any active connection, releases internal
+   * resources, emits `'disposed'` on {@link state$}, and completes every
+   * session stream. After disposal, {@link connect$} and {@link send$}
+   * fail with {@link SerialErrorCode.SESSION_DISPOSED}; create a new
+   * session instead of reusing this instance.
+   *
+   * Safe to call multiple times; subsequent calls complete immediately.
+   *
+   * @returns An Observable that completes when disposal has finished.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/373 | Issue #373}
+   */
+  dispose$(): Observable<void>;
+
+  /**
+   * Alias for {@link dispose$}.
+   *
+   * @returns An Observable that completes when disposal has finished.
+   */
+  destroy$(): Observable<void>;
+
+  /**
    * Reactive session lifecycle state.
    *
    * Replays the current state on subscribe. UIs should drive entirely from
