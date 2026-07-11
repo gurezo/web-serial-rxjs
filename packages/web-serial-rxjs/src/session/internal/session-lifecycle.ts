@@ -245,7 +245,7 @@ export function createSessionLifecycle(
             parity: resolvedOptions.parity,
             bufferSize: resolvedOptions.bufferSize,
             flowControl: resolvedOptions.flowControl,
-          });
+          } satisfies SerialOptions);
         } catch (error) {
           if (selectedPort) {
             await closePortSafely(selectedPort);
