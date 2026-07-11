@@ -19,13 +19,14 @@
 
 1. **すべての変更が `main` にマージされている**: リリースは最新の `main` ブランチに基づくべきです
 2. **テストが通過する**: ローカルで `pnpm test` を実行してすべてが動作することを確認
-3. **ビルドが成功する**: `pnpm exec nx build web-serial-rxjs` を実行してビルドを確認
-4. **バージョン番号**: [セマンティックバージョニング](https://semver.org/)に従って適切なバージョン番号を決定
+3. **ビルドが成功する**: `pnpm exec nx build web-serial-rxjs` を実行してビルドを確認。この Nx target は `packages/web-serial-rxjs` の package scripts（`tsc` + `esbuild`）に委譲され、npm publish で使うのと同じ `dist/index.mjs` と `dist/index.d.ts` を生成します。
+4. **dist 検証**: `pnpm exec nx run web-serial-rxjs:verify-dist` を実行し、`package.json` の exports とビルド成果物が一致することを確認
+5. **バージョン番号**: [セマンティックバージョニング](https://semver.org/)に従って適切なバージョン番号を決定
    - **MAJOR** (例: `1.0.0` → `2.0.0`): 破壊的変更
    - **MINOR** (例: `1.0.0` → `1.1.0`): 新機能（後方互換性あり）
    - **PATCH** (例: `1.0.0` → `1.0.1`): バグ修正（後方互換性あり）
-5. **package.json のバージョン**: `packages/web-serial-rxjs/package.json` のバージョンをタグと一致させる
-6. **ドキュメント**: メンテナンスされている場合は `CHANGELOG.md` を更新（任意）
+6. **package.json のバージョン**: `packages/web-serial-rxjs/package.json` のバージョンをタグと一致させる
+7. **ドキュメント**: メンテナンスされている場合は `CHANGELOG.md` を更新（任意）
 
 ## リリース手順
 
@@ -90,11 +91,12 @@ git push origin v1.0.0
 1. ✅ タグ付けされたコミットでコードをチェックアウト
 2. ✅ 依存関係をインストール（`pnpm install --frozen-lockfile`）
 3. ✅ テストを実行（`pnpm test`）
-4. ✅ パッケージをビルド（`pnpm exec nx build web-serial-rxjs`）
-5. ✅ リリース用 zip ファイルを作成
-6. ✅ Trusted Publishing (OIDC) を使用して npm に公開 - トークン不要！
-7. ✅ 自動生成されたリリースノート付きの GitHub リリースを作成
-8. ✅ GitHub リリースにリリース zip を添付
+4. ✅ パッケージをビルド（`pnpm exec nx build web-serial-rxjs`）— npm publish と同じ package scripts 経由
+5. ✅ 配布用 dist 成果物（`dist/index.mjs`, `dist/index.d.ts`）と npm pack 内容を検証
+6. ✅ リリース用 zip ファイルを作成
+7. ✅ Trusted Publishing (OIDC) を使用して npm に公開 - トークン不要！
+8. ✅ 自動生成されたリリースノート付きの GitHub リリースを作成
+9. ✅ GitHub リリースにリリース zip を添付
 
 進行状況は GitHub の [Actions タブ](https://github.com/gurezo/web-serial-rxjs/actions) で確認できます。
 
