@@ -20,6 +20,7 @@ interface MockSession {
   errorsSubject: Subject<SerialError>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
+  dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
   isBrowserSupported: ReturnType<typeof vi.fn>;
 }
@@ -35,6 +36,7 @@ const createMockSession = (): MockSession => {
   );
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
+  const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => true);
   const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
@@ -43,6 +45,7 @@ const createMockSession = (): MockSession => {
     isBrowserSupported,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
@@ -64,6 +67,7 @@ const createMockSession = (): MockSession => {
     errorsSubject,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     isBrowserSupported,
   };
