@@ -99,7 +99,7 @@ export function useSerialSession(
 
   onDestroy(() => {
     terminalSub.unsubscribe();
-    currentSession.disconnect$().subscribe({ error: () => void 0 });
+    currentSession.dispose$().subscribe({ error: () => void 0 });
     sessions$.complete();
     terminalBufferEpoch$.complete();
   });
@@ -108,9 +108,13 @@ export function useSerialSession(
     receivedData.set('');
     terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
     if (baudRate !== undefined && baudRate !== currentBaudRate) {
+      const previousSession = currentSession;
       currentBaudRate = baudRate;
       currentSession = createSerialSession({ baudRate });
       sessions$.next(currentSession);
+      return previousSession
+        .dispose$()
+        .pipe(switchMap(() => currentSession.connect$()));
     }
     return currentSession.connect$();
   };
