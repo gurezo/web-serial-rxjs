@@ -48,9 +48,10 @@ This library is framework-agnostic and can be used with:
 
 | Surface | Role |
 | --- | --- |
-| `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported` / `disposed`. Replays the current state on subscribe. Compare with **`SerialSessionState`** instead of string literals. |
-| `SerialSessionState` | **State constants** — exported const object (e.g. `SerialSessionState.Connected`, `SerialSessionState.Idle`) with the same values `state$` emits. |
-| `isConnected$` | **Connected flag** — `true` only when `state$` is `SerialSessionState.Connected`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
+| `state$` | **Connection lifecycle** — discriminated union (`status` plus optional `portInfo` / `error`). Replays on subscribe. Compare **`state.status`** with **`SerialSessionStatus`**. |
+| `SerialSessionStatus` | **Status constants** — const object (e.g. `SerialSessionStatus.Connected` → `'connected'`). Compare with `state$.status`. |
+| `SerialSessionState` | **Payload type** for `state$` (discriminated union). |
+| `isConnected$` | **Connected flag** — `true` only when `state$.status` is `SerialSessionStatus.Connected`. |
 | `receive$` | **Raw decoder chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
 | `terminalText$` | **Terminal-ready cumulative text** — display-oriented text derived from `receive$` that folds carriage-return redraws while keeping normal newline behavior. Use when you want to bind one string directly to a terminal-like viewport. By default retains at most 10,000 lines and 1,048,576 characters (configure via `SerialSessionOptions.terminalBuffer`). |
 | `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring raw terminal streams where `\r` must stay intact. |
@@ -61,30 +62,30 @@ This library is framework-agnostic and can be used with:
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
 | `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
 
-### SerialSessionState (quick reference)
+### SerialSessionStatus (quick reference)
 
-`state$` uses the string union below. Prefer the **const object** (e.g. `SerialSessionState.Connected` → `'connected'`) in code. Full lifecycle diagram, transitions, and edge cases: [API Reference – SerialSessionState](variables/SerialSessionState.html).
+Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `SerialSessionStatus.Connected` → `'connected'`).
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `SerialSessionState.Idle` | `'idle'` | No open port; initial state when the browser supports Web Serial. |
-| `SerialSessionState.Connecting` | `'connecting'` | `connect$` in progress. |
-| `SerialSessionState.Connected` | `'connected'` | Port is open; internal read pump is running. |
-| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
-| `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
-| `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
-| `SerialSessionState.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`; all observables complete. Create a new session to continue. |
+| `SerialSessionStatus.Idle` | `'idle'` | No open port; initial when Web Serial is supported. |
+| `SerialSessionStatus.Connecting` | `'connecting'` | `connect$` in progress. |
+| `SerialSessionStatus.Connected` | `'connected'` | Port open; read pump running (`portInfo` included). |
+| `SerialSessionStatus.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
+| `SerialSessionStatus.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
+| `SerialSessionStatus.Error` | `'error'` | Fatal failure (`error` included). |
+| `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`. |
 
 **`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 
-**`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$` to `SerialSessionState.Connected` yourself. You can still derive your own boolean from `state$` with `map` if you need different rules.
+**`isConnected$` (for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles without comparing `state$.status` to `SerialSessionStatus.Connected` yourself.
 
 **`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 
 ### Minimal example
 
 ```typescript
-import { createSerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
@@ -96,9 +97,9 @@ if (!session.isBrowserSupported()) {
 session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
 session.state$
-  .pipe(filter((s) => s === SerialSessionState.Connected))
-  .subscribe(() => {
-    /* e.g. enable UI that must wait until the port is open */
+  .pipe(filter((s) => s.status === SerialSessionStatus.Connected))
+  .subscribe((state) => {
+    console.log(state.portInfo);
   });
 session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();

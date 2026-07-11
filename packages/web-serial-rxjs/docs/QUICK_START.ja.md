@@ -4,19 +4,19 @@
 
 標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。独自区切りや別の分割ルールが必要なときは `receive$` 上に `scan` などで組み立てます（[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。接続の真偽は **`isConnected$`** を使うか、従来どおり `state$` から `map` しても構いません。
 
-### SerialSessionState（早見表）
+### SerialSessionStatus（早見表）
 
 | 定数 | 値 | 意味 |
 | --- | --- | --- |
-| `SerialSessionState.Idle` | `'idle'` | ポート未接続。Web Serial 利用可能な場合の初期値。 |
-| `SerialSessionState.Connecting` | `'connecting'` | `connect$` 実行中。 |
-| `SerialSessionState.Connected` | `'connected'` | ポートが開き、read pump が動作中。 |
-| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
-| `SerialSessionState.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
-| `SerialSessionState.Error` | `'error'` | 致命的な失敗。`disconnect$` または新しいセッションで復帰。 |
-| `SerialSessionState.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
+| `SerialSessionStatus.Idle` | `'idle'` | ポート未接続。Web Serial 利用可能な場合の初期値。 |
+| `SerialSessionStatus.Connecting` | `'connecting'` | `connect$` 実行中。 |
+| `SerialSessionStatus.Connected` | `'connected'` | ポートが開き、read pump が動作中（`portInfo` 付き）。 |
+| `SerialSessionStatus.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
+| `SerialSessionStatus.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
+| `SerialSessionStatus.Error` | `'error'` | 致命的な失敗（`error` 付き）。 |
+| `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
-遷移・詳細は [API リファレンスの SerialSessionState](./API_REFERENCE.ja.md#serialsessionstate) を参照してください。
+詳細は [API リファレンス](./API_REFERENCE.ja.md#serialsessionstate--serialsessionstatus) と [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
@@ -43,14 +43,17 @@ session.connect$().subscribe({
 });
 ```
 
-`state$` の分岐は **`SerialSessionState`** の定数で比較します（`'connected'` などの文字列直書きは避けてください）:
+`state$` の分岐は **`state.status`** を **`SerialSessionStatus`** の定数と比較します:
 
 ```typescript
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
-session.state$.subscribe((s) => {
-  if (s === SerialSessionState.Unsupported) {
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Unsupported) {
     console.warn('このブラウザでは Web Serial を利用できません');
+  }
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
   }
 });
 ```

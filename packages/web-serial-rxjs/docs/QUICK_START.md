@@ -4,19 +4,19 @@ This is the **shortest path** to opening a serial port, receiving **newline-deli
 
 Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
 
-### SerialSessionState (quick reference)
+### SerialSessionStatus (quick reference)
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `SerialSessionState.Idle` | `'idle'` | No open port; initial when Web Serial is supported. |
-| `SerialSessionState.Connecting` | `'connecting'` | `connect$` in progress. |
-| `SerialSessionState.Connected` | `'connected'` | Port open; read pump running. |
-| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
-| `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
-| `SerialSessionState.Error` | `'error'` | Fatal failure; `disconnect$` or a new session. |
-| `SerialSessionState.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`; all observables complete. |
+| `SerialSessionStatus.Idle` | `'idle'` | No open port; initial when Web Serial is supported. |
+| `SerialSessionStatus.Connecting` | `'connecting'` | `connect$` in progress. |
+| `SerialSessionStatus.Connected` | `'connected'` | Port open; read pump running (`portInfo` included). |
+| `SerialSessionStatus.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
+| `SerialSessionStatus.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
+| `SerialSessionStatus.Error` | `'error'` | Fatal failure (`error` included). |
+| `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`. |
 
-Details and lifecycle: [API Reference – SerialSessionState](./API_REFERENCE.md#serialsessionstate).
+Details: [API Reference](./API_REFERENCE.md#serialsessionstate--serialsessionstatus) and [Migrating to v3](./MIGRATION_V3.md).
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
@@ -45,14 +45,17 @@ session.connect$().subscribe({
 });
 ```
 
-Prefer **`SerialSessionState`** for comparisons (not raw strings such as `'connected'`):
+Compare **`state.status`** with **`SerialSessionStatus`**:
 
 ```typescript
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
-session.state$.subscribe((s) => {
-  if (s === SerialSessionState.Unsupported) {
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Unsupported) {
     console.warn('Web Serial is not available');
+  }
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
   }
 });
 ```

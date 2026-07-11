@@ -96,29 +96,33 @@ function createTerminalBuffer(
 ): TerminalBuffer;
 ```
 
-## SerialSessionState
+## SerialSessionState / SerialSessionStatus
 
-上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialSessionState`（例: `SerialSessionState.Connected` は `'connected'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。
+v3 では **`SerialSessionStatus`** が lifecycle 文字列定数（例: `SerialSessionStatus.Connected` は `'connected'`）を提供し、**`SerialSessionState`** は `state$` が emit する discriminated union 型です。
 
-`state$` は以下のいずれかを emit します。
+`state$` は次のいずれかのオブジェクトを emit します。
 
-- `'idle'` — ポート未接続。Web Serial 対応環境での初期値。
-- `'connecting'` — `connect$` 実行中。
-- `'connected'` — ポートが開いており read pump が動作中。
-- `'disconnecting'` — `disconnect$` 実行中。
-- `'unsupported'` — `navigator.serial` が存在しない環境でセッションを生成した場合。
-- `'error'` — 致命的な失敗が発生した。`disconnect$` で復帰するか、新しいセッションを作成する。
-- `'disposed'` — `dispose$` / `destroy$` によりセッションが永久破棄された。すべての Observable が complete する。継続するには新しいセッションを作成する。
+- `{ status: 'idle' }` — ポート未接続。Web Serial 対応環境での初期値。
+- `{ status: 'connecting' }` — `connect$` 実行中。
+- `{ status: 'connected', portInfo }` — ポートが開いており read pump が動作中。`portInfo` は `SerialPort.getInfo()` と同じ形。
+- `{ status: 'disconnecting' }` — `disconnect$` 実行中。
+- `{ status: 'unsupported' }` — `navigator.serial` が存在しない環境でセッションを生成した場合。
+- `{ status: 'error', error }` — 致命的な失敗。`error` は `errors$` に流れた `SerialError` と同一インスタンス。
+- `{ status: 'disposed' }` — `dispose$` / `destroy$` によりセッションが永久破棄された。
 
-遷移:
+比較例:
 
+```typescript
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
+  }
+});
 ```
-idle -> connecting -> connected -> disconnecting -> idle
-                              \-> error
-idle / connected / connecting / disconnecting / error -> error（致命的失敗）
-any -> unsupported（生成時に navigator.serial が存在しない場合）
-（任意のアクティブ状態） -> disposed（dispose$ による永久 teardown）
-```
+
+v2 からの移行は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
 
 ## SerialSession
 
@@ -167,11 +171,11 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `isConnected$: Observable<boolean>`
 
-`SerialSessionState` が `'connected'` のとき `true`、それ以外のとき `false` です。`state$` から `distinctUntilChanged` 付きで派生しており、接続有無の UI 分岐にそのまま使えます。必要に応じて従来どおり `state$` から自前の `map` でも構いません。
+`state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。`state$` から `distinctUntilChanged` 付きで派生しており、接続有無の UI 分岐にそのまま使えます。必要に応じて従来どおり `state$` から自前の `map` でも構いません。
 
 ### `errors$: Observable<SerialError>`
 
-主エラーチャネル。接続・読み取り・書き込み・クローズで発生したすべての失敗が `SerialError` に正規化されて流れます。致命的な失敗は `state$` を `'error'` に遷移させ、read pump とポートをテアダウンします。
+主エラーチャネル。接続・読み取り・書き込み・クローズで発生したすべての失敗が `SerialError` に正規化されて流れます。致命的な失敗は `state$` を `{ status: 'error', error }` に遷移させ、read pump とポートをテアダウンします。
 
 ### `receive$: Observable<string>`
 

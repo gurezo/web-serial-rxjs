@@ -1,14 +1,32 @@
-# Migrating to v3 (`SerialErrorCode` const object)
+# Migrating to v3
 
-v3 changes how `SerialErrorCode` is declared in TypeScript. **Runtime values and member names are unchanged** — `SerialErrorCode.READ_FAILED` is still the string `'READ_FAILED'`.
+v3 introduces two TypeScript-facing breaking changes:
 
-This guide covers what changed and what (if anything) you need to update.
+1. **`SerialErrorCode`** — `enum` → const object + union type (runtime values unchanged).
+2. **`state$` payload** — flat string → discriminated union with per-status detail.
+
+This guide covers both. Runtime string values for error codes are unchanged (`SerialErrorCode.READ_FAILED` is still `'READ_FAILED'`).
 
 ## TL;DR
 
 ```typescript
-// v2 and v3 — no change required for typical usage
-import { SerialError, SerialErrorCode } from '@gurezo/web-serial-rxjs';
+import {
+  SerialError,
+  SerialErrorCode,
+  SerialSessionStatus,
+  type SerialSessionState,
+} from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state: SerialSessionState) => {
+  switch (state.status) {
+    case SerialSessionStatus.Connected:
+      console.log(state.portInfo);
+      break;
+    case SerialSessionStatus.Error:
+      console.error(state.error);
+      break;
+  }
+});
 
 session.errors$.subscribe((error) => {
   if (error.is(SerialErrorCode.READ_FAILED)) {
@@ -17,78 +35,112 @@ session.errors$.subscribe((error) => {
 });
 ```
 
-## What changed
+---
+
+## 1. `SerialErrorCode` const object
+
+### What changed
 
 | v2 | v3 |
 | --- | --- |
 | `export enum SerialErrorCode { ... }` | `export const SerialErrorCode = { ... } as const` + `export type SerialErrorCode` |
 | TypeDoc: `enums/SerialErrorCode.html` | TypeDoc: `variables/SerialErrorCode.html` |
 
-`SerialError`, `SerialErrorContextMap`, and `SerialSessionState` are not affected by this change.
-
-## No migration needed (typical patterns)
-
-These patterns work the same in v2 and v3:
+### No migration needed (typical patterns)
 
 - `SerialErrorCode.BROWSER_NOT_SUPPORTED` (and any other member)
 - `error.code === SerialErrorCode.WRITE_FAILED`
 - `error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)` with narrowed `context`
 - `switch (error.code) { case SerialErrorCode.READ_FAILED: ... }`
-- `Object.values(SerialErrorCode)` (returns string values only)
 
-## When you may need to update
+### When you may need to update
 
-### Type-only imports
-
-If you import `SerialErrorCode` as a type only, continue using:
-
-```typescript
-import type { SerialErrorCode } from '@gurezo/web-serial-rxjs';
-```
-
-The type is now a string literal union instead of an enum type. For most apps this is a drop-in replacement.
-
-### Code that depended on enum-specific behaviour
-
-Update if you relied on:
-
-- **Enum reverse mapping** — string enums never had reverse mapping; const object behaves the same.
-- **Assigning arbitrary strings** — `const code: SerialErrorCode = someString` still requires the string to match a known code.
+- **Type-only imports** — continue using `import type { SerialErrorCode } from '@gurezo/web-serial-rxjs'`.
 - **TypeDoc deep links** — update bookmarks from `enums/SerialErrorCode.html` to `variables/SerialErrorCode.html`.
+- **Tools parsing `.d.ts`** — declaration shape changes from `enum` to `const` + type alias.
 
-### Declaration shape in `.d.ts`
+---
 
-Published types change from `enum SerialErrorCode` to:
+## 2. Discriminated union `state$`
+
+### What changed
+
+| v2 | v3 |
+| --- | --- |
+| `state$: Observable<'idle' \| 'connected' \| ...>` | `state$: Observable<SerialSessionState>` (discriminated union) |
+| `SerialSessionState` const (string literals) | **`SerialSessionStatus`** const (string literals) |
+| Compare `state === SerialSessionState.Connected` | Compare `state.status === SerialSessionStatus.Connected` |
+| Correlate `state$` + `portInfo$` / `errors$` manually | `connected` carries `portInfo`; `error` carries `SerialError` |
+
+### v2 (before)
 
 ```typescript
-export declare const SerialErrorCode: {
-  readonly BROWSER_NOT_SUPPORTED: 'BROWSER_NOT_SUPPORTED';
-  // ...
-};
-export type SerialErrorCode =
-  (typeof SerialErrorCode)[keyof typeof SerialErrorCode];
+import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state === SerialSessionState.Connected) {
+    session.getPortInfo(); // separate call
+  }
+});
 ```
 
-Tools that parse `.d.ts` and expect an `enum` declaration may need adjustment. Runtime bundles are equivalent.
-
-## Alignment with `SerialSessionState`
-
-v3 applies the same pattern already used by `SerialSessionState`:
+### v3 (after)
 
 ```typescript
-export const SerialErrorCode = {
-  BROWSER_NOT_SUPPORTED: 'BROWSER_NOT_SUPPORTED',
-  READ_FAILED: 'READ_FAILED',
-  // ...
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  switch (state.status) {
+    case SerialSessionStatus.Connected:
+      console.log(state.portInfo);
+      break;
+    case SerialSessionStatus.Error:
+      console.error(state.error);
+      break;
+  }
+});
+```
+
+### Type shape
+
+```typescript
+export const SerialSessionStatus = {
+  Idle: 'idle',
+  Connecting: 'connecting',
+  Connected: 'connected',
+  Disconnecting: 'disconnecting',
+  Unsupported: 'unsupported',
+  Error: 'error',
+  Disposed: 'disposed',
 } as const;
 
-export type SerialErrorCode =
-  (typeof SerialErrorCode)[keyof typeof SerialErrorCode];
+export type SerialSessionState =
+  | { readonly status: typeof SerialSessionStatus.Idle }
+  | { readonly status: typeof SerialSessionStatus.Connecting }
+  | { readonly status: typeof SerialSessionStatus.Connected; readonly portInfo: SerialPortInfo }
+  | { readonly status: typeof SerialSessionStatus.Disconnecting }
+  | { readonly status: typeof SerialSessionStatus.Unsupported }
+  | { readonly status: typeof SerialSessionStatus.Error; readonly error: SerialError }
+  | { readonly status: typeof SerialSessionStatus.Disposed };
 ```
 
-Member names stay `SCREAMING_SNAKE_CASE` (unlike `SerialSessionState`'s PascalCase keys) so existing `SerialErrorCode.X` references remain valid.
+### Migration checklist
+
+- [ ] Replace `import { SerialSessionState }` used as **constants** with `SerialSessionStatus`.
+- [ ] Replace `state === SerialSessionState.X` with `state.status === SerialSessionStatus.X`.
+- [ ] Replace `switch (state)` with `switch (state.status)` (or compare `state.status` in `if`).
+- [ ] Use `state.portInfo` when `state.status === 'connected'` instead of correlating `portInfo$` (optional — `portInfo$` still works).
+- [ ] Use `state.error` when `state.status === 'error'` (same instance as `errors$` for fatal errors).
+
+### Unchanged
+
+- `portInfo$`, `getPortInfo()`, `errors$`, and `isConnected$` remain available.
+- `isConnected$` still derives from connected status internally.
+
+---
 
 ## See also
 
 - [Migrating from v1 to v2](./MIGRATION_V2.md)
+- [API Reference – SerialSessionState / SerialSessionStatus](./API_REFERENCE.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./API_REFERENCE.md#serialerror--serialerrorcode)
