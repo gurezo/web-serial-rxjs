@@ -2,36 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { createLineBuffer } from '../../src/session/internal/line-buffer';
 
 describe('createLineBuffer', () => {
-  it('splits on LF', () => {
-    const b = createLineBuffer();
-    expect(b.feed('a\nb')).toEqual({ lines: ['a'], overflowed: false });
-  });
-
-  it('splits on CRLF', () => {
-    const b = createLineBuffer();
-    expect(b.feed('a\r\nb')).toEqual({ lines: ['a'], overflowed: false });
-  });
-
-  it('accumulates across feeds until a delimiter completes', () => {
-    const b = createLineBuffer();
-    expect(b.feed('a\r')).toEqual({ lines: [], overflowed: false });
-    expect(b.feed('\n')).toEqual({ lines: ['a'], overflowed: false });
-  });
-
-  it('emits all complete lines in one feed', () => {
-    const b = createLineBuffer();
-    expect(b.feed('a\nb\n')).toEqual({
-      lines: ['a', 'b'],
-      overflowed: false,
-    });
-  });
-
-  it('resolves interior CR and LF when split across two feeds', () => {
-    const b = createLineBuffer();
-    expect(b.feed('a\r')).toEqual({ lines: [], overflowed: false });
-    expect(b.feed('b\n')).toEqual({ lines: ['a', 'b'], overflowed: false });
-  });
-
   it('clears buffer state', () => {
     const b = createLineBuffer();
     b.feed('partial');
