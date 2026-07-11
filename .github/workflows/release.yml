@@ -30,7 +30,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
-      - name: Verify npm package includes README files
+      - run: pnpm exec nx run web-serial-rxjs:verify-dist
+      - name: Verify npm package includes required files
         shell: bash
         run: |
           set -euo pipefail
@@ -39,7 +40,12 @@ jobs:
           node -e '
             const result = JSON.parse(process.argv[1]);
             const files = (result[0]?.files ?? []).map((file) => file.path);
-            const required = ["README.md", "README.ja.md"];
+            const required = [
+              "README.md",
+              "README.ja.md",
+              "dist/index.mjs",
+              "dist/index.d.ts",
+            ];
             const missing = required.filter((path) => !files.includes(path));
 
             if (missing.length > 0) {
@@ -47,7 +53,7 @@ jobs:
               process.exit(1);
             }
 
-            console.log("Verified npm pack includes README files.");
+            console.log("Verified npm pack includes required publish files.");
           ' "$PACK_RESULT"
 
       # リリース添付用の zip を作る（パッケージ単位）
