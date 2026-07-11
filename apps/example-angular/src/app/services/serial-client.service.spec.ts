@@ -10,7 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialClientService } from './serial-client.service';
 
-const SS = webSerialRxjs.SerialSessionState;
+const SS = webSerialRxjs.SerialSessionStatus;
 
 interface MockCore {
   session: webSerialRxjs.SerialSession;
@@ -26,9 +26,9 @@ interface MockCore {
 }
 
 const createMockCore = (): MockCore => {
-  const stateSubject = new BehaviorSubject<webSerialRxjs.SerialSessionState>(
-    SS.Idle,
-  );
+  const stateSubject = new BehaviorSubject<webSerialRxjs.SerialSessionState>({
+    status: SS.Idle,
+  });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<webSerialRxjs.SerialError>();
   const isConnectedSubject = new BehaviorSubject(false);
@@ -117,16 +117,16 @@ describe('SerialClientService', () => {
 
   it('should emit the initial idle state on state$', async () => {
     const state = await firstValueFrom(service.state$);
-    expect(state).toBe(SS.Idle);
+    expect(state).toEqual({ status: SS.Idle });
   });
 
   it('should forward session state transitions', async () => {
     const mock = latestMock();
-    mock.stateSubject.next(SS.Connecting);
-    mock.stateSubject.next(SS.Connected);
+    mock.stateSubject.next({ status: SS.Connecting });
+    mock.stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
 
     const state = await firstValueFrom(service.state$);
-    expect(state).toBe(SS.Connected);
+    expect(state).toEqual({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
   });
 
   it('should connect through the session', async () => {

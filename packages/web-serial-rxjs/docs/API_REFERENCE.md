@@ -96,29 +96,33 @@ function createTerminalBuffer(
 ): TerminalBuffer;
 ```
 
-## SerialSessionState
+## SerialSessionState / SerialSessionStatus
 
-The same union is available as a **const object** `SerialSessionState` (e.g. `SerialSessionState.Connected` is `'connected'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons.
+v3 exposes **`SerialSessionStatus`** as lifecycle string constants (e.g. `SerialSessionStatus.Connected` is `'connected'`) and **`SerialSessionState`** as the discriminated union type emitted by `state$`.
 
-`state$` emits one of:
+`state$` emits objects such as:
 
-- `'idle'` — no active port; initial state when Web Serial is supported.
-- `'connecting'` — `connect$` is in flight.
-- `'connected'` — port is open and the read pump is running.
-- `'disconnecting'` — `disconnect$` is in flight.
-- `'unsupported'` — `navigator.serial` was not available at session creation time.
-- `'error'` — a fatal failure occurred. Call `disconnect$` to recover, or create a new session.
-- `'disposed'` — the session was permanently torn down via `dispose$` / `destroy$`. All observables complete; create a new session to continue.
+- `{ status: 'idle' }` — no active port; initial state when Web Serial is supported.
+- `{ status: 'connecting' }` — `connect$` is in flight.
+- `{ status: 'connected', portInfo }` — port is open and the read pump is running.
+- `{ status: 'disconnecting' }` — `disconnect$` is in flight.
+- `{ status: 'unsupported' }` — `navigator.serial` was not available at session creation time.
+- `{ status: 'error', error }` — fatal failure; `error` is the same `SerialError` instance on `errors$`.
+- `{ status: 'disposed' }` — session permanently torn down via `dispose$`.
 
-Valid transitions:
+Example:
 
+```typescript
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
+  }
+});
 ```
-idle -> connecting -> connected -> disconnecting -> idle
-                              \-> error
-idle / connected / connecting / disconnecting / error -> error (fatal failure)
-any -> unsupported (when navigator.serial is missing at construction)
-(any active state) -> disposed (permanent teardown via dispose$)
-```
+
+See [Migrating to v3](./MIGRATION_V3.md) for the v2 string migration.
 
 ## SerialSession
 
@@ -167,11 +171,11 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 
 ### `isConnected$: Observable<boolean>`
 
-`true` when the session is in `'connected'`; `false` for every other `SerialSessionState` value. Derived from `state$` with `distinctUntilChanged` so simple UIs can bind without repeating string comparisons (you can still `map` `state$` yourself if you prefer).
+`true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise.
 
 ### `errors$: Observable<SerialError>`
 
-Primary error channel. Every connect / read / write / close failure is normalised to `SerialError` and pushed here. Fatal failures additionally drive `state$` to `'error'` and tear down the live pump and port.
+Primary error channel. Every connect / read / write / close failure is normalised to `SerialError` and pushed here. Fatal failures additionally drive `state$` to `{ status: 'error', error }` and tear down the live pump and port.
 
 ### `receive$: Observable<string>`
 

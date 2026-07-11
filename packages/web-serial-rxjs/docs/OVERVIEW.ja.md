@@ -48,9 +48,10 @@ TypeDoc のトップページから、まず以下を参照してください。
 
 | 公開面 | 役割 |
 | --- | --- |
-| `state$` | **接続ライフサイクル** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported` / `disposed`。購読時に現在値をリプレイ。分岐は文字列直書きではなく **`SerialSessionState`** との比較を推奨。 |
-| `SerialSessionState` | **状態定数** — エクスポートされる const object（例: `SerialSessionState.Connected`, `SerialSessionState.Idle`）。`state$` が emit する値と同じ。 |
-| `isConnected$` | **接続中かどうか** — `state$` が `SerialSessionState.Connected` のときだけ `true`、それ以外は `false`（`state$` から `distinctUntilChanged` 付きで派生）。 |
+| `state$` | **接続ライフサイクル** — discriminated union（`status` + 必要に応じ `portInfo` / `error`）。購読時に現在値をリプレイ。分岐は **`SerialSessionStatus`** との比較を推奨。 |
+| `SerialSessionStatus` | **状態定数** — エクスポートされる const object（例: `SerialSessionStatus.Connected` → `'connected'`）。`state$.status` と比較する。 |
+| `SerialSessionState` | **`state$` の payload 型** — discriminated union。 |
+| `isConnected$` | **接続中かどうか** — `state$.status` が `SerialSessionStatus.Connected` のときだけ `true`（`state$` から `distinctUntilChanged` 付きで派生）。 |
 | `receive$` | **生のデコードチャンク** — UTF-8 テキストを read pump が返すとおりに受け取る（行揃えではない。マルチバイト安全）。`\r` 等も保持。**ターミナル風の表示**や `\r` による上書き表示向け。 |
 | `terminalText$` | **ターミナル表示向けの累積テキスト** — `receive$` 由来の表示用テキスト。`\r` による上書きを折りたたみつつ通常の改行挙動は維持するため、ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持します（`SerialSessionOptions.terminalBuffer` で変更可能）。 |
 | `lines$` | **行単位の受信** — `\n` / `\r\n` / 内部の `\r` など実装に従い 1 行ずつ emit。**ログ・1 行ごとの解析**向け。`\r` をそのまま残す必要がある raw ターミナル表示には向かない。 |
@@ -61,30 +62,30 @@ TypeDoc のトップページから、まず以下を参照してください。
 | `send$(string \| Uint8Array)` | 送信を **FIFO** で直列化（並行 `send$` も呼び出し順）。 |
 | `isBrowserSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
 
-### SerialSessionState（早見表）
+### SerialSessionStatus（早見表）
 
-`state$` が emit する文字列のユニオンです。コードでは **const オブジェクト**（例: `SerialSessionState.Connected` → `'connected'`）での比較を推奨します。有効な遷移・例外系の扱いの詳細は [API リファレンスの SerialSessionState](https://gurezo.github.io/web-serial-rxjs/variables/SerialSessionState.html) および [GitHub 上の表・図](./API_REFERENCE.ja.md#serialsessionstate) を参照してください。
+`state$` の各 variant は `status` フィールドを持ちます。コードでは **const オブジェクト**（例: `SerialSessionStatus.Connected` → `'connected'`）での比較を推奨します。
 
 | 定数 | 値 | 意味 |
 | --- | --- | --- |
-| `SerialSessionState.Idle` | `'idle'` | ポート未接続。Web Serial 利用可能な場合の初期値。 |
-| `SerialSessionState.Connecting` | `'connecting'` | `connect$` 実行中。 |
-| `SerialSessionState.Connected` | `'connected'` | ポートが開き、内部 read pump が動作中。 |
-| `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
-| `SerialSessionState.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
-| `SerialSessionState.Error` | `'error'` | 接続まわりの致命エラー。`disconnect$` か新しいセッションで復帰。 |
-| `SerialSessionState.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。継続には新しいセッションを作成。 |
+| `SerialSessionStatus.Idle` | `'idle'` | ポート未接続。Web Serial 利用可能な場合の初期値。 |
+| `SerialSessionStatus.Connecting` | `'connecting'` | `connect$` 実行中。 |
+| `SerialSessionStatus.Connected` | `'connected'` | ポートが開き、内部 read pump が動作中。`portInfo` 付き。 |
+| `SerialSessionStatus.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
+| `SerialSessionStatus.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
+| `SerialSessionStatus.Error` | `'error'` | 接続まわりの致命エラー。`error` 付き。 |
+| `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
 **`receive$` と `lines$`:** 機器から来たバイト列を**そのまま**画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./ADVANCED_USAGE.ja.md)）。
 
-**`isConnected$`（UI 用）** — 読み取り専用の `Observable<boolean>` です。`state$` を `SerialSessionState.Connected` と毎回比較しなくても接続有無の UI 分岐に使えます。独自ルールが必要な場合は、従来どおり `state$` から `map` で派生しても構いません。
+**`isConnected$`（UI 用）** — 読み取り専用の `Observable<boolean>` です。`state$.status` を `SerialSessionStatus.Connected` と毎回比較しなくても接続有無の UI 分岐に使えます。
 
 **`lines$`（行区切り）** — 組み込みの行分割。ターミナルのミラーや `\r` を保持したいときは **`receive$`** を購読します（[高度な使用方法 — 行単位のフレーミング](./ADVANCED_USAGE.ja.md)）。
 
 ### 最小サンプル
 
 ```typescript
-import { createSerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
@@ -96,9 +97,9 @@ if (!session.isBrowserSupported()) {
 session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
 session.state$
-  .pipe(filter((s) => s === SerialSessionState.Connected))
-  .subscribe(() => {
-    /* 例: ポートが開いてから有効化する UI */
+  .pipe(filter((s) => s.status === SerialSessionStatus.Connected))
+  .subscribe((state) => {
+    console.log(state.portInfo);
   });
 session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();

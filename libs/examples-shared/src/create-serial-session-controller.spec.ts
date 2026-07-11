@@ -13,7 +13,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createSerialSessionController } from './create-serial-session-controller';
 
-const SS = webSerialRxjs.SerialSessionState;
+const SS = webSerialRxjs.SerialSessionStatus;
 
 interface MockCore {
   session: SerialSession;
@@ -29,7 +29,7 @@ interface MockCore {
 }
 
 const createMockCore = (supported = true): MockCore => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
+  const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const isConnectedSubject = new BehaviorSubject(false);
@@ -125,11 +125,11 @@ describe('createSerialSessionController', () => {
     const textSub = controller.terminalText$.subscribe((v) => texts.push(v));
     const errorSub = controller.errors$.subscribe((v) => errors.push(v));
 
-    mock.stateSubject.next(SS.Connecting);
+    mock.stateSubject.next({ status: SS.Connecting });
     mock.receiveSubject.next('hello');
     mock.errorsSubject.next({ message: 'boom' } as SerialError);
 
-    expect(states.at(-1)).toBe(SS.Connecting);
+    expect(states.at(-1)).toEqual({ status: SS.Connecting });
     expect(texts.at(-1)).toBe('hello');
     expect(errors.at(-1)?.message).toBe('boom');
 

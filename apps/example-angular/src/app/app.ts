@@ -3,7 +3,10 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import {
+  SerialSessionStatus,
+  type SerialSessionState,
+} from '@gurezo/web-serial-rxjs';
 import { SerialClientService } from './services/serial-client.service';
 
 type StatusType = 'info' | 'success' | 'error';
@@ -22,7 +25,9 @@ export class App {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly browserSupported = this.serialService.isBrowserSupported();
-  readonly state = signal<SerialSessionState>(SerialSessionState.Idle);
+  readonly state = signal<SerialSessionState>({
+    status: SerialSessionStatus.Idle,
+  });
   readonly isConnected = signal(false);
   readonly receivedData = signal('');
   readonly errorMessage = signal<string | null>(null);
@@ -32,7 +37,10 @@ export class App {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((state) => {
         this.state.set(state);
-        if (state === SerialSessionState.Connected || state === SerialSessionState.Idle) {
+        if (
+          state.status === SerialSessionStatus.Connected ||
+          state.status === SerialSessionStatus.Idle
+        ) {
           this.errorMessage.set(null);
         }
       });
@@ -53,11 +61,11 @@ export class App {
   }
 
   get connecting(): boolean {
-    return this.state() === SerialSessionState.Connecting;
+    return this.state().status === SerialSessionStatus.Connecting;
   }
 
   get disconnecting(): boolean {
-    return this.state() === SerialSessionState.Disconnecting;
+    return this.state().status === SerialSessionStatus.Disconnecting;
   }
 
   get hasReceivedData(): boolean {
@@ -69,20 +77,20 @@ export class App {
     if (error) {
       return { type: 'error', message: `エラー: ${error}` };
     }
-    switch (this.state()) {
-      case SerialSessionState.Connecting:
+    switch (this.state().status) {
+      case SerialSessionStatus.Connecting:
         return { type: 'info', message: '接続中...' };
-      case SerialSessionState.Disconnecting:
+      case SerialSessionStatus.Disconnecting:
         return { type: 'info', message: '切断中...' };
-      case SerialSessionState.Connected:
+      case SerialSessionStatus.Connected:
         return { type: 'success', message: 'シリアルポートに接続しました。' };
-      case SerialSessionState.Unsupported:
+      case SerialSessionStatus.Unsupported:
         return {
           type: 'error',
           message:
             'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
         };
-      case SerialSessionState.Error:
+      case SerialSessionStatus.Error:
         return { type: 'error', message: 'エラーが発生しました。' };
       default:
         return { type: 'info', message: 'シリアルポートに接続していません。' };

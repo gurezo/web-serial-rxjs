@@ -1,4 +1,4 @@
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { createSerialSessionController } from '@gurezo/examples-shared';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -12,6 +12,7 @@ const STATUS = {
   disconnecting: ['info', '切断中です...'],
   unsupported: ['error', UNSUPPORTED_MSG],
   error: ['error', 'エラーが発生しました。errors$ を確認してください。'],
+  disposed: ['info', 'セッションは破棄されました。'],
 };
 
 const $ = (id) => {
@@ -43,13 +44,13 @@ export class App {
     );
 
     this.controller.state$.subscribe((state) => {
-      const connected = state === SerialSessionState.Connected;
+      const connected = state.status === SerialSessionStatus.Connected;
       const busy =
-        state === SerialSessionState.Connecting ||
-        state === SerialSessionState.Disconnecting;
+        state.status === SerialSessionStatus.Connecting ||
+        state.status === SerialSessionStatus.Disconnecting;
       connectBtn.disabled = !supported || connected || busy;
       baudRateSelect.disabled = connected || busy;
-      setStatus(status, ...STATUS[state]);
+      setStatus(status, ...STATUS[state.status]);
     });
 
     this.controller.isConnected$.subscribe((isConnected) => {

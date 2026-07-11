@@ -11,7 +11,7 @@ import {
 import { createReadPump, type ReadPump } from '../read-pump';
 import type { SendQueue } from '../send-queue';
 import type { ResolvedSerialSessionOptions } from '../serial-session-options';
-import { SerialSessionState } from '../serial-session-state';
+import { SerialSessionStatus } from '../serial-session-state';
 import {
   createConnectedRuntime,
   createConnectingRuntime,
@@ -106,16 +106,16 @@ export function createSessionLifecycle(
   const teardownFromSnapshot = async (
     snapshot: SessionRuntime,
   ): Promise<void> => {
-    if (snapshot.status === SerialSessionState.Connecting) {
+    if (snapshot.status === SerialSessionStatus.Connecting) {
       snapshot.cancel();
     }
 
     sendQueue.clear();
 
     if (
-      snapshot.status === SerialSessionState.Connected ||
-      snapshot.status === SerialSessionState.Disconnecting ||
-      snapshot.status === SerialSessionState.Error
+      snapshot.status === SerialSessionStatus.Connected ||
+      snapshot.status === SerialSessionStatus.Disconnecting ||
+      snapshot.status === SerialSessionStatus.Error
     ) {
       const portToClose = getRuntimePort(snapshot);
       const pump = getRuntimePump(snapshot);
@@ -166,7 +166,7 @@ export function createSessionLifecycle(
   const writeToPort = async (payload: Uint8Array): Promise<void> => {
     const runtime = controller.runtime;
     if (
-      runtime.status !== SerialSessionState.Connected ||
+      runtime.status !== SerialSessionStatus.Connected ||
       !runtime.port.writable
     ) {
       throw new SerialError(
@@ -209,8 +209,8 @@ export function createSessionLifecycle(
 
       const current = controller.status;
       if (
-        current !== SerialSessionState.Idle &&
-        current !== SerialSessionState.Error
+        current !== SerialSessionStatus.Idle &&
+        current !== SerialSessionStatus.Error
       ) {
         const error = reportError(
           new SerialError(
@@ -226,7 +226,7 @@ export function createSessionLifecycle(
       let cancelled = false;
       const cancelInFlightConnect = (): void => {
         cancelled = true;
-        if (controller.status === SerialSessionState.Connecting) {
+        if (controller.status === SerialSessionStatus.Connecting) {
           controller.transition(createIdleRuntime());
         }
       };
@@ -277,7 +277,7 @@ export function createSessionLifecycle(
               messagePrefix: 'Read pump failed',
             }),
           onDone: () => {
-            if (controller.status !== SerialSessionState.Connected) {
+            if (controller.status !== SerialSessionStatus.Connected) {
               return;
             }
             reportError(
@@ -322,16 +322,16 @@ export function createSessionLifecycle(
       const runtime = controller.runtime;
 
       if (
-        runtime.status === SerialSessionState.Idle ||
-        runtime.status === SerialSessionState.Unsupported ||
-        runtime.status === SerialSessionState.Disconnecting
+        runtime.status === SerialSessionStatus.Idle ||
+        runtime.status === SerialSessionStatus.Unsupported ||
+        runtime.status === SerialSessionStatus.Disconnecting
       ) {
         subscriber.next();
         subscriber.complete();
         return;
       }
 
-      if (runtime.status === SerialSessionState.Connecting) {
+      if (runtime.status === SerialSessionStatus.Connecting) {
         runtime.cancel();
         subscriber.next();
         subscriber.complete();
@@ -339,8 +339,8 @@ export function createSessionLifecycle(
       }
 
       if (
-        runtime.status !== SerialSessionState.Connected &&
-        runtime.status !== SerialSessionState.Error
+        runtime.status !== SerialSessionStatus.Connected &&
+        runtime.status !== SerialSessionStatus.Error
       ) {
         const error = reportError(
           new SerialError(

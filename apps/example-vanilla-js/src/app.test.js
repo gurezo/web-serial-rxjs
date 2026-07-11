@@ -4,11 +4,11 @@ import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { App } from './app.js';
 
 const createMockSession = () => {
-  const state$ = new BehaviorSubject('idle');
+  const state$ = new BehaviorSubject({ status: 'idle' });
   const receive$ = new Subject();
   const errors$ = new Subject();
   const isConnected$ = state$.pipe(
-    map((s) => s === 'connected'),
+    map((s) => s.status === 'connected'),
     distinctUntilChanged(),
   );
   return {

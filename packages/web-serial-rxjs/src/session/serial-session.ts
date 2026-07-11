@@ -90,15 +90,16 @@ export interface SerialSession {
   destroy$(): Observable<void>;
 
   /**
-   * Reactive session lifecycle state.
+   * Reactive session lifecycle state as a discriminated union.
    *
-   * Replays the current state on subscribe. UIs should drive entirely from
-   * this stream instead of reconstructing their own BehaviorSubject.
+   * Replays the current state on subscribe. Switch on `state.status` and
+   * use the per-variant fields (`portInfo`, `error`) instead of correlating
+   * separate streams.
    */
   readonly state$: Observable<SerialSessionState>;
 
   /**
-   * `true` when {@link state$} is `'connected'`, `false` for all other states.
+   * `true` when {@link state$} has `status: 'connected'`, `false` otherwise.
    *
    * Derived from `state$` with `distinctUntilChanged` so UIs can bind
    * connect/disabled flags without reimplementing the comparison.
@@ -107,8 +108,8 @@ export interface SerialSession {
 
   /**
    * The active port’s {@link SerialPort.getInfo} snapshot, or `null` when no
-   * port is open (including {@link SerialSessionState.Idle},
-   * {@link SerialSessionState.Error}, and {@link SerialSessionState.Unsupported}).
+   * port is open (including {@link SerialSessionStatus.Idle},
+   * {@link SerialSessionStatus.Error}, and {@link SerialSessionStatus.Unsupported}).
    *
    * Emits the current value on subscribe. Use with {@link state$} to know when
    * the value is valid for your UI.

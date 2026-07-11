@@ -11,9 +11,17 @@ import { SerialError } from '../../src/errors/serial-error';
 import { SerialErrorCode } from '../../src/errors/serial-error-code';
 import { createSerialSession } from '../../src/session/create-serial-session';
 import type { SerialSession } from '../../src/session/serial-session';
-import { SerialSessionState } from '../../src/session/serial-session-state';
+import {
+  SerialSessionStatus,
+  type SerialSessionState,
+} from '../../src/session/serial-session-state';
 
-const S = SerialSessionState;
+const S = SerialSessionStatus;
+
+const connectedState = (): SerialSessionState => ({
+  status: S.Connected,
+  portInfo: stubPortInfo,
+});
 
 const stubPortInfo: SerialPortInfo = {
   usbVendorId: 0x1a86,
@@ -186,7 +194,7 @@ describe('createSerialSession', () => {
 
       const state = await firstValueFrom(session.state$);
 
-      expect(state).toBe<SerialSessionState>(S.Idle);
+      expect(state).toEqual({ status: S.Idle });
     });
 
     it('replays unsupported when navigator.serial is missing', async () => {
@@ -194,7 +202,51 @@ describe('createSerialSession', () => {
 
       const state = await firstValueFrom(session.state$);
 
-      expect(state).toBe<SerialSessionState>(S.Unsupported);
+      expect(state).toEqual({ status: S.Unsupported });
+    });
+
+    it('includes portInfo on connected state', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const state = await firstValueFrom(session.state$);
+      expect(state).toEqual(connectedState());
+      if (state.status === S.Connected) {
+        expect(state.portInfo).toEqual(stubPortInfo);
+      } else {
+        throw new Error('expected connected state');
+      }
+    });
+
+    it('includes the same SerialError instance on error state and errors$', async () => {
+      const requestPort = vi
+        .fn()
+        .mockRejectedValue(new DOMException('user cancel', 'NotFoundError'));
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+      const errorsPromise = firstValueFrom(session.errors$);
+
+      await expect(firstValueFrom(session.connect$())).rejects.toBeInstanceOf(
+        SerialError,
+      );
+
+      const emitted = await errorsPromise;
+      const state = await firstValueFrom(session.state$);
+      expect(state.status).toBe(S.Error);
+      if (state.status === S.Error) {
+        expect(state.error).toBe(emitted);
+      } else {
+        throw new Error('expected error state');
+      }
     });
   });
 
@@ -264,10 +316,10 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.connect$());
 
       const states = await statesPromise;
-      expect(states).toEqual<SerialSessionState[]>([
-        S.Idle,
-        S.Connecting,
-        S.Connected,
+      expect(states).toEqual([
+        { status: S.Idle },
+        { status: S.Connecting },
+        connectedState(),
       ]);
       expect(port.open).toHaveBeenCalledTimes(1);
       expect(port.open).toHaveBeenCalledWith(
@@ -295,9 +347,10 @@ describe('createSerialSession', () => {
       const emitted = await errorsPromise;
       expect(emitted).toBeInstanceOf(SerialError);
       expect(emitted.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Error,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: emitted,
+      });
     });
 
     it('maps generic port.open failure to PORT_OPEN_FAILED', async () => {
@@ -341,13 +394,13 @@ describe('createSerialSession', () => {
       const subscription = session.connect$().subscribe({
         error: () => undefined,
       });
-      expect(await stateAfterConnecting).toBe<SerialSessionState>(S.Connecting);
+      expect(await stateAfterConnecting).toEqual({ status: S.Connecting });
 
       subscription.unsubscribe();
       resolveRequestPort(port);
       await flushMicrotasks();
 
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
       expect(port.close).toHaveBeenCalledTimes(1);
     });
 
@@ -372,15 +425,15 @@ describe('createSerialSession', () => {
       const stateAfterConnecting = firstValueFrom(session.state$.pipe(skip(1), take(1)));
 
       session.connect$().subscribe({ error: () => undefined });
-      expect(await stateAfterConnecting).toBe<SerialSessionState>(S.Connecting);
+      expect(await stateAfterConnecting).toEqual({ status: S.Connecting });
 
       await expect(firstValueFrom(session.disconnect$())).resolves.toBeUndefined();
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
 
       resolveRequestPort(port);
       await flushMicrotasks();
 
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
       expect(port.close).toHaveBeenCalledTimes(1);
     });
 
@@ -404,7 +457,7 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
       const connectComplete = vi.fn();
       const stateAfterConnecting = firstValueFrom(
-        session.state$.pipe(filter((s) => s === S.Connecting), take(1)),
+        session.state$.pipe(filter((s) => s.status === S.Connecting), take(1)),
       );
       session.connect$().subscribe({
         next: connectComplete,
@@ -416,7 +469,7 @@ describe('createSerialSession', () => {
       resolveRequestPort(port);
       await flushMicrotasks();
 
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
       expect(connectComplete).not.toHaveBeenCalled();
       expect(port.close).toHaveBeenCalledTimes(1);
     });
@@ -437,7 +490,7 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
       const connectComplete = vi.fn();
       const stateAfterConnecting = firstValueFrom(
-        session.state$.pipe(filter((s) => s === S.Connecting), take(1)),
+        session.state$.pipe(filter((s) => s.status === S.Connecting), take(1)),
       );
       session.connect$().subscribe({
         next: connectComplete,
@@ -449,7 +502,7 @@ describe('createSerialSession', () => {
       resolveOpen();
       await flushMicrotasks();
 
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
       expect(connectComplete).not.toHaveBeenCalled();
       expect(port.close).toHaveBeenCalledTimes(1);
     });
@@ -474,7 +527,7 @@ describe('createSerialSession', () => {
 
       resolveClose();
       await expect(firstDisconnect).resolves.toBeUndefined();
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(S.Idle);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
     });
 
     it('rejects connect$ with BROWSER_NOT_SUPPORTED when navigator.serial is missing', async () => {
@@ -513,10 +566,10 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.disconnect$());
 
       const states = await statesPromise;
-      expect(states).toEqual<SerialSessionState[]>([
-        S.Connected,
-        S.Disconnecting,
-        S.Idle,
+      expect(states).toEqual([
+        connectedState(),
+        { status: S.Disconnecting },
+        { status: S.Idle },
       ]);
       expect(close).toHaveBeenCalledTimes(1);
     });
@@ -650,9 +703,10 @@ describe('createSerialSession', () => {
       expect(received.code).toBe(SerialErrorCode.READ_FAILED);
 
       await flushMicrotasks();
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Error,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: received,
+      });
     });
 
     it('treats done:true stream completion as connection lost and leaves connected', async () => {
@@ -671,9 +725,10 @@ describe('createSerialSession', () => {
       expect(received.code).toBe(SerialErrorCode.CONNECTION_LOST);
 
       await flushMicrotasks();
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Error,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: received,
+      });
     });
   });
 
@@ -862,9 +917,7 @@ describe('createSerialSession', () => {
       await flushMicrotasks();
 
       await errorPromise;
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Connected,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
     });
   });
 
@@ -991,9 +1044,7 @@ describe('createSerialSession', () => {
       await flushMicrotasks();
 
       await errorPromise;
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Connected,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
     });
   });
 
@@ -1305,9 +1356,7 @@ describe('createSerialSession', () => {
         code: SerialErrorCode.WRITE_FAILED,
       });
 
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Connected,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
     });
 
     it('routes close failures on disconnect$ to errors$ as CONNECTION_LOST and state -> error', async () => {
@@ -1330,9 +1379,10 @@ describe('createSerialSession', () => {
 
       const emitted = await errorsPromise;
       expect(emitted.code).toBe(SerialErrorCode.CONNECTION_LOST);
-      expect(await firstValueFrom(session.state$)).toBe<SerialSessionState>(
-        S.Error,
-      );
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: emitted,
+      });
     });
 
     it('forwards DOMException(NotFoundError) on requestPort as a single OPERATION_CANCELLED emission', async () => {
@@ -1417,9 +1467,9 @@ describe('createSerialSession', () => {
 
       await firstValueFrom(session.dispose$());
 
-      await expect(states).resolves.toEqual<SerialSessionState[]>([
-        S.Idle,
-        S.Disposed,
+      await expect(states).resolves.toEqual([
+        { status: S.Idle },
+        { status: S.Disposed },
       ]);
     });
 
@@ -1443,9 +1493,9 @@ describe('createSerialSession', () => {
       expect(port.close).toHaveBeenCalledTimes(1);
       expect(session.getCurrentPort()).toBeNull();
       expect(session.getPortInfo()).toBeNull();
-      await expect(states).resolves.toEqual<SerialSessionState[]>([
-        S.Connected,
-        S.Disposed,
+      await expect(states).resolves.toEqual([
+        connectedState(),
+        { status: S.Disposed },
       ]);
       await expect(errors).resolves.toEqual([]);
       await expect(receive).resolves.toEqual([]);
@@ -1481,7 +1531,10 @@ describe('createSerialSession', () => {
       connectSub.unsubscribe();
 
       await expect(states).resolves.toEqual(
-        expect.arrayContaining([S.Connecting, S.Disposed]),
+        expect.arrayContaining([
+          { status: S.Connecting },
+          { status: S.Disposed },
+        ]),
       );
     });
 
@@ -1494,13 +1547,17 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.connect$());
       controller.error(new Error('device unplugged'));
       await flushMicrotasks();
-      expect(await firstValueFrom(session.state$)).toBe(S.Error);
+      const errorState = await firstValueFrom(session.state$);
+      expect(errorState.status).toBe(S.Error);
 
       const states = lastValueFrom(session.state$.pipe(toArray()));
       await firstValueFrom(session.dispose$());
 
       await expect(states).resolves.toEqual(
-        expect.arrayContaining([S.Error, S.Disposed]),
+        expect.arrayContaining([
+          { status: S.Error, error: expect.any(SerialError) },
+          { status: S.Disposed },
+        ]),
       );
     });
 

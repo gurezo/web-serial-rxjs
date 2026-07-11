@@ -20,7 +20,7 @@ import {
   resolveSerialSessionOptions,
   type SerialSessionOptions,
 } from './serial-session-options';
-import { SerialSessionState } from './serial-session-state';
+import { SerialSessionStatus } from './serial-session-state';
 import {
   createInitialRuntime,
   createSessionRuntimeController,
@@ -90,7 +90,7 @@ export function createSerialSession(
   const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
 
   const isDisposed = (): boolean =>
-    controller.status === SerialSessionState.Disposed;
+    controller.status === SerialSessionStatus.Disposed;
 
   const errorReporterRef: {
     reportError?: (
@@ -138,7 +138,7 @@ export function createSerialSession(
     resolvedOptions.terminalBuffer,
   ).text$;
   const isConnected$ = controller.state$.pipe(
-    map((state) => state === SerialSessionState.Connected),
+    map((state) => state.status === SerialSessionStatus.Connected),
     distinctUntilChanged(),
   );
   const portInfo$ = portInfoSubject.asObservable();

@@ -1,11 +1,10 @@
+import type { SerialError } from '../errors/serial-error';
+
 /**
- * Reactive lifecycle state for a {@link SerialSession}.
+ * Canonical status literals for a {@link SerialSession} lifecycle.
  *
- * This is the v2 API counterpart of the legacy `SerialState` used by
- * `SerialClient`. The runtime values are the same flat strings v1
- * consumers used for UI switches; the {@link SerialSessionState} const
- * object is the canonical source of those literals so call sites can
- * avoid string typos and get IDE completion.
+ * Use these constants when comparing {@link SerialSessionState.status}
+ * so call sites avoid string typos and get IDE completion.
  *
  * Lifecycle transitions:
  *
@@ -14,12 +13,12 @@
  *                                \-> error
  * (any)  -> unsupported   (when Web Serial API is unavailable)
  * (any)  -> error         (when an unrecoverable failure occurs)
+ * (any)  -> disposed      (when dispose$ completes)
  * ```
  *
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/406 | Issue #406}
  */
-export const SerialSessionState = {
+export const SerialSessionStatus = {
   Idle: 'idle',
   Connecting: 'connecting',
   Connected: 'connected',
@@ -30,8 +29,62 @@ export const SerialSessionState = {
 } as const;
 
 /**
- * String union of allowed {@link SerialSessionState} runtime values
- * (same set as the values on the {@link SerialSessionState} object).
+ * String union of allowed {@link SerialSessionStatus} runtime values
+ * (same set as the values on the {@link SerialSessionStatus} object).
+ */
+export type SerialSessionStatus =
+  (typeof SerialSessionStatus)[keyof typeof SerialSessionStatus];
+
+/** @see {@link SerialSessionState} */
+export interface IdleSessionState {
+  readonly status: typeof SerialSessionStatus.Idle;
+}
+
+/** @see {@link SerialSessionState} */
+export interface ConnectingSessionState {
+  readonly status: typeof SerialSessionStatus.Connecting;
+}
+
+/** @see {@link SerialSessionState} */
+export interface ConnectedSessionState {
+  readonly status: typeof SerialSessionStatus.Connected;
+  readonly portInfo: SerialPortInfo;
+}
+
+/** @see {@link SerialSessionState} */
+export interface DisconnectingSessionState {
+  readonly status: typeof SerialSessionStatus.Disconnecting;
+}
+
+/** @see {@link SerialSessionState} */
+export interface UnsupportedSessionState {
+  readonly status: typeof SerialSessionStatus.Unsupported;
+}
+
+/** @see {@link SerialSessionState} */
+export interface ErrorSessionState {
+  readonly status: typeof SerialSessionStatus.Error;
+  readonly error: SerialError;
+}
+
+/** @see {@link SerialSessionState} */
+export interface DisposedSessionState {
+  readonly status: typeof SerialSessionStatus.Disposed;
+}
+
+/**
+ * Discriminated union emitted by {@link SerialSession.state$}.
+ *
+ * Each variant carries the lifecycle `status` plus optional detail fields
+ * (`portInfo` when connected, `error` when in a fatal error state).
+ *
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/406 | Issue #406}
  */
 export type SerialSessionState =
-  (typeof SerialSessionState)[keyof typeof SerialSessionState];
+  | IdleSessionState
+  | ConnectingSessionState
+  | ConnectedSessionState
+  | DisconnectingSessionState
+  | UnsupportedSessionState
+  | ErrorSessionState
+  | DisposedSessionState;

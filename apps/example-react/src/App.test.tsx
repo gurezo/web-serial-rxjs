@@ -10,7 +10,7 @@ import { BehaviorSubject, distinctUntilChanged, map, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 
-const SS = webSerialRxjs.SerialSessionState;
+const SS = webSerialRxjs.SerialSessionStatus;
 
 interface MockSession {
   session: SerialSession;
@@ -26,12 +26,12 @@ interface MockSession {
 }
 
 const createMockSession = (): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
+  const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const isConnected$ = stateSubject.pipe(
-    map((s) => s === SS.Connected),
+    map((s) => s.status === SS.Connected),
     distinctUntilChanged(),
   );
   const connect$ = vi.fn(() => of(undefined));
@@ -144,12 +144,12 @@ describe('App', () => {
     expect(baudRateSelect).toHaveValue('115200');
   });
 
-  it('state$ が SerialSessionState.Connected なら成功ステータスを表示する', async () => {
+  it('state$ が SerialSessionStatus.Connected なら成功ステータスを表示する', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByText('接続'));
-    act(() => latestMock().stateSubject.next(SS.Connected));
+    act(() => latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } }));
 
     await waitFor(() => {
       expect(
@@ -164,7 +164,7 @@ describe('App', () => {
     render(<App />);
 
     await user.click(screen.getByText('接続'));
-    act(() => latestMock().stateSubject.next(SS.Connected));
+    act(() => latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } }));
     await waitFor(() => {
       expect(
         screen.getByText('シリアルポートに接続しました。'),
@@ -172,7 +172,7 @@ describe('App', () => {
     });
 
     await user.click(screen.getByText('切断'));
-    act(() => latestMock().stateSubject.next(SS.Idle));
+    act(() => latestMock().stateSubject.next({ status: SS.Idle }));
 
     await waitFor(() => {
       expect(
@@ -187,7 +187,7 @@ describe('App', () => {
     render(<App />);
 
     await user.click(screen.getByText('接続'));
-    act(() => latestMock().stateSubject.next(SS.Connected));
+    act(() => latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } }));
     await waitFor(() => {
       expect(
         screen.getByText('シリアルポートに接続しました。'),

@@ -9,7 +9,7 @@ interface MockSession {
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  state$: BehaviorSubject<string>;
+  state$: BehaviorSubject<{ status: string }>;
   receive$: Subject<string>;
   terminalText$: Subject<string>;
   errors$: Subject<{ message: string }>;
@@ -17,11 +17,11 @@ interface MockSession {
 }
 
 const createMockSession = (): MockSession => {
-  const state$ = new BehaviorSubject<string>('idle');
+  const state$ = new BehaviorSubject<{ status: string }>({ status: 'idle' });
   const receive$ = new Subject<string>();
   const errors$ = new Subject<{ message: string }>();
   const isConnected$ = state$.pipe(
-    map((s) => s === 'connected'),
+    map((s) => s.status === 'connected'),
     distinctUntilChanged(),
   );
   return {

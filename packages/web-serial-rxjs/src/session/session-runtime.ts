@@ -1,7 +1,12 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { assertNever } from '../internal/assert-never';
+import type { SerialError } from '../errors/serial-error';
 import type { ReadPump } from './read-pump';
-import { SerialSessionState } from './serial-session-state';
+import {
+  SerialSessionStatus,
+  type SerialSessionState,
+  type SerialSessionStatus as SerialSessionStatusType,
+} from './serial-session-state';
 
 /**
  * Discriminated union representing the full internal runtime state of a
@@ -9,8 +14,8 @@ import { SerialSessionState } from './serial-session-state';
  * are valid for that status.
  *
  * This is the single source of truth for session lifecycle + resources.
- * Public consumers still observe the flat {@link SerialSessionState} string
- * via `state$`; this union is internal only.
+ * Public consumers observe the mapped {@link SerialSessionState} via
+ * `state$`; this union is internal only.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/397 | Issue #397}
@@ -26,50 +31,51 @@ export type SessionRuntime =
 
 /** @internal */
 export interface IdleRuntime {
-  readonly status: typeof SerialSessionState.Idle;
+  readonly status: typeof SerialSessionStatus.Idle;
 }
 
 /** @internal */
 export interface ConnectingRuntime {
-  readonly status: typeof SerialSessionState.Connecting;
+  readonly status: typeof SerialSessionStatus.Connecting;
   readonly cancel: () => void;
 }
 
 /** @internal */
 export interface ConnectedRuntime {
-  readonly status: typeof SerialSessionState.Connected;
+  readonly status: typeof SerialSessionStatus.Connected;
   readonly port: SerialPort;
   readonly pump: ReadPump;
 }
 
 /** @internal */
 export interface DisconnectingRuntime {
-  readonly status: typeof SerialSessionState.Disconnecting;
+  readonly status: typeof SerialSessionStatus.Disconnecting;
   readonly port: SerialPort | null;
 }
 
 /** @internal */
 export interface ErrorRuntime {
-  readonly status: typeof SerialSessionState.Error;
+  readonly status: typeof SerialSessionStatus.Error;
+  readonly error: SerialError;
 }
 
 /** @internal */
 export interface UnsupportedRuntime {
-  readonly status: typeof SerialSessionState.Unsupported;
+  readonly status: typeof SerialSessionStatus.Unsupported;
 }
 
 /** @internal */
 export interface DisposedRuntime {
-  readonly status: typeof SerialSessionState.Disposed;
+  readonly status: typeof SerialSessionStatus.Disposed;
 }
 
-const S = SerialSessionState;
+const S = SerialSessionStatus;
 
 /**
  * Allowed transitions for the internal SerialSession state machine.
  *
  * `as const satisfies` keeps literal transition targets while ensuring every
- * {@link SerialSessionState} key is present. Drift from the state union
+ * {@link SerialSessionStatus} key is present. Drift from the status union
  * becomes a compile error.
  *
  * @internal
@@ -84,7 +90,7 @@ export const ALLOWED_TRANSITIONS = {
   [S.Unsupported]: [S.Disposed],
   [S.Disposed]: [],
 } as const satisfies Readonly<
-  Record<SerialSessionState, readonly SerialSessionState[]>
+  Record<SerialSessionStatusType, readonly SerialSessionStatusType[]>
 >;
 
 /**
@@ -92,23 +98,52 @@ export const ALLOWED_TRANSITIONS = {
  *
  * @internal
  */
-export type AllowedTransition<T extends SerialSessionState> =
+export type AllowedTransition<T extends SerialSessionStatusType> =
   (typeof ALLOWED_TRANSITIONS)[T][number];
 
 /** @internal */
-export function runtimeToSessionState(runtime: SessionRuntime): SerialSessionState {
+export function runtimeToSessionStatus(
+  runtime: SessionRuntime,
+): SerialSessionStatusType {
   return runtime.status;
+}
+
+/**
+ * Map internal runtime to the public {@link SerialSessionState} payload.
+ *
+ * @internal
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/406 | Issue #406}
+ */
+export function runtimeToPublicState(runtime: SessionRuntime): SerialSessionState {
+  switch (runtime.status) {
+    case S.Idle:
+      return { status: S.Idle };
+    case S.Connecting:
+      return { status: S.Connecting };
+    case S.Connected:
+      return { status: S.Connected, portInfo: runtime.port.getInfo() };
+    case S.Disconnecting:
+      return { status: S.Disconnecting };
+    case S.Unsupported:
+      return { status: S.Unsupported };
+    case S.Error:
+      return { status: S.Error, error: runtime.error };
+    case S.Disposed:
+      return { status: S.Disposed };
+    default:
+      return assertNeverRuntime(runtime);
+  }
 }
 
 /** @internal */
 export function isValidTransition(
-  from: SerialSessionState,
-  to: SerialSessionState,
+  from: SerialSessionStatusType,
+  to: SerialSessionStatusType,
 ): boolean {
   if (from === to) {
     return false;
   }
-  return (ALLOWED_TRANSITIONS[from] as readonly SerialSessionState[]).includes(
+  return (ALLOWED_TRANSITIONS[from] as readonly SerialSessionStatusType[]).includes(
     to,
   );
 }
@@ -139,8 +174,8 @@ export function createDisconnectingRuntime(
 }
 
 /** @internal */
-export function createErrorRuntime(): ErrorRuntime {
-  return { status: S.Error };
+export function createErrorRuntime(error: SerialError): ErrorRuntime {
+  return { status: S.Error, error };
 }
 
 /** @internal */
@@ -188,13 +223,13 @@ export function getRuntimePump(runtime: SessionRuntime): ReadPump | null {
 
 /**
  * Controller that owns the {@link SessionRuntime} discriminated union and
- * exposes the public `state$` stream derived from `runtime.status`.
+ * exposes the public `state$` stream derived from the runtime.
  *
  * @internal
  */
 export interface SessionRuntimeController {
   get runtime(): SessionRuntime;
-  get status(): SerialSessionState;
+  get status(): SerialSessionStatusType;
   get state$(): Observable<SerialSessionState>;
   transition(next: SessionRuntime): boolean;
   complete(): void;
@@ -210,12 +245,12 @@ export function createSessionRuntimeController(
 ): SessionRuntimeController {
   let runtime = initial;
   const subject = new BehaviorSubject<SerialSessionState>(
-    runtimeToSessionState(initial),
+    runtimeToPublicState(initial),
   );
 
   const transition = (next: SessionRuntime): boolean => {
-    const from = runtimeToSessionState(runtime);
-    const to = runtimeToSessionState(next);
+    const from = runtimeToSessionStatus(runtime);
+    const to = runtimeToSessionStatus(next);
 
     if (from === to) {
       return false;
@@ -231,7 +266,7 @@ export function createSessionRuntimeController(
     }
 
     runtime = next;
-    subject.next(to);
+    subject.next(runtimeToPublicState(next));
     return true;
   };
 
@@ -240,7 +275,7 @@ export function createSessionRuntimeController(
       return runtime;
     },
     get status() {
-      return runtimeToSessionState(runtime);
+      return runtimeToSessionStatus(runtime);
     },
     get state$() {
       return subject.asObservable();
