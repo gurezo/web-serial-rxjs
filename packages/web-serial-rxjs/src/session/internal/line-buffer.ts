@@ -1,3 +1,5 @@
+import { createNewlineTokenizer } from '../../internal/newline-tokenizer';
+
 /**
  * Options for {@link createLineBuffer}.
  *
@@ -43,59 +45,23 @@ export function createLineBuffer(options?: LineBufferOptions): {
     ...options,
   };
 
-  let buffer = '';
+  const tokenizer = createNewlineTokenizer('line');
 
   const clear = (): void => {
-    buffer = '';
-  };
-
-  const trimIncompleteTail = (): boolean => {
-    if (limits.maxChars <= 0 || buffer.length <= limits.maxChars) {
-      return false;
-    }
-    buffer = buffer.slice(buffer.length - limits.maxChars);
-    return true;
+    tokenizer.clear();
   };
 
   const feed = (chunk: string): LineBufferFeedResult => {
-    buffer += chunk;
-    let overflowed = false;
+    const events = tokenizer.feed(chunk);
     const out: string[] = [];
 
-    for (;;) {
-      const crlf = buffer.indexOf('\r\n');
-      if (crlf >= 0) {
-        out.push(buffer.slice(0, crlf));
-        buffer = buffer.slice(crlf + 2);
-        continue;
+    for (const event of events) {
+      if (event.type === 'line') {
+        out.push(event.content);
       }
-
-      // Lone \r (not the last character) is a line end so we must not let
-      // a later \n in the same buffer be matched first (e.g. "a\rb\n").
-      const cr = buffer.indexOf('\r');
-      if (cr >= 0 && cr + 1 < buffer.length && buffer[cr + 1] !== '\n') {
-        out.push(buffer.slice(0, cr));
-        buffer = buffer.slice(cr + 1);
-        continue;
-      }
-
-      const nl = buffer.indexOf('\n');
-      if (nl >= 0) {
-        out.push(buffer.slice(0, nl));
-        buffer = buffer.slice(nl + 1);
-        continue;
-      }
-
-      if (cr >= 0 && cr + 1 === buffer.length) {
-        break;
-      }
-
-      break;
     }
 
-    if (trimIncompleteTail()) {
-      overflowed = true;
-    }
+    const overflowed = tokenizer.trimPending(limits.maxChars);
 
     return { lines: out, overflowed };
   };

@@ -15,8 +15,15 @@ export type NewlineEvent =
 export interface NewlineTokenizer {
   feed(chunk: string): NewlineEvent[];
   clear(): void;
+  /** Replaces the incomplete tail (used when folding external state in). */
+  restorePending(text: string): void;
   /** Incomplete tail retained across feeds (line mode may end with `\r`). */
   getPendingText(): string;
+  /**
+   * Discards leading characters when pending text exceeds `maxChars`.
+   * @returns `true` when trimming occurred.
+   */
+  trimPending(maxChars: number): boolean;
 }
 
 /**
@@ -35,6 +42,11 @@ export function createNewlineTokenizer(
 
   const clear = (): void => {
     pending = '';
+    deferredTrailingCr = false;
+  };
+
+  const restorePending = (text: string): void => {
+    pending = text;
     deferredTrailingCr = false;
   };
 
@@ -93,9 +105,32 @@ export function createNewlineTokenizer(
     return events;
   };
 
+  const trimPending = (maxChars: number): boolean => {
+    if (maxChars <= 0) {
+      return false;
+    }
+
+    const text = deferredTrailingCr ? `${pending}\r` : pending;
+    if (text.length <= maxChars) {
+      return false;
+    }
+
+    const trimmed = text.slice(text.length - maxChars);
+    if (trimmed.endsWith('\r')) {
+      pending = trimmed.slice(0, -1);
+      deferredTrailingCr = true;
+    } else {
+      pending = trimmed;
+      deferredTrailingCr = false;
+    }
+    return true;
+  };
+
   return {
     feed,
     clear,
+    restorePending,
     getPendingText: () => (deferredTrailingCr ? `${pending}\r` : pending),
+    trimPending,
   };
 }
