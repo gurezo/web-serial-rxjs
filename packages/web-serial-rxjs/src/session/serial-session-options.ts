@@ -1,3 +1,15 @@
+import {
+  brandBaudRate,
+  brandMaxChars,
+  brandMaxLines,
+  brandReceiveReplayBufferSize,
+  brandSerialPortBufferSize,
+  type BaudRate,
+  type MaxChars,
+  type MaxLines,
+  type ReceiveReplayBufferSize,
+  type SerialPortBufferSize,
+} from '../internal/branded-numbers';
 import type { TerminalBufferOptions } from '../terminal/create-terminal-buffer';
 import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../terminal/create-terminal-buffer';
 import { SerialError } from '../errors/serial-error';
@@ -136,9 +148,16 @@ const DEFAULT_RECEIVE_REPLAY: Required<SerialSessionReceiveReplayOptions> = {
  * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS}
  *         when `bufferSize` or `maxChars` are out of range.
  */
+/** Resolved receive replay options with validated branded numeric fields. */
+export type ResolvedSerialSessionReceiveReplayOptions = {
+  enabled: boolean;
+  bufferSize: ReceiveReplayBufferSize;
+  maxChars: MaxChars;
+};
+
 export function resolveReceiveReplayOptions(
   options?: SerialSessionReceiveReplayOptions,
-): Required<SerialSessionReceiveReplayOptions> {
+): ResolvedSerialSessionReceiveReplayOptions {
   const merged: Required<SerialSessionReceiveReplayOptions> = {
     ...DEFAULT_RECEIVE_REPLAY,
     ...options,
@@ -168,7 +187,11 @@ export function resolveReceiveReplayOptions(
     );
   }
 
-  return merged;
+  return {
+    enabled: merged.enabled,
+    bufferSize: brandReceiveReplayBufferSize(bufferSize),
+    maxChars: brandMaxChars(maxChars),
+  };
 }
 
 /**
@@ -177,9 +200,15 @@ export function resolveReceiveReplayOptions(
  * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}
  *         when `maxLines` or `maxChars` are out of range.
  */
+/** Resolved terminal buffer options with validated branded numeric fields. */
+export type ResolvedTerminalBufferOptions = {
+  maxLines: MaxLines;
+  maxChars: MaxChars;
+};
+
 export function resolveTerminalBufferOptions(
   options?: TerminalBufferOptions,
-): Required<TerminalBufferOptions> {
+): ResolvedTerminalBufferOptions {
   const merged: Required<TerminalBufferOptions> = {
     ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
     ...options,
@@ -201,7 +230,10 @@ export function resolveTerminalBufferOptions(
     );
   }
 
-  return merged;
+  return {
+    maxLines: brandMaxLines(maxLines),
+    maxChars: brandMaxChars(maxChars),
+  };
 }
 
 /**
@@ -210,9 +242,14 @@ export function resolveTerminalBufferOptions(
  * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}
  *         when `maxChars` is out of range.
  */
+/** Resolved line buffer options with validated branded numeric fields. */
+export type ResolvedLineBufferOptions = {
+  maxChars: MaxChars;
+};
+
 export function resolveLineBufferOptions(
   options?: LineBufferOptions,
-): Required<LineBufferOptions> {
+): ResolvedLineBufferOptions {
   const merged: Required<LineBufferOptions> = {
     ...DEFAULT_LINE_BUFFER_OPTIONS,
     ...options,
@@ -227,7 +264,9 @@ export function resolveLineBufferOptions(
     );
   }
 
-  return merged;
+  return {
+    maxChars: brandMaxChars(maxChars),
+  };
 }
 
 /**
@@ -236,12 +275,22 @@ export function resolveLineBufferOptions(
  * required; `filters` remains optional.
  */
 export type ResolvedSerialSessionOptions = Required<
-  Omit<SerialSessionOptions, 'filters' | 'receiveReplay' | 'terminalBuffer' | 'lineBuffer'>
+  Omit<
+    SerialSessionOptions,
+    | 'filters'
+    | 'receiveReplay'
+    | 'terminalBuffer'
+    | 'lineBuffer'
+    | 'baudRate'
+    | 'bufferSize'
+  >
 > & {
+  baudRate: BaudRate;
+  bufferSize: SerialPortBufferSize;
   filters?: SerialPortFilter[];
-  receiveReplay: Required<SerialSessionReceiveReplayOptions>;
-  terminalBuffer: Required<TerminalBufferOptions>;
-  lineBuffer: Required<LineBufferOptions>;
+  receiveReplay: ResolvedSerialSessionReceiveReplayOptions;
+  terminalBuffer: ResolvedTerminalBufferOptions;
+  lineBuffer: ResolvedLineBufferOptions;
 };
 
 /**
@@ -250,20 +299,24 @@ export type ResolvedSerialSessionOptions = Required<
  * @internal
  */
 export const DEFAULT_SERIAL_SESSION_OPTIONS = {
-  baudRate: 9600,
+  baudRate: brandBaudRate(9600),
   dataBits: 8,
   stopBits: 1,
   parity: 'none',
-  bufferSize: 255,
+  bufferSize: brandSerialPortBufferSize(255),
   flowControl: 'none',
-  receiveReplay: { ...DEFAULT_RECEIVE_REPLAY },
-  terminalBuffer: { ...DEFAULT_TERMINAL_BUFFER_OPTIONS },
-  lineBuffer: { ...DEFAULT_LINE_BUFFER_OPTIONS },
+  receiveReplay: resolveReceiveReplayOptions(),
+  terminalBuffer: resolveTerminalBufferOptions(),
+  lineBuffer: resolveLineBufferOptions(),
 } satisfies ResolvedSerialSessionOptions;
 
 /** Resolved W3C connection fields for {@link ResolvedSerialSessionOptions}. */
-export type ResolvedSerialSessionConnectionOptions =
-  Required<SerialSessionConnectionFields>;
+export type ResolvedSerialSessionConnectionOptions = Required<
+  Omit<SerialSessionConnectionFields, 'baudRate' | 'bufferSize'>
+> & {
+  baudRate: BaudRate;
+  bufferSize: SerialPortBufferSize;
+};
 
 /**
  * Merge and validate W3C connection fields from {@link SerialSessionOptions}.
@@ -277,7 +330,7 @@ export function resolveConnectionOptions(
     'baudRate' | 'dataBits' | 'stopBits' | 'parity' | 'bufferSize' | 'flowControl'
   >,
 ): ResolvedSerialSessionConnectionOptions {
-  const merged: ResolvedSerialSessionConnectionOptions = {
+  const merged = {
     baudRate: DEFAULT_SERIAL_SESSION_OPTIONS.baudRate,
     dataBits: DEFAULT_SERIAL_SESSION_OPTIONS.dataBits,
     stopBits: DEFAULT_SERIAL_SESSION_OPTIONS.stopBits,
@@ -287,7 +340,7 @@ export function resolveConnectionOptions(
     ...options,
   };
 
-  const { baudRate } = merged;
+  const { baudRate, bufferSize } = merged;
 
   if (!Number.isSafeInteger(baudRate) || baudRate <= 0) {
     throw new SerialError(
@@ -296,7 +349,17 @@ export function resolveConnectionOptions(
     );
   }
 
-  return merged;
+  return {
+    dataBits: merged.dataBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.dataBits,
+    stopBits: merged.stopBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.stopBits,
+    parity: merged.parity ?? DEFAULT_SERIAL_SESSION_OPTIONS.parity,
+    flowControl:
+      merged.flowControl ?? DEFAULT_SERIAL_SESSION_OPTIONS.flowControl,
+    baudRate: brandBaudRate(baudRate),
+    bufferSize: brandSerialPortBufferSize(
+      bufferSize ?? DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize,
+    ),
+  };
 }
 
 /**

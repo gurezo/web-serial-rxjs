@@ -1,4 +1,8 @@
 import { Observable, Subject } from 'rxjs';
+import type {
+  MaxChars,
+  ReceiveReplayBufferSize,
+} from '../../internal/branded-numbers';
 
 /**
  * Options for {@link createReceiveReplayBuffer}.
@@ -7,11 +11,11 @@ import { Observable, Subject } from 'rxjs';
  */
 export interface ReceiveReplayBufferOptions {
   /** Maximum number of chunks to retain. */
-  bufferSize: number;
+  bufferSize: ReceiveReplayBufferSize;
   /**
    * Maximum total characters across retained chunks. `0` disables the limit.
    */
-  maxChars: number;
+  maxChars: MaxChars;
 }
 
 /** Result of {@link ReceiveReplayBuffer.next}. */

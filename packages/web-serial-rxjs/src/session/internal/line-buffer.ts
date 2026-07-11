@@ -1,4 +1,6 @@
 import { createNewlineTokenizer } from '../../internal/newline-tokenizer';
+import type { MaxChars } from '../../internal/branded-numbers';
+import { brandMaxChars } from '../../internal/branded-numbers';
 
 /**
  * Options for {@link createLineBuffer}.
@@ -37,6 +39,11 @@ export interface LineBuffer {
   clear(): void;
 }
 
+/** @internal Resolved limits for {@link createLineBuffer}. */
+export interface LineBufferLimits {
+  maxChars: MaxChars;
+}
+
 /**
  * Streaming UTF-16 text to newline-delimited lines for {@link createSerialSession}.
  * Supports `\r\n` and `\n` per #237; a lone `\r` that is not the last character
@@ -46,10 +53,13 @@ export interface LineBuffer {
  *
  * @internal
  */
-export function createLineBuffer(options?: LineBufferOptions): LineBuffer {
-  const limits: Required<LineBufferOptions> = {
-    ...DEFAULT_LINE_BUFFER_OPTIONS,
-    ...options,
+export function createLineBuffer(
+  options?: LineBufferOptions | LineBufferLimits,
+): LineBuffer {
+  const limits: LineBufferLimits = {
+    maxChars: brandMaxChars(
+      options?.maxChars ?? DEFAULT_LINE_BUFFER_OPTIONS.maxChars,
+    ),
   };
 
   const tokenizer = createNewlineTokenizer('line');
