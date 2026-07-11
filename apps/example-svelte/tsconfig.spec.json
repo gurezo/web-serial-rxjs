@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "allowJs": false,
+    "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "resolveJsonModule": true,
     "outDir": "../../../dist/out-tsc",
     "moduleResolution": "bundler",
     "types": [
@@ -14,8 +14,7 @@
       "vite/client",
       "node",
       "vitest",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts"
+      "svelte"
     ]
   },
   "include": [
@@ -25,12 +24,8 @@
     "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.tsx",
-    "src/**/*.test.js",
-    "src/**/*.spec.js",
-    "src/**/*.test.jsx",
-    "src/**/*.spec.jsx",
+    "src/**/*.test.svelte",
+    "src/**/*.spec.svelte",
     "src/**/*.d.ts"
   ]
 }

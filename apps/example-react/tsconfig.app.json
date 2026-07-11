@@ -1,7 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
+    "allowJs": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
     "outDir": "../../../dist/out-tsc",
+    "moduleResolution": "bundler",
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",

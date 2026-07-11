@@ -1,7 +1,15 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
+    "resolveJsonModule": true,
     "outDir": "../../../dist/out-tsc",
+    "moduleResolution": "bundler",
     "types": ["vite/client"]
   },
   "exclude": [
