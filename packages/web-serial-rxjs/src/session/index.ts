@@ -11,7 +11,18 @@ export {
   MAX_RECEIVE_REPLAY_MAX_CHARS,
 } from './serial-session-options';
 export type { SerialPayload, SerialConnectionOptions } from '../types';
-export { SerialSessionState } from './serial-session-state';
+export { SerialSessionStatus } from './serial-session-state';
+export type {
+  SerialSessionState,
+  SerialSessionStatus,
+  IdleSessionState,
+  ConnectingSessionState,
+  ConnectedSessionState,
+  DisconnectingSessionState,
+  UnsupportedSessionState,
+  ErrorSessionState,
+  DisposedSessionState,
+} from './serial-session-state';
 export {
   DEFAULT_LINE_BUFFER_OPTIONS,
   type LineBufferOptions,

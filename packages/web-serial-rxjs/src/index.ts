@@ -21,7 +21,8 @@
  * - {@link SerialSessionOptions} - connection options
  * - {@link SerialPayload} - payload accepted by {@link SerialSession.send$}
  * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
- * - {@link SerialSessionState} - `state$` payload values (const + type)
+ * - {@link SerialSessionStatus} - lifecycle status literals for `state$.status`
+ * - {@link SerialSessionState} - discriminated union emitted by `state$`
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
  * - {@link SerialErrorContextMap} - structured metadata per error code
  *
@@ -63,9 +64,18 @@
 
 export { assertNever } from './internal/assert-never';
 
-export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions, MAX_RECEIVE_REPLAY_BUFFER_SIZE, MAX_RECEIVE_REPLAY_MAX_CHARS } from './session';
+export { createSerialSession, SerialSessionStatus, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions, MAX_RECEIVE_REPLAY_BUFFER_SIZE, MAX_RECEIVE_REPLAY_MAX_CHARS } from './session';
 export type {
   SerialSession,
+  SerialSessionState,
+  SerialSessionStatus,
+  IdleSessionState,
+  ConnectingSessionState,
+  ConnectedSessionState,
+  DisconnectingSessionState,
+  UnsupportedSessionState,
+  ErrorSessionState,
+  DisposedSessionState,
   SerialSessionOptions,
   SerialSessionReceiveReplayOptions,
   ResolvedSerialSessionOptions,
