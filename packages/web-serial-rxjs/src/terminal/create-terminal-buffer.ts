@@ -1,4 +1,10 @@
 import { type Observable, map, scan, shareReplay } from 'rxjs';
+import {
+  brandMaxChars,
+  brandMaxLines,
+  type MaxChars,
+  type MaxLines,
+} from '../internal/branded-numbers';
 import { createNewlineTokenizer } from '../internal/newline-tokenizer';
 
 /** @internal Folded state between {@link createTerminalBuffer} emissions. */
@@ -42,8 +48,8 @@ export function terminalDisplayText(state: TerminalBufferState): string {
 
 /** Resolved limits for {@link trimTerminalState}. `0` means unlimited. */
 export interface TerminalBufferLimits {
-  maxLines: number;
-  maxChars: number;
+  maxLines: MaxLines;
+  maxChars: MaxChars;
 }
 
 /** @internal Count newline-terminated rows in `completed`. */
@@ -155,9 +161,11 @@ export const DEFAULT_TERMINAL_BUFFER_OPTIONS: Required<TerminalBufferOptions> =
 function resolveTerminalBufferLimits(
   options?: TerminalBufferOptions,
 ): TerminalBufferLimits {
+  const maxLines = options?.maxLines ?? DEFAULT_TERMINAL_BUFFER_OPTIONS.maxLines;
+  const maxChars = options?.maxChars ?? DEFAULT_TERMINAL_BUFFER_OPTIONS.maxChars;
   return {
-    ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
-    ...options,
+    maxLines: brandMaxLines(maxLines),
+    maxChars: brandMaxChars(maxChars),
   };
 }
 
