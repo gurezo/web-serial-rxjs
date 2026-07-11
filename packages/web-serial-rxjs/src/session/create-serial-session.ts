@@ -25,8 +25,7 @@ import { createReadPump, type ReadPump } from './read-pump';
 import { createSendQueue } from './send-queue';
 import type { SerialSession } from './serial-session';
 import {
-  DEFAULT_SERIAL_SESSION_OPTIONS,
-  resolveReceiveReplayOptions,
+  resolveSerialSessionOptions,
   type SerialSessionOptions,
 } from './serial-session-options';
 import { SerialSessionState } from './serial-session-state';
@@ -93,19 +92,7 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
 export function createSerialSession(
   options?: SerialSessionOptions,
 ): SerialSession {
-  const resolvedOptions = {
-    ...DEFAULT_SERIAL_SESSION_OPTIONS,
-    ...options,
-    receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
-    terminalBuffer: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
-      ...options?.terminalBuffer,
-    },
-    lineBuffer: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.lineBuffer,
-      ...options?.lineBuffer,
-    },
-  };
+  const resolvedOptions = resolveSerialSessionOptions(options);
 
   const supported = hasWebSerialSupport();
   const machine = new SessionStateMachine(
