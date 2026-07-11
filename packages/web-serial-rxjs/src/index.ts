@@ -58,6 +58,8 @@
  * ```
  */
 
+export { assertNever } from './internal/assert-never';
+
 export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS } from './session';
 export type {
   SerialSession,

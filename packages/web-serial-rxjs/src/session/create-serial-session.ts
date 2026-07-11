@@ -609,5 +609,5 @@ export function createSerialSession(
     terminalText$,
     receiveReplay$,
     lines$,
-  };
+  } satisfies SerialSession;
 }

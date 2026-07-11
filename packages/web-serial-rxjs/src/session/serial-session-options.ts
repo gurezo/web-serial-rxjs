@@ -204,14 +204,16 @@ export function resolveReceiveReplayOptions(
  *
  * @internal
  */
-export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
+type DefaultSerialSessionOptions = Required<
   Omit<SerialSessionOptions, 'filters' | 'receiveReplay' | 'terminalBuffer' | 'lineBuffer'>
 > & {
   filters?: SerialPortFilter[];
   receiveReplay: Required<SerialSessionReceiveReplayOptions>;
   terminalBuffer: Required<TerminalBufferOptions>;
   lineBuffer: Required<LineBufferOptions>;
-} = {
+};
+
+export const DEFAULT_SERIAL_SESSION_OPTIONS = {
   baudRate: 9600,
   dataBits: 8,
   stopBits: 1,
@@ -221,4 +223,4 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
   receiveReplay: { ...DEFAULT_RECEIVE_REPLAY },
   terminalBuffer: { ...DEFAULT_TERMINAL_BUFFER_OPTIONS },
   lineBuffer: { ...DEFAULT_LINE_BUFFER_OPTIONS },
-};
+} satisfies DefaultSerialSessionOptions;
