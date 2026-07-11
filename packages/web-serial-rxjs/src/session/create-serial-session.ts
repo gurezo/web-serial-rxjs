@@ -23,6 +23,7 @@ import { createSendQueue } from './send-queue';
 import type { SerialSession } from './serial-session';
 import {
   DEFAULT_SERIAL_SESSION_OPTIONS,
+  resolveReceiveReplayOptions,
   type SerialSessionOptions,
 } from './serial-session-options';
 import { SerialSessionState } from './serial-session-state';
@@ -93,10 +94,7 @@ export function createSerialSession(
     ...DEFAULT_SERIAL_SESSION_OPTIONS,
     ...options,
     filters: options?.filters,
-    receiveReplay: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.receiveReplay,
-      ...options?.receiveReplay,
-    },
+    receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
     terminalBuffer: {
       ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
       ...options?.terminalBuffer,
