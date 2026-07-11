@@ -96,10 +96,14 @@ describe('createReadPump', () => {
     await flushMicrotasks();
 
     expect(onError).toHaveBeenCalledTimes(1);
-    const received = onError.mock.calls[0][0];
+    const call = onError.mock.calls[0];
+    expect(call).toBeDefined();
+    const received = call?.[0];
     expect(received).toBeInstanceOf(SerialError);
-    expect(received.code).toBe(SerialErrorCode.READ_FAILED);
-    expect(received.message).toContain('boom');
+    if (received instanceof SerialError) {
+      expect(received.code).toBe(SerialErrorCode.READ_FAILED);
+      expect(received.message).toContain('boom');
+    }
     expect(pump.isRunning).toBe(false);
   });
 
@@ -114,9 +118,13 @@ describe('createReadPump', () => {
     pump.start();
 
     expect(onError).toHaveBeenCalledTimes(1);
-    const received = onError.mock.calls[0][0];
+    const call = onError.mock.calls[0];
+    expect(call).toBeDefined();
+    const received = call?.[0];
     expect(received).toBeInstanceOf(SerialError);
-    expect(received.code).toBe(SerialErrorCode.CONNECTION_LOST);
+    if (received instanceof SerialError) {
+      expect(received.code).toBe(SerialErrorCode.CONNECTION_LOST);
+    }
     expect(pump.isRunning).toBe(false);
   });
 
