@@ -1142,7 +1142,11 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.send$('ping\r\n'));
 
       expect(writes).toHaveLength(1);
-      expect(new TextDecoder().decode(writes[0])).toBe('ping\r\n');
+      const [write] = writes;
+      expect(write).toBeDefined();
+      if (write) {
+        expect(new TextDecoder().decode(write)).toBe('ping\r\n');
+      }
     });
 
     it('passes raw Uint8Array payloads straight through to the writer', async () => {
@@ -1158,7 +1162,11 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.send$(payload));
 
       expect(writes).toHaveLength(1);
-      expect(Array.from(writes[0])).toEqual([0x01, 0x02, 0x03]);
+      const [write] = writes;
+      expect(write).toBeDefined();
+      if (write) {
+        expect(Array.from(write)).toEqual([0x01, 0x02, 0x03]);
+      }
     });
 
     it('guarantees FIFO order for concurrently subscribed send$ calls', async () => {
@@ -1243,8 +1251,12 @@ describe('createSerialSession', () => {
 
         expect(rejection).toBeInstanceOf(SerialError);
         expect(emissions).toHaveLength(1);
-        expect(emissions[0]).toBe(rejection);
-        expect(emissions[0].code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+        const [emission] = emissions;
+        expect(emission).toBeDefined();
+        expect(emission).toBe(rejection);
+        if (emission) {
+          expect(emission.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+        }
       } finally {
         subscription.unsubscribe();
       }
@@ -1321,7 +1333,11 @@ describe('createSerialSession', () => {
         });
 
         expect(emissions).toHaveLength(1);
-        expect(emissions[0].code).toBe(SerialErrorCode.OPERATION_CANCELLED);
+        const [emission] = emissions;
+        expect(emission).toBeDefined();
+        if (emission) {
+          expect(emission.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
+        }
       } finally {
         subscription.unsubscribe();
       }

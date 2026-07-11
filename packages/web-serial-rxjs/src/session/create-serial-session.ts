@@ -96,7 +96,6 @@ export function createSerialSession(
   const resolvedOptions = {
     ...DEFAULT_SERIAL_SESSION_OPTIONS,
     ...options,
-    filters: options?.filters,
     receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
     terminalBuffer: {
       ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
