@@ -1,10 +1,9 @@
 import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { App } from './app.js';
 
-vi.mock('@gurezo/web-serial-rxjs', async () => {
-  const actual = await vi.importActual('@gurezo/web-serial-rxjs');
+const createMockSession = () => {
   const state$ = new BehaviorSubject('idle');
   const receive$ = new Subject();
   const errors$ = new Subject();
@@ -12,10 +11,11 @@ vi.mock('@gurezo/web-serial-rxjs', async () => {
     map((s) => s === 'connected'),
     distinctUntilChanged(),
   );
-  const core = {
+  return {
     isBrowserSupported: vi.fn(() => true),
     connect$: vi.fn(() => of(undefined)),
     disconnect$: vi.fn(() => of(undefined)),
+    dispose$: vi.fn(() => of(undefined)),
     send$: vi.fn(() => of(undefined)),
     state$,
     receive$,
@@ -23,9 +23,19 @@ vi.mock('@gurezo/web-serial-rxjs', async () => {
     errors$,
     isConnected$,
   };
+};
+
+let mockSessions = [];
+
+vi.mock('@gurezo/web-serial-rxjs', async () => {
+  const actual = await vi.importActual('@gurezo/web-serial-rxjs');
   return {
     ...actual,
-    createSerialSession: vi.fn(() => core),
+    createSerialSession: vi.fn(() => {
+      const mock = createMockSession();
+      mockSessions.push(mock);
+      return mock;
+    }),
   };
 });
 
@@ -34,6 +44,8 @@ describe('App', () => {
   let container;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    mockSessions = [];
     container = document.createElement('div');
     container.innerHTML = `
       <div id="browser-support-status"></div>
@@ -67,7 +79,9 @@ describe('App', () => {
 
   it('should create serial session on init', () => {
     app = new App();
-    expect(createSerialSession).toHaveBeenCalled();
+    expect(webSerialRxjs.createSerialSession).toHaveBeenCalledWith({
+      baudRate: 9600,
+    });
   });
 
   it('should render browser support status based on session.isBrowserSupported', () => {
@@ -83,5 +97,20 @@ describe('App', () => {
     expect(document.getElementById('disconnect-btn')).not.toBeNull();
     expect(document.getElementById('send-input')).not.toBeNull();
     expect(document.getElementById('receive-output')).not.toBeNull();
+  });
+
+  it('should dispose previous session when baud rate changes on connect', () => {
+    app = new App();
+    const first = mockSessions[0];
+    const connectBtn = document.getElementById('connect-btn');
+    connectBtn.click();
+
+    expect(first.dispose$).toHaveBeenCalledTimes(1);
+    expect(first.connect$).not.toHaveBeenCalled();
+    expect(mockSessions).toHaveLength(2);
+    expect(mockSessions[1].connect$).toHaveBeenCalledTimes(1);
+    expect(webSerialRxjs.createSerialSession).toHaveBeenLastCalledWith({
+      baudRate: 115200,
+    });
   });
 });
