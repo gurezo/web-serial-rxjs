@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, computed, inject, linkedSignal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
   SerialSessionStatus,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
+import { map } from 'rxjs';
 import { SerialClientService } from './services/serial-client.service';
 
 type StatusType = 'info' | 'success' | 'error';
@@ -22,43 +23,41 @@ export class App {
   sendInput = '';
 
   private readonly serialService = inject(SerialClientService);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly browserSupported = this.serialService.isBrowserSupported();
-  readonly state = signal<SerialSessionState>({
-    status: SerialSessionStatus.Idle,
+  readonly state = toSignal(this.serialService.state$, {
+    initialValue: {
+      status: SerialSessionStatus.Idle,
+    } satisfies SerialSessionState,
   });
-  readonly isConnected = signal(false);
-  readonly receivedData = signal('');
-  readonly errorMessage = signal<string | null>(null);
+  readonly isConnected = toSignal(this.serialService.isConnected$, {
+    initialValue: false,
+  });
+  private readonly terminalText = toSignal(this.serialService.terminalText$, {
+    initialValue: '',
+  });
+  readonly receivedData = linkedSignal({
+    source: () => this.terminalText(),
+    computation: (text) => text,
+  });
+  private readonly lastError = toSignal(
+    this.serialService.errors$.pipe(
+      map((error): string | null => error.message),
+    ),
+    { initialValue: null },
+  );
 
-  constructor() {
-    this.serialService.state$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((state) => {
-        this.state.set(state);
-        if (
-          state.status === SerialSessionStatus.Connected ||
-          state.status === SerialSessionStatus.Idle
-        ) {
-          this.errorMessage.set(null);
-        }
-      });
-
-    this.serialService.isConnected$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => this.isConnected.set(v));
-
-    this.serialService.terminalText$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((text) => this.receivedData.set(text));
-
-    this.serialService.errors$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((error) => {
-        this.errorMessage.set(error.message);
-      });
-  }
+  readonly errorMessage = computed(() => {
+    const status = this.state().status;
+    if (
+      status === SerialSessionStatus.Connected ||
+      status === SerialSessionStatus.Idle ||
+      status === SerialSessionStatus.Connecting
+    ) {
+      return null;
+    }
+    return this.lastError();
+  });
 
   readonly connecting = computed(
     () => this.state().status === SerialSessionStatus.Connecting,
@@ -97,7 +96,6 @@ export class App {
 
   handleConnect(): void {
     this.resetTerminalView();
-    this.errorMessage.set(null);
     this.serialService.connect$(this.baudRate).subscribe({
       error: (error: unknown) => {
         console.error('接続エラー:', error);
