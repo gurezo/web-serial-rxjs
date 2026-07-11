@@ -1,6 +1,6 @@
 {
   "name": "@gurezo/web-serial-rxjs",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "description": "RxJS-based utilities for the Web Serial API, usable from Angular, React, Svelte, and Vanilla JavaScript/TypeScript.",
   "author": "Akihiko Kigure <akihiko.kigure@gmail.com>",
   "license": "MIT",
