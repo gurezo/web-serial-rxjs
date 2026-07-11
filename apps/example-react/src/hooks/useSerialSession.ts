@@ -108,7 +108,7 @@ export function useSerialSession(
     return () => {
       sub.unsubscribe();
       if (sessionRef.current !== null) {
-        sessionRef.current.disconnect$().subscribe({
+        sessionRef.current.dispose$().subscribe({
           error: () => void 0,
         });
       }
@@ -128,11 +128,15 @@ export function useSerialSession(
       baudRate !== undefined &&
       baudRate !== currentBaudRateRef.current
     ) {
+      const previousSession = sessionRef.current as SerialSession;
       currentBaudRateRef.current = baudRate;
       sessionRef.current = createSerialSession({ baudRate });
       (sessionsRef.current as ReplaySubject<SerialSession>).next(
         sessionRef.current,
       );
+      return previousSession
+        .dispose$()
+        .pipe(switchMap(() => (sessionRef.current as SerialSession).connect$()));
     }
     return (sessionRef.current as SerialSession).connect$();
   };

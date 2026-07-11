@@ -61,7 +61,7 @@ export class SerialClientService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.currentSession.disconnect$().subscribe({ error: () => void 0 });
+    this.currentSession.dispose$().subscribe({ error: () => void 0 });
     this.sessions$.complete();
     this.terminalBufferEpoch$.complete();
   }
@@ -73,9 +73,13 @@ export class SerialClientService implements OnDestroy {
   connect$(baudRate?: number): Observable<void> {
     this.bumpTerminalBufferEpoch();
     if (baudRate !== undefined && baudRate !== this.currentBaudRate) {
+      const previousSession = this.currentSession;
       this.currentBaudRate = baudRate;
       this.currentSession = createSerialSession({ baudRate });
       this.sessions$.next(this.currentSession);
+      return previousSession
+        .dispose$()
+        .pipe(switchMap(() => this.currentSession.connect$()));
     }
     return this.currentSession.connect$();
   }

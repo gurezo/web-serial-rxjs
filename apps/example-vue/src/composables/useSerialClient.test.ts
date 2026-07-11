@@ -24,6 +24,7 @@ interface MockCore {
   isConnectedSubject: BehaviorSubject<boolean>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
+  dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
   isBrowserSupported: ReturnType<typeof vi.fn>;
 }
@@ -35,6 +36,7 @@ const createMockCore = (supported = true): MockCore => {
   const isConnectedSubject = new BehaviorSubject(false);
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
+  const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => supported);
 
@@ -42,6 +44,7 @@ const createMockCore = (supported = true): MockCore => {
     isBrowserSupported,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
@@ -58,6 +61,7 @@ const createMockCore = (supported = true): MockCore => {
     isConnectedSubject,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     isBrowserSupported,
   };
@@ -176,6 +180,7 @@ describe('useSerialClient', () => {
     api.connect$(115200).subscribe();
 
     expect(first.connect$).not.toHaveBeenCalled();
+    expect(first.dispose$).toHaveBeenCalledTimes(1);
     expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(
       vi.mocked(webSerialRxjs.createSerialSession),
@@ -246,12 +251,12 @@ describe('useSerialClient', () => {
     expect(api.receivedData.value).toBe('');
   });
 
-  it('should disconnect session on unmount', () => {
+  it('should dispose session on unmount', () => {
     const { wrapper } = mountHarness();
     const mock = latestMock();
 
     wrapper.unmount();
 
-    expect(mock.disconnect$).toHaveBeenCalledTimes(1);
+    expect(mock.dispose$).toHaveBeenCalledTimes(1);
   });
 });

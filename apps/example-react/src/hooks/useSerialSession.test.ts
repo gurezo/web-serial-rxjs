@@ -25,6 +25,7 @@ interface MockCore {
   isConnectedSubject: BehaviorSubject<boolean>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
+  dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
   isBrowserSupported: ReturnType<typeof vi.fn>;
 }
@@ -36,6 +37,7 @@ const createMockCore = (supported = true): MockCore => {
   const isConnectedSubject = new BehaviorSubject(false);
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
+  const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => supported);
 
@@ -43,6 +45,7 @@ const createMockCore = (supported = true): MockCore => {
     isBrowserSupported,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
@@ -59,6 +62,7 @@ const createMockCore = (supported = true): MockCore => {
     isConnectedSubject,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     isBrowserSupported,
   };
@@ -191,6 +195,7 @@ describe('useSerialSession', () => {
       result.current.connect$(115200).subscribe();
     });
     expect(first.connect$).not.toHaveBeenCalled();
+    expect(first.dispose$).toHaveBeenCalledTimes(1);
     expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(
       vi.mocked(webSerialRxjs.createSerialSession),
@@ -224,11 +229,11 @@ describe('useSerialSession', () => {
     expect(onError).toHaveBeenCalledWith(err);
   });
 
-  it('unmount 時に disconnect$ を呼ぶ', () => {
+  it('unmount 時に dispose$ を呼ぶ', () => {
     const { unmount } = renderHook(() => useSerialSession());
     const mock = latestMock();
     unmount();
-    expect(mock.disconnect$).toHaveBeenCalled();
+    expect(mock.dispose$).toHaveBeenCalled();
   });
 
   it('StrictMode の二重マウントでも例外なくセッションを購読できる (issue #328)', () => {

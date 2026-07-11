@@ -105,9 +105,15 @@ export class App {
       this.terminalBufferEpoch$.next(this.terminalBufferEpoch$.value + 1);
       receiveOutput.value = '';
       if (baudRate !== this.currentBaudRate) {
+        const previousSession = this.currentSession;
         this.currentBaudRate = baudRate;
         this.currentSession = createSerialSession({ baudRate });
         this.sessions$.next(this.currentSession);
+        previousSession
+          .dispose$()
+          .pipe(switchMap(() => this.currentSession.connect$()))
+          .subscribe({ error: () => void 0 });
+        return;
       }
       this.currentSession.connect$().subscribe({ error: () => void 0 });
     });

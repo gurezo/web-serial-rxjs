@@ -20,6 +20,7 @@ interface MockCore {
   isConnectedSubject: BehaviorSubject<boolean>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
+  dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
   isBrowserSupported: ReturnType<typeof vi.fn>;
 }
@@ -33,6 +34,7 @@ const createMockCore = (): MockCore => {
   const isConnectedSubject = new BehaviorSubject(false);
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
+  const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => true);
 
@@ -40,6 +42,7 @@ const createMockCore = (): MockCore => {
     isBrowserSupported,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     state$: stateSubject.asObservable(),
     errors$: errorsSubject.asObservable(),
@@ -56,6 +59,7 @@ const createMockCore = (): MockCore => {
     isConnectedSubject,
     connect$,
     disconnect$,
+    dispose$,
     send$,
     isBrowserSupported,
   };
@@ -131,7 +135,10 @@ describe('SerialClientService', () => {
   });
 
   it('should recreate session when baud rate changes', async () => {
+    const first = mockSessions[0];
     await firstValueFrom(service.connect$(115200));
+    expect(first.connect$).not.toHaveBeenCalled();
+    expect(first.dispose$).toHaveBeenCalledTimes(1);
     expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(vi.mocked(webSerialRxjs.createSerialSession)).toHaveBeenLastCalledWith({
       baudRate: 115200,
@@ -194,8 +201,8 @@ describe('SerialClientService', () => {
     await expect(pending).resolves.toBe(error);
   });
 
-  it('should disconnect session on destroy', () => {
+  it('should dispose session on destroy', () => {
     service.ngOnDestroy();
-    expect(latestMock().disconnect$).toHaveBeenCalledTimes(1);
+    expect(latestMock().dispose$).toHaveBeenCalledTimes(1);
   });
 });
