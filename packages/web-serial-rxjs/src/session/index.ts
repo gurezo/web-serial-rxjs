@@ -6,6 +6,10 @@ export type {
   ResolvedSerialSessionOptions,
 } from './serial-session-options';
 export { resolveSerialSessionOptions } from './serial-session-options';
+export {
+  MAX_RECEIVE_REPLAY_BUFFER_SIZE,
+  MAX_RECEIVE_REPLAY_MAX_CHARS,
+} from './serial-session-options';
 export type { SerialPayload, SerialConnectionOptions } from '../types';
 export { SerialSessionState } from './serial-session-state';
 export {
