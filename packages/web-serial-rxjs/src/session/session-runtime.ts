@@ -68,11 +68,14 @@ const S = SerialSessionState;
 /**
  * Allowed transitions for the internal SerialSession state machine.
  *
+ * `as const satisfies` keeps literal transition targets while ensuring every
+ * {@link SerialSessionState} key is present. Drift from the state union
+ * becomes a compile error.
+ *
  * @internal
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/398 | Issue #398}
  */
-export const ALLOWED_TRANSITIONS: Readonly<
-  Record<SerialSessionState, readonly SerialSessionState[]>
-> = {
+export const ALLOWED_TRANSITIONS = {
   [S.Idle]: [S.Connecting, S.Error, S.Disposed],
   [S.Connecting]: [S.Connected, S.Error, S.Idle, S.Disposed],
   [S.Connected]: [S.Disconnecting, S.Error, S.Disposed],
@@ -80,7 +83,17 @@ export const ALLOWED_TRANSITIONS: Readonly<
   [S.Error]: [S.Idle, S.Connecting, S.Disposed],
   [S.Unsupported]: [S.Disposed],
   [S.Disposed]: [],
-};
+} as const satisfies Readonly<
+  Record<SerialSessionState, readonly SerialSessionState[]>
+>;
+
+/**
+ * Valid target states when transitioning from {@link T}.
+ *
+ * @internal
+ */
+export type AllowedTransition<T extends SerialSessionState> =
+  (typeof ALLOWED_TRANSITIONS)[T][number];
 
 /** @internal */
 export function runtimeToSessionState(runtime: SessionRuntime): SerialSessionState {
@@ -95,7 +108,9 @@ export function isValidTransition(
   if (from === to) {
     return false;
   }
-  return ALLOWED_TRANSITIONS[from].includes(to);
+  return (ALLOWED_TRANSITIONS[from] as readonly SerialSessionState[]).includes(
+    to,
+  );
 }
 
 /** @internal */
