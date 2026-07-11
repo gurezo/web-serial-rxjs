@@ -75,19 +75,23 @@ export class SerialError extends Error {
    * Check if the error matches a specific error code.
    *
    * This is a convenience method for checking the error code without directly
-   * comparing the code property.
+   * comparing the code property. When this method returns `true`, TypeScript
+   * narrows `this.code` to the literal type of the provided `code` argument.
    *
    * @param code - The error code to check against
-   * @returns `true` if this error's code matches the provided code, `false` otherwise
+   * @returns Type predicate: `true` if this error's code matches the provided
+   *   code (and `this.code` is narrowed to that literal type), `false` otherwise
    *
    * @example
    * ```typescript
    * if (error.is(SerialErrorCode.PORT_NOT_OPEN)) {
-   *   // Handle port not open error
+   *   // error.code is narrowed to SerialErrorCode.PORT_NOT_OPEN
    * }
    * ```
    */
-  public is(code: SerialErrorCode): boolean {
+  public is<C extends SerialErrorCode>(
+    code: C,
+  ): this is SerialError & { readonly code: C } {
     return this.code === code;
   }
 }
