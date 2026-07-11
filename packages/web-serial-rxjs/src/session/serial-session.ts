@@ -1,5 +1,6 @@
 import type { Observable } from 'rxjs';
 import type { SerialError } from '../errors/serial-error';
+import type { SerialPayload } from '../types';
 import type { SerialSessionState } from './serial-session-state';
 
 /**
@@ -249,5 +250,5 @@ export interface SerialSession {
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
    */
-  send$(data: string | Uint8Array): Observable<void>;
+  send$(data: SerialPayload): Observable<void>;
 }
