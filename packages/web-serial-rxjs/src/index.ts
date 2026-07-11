@@ -60,11 +60,12 @@
 
 export { assertNever } from './internal/assert-never';
 
-export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS } from './session';
+export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions } from './session';
 export type {
   SerialSession,
   SerialSessionOptions,
   SerialSessionReceiveReplayOptions,
+  ResolvedSerialSessionOptions,
   LineBufferOptions,
 } from './session';
 
