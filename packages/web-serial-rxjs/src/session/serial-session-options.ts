@@ -171,6 +171,65 @@ export function resolveReceiveReplayOptions(
 }
 
 /**
+ * Merge and validate {@link TerminalBufferOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}
+ *         when `maxLines` or `maxChars` are out of range.
+ */
+export function resolveTerminalBufferOptions(
+  options?: TerminalBufferOptions,
+): Required<TerminalBufferOptions> {
+  const merged: Required<TerminalBufferOptions> = {
+    ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
+    ...options,
+  };
+
+  const { maxLines, maxChars } = merged;
+
+  if (!Number.isSafeInteger(maxLines) || maxLines < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      `Invalid terminalBuffer.maxLines: ${maxLines}. Must be a safe integer >= 0.`,
+    );
+  }
+
+  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      `Invalid terminalBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+    );
+  }
+
+  return merged;
+}
+
+/**
+ * Merge and validate {@link LineBufferOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}
+ *         when `maxChars` is out of range.
+ */
+export function resolveLineBufferOptions(
+  options?: LineBufferOptions,
+): Required<LineBufferOptions> {
+  const merged: Required<LineBufferOptions> = {
+    ...DEFAULT_LINE_BUFFER_OPTIONS,
+    ...options,
+  };
+
+  const { maxChars } = merged;
+
+  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
+      `Invalid lineBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+    );
+  }
+
+  return merged;
+}
+
+/**
  * Fully resolved session options after merging {@link SerialSessionOptions}
  * with {@link DEFAULT_SERIAL_SESSION_OPTIONS}. All invariant fields are
  * required; `filters` remains optional.
@@ -215,13 +274,7 @@ export function resolveSerialSessionOptions(
     ...DEFAULT_SERIAL_SESSION_OPTIONS,
     ...options,
     receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
-    terminalBuffer: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
-      ...options?.terminalBuffer,
-    },
-    lineBuffer: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.lineBuffer,
-      ...options?.lineBuffer,
-    },
+    terminalBuffer: resolveTerminalBufferOptions(options?.terminalBuffer),
+    lineBuffer: resolveLineBufferOptions(options?.lineBuffer),
   };
 }
