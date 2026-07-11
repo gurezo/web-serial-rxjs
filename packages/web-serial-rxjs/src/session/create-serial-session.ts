@@ -3,9 +3,7 @@ import {
   distinctUntilChanged,
   map,
   Observable,
-  share,
   Subject,
-  switchMap,
 } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
@@ -13,15 +11,10 @@ import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
 import type { SerialPayload } from '../types';
 import { buildRequestOptions } from './internal/build-request-options';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
+import { createReceivePipeline } from './internal/receive-pipeline';
 import { createSessionErrorReporter } from './internal/session-error-reporter';
-import { createLineBuffer } from './internal/line-buffer';
-import {
-  createReceiveReplayBuffer,
-  type ReceiveReplayBuffer,
-} from './internal/receive-replay-buffer';
 import {
   normalizeSerialError,
-  type NormalizeSerialErrorOptions,
 } from './normalize-serial-error';
 import { createReadPump, type ReadPump } from './read-pump';
 import { createSendQueue } from './send-queue';
@@ -102,15 +95,25 @@ export function createSerialSession(
     createInitialRuntime(supported),
   );
   const errorsSubject = new Subject<SerialError>();
-  const receiveSubject = new Subject<string>();
-  const linesSubject = new Subject<string>();
   const sendQueue = createSendQueue();
   const textEncoder = new TextEncoder();
-  const lineBuffer = createLineBuffer(resolvedOptions.lineBuffer);
+
+  const errorReporterRef: {
+    reportError?: (
+      error: unknown,
+      options: Parameters<typeof normalizeSerialError>[1],
+    ) => SerialError;
+  } = {};
+
+  const receivePipeline = createReceivePipeline({
+    resolvedOptions,
+    reportError: (error, options) =>
+      errorReporterRef.reportError!(error, options),
+  });
+
+  const { receive$, lines$, receiveReplay$ } = receivePipeline;
 
   const errors$ = errorsSubject.asObservable();
-  const receive$ = receiveSubject.asObservable();
-  const lines$ = linesSubject.asObservable();
   const terminalText$ = createTerminalBuffer(
     receive$,
     resolvedOptions.terminalBuffer,
@@ -124,41 +127,6 @@ export function createSerialSession(
   const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
   const portInfo$ = portInfoSubject.asObservable();
 
-  const receiveReplayStream$ = resolvedOptions.receiveReplay.enabled
-    ? new BehaviorSubject<Observable<string>>(receive$)
-    : null;
-  let activeReceiveReplay: ReceiveReplayBuffer | null = null;
-
-  const clearLiveReceiveReplay = (): void => {
-    if (receiveReplayStream$) {
-      if (activeReceiveReplay) {
-        activeReceiveReplay.complete();
-        activeReceiveReplay = null;
-      }
-      receiveReplayStream$.next(receive$);
-    }
-  };
-
-  const startLiveReceiveReplay = (): void => {
-    if (!receiveReplayStream$) {
-      return;
-    }
-    if (activeReceiveReplay) {
-      activeReceiveReplay.complete();
-      activeReceiveReplay = null;
-    }
-    const buffer = createReceiveReplayBuffer({
-      bufferSize: resolvedOptions.receiveReplay.bufferSize,
-      maxChars: resolvedOptions.receiveReplay.maxChars,
-    });
-    activeReceiveReplay = buffer;
-    receiveReplayStream$.next(buffer.asObservable());
-  };
-
-  const receiveReplay$ = receiveReplayStream$
-    ? receiveReplayStream$.pipe(switchMap((inner) => inner), share())
-    : receive$;
-
   const isDisposed = (): boolean =>
     controller.status === SerialSessionState.Disposed;
 
@@ -167,8 +135,8 @@ export function createSerialSession(
   };
 
   const teardownPump = async (pump: ReadPump | null): Promise<void> => {
-    clearLiveReceiveReplay();
-    lineBuffer.clear();
+    receivePipeline.clearReplay();
+    receivePipeline.clearLineBuffer();
     if (pump) {
       await pump.stop();
     }
@@ -208,16 +176,14 @@ export function createSerialSession(
       updatePortInfo(null);
     }
 
-    lineBuffer.clear();
+    receivePipeline.clearLineBuffer();
   };
 
   const completeSubjects = (): void => {
     controller.complete();
     errorsSubject.complete();
-    receiveSubject.complete();
-    linesSubject.complete();
+    receivePipeline.complete();
     portInfoSubject.complete();
-    receiveReplayStream$?.complete();
   };
 
   const dispose$ = (): Observable<void> =>
@@ -258,6 +224,7 @@ export function createSerialSession(
     teardownPump,
     closePortSafely,
   });
+  errorReporterRef.reportError = reportError;
 
   const writeToPort = async (payload: Uint8Array): Promise<void> => {
     const runtime = controller.runtime;
@@ -365,41 +332,12 @@ export function createSerialSession(
             return;
           }
 
-          lineBuffer.clear();
+          receivePipeline.clearLineBuffer();
           if (resolvedOptions.receiveReplay.enabled) {
-            startLiveReceiveReplay();
+            receivePipeline.startLiveReceiveReplay();
           }
           const pump = createReadPump(selectedPort, {
-            onChunk: (text) => {
-              receiveSubject.next(text);
-              if (activeReceiveReplay) {
-                const { overflowed } = activeReceiveReplay.next(text);
-                if (overflowed) {
-                  reportError(
-                    new SerialError(
-                      SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
-                      `Receive replay buffer exceeded configured limits; oldest chunks were discarded`,
-                    ),
-                    {
-                      fallbackCode: SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
-                    },
-                  );
-                }
-              }
-              const { lines, overflowed } = lineBuffer.feed(text);
-              if (overflowed) {
-                reportError(
-                  new SerialError(
-                    SerialErrorCode.LINE_BUFFER_OVERFLOW,
-                    `Line buffer exceeded maxChars (${resolvedOptions.lineBuffer.maxChars}); leading data was discarded`,
-                  ),
-                  { fallbackCode: SerialErrorCode.LINE_BUFFER_OVERFLOW },
-                );
-              }
-              for (const line of lines) {
-                linesSubject.next(line);
-              }
-            },
+            onChunk: receivePipeline.handleChunk,
             onError: (pumpError) =>
               reportError(pumpError, {
                 fallbackCode: SerialErrorCode.READ_FAILED,
