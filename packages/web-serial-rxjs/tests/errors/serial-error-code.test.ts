@@ -32,12 +32,13 @@ describe('SerialErrorCode', () => {
     expect(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW).toBe(
       'RECEIVE_REPLAY_BUFFER_OVERFLOW',
     );
+    expect(SerialErrorCode.SESSION_DISPOSED).toBe('SESSION_DISPOSED');
     expect(SerialErrorCode.UNKNOWN).toBe('UNKNOWN');
   });
 
-  it('should be an enum with string values', () => {
+  it('should be a const object with string values', () => {
     const codes = Object.values(SerialErrorCode);
-    expect(codes.length).toBeGreaterThan(0);
+    expect(codes.length).toBe(19);
     codes.forEach((code) => {
       expect(typeof code).toBe('string');
       expect(code.length).toBeGreaterThan(0);
