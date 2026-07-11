@@ -19,6 +19,8 @@
  * - {@link LineBufferOptions} - memory limits for lines$ incomplete line tail
  * - {@link SerialSession} - the runtime interface
  * - {@link SerialSessionOptions} - connection options
+ * - {@link SerialPayload} - payload accepted by {@link SerialSession.send$}
+ * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
  * - {@link SerialSessionState} - `state$` payload values (const + type)
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
  *
@@ -66,6 +68,8 @@ export type {
   SerialSessionOptions,
   SerialSessionReceiveReplayOptions,
   ResolvedSerialSessionOptions,
+  SerialPayload,
+  SerialConnectionOptions,
   LineBufferOptions,
 } from './session';
 

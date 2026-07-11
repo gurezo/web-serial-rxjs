@@ -6,6 +6,7 @@ export type {
   ResolvedSerialSessionOptions,
 } from './serial-session-options';
 export { resolveSerialSessionOptions } from './serial-session-options';
+export type { SerialPayload, SerialConnectionOptions } from '../types';
 export { SerialSessionState } from './serial-session-state';
 export {
   DEFAULT_LINE_BUFFER_OPTIONS,
