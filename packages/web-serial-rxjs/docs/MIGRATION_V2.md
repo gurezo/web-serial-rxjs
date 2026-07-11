@@ -142,7 +142,7 @@ async function query(
 
 `SerialSessionOptions` mirrors the fields of `SerialClientOptions` (`baudRate`, `dataBits`, `stopBits`, `parity`, `bufferSize`, `flowControl`, `filters`) and uses the same defaults (`9600`, `8`, `1`, `'none'`, `255`, `'none'`).
 
-`filters` validation that previously happened inside `buildRequestOptions` now happens inside `createSerialSession` / `connect$`; invalid filters surface as `SerialError` with `SerialErrorCode.INVALID_FILTER_OPTIONS`.
+At `createSerialSession` factory time, `resolveSerialSessionOptions` validates `filters`, `baudRate`, `receiveReplay`, `terminalBuffer`, and `lineBuffer`. Invalid values throw `SerialError` (for example `SerialErrorCode.INVALID_FILTER_OPTIONS`).
 
 ## Framework examples
 

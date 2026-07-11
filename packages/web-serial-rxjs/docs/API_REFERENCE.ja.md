@@ -44,6 +44,16 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576 }` | `terminalText$` のメモリ上限。`createTerminalBuffer` を参照。 |
 | `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | `lines$` の未完成行 tail のメモリ上限。下記を参照。 |
 
+`createSerialSession` 呼び出し時（factory 時）に `resolveSerialSessionOptions` が以下を検証します。不正値は `SerialError` として throw されます。
+
+| 対象 | 検証内容 | エラーコード |
+| --- | --- | --- |
+| `baudRate` | safe integer かつ `> 0` | `INVALID_CONNECTION_OPTIONS` |
+| `filters` | USB vendor/product ID の範囲 | `INVALID_FILTER_OPTIONS` |
+| `receiveReplay` | `bufferSize` / `maxChars` の範囲 | `INVALID_RECEIVE_REPLAY_OPTIONS` |
+| `terminalBuffer` | `maxLines` / `maxChars` が safe integer かつ `>= 0` | `INVALID_TERMINAL_BUFFER_OPTIONS` |
+| `lineBuffer` | `maxChars` が safe integer かつ `>= 0` | `INVALID_LINE_BUFFER_OPTIONS` |
+
 ### `SerialSessionReceiveReplayOptions`
 
 | フィールド   | 型        | 既定値   | 説明 |
@@ -63,6 +73,8 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `maxLines`   | `number`  | `10000`    | 累積表示テキストに保持する完了行数の上限。 |
 | `maxChars`   | `number`  | `1048576`  | 表示テキスト全体（完了部分 + 編集中行）の文字数上限。 |
 
+無効な `maxLines` / `maxChars` は `createSerialSession` 時に `INVALID_TERMINAL_BUFFER_OPTIONS` で throw します。
+
 ### `LineBufferOptions`
 
 `SerialSessionOptions.lineBuffer` で `lines$` の**未完成行 tail**（改行未到達の保持データ）の上限を指定します。`maxChars` を超えたときは tail の**先頭**文字から破棄し、non-fatal の `SerialErrorCode.LINE_BUFFER_OVERFLOW` を `errors$` に emit します（セッションは切断されません）。完了した行は trim 前にそのまま emit されます。`0` で制限を無効化します。
@@ -70,6 +82,8 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | フィールド   | 型        | 既定値     | 説明 |
 | ------------ | --------- | ---------- | ---- |
 | `maxChars`   | `number`  | `1048576`  | 未完成行 tail に保持する最大文字数。 |
+
+無効な `maxChars` は `createSerialSession` 時に `INVALID_LINE_BUFFER_OPTIONS` で throw します。
 
 ## createTerminalBuffer(receive$, options?)
 
@@ -195,8 +209,11 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 | `LINE_BUFFER_OVERFLOW`   | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |
 | `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` バッファが `receiveReplay` の上限を超過。古いチャンクを破棄（non-fatal） |
 | `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
-| `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる                                     |
+| `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる（セッション生成時）                 |
 | `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` または `receiveReplay.maxChars` が範囲外（セッション生成時） |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` または `terminalBuffer.maxChars` が範囲外（セッション生成時） |
+| `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） |
+| `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） |
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
 | `OPERATION_TIMEOUT`      | 内部操作がタイムアウト                                             |
 | `SESSION_DISPOSED`       | `dispose$` / `destroy$` 後に `connect$` または `send$` を呼んだ    |

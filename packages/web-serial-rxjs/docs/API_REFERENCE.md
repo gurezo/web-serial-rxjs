@@ -44,6 +44,16 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576 }` | Memory limits for `terminalText$`; see `createTerminalBuffer`. |
 | `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | Memory limit for the incomplete line tail used by `lines$`; see below. |
 
+At `createSerialSession` time (factory), `resolveSerialSessionOptions` validates the following. Invalid values throw `SerialError`:
+
+| Target | Validation | Error code |
+| --- | --- | --- |
+| `baudRate` | safe integer and `> 0` | `INVALID_CONNECTION_OPTIONS` |
+| `filters` | USB vendor/product ID ranges | `INVALID_FILTER_OPTIONS` |
+| `receiveReplay` | `bufferSize` / `maxChars` ranges | `INVALID_RECEIVE_REPLAY_OPTIONS` |
+| `terminalBuffer` | `maxLines` / `maxChars` are safe integers and `>= 0` | `INVALID_TERMINAL_BUFFER_OPTIONS` |
+| `lineBuffer` | `maxChars` is a safe integer and `>= 0` | `INVALID_LINE_BUFFER_OPTIONS` |
+
 ### `SerialSessionReceiveReplayOptions`
 
 | Field         | Type      | Default | Description |
@@ -63,6 +73,8 @@ Used by `createTerminalBuffer` and `SerialSessionOptions.terminalBuffer`. When a
 | `maxLines` | `number` | `10000`    | Max number of completed lines retained in the cumulative display text. |
 | `maxChars` | `number` | `1048576`  | Max total characters in the display text (`completed` + current line). |
 
+Invalid `maxLines` or `maxChars` values cause `createSerialSession` to throw `SerialError` with `INVALID_TERMINAL_BUFFER_OPTIONS`.
+
 ### `LineBufferOptions`
 
 Used by `SerialSessionOptions.lineBuffer` for the **incomplete line tail** held while framing `lines$`. When `maxChars` is exceeded, **leading** characters of the tail are discarded and a non-fatal `SerialError` with `SerialErrorCode.LINE_BUFFER_OVERFLOW` is emitted on `errors$`. Completed lines are emitted in full before the tail is trimmed. Pass `0` to disable the limit.
@@ -70,6 +82,8 @@ Used by `SerialSessionOptions.lineBuffer` for the **incomplete line tail** held 
 | Field      | Type     | Default    | Description |
 | ---------- | -------- | ---------- | ----------- |
 | `maxChars` | `number` | `1048576`  | Max characters retained in the incomplete line tail (no line terminator yet). |
+
+Invalid `maxChars` values cause `createSerialSession` to throw `SerialError` with `INVALID_LINE_BUFFER_OPTIONS`.
 
 ## createTerminalBuffer(receive$, options?)
 
@@ -195,8 +209,11 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 | `LINE_BUFFER_OVERFLOW`   | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
 | `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
-| `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry.                               |
+| `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry (at session creation).         |
 | `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` or `terminalBuffer.maxChars` was out of range at session creation. |
+| `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. |
+| `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `OPERATION_TIMEOUT`      | Internal operation timed out.                                       |
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$` / `destroy$`.         |
