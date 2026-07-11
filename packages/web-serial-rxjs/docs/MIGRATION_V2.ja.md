@@ -45,7 +45,7 @@ session.send$('hi').subscribe();
 | `readableToObservable`            | 不要。`receive$` がストリームを提供します                        |
 | `buildRequestOptions`             | `createSerialSession` に `filters` を渡すだけで OK               |
 
-`SerialError` と `SerialErrorCode` は v1 と同一です。
+`SerialError` と `SerialErrorCode` は v2 では v1 と同一です。v3 では `SerialErrorCode` が const object + 型エイリアスへ変わります（[v3 移行ガイド](./MIGRATION_V3.ja.md) を参照）。ランタイムのメンバー名と値は不変です。
 
 ## メソッド／フィールド対応表
 

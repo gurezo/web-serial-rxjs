@@ -197,6 +197,8 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 `SerialError` は `Error` を継承し、`code: SerialErrorCode`、任意の `originalError: Error`、および code 別の構造化メタデータ `context` を持ちます。`is(code)` は `code` と `context` を literal 型に narrow します。`originalError` は後方互換のため残されていますが、cause 系コードでは `context.cause` を優先してください。
 
+上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
+
 | Code                     | `context` の形 | emit されるタイミング                                              |
 | ------------------------ | -------------- | ------------------------------------------------------------------ |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |

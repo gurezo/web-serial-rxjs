@@ -197,6 +197,8 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 
 `SerialError` extends `Error` with a `code: SerialErrorCode`, an optional `originalError: Error`, and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code. `originalError` is retained for backward compatibility; prefer `context.cause` for cause-bearing codes.
 
+The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./MIGRATION_V3.md) for the enum-to-const declaration change.
+
 | Code                     | `context` shape | When it is emitted                                                  |
 | ------------------------ | --------------- | ------------------------------------------------------------------- |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
