@@ -161,6 +161,39 @@ export enum SerialErrorCode {
   INVALID_RECEIVE_REPLAY_OPTIONS = 'INVALID_RECEIVE_REPLAY_OPTIONS',
 
   /**
+   * Invalid terminal buffer options provided.
+   *
+   * This error occurs when {@link SerialSessionOptions.terminalBuffer} values are
+   * out of range, such as a negative or non-integer `maxLines` or `maxChars`.
+   *
+   * **Suggested action**: Verify `terminalBuffer` options match the documented
+   * ranges and value types.
+   */
+  INVALID_TERMINAL_BUFFER_OPTIONS = 'INVALID_TERMINAL_BUFFER_OPTIONS',
+
+  /**
+   * Invalid line buffer options provided.
+   *
+   * This error occurs when {@link SerialSessionOptions.lineBuffer} values are
+   * out of range, such as a negative or non-integer `maxChars`.
+   *
+   * **Suggested action**: Verify `lineBuffer` options match the documented
+   * ranges and value types.
+   */
+  INVALID_LINE_BUFFER_OPTIONS = 'INVALID_LINE_BUFFER_OPTIONS',
+
+  /**
+   * Invalid connection options provided.
+   *
+   * This error occurs when connection fields such as `baudRate` are out of
+   * range at session creation time.
+   *
+   * **Suggested action**: Verify connection options match the documented
+   * ranges and value types.
+   */
+  INVALID_CONNECTION_OPTIONS = 'INVALID_CONNECTION_OPTIONS',
+
+  /**
    * Receive replay buffer exceeded its configured character limit.
    *
    * This error occurs when buffered chunks on {@link SerialSession.receiveReplay$}

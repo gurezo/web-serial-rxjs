@@ -20,6 +20,15 @@ describe('SerialErrorCode', () => {
     expect(SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS).toBe(
       'INVALID_RECEIVE_REPLAY_OPTIONS',
     );
+    expect(SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS).toBe(
+      'INVALID_TERMINAL_BUFFER_OPTIONS',
+    );
+    expect(SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS).toBe(
+      'INVALID_LINE_BUFFER_OPTIONS',
+    );
+    expect(SerialErrorCode.INVALID_CONNECTION_OPTIONS).toBe(
+      'INVALID_CONNECTION_OPTIONS',
+    );
     expect(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW).toBe(
       'RECEIVE_REPLAY_BUFFER_OVERFLOW',
     );

@@ -102,6 +102,96 @@ describe('resolveSerialSessionOptions', () => {
     }
   });
 
+  it.each([
+    ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: -1 } }],
+    ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: 1.5 } }],
+    ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: NaN } }],
+    ['terminalBuffer.maxChars', { terminalBuffer: { maxChars: -1 } }],
+    ['terminalBuffer.maxChars', { terminalBuffer: { maxChars: 1.5 } }],
+    ['terminalBuffer.maxChars', { terminalBuffer: { maxChars: NaN } }],
+  ])('rejects invalid %s', (_field, options) => {
+    expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
+    try {
+      resolveSerialSessionOptions(options);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SerialError);
+      expect((error as SerialError).code).toBe(
+        SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      );
+    }
+  });
+
+  it('accepts terminalBuffer zero limits as unlimited', () => {
+    expect(
+      resolveSerialSessionOptions({
+        terminalBuffer: { maxLines: 0, maxChars: 0 },
+      }).terminalBuffer,
+    ).toEqual({ maxLines: 0, maxChars: 0 });
+  });
+
+  it.each([
+    ['lineBuffer.maxChars', { lineBuffer: { maxChars: -1 } }],
+    ['lineBuffer.maxChars', { lineBuffer: { maxChars: 1.5 } }],
+    ['lineBuffer.maxChars', { lineBuffer: { maxChars: NaN } }],
+  ])('rejects invalid %s', (_field, options) => {
+    expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
+    try {
+      resolveSerialSessionOptions(options);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SerialError);
+      expect((error as SerialError).code).toBe(
+        SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
+      );
+    }
+  });
+
+  it('accepts lineBuffer zero maxChars as unlimited', () => {
+    expect(
+      resolveSerialSessionOptions({ lineBuffer: { maxChars: 0 } }).lineBuffer,
+    ).toEqual({ maxChars: 0 });
+  });
+
+  it.each([
+    ['filters', { filters: [{}] }],
+    ['filters', { filters: [{ usbVendorId: -1 }] }],
+    ['filters', { filters: [{ usbVendorId: 0x10000 }] }],
+    ['filters', { filters: [{ usbProductId: -1 }] }],
+    ['filters', { filters: [{ usbProductId: 0x10000 }] }],
+  ])('rejects invalid %s', (_field, options) => {
+    expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
+    try {
+      resolveSerialSessionOptions(options);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SerialError);
+      expect((error as SerialError).code).toBe(
+        SerialErrorCode.INVALID_FILTER_OPTIONS,
+      );
+    }
+  });
+
+  it.each([
+    ['baudRate', { baudRate: 0 }],
+    ['baudRate', { baudRate: -1 }],
+    ['baudRate', { baudRate: 1.5 }],
+    ['baudRate', { baudRate: NaN }],
+  ])('rejects invalid %s', (_field, options) => {
+    expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
+    try {
+      resolveSerialSessionOptions(options);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SerialError);
+      expect((error as SerialError).code).toBe(
+        SerialErrorCode.INVALID_CONNECTION_OPTIONS,
+      );
+    }
+  });
+
+  it('accepts valid baudRate values', () => {
+    expect(resolveSerialSessionOptions({ baudRate: 115200 }).baudRate).toBe(
+      115200,
+    );
+  });
+
   it('accepts representative SerialSessionOptions shapes', () => {
     const emptyOptions: SerialSessionOptions = {};
     const partialConnectionOptions: SerialSessionOptions = { baudRate: 115200 };

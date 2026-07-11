@@ -6,6 +6,7 @@ import {
   DEFAULT_LINE_BUFFER_OPTIONS,
   type LineBufferOptions,
 } from './internal/line-buffer';
+import { validateSerialPortFilters } from './internal/validate-serial-port-filters';
 
 /**
  * W3C connection fields shared with {@link SerialOptions}.
@@ -171,6 +172,65 @@ export function resolveReceiveReplayOptions(
 }
 
 /**
+ * Merge and validate {@link TerminalBufferOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}
+ *         when `maxLines` or `maxChars` are out of range.
+ */
+export function resolveTerminalBufferOptions(
+  options?: TerminalBufferOptions,
+): Required<TerminalBufferOptions> {
+  const merged: Required<TerminalBufferOptions> = {
+    ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
+    ...options,
+  };
+
+  const { maxLines, maxChars } = merged;
+
+  if (!Number.isSafeInteger(maxLines) || maxLines < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      `Invalid terminalBuffer.maxLines: ${maxLines}. Must be a safe integer >= 0.`,
+    );
+  }
+
+  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      `Invalid terminalBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+    );
+  }
+
+  return merged;
+}
+
+/**
+ * Merge and validate {@link LineBufferOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}
+ *         when `maxChars` is out of range.
+ */
+export function resolveLineBufferOptions(
+  options?: LineBufferOptions,
+): Required<LineBufferOptions> {
+  const merged: Required<LineBufferOptions> = {
+    ...DEFAULT_LINE_BUFFER_OPTIONS,
+    ...options,
+  };
+
+  const { maxChars } = merged;
+
+  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
+      `Invalid lineBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+    );
+  }
+
+  return merged;
+}
+
+/**
  * Fully resolved session options after merging {@link SerialSessionOptions}
  * with {@link DEFAULT_SERIAL_SESSION_OPTIONS}. All invariant fields are
  * required; `filters` remains optional.
@@ -201,27 +261,67 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS = {
   lineBuffer: { ...DEFAULT_LINE_BUFFER_OPTIONS },
 } satisfies ResolvedSerialSessionOptions;
 
+/** Resolved W3C connection fields for {@link ResolvedSerialSessionOptions}. */
+export type ResolvedSerialSessionConnectionOptions =
+  Required<SerialSessionConnectionFields>;
+
+/**
+ * Merge and validate W3C connection fields from {@link SerialSessionOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_CONNECTION_OPTIONS}
+ *         when `baudRate` is out of range.
+ */
+export function resolveConnectionOptions(
+  options?: Pick<
+    SerialSessionOptions,
+    'baudRate' | 'dataBits' | 'stopBits' | 'parity' | 'bufferSize' | 'flowControl'
+  >,
+): ResolvedSerialSessionConnectionOptions {
+  const merged: ResolvedSerialSessionConnectionOptions = {
+    baudRate: DEFAULT_SERIAL_SESSION_OPTIONS.baudRate,
+    dataBits: DEFAULT_SERIAL_SESSION_OPTIONS.dataBits,
+    stopBits: DEFAULT_SERIAL_SESSION_OPTIONS.stopBits,
+    parity: DEFAULT_SERIAL_SESSION_OPTIONS.parity,
+    bufferSize: DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize,
+    flowControl: DEFAULT_SERIAL_SESSION_OPTIONS.flowControl,
+    ...options,
+  };
+
+  const { baudRate } = merged;
+
+  if (!Number.isSafeInteger(baudRate) || baudRate <= 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_CONNECTION_OPTIONS,
+      `Invalid baudRate: ${baudRate}. Must be a safe integer > 0.`,
+    );
+  }
+
+  return merged;
+}
+
 /**
  * Merge and validate {@link SerialSessionOptions} into a fully resolved
  * options object for internal session use.
  *
- * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS}
- *         when `receiveReplay` values are out of range.
+ * @throws {@link SerialError} when option values are out of range:
+ *         {@link SerialErrorCode.INVALID_CONNECTION_OPTIONS},
+ *         {@link SerialErrorCode.INVALID_FILTER_OPTIONS},
+ *         {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS},
+ *         {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}, or
+ *         {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}.
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/403 | Issue #403}
  */
 export function resolveSerialSessionOptions(
   options?: SerialSessionOptions,
 ): ResolvedSerialSessionOptions {
+  const connection = resolveConnectionOptions(options);
+  const filters = validateSerialPortFilters(options?.filters);
+
   return {
-    ...DEFAULT_SERIAL_SESSION_OPTIONS,
-    ...options,
+    ...connection,
+    ...(filters !== undefined ? { filters } : {}),
     receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
-    terminalBuffer: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
-      ...options?.terminalBuffer,
-    },
-    lineBuffer: {
-      ...DEFAULT_SERIAL_SESSION_OPTIONS.lineBuffer,
-      ...options?.lineBuffer,
-    },
+    terminalBuffer: resolveTerminalBufferOptions(options?.terminalBuffer),
+    lineBuffer: resolveLineBufferOptions(options?.lineBuffer),
   };
 }
