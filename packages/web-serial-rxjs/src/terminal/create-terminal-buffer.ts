@@ -1,4 +1,5 @@
 import { type Observable, map, scan, shareReplay } from 'rxjs';
+import { createNewlineTokenizer } from '../internal/newline-tokenizer';
 
 /** @internal Folded state between {@link createTerminalBuffer} emissions. */
 export interface TerminalBufferState {
@@ -17,29 +18,21 @@ export function applyTerminalChunk(
   state: TerminalBufferState,
   chunk: string,
 ): TerminalBufferState {
-  let { completed, currentLine } = state;
-  const len = chunk.length;
+  const tokenizer = createNewlineTokenizer('terminal');
+  tokenizer.restorePending(state.currentLine);
+  const events = tokenizer.feed(chunk);
 
-  for (let i = 0; i < len; i++) {
-    const c = chunk.charAt(i);
-    if (c === '\r') {
-      const next = i + 1 < len ? chunk.charAt(i + 1) : '';
-      if (next === '\n') {
-        completed += currentLine + '\n';
-        currentLine = '';
-        i++;
-      } else {
-        currentLine = '';
-      }
-    } else if (c === '\n') {
-      completed += currentLine + '\n';
-      currentLine = '';
-    } else {
-      currentLine += c;
+  let { completed } = state;
+  for (const event of events) {
+    if (event.type === 'line') {
+      completed += event.content + '\n';
     }
   }
 
-  return { completed, currentLine };
+  return {
+    completed,
+    currentLine: tokenizer.getPendingText(),
+  };
 }
 
 /** @internal */
