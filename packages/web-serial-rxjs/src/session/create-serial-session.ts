@@ -12,6 +12,7 @@ import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
 import type { SerialPayload } from '../types';
 import { buildRequestOptions } from './internal/build-request-options';
+import { resolveErrorSeverity } from './internal/error-severity';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
 import { createLineBuffer } from './internal/line-buffer';
 import {
@@ -43,18 +44,6 @@ import {
   getRuntimePump,
   type SessionRuntime,
 } from './session-runtime';
-
-/**
- * Internal error classification used by the single `reportError` entry
- * point. `'fatal'` errors drive `state$` into `'error'` and tear down
- * the live session (pump stop + port close); `'non-fatal'` errors are
- * only multiplexed on `errors$` without mutating session state - this
- * matches the Issue #199 design note that write failures must not
- * implicitly disconnect the session.
- *
- * @internal
- */
-type ReportErrorSeverity = 'fatal' | 'non-fatal';
 
 /**
  * Create a v2 {@link SerialSession}.
@@ -102,6 +91,7 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/397 | Issue #397}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/399 | Issue #399}
  */
 export function createSerialSession(
   options?: SerialSessionOptions,
@@ -274,7 +264,10 @@ export function createSerialSession(
    * 1. Normalise the input through {@link normalizeSerialError} so every
    *    emission is a well-formed {@link SerialError}.
    * 2. Multiplex the normalised error on `errors$`.
-   * 3. For fatal severities, drive `state$` to `'error'`, clear the send
+   * 3. Resolve severity from the normalised {@link SerialError.code} via
+   *    {@link resolveErrorSeverity} (see `ERROR_SEVERITY` in
+   *    `error-severity.ts`).
+   * 4. For fatal severities, drive `state$` to `'error'`, clear the send
    *    queue so pending writes fail fast, and tear down the live pump +
    *    port off the hot path.
    *
@@ -283,7 +276,6 @@ export function createSerialSession(
    */
   const reportError = (
     error: unknown,
-    severity: ReportErrorSeverity,
     options: NormalizeSerialErrorOptions,
   ): SerialError => {
     const serialError = normalizeSerialError(error, options);
@@ -291,7 +283,7 @@ export function createSerialSession(
       return serialError;
     }
     errorsSubject.next(serialError);
-    if (severity === 'fatal') {
+    if (resolveErrorSeverity(serialError.code) === 'fatal') {
       const runtime = controller.runtime;
       const portToClose = getRuntimePort(runtime);
       const pump = getRuntimePump(runtime);
@@ -345,7 +337,6 @@ export function createSerialSession(
               SerialErrorCode.BROWSER_NOT_SUPPORTED,
               'Web Serial API is not supported in this environment',
             ),
-            'non-fatal',
             { fallbackCode: SerialErrorCode.BROWSER_NOT_SUPPORTED },
           );
           subscriber.error(error);
@@ -362,7 +353,6 @@ export function createSerialSession(
               SerialErrorCode.PORT_ALREADY_OPEN,
               `Cannot connect while session state is '${current}'`,
             ),
-            'non-fatal',
             { fallbackCode: SerialErrorCode.PORT_ALREADY_OPEN },
           );
           subscriber.error(error);
@@ -396,7 +386,7 @@ export function createSerialSession(
             if (selectedPort) {
               await closePortSafely(selectedPort);
             }
-            const serialError = reportError(error, 'fatal', {
+            const serialError = reportError(error, {
               fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
               messagePrefix: 'Failed to open port',
             });
@@ -426,7 +416,6 @@ export function createSerialSession(
                       SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
                       `Receive replay buffer exceeded configured limits; oldest chunks were discarded`,
                     ),
-                    'non-fatal',
                     {
                       fallbackCode: SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
                     },
@@ -440,7 +429,6 @@ export function createSerialSession(
                     SerialErrorCode.LINE_BUFFER_OVERFLOW,
                     `Line buffer exceeded maxChars (${resolvedOptions.lineBuffer.maxChars}); leading data was discarded`,
                   ),
-                  'non-fatal',
                   { fallbackCode: SerialErrorCode.LINE_BUFFER_OVERFLOW },
                 );
               }
@@ -449,7 +437,7 @@ export function createSerialSession(
               }
             },
             onError: (pumpError) =>
-              reportError(pumpError, 'fatal', {
+              reportError(pumpError, {
                 fallbackCode: SerialErrorCode.READ_FAILED,
                 messagePrefix: 'Read pump failed',
               }),
@@ -462,7 +450,6 @@ export function createSerialSession(
                   SerialErrorCode.CONNECTION_LOST,
                   'Read pump ended unexpectedly: stream closed while connected',
                 ),
-                'fatal',
                 {
                   fallbackCode: SerialErrorCode.CONNECTION_LOST,
                 },
@@ -525,7 +512,6 @@ export function createSerialSession(
               SerialErrorCode.PORT_NOT_OPEN,
               `Cannot disconnect while session state is '${runtime.status}'`,
             ),
-            'non-fatal',
             { fallbackCode: SerialErrorCode.PORT_NOT_OPEN },
           );
           subscriber.error(error);
@@ -545,7 +531,7 @@ export function createSerialSession(
                 await portToClose.close();
               } catch (error) {
                 updatePortInfo(null);
-                const serialError = reportError(error, 'fatal', {
+                const serialError = reportError(error, {
                   fallbackCode: SerialErrorCode.CONNECTION_LOST,
                   messagePrefix: 'Failed to close port',
                 });
@@ -560,7 +546,7 @@ export function createSerialSession(
             subscriber.next();
             subscriber.complete();
           } catch (error) {
-            const serialError = reportError(error, 'fatal', {
+            const serialError = reportError(error, {
               fallbackCode: SerialErrorCode.UNKNOWN,
               messagePrefix: 'Unexpected disconnect failure',
             });
@@ -586,7 +572,7 @@ export function createSerialSession(
         try {
           await writeToPort(payload);
         } catch (error) {
-          throw reportError(error, 'non-fatal', {
+          throw reportError(error, {
             fallbackCode: SerialErrorCode.WRITE_FAILED,
             messagePrefix: 'Failed to write data',
           });
