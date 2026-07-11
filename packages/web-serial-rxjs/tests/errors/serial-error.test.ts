@@ -66,6 +66,20 @@ describe('SerialError', () => {
       expect(error.is(SerialErrorCode.PORT_ALREADY_OPEN)).toBe(false);
     });
 
+    it('should narrow error.code when is() returns true', () => {
+      const error = new SerialError(
+        SerialErrorCode.PORT_NOT_OPEN,
+        'Port is not open',
+      );
+
+      if (error.is(SerialErrorCode.PORT_NOT_OPEN)) {
+        const narrowed: SerialErrorCode.PORT_NOT_OPEN = error.code;
+        expect(narrowed).toBe(SerialErrorCode.PORT_NOT_OPEN);
+      } else {
+        expect.fail('is() should have returned true');
+      }
+    });
+
     it('should work with all error codes', () => {
       const codes = Object.values(SerialErrorCode);
 
