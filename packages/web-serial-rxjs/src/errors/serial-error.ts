@@ -9,6 +9,16 @@ import {
 export { SerialErrorCode };
 export type { SerialErrorCauseContext, SerialErrorContextMap };
 
+interface ErrorConstructorWithCaptureStackTrace extends ErrorConstructor {
+  captureStackTrace?: (
+    targetObject: object,
+    constructorOpt?: abstract new (...args: never[]) => unknown,
+  ) => void;
+}
+
+const ErrorWithCaptureStackTrace =
+  Error as ErrorConstructorWithCaptureStackTrace;
+
 /**
  * Custom error class for serial port operations.
  *
@@ -106,10 +116,8 @@ export class SerialError<
     }
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((Error as any).captureStackTrace) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (Error as any).captureStackTrace(this, SerialError);
+    if (ErrorWithCaptureStackTrace.captureStackTrace) {
+      ErrorWithCaptureStackTrace.captureStackTrace(this, SerialError);
     }
   }
 
