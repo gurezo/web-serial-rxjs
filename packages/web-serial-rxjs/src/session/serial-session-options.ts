@@ -200,11 +200,11 @@ export function resolveReceiveReplayOptions(
 }
 
 /**
- * Default values applied to omitted {@link SerialSessionOptions} fields.
- *
- * @internal
+ * Fully resolved session options after merging {@link SerialSessionOptions}
+ * with {@link DEFAULT_SERIAL_SESSION_OPTIONS}. All invariant fields are
+ * required; `filters` remains optional.
  */
-type DefaultSerialSessionOptions = Required<
+export type ResolvedSerialSessionOptions = Required<
   Omit<SerialSessionOptions, 'filters' | 'receiveReplay' | 'terminalBuffer' | 'lineBuffer'>
 > & {
   filters?: SerialPortFilter[];
@@ -213,6 +213,11 @@ type DefaultSerialSessionOptions = Required<
   lineBuffer: Required<LineBufferOptions>;
 };
 
+/**
+ * Default values applied to omitted {@link SerialSessionOptions} fields.
+ *
+ * @internal
+ */
 export const DEFAULT_SERIAL_SESSION_OPTIONS = {
   baudRate: 9600,
   dataBits: 8,
@@ -223,4 +228,29 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS = {
   receiveReplay: { ...DEFAULT_RECEIVE_REPLAY },
   terminalBuffer: { ...DEFAULT_TERMINAL_BUFFER_OPTIONS },
   lineBuffer: { ...DEFAULT_LINE_BUFFER_OPTIONS },
-} satisfies DefaultSerialSessionOptions;
+} satisfies ResolvedSerialSessionOptions;
+
+/**
+ * Merge and validate {@link SerialSessionOptions} into a fully resolved
+ * options object for internal session use.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS}
+ *         when `receiveReplay` values are out of range.
+ */
+export function resolveSerialSessionOptions(
+  options?: SerialSessionOptions,
+): ResolvedSerialSessionOptions {
+  return {
+    ...DEFAULT_SERIAL_SESSION_OPTIONS,
+    ...options,
+    receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
+    terminalBuffer: {
+      ...DEFAULT_SERIAL_SESSION_OPTIONS.terminalBuffer,
+      ...options?.terminalBuffer,
+    },
+    lineBuffer: {
+      ...DEFAULT_SERIAL_SESSION_OPTIONS.lineBuffer,
+      ...options?.lineBuffer,
+    },
+  };
+}
