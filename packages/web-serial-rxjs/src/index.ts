@@ -23,6 +23,7 @@
  * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
  * - {@link SerialSessionState} - `state$` payload values (const + type)
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
+ * - {@link SerialErrorContextMap} - structured metadata per error code
  *
  * ## Browser Support
  *
@@ -74,6 +75,7 @@ export type {
 } from './session';
 
 export { SerialError } from './errors/serial-error';
+export type { SerialErrorCauseContext, SerialErrorContextMap } from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';
 
 export { createTerminalBuffer, DEFAULT_TERMINAL_BUFFER_OPTIONS } from './terminal/create-terminal-buffer';
