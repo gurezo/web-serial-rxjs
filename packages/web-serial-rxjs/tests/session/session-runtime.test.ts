@@ -1,7 +1,12 @@
 import { firstValueFrom, lastValueFrom, take, toArray } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SerialError } from '../../src/errors/serial-error';
+import { SerialErrorCode } from '../../src/errors/serial-error-code';
 import type { ReadPump } from '../../src/session/read-pump';
-import { SerialSessionState } from '../../src/session/serial-session-state';
+import {
+  SerialSessionStatus,
+  type SerialSessionState,
+} from '../../src/session/serial-session-state';
 import {
   ALLOWED_TRANSITIONS,
   createConnectedRuntime,
@@ -14,14 +19,19 @@ import {
   createSessionRuntimeController,
   createUnsupportedRuntime,
   isValidTransition,
-  runtimeToSessionState,
+  runtimeToPublicState,
+  runtimeToSessionStatus,
 } from '../../src/session/session-runtime';
 
-const S = SerialSessionState;
+const S = SerialSessionStatus;
+
+const stubPortInfo: SerialPortInfo = { usbVendorId: 1, usbProductId: 2 };
+
+const stubError = new SerialError(SerialErrorCode.READ_FAILED, 'test error');
 
 function createMockPort(): SerialPort {
   return {
-    getInfo: () => ({ usbVendorId: 1, usbProductId: 2 }),
+    getInfo: () => stubPortInfo,
     open: vi.fn(),
     close: vi.fn(),
     readable: null,
@@ -43,14 +53,14 @@ describe('session-runtime', () => {
       const runtime = createInitialRuntime(true);
 
       expect(runtime).toEqual(createIdleRuntime());
-      expect(runtimeToSessionState(runtime)).toBe(S.Idle);
+      expect(runtimeToSessionStatus(runtime)).toBe(S.Idle);
     });
 
     it('createInitialRuntime returns unsupported when not supported', () => {
       const runtime = createInitialRuntime(false);
 
       expect(runtime).toEqual(createUnsupportedRuntime());
-      expect(runtimeToSessionState(runtime)).toBe(S.Unsupported);
+      expect(runtimeToSessionStatus(runtime)).toBe(S.Unsupported);
     });
 
     it('createConnectedRuntime holds port and pump', () => {
@@ -61,6 +71,34 @@ describe('session-runtime', () => {
       expect(runtime.status).toBe(S.Connected);
       expect(runtime.port).toBe(port);
       expect(runtime.pump).toBe(pump);
+    });
+  });
+
+  describe('runtimeToPublicState', () => {
+    it('maps connected runtime to portInfo payload', () => {
+      const port = createMockPort();
+      const pump = createMockPump();
+      const runtime = createConnectedRuntime(port, pump);
+
+      expect(runtimeToPublicState(runtime)).toEqual({
+        status: S.Connected,
+        portInfo: stubPortInfo,
+      });
+    });
+
+    it('maps error runtime to error payload', () => {
+      const runtime = createErrorRuntime(stubError);
+
+      expect(runtimeToPublicState(runtime)).toEqual({
+        status: S.Error,
+        error: stubError,
+      });
+    });
+
+    it('maps idle runtime to status-only payload', () => {
+      expect(runtimeToPublicState(createIdleRuntime())).toEqual({
+        status: S.Idle,
+      });
     });
   });
 
@@ -103,7 +141,7 @@ describe('session-runtime', () => {
       it('starts in idle by default', () => {
         const controller = createSessionRuntimeController(createIdleRuntime());
 
-        expect(controller.status).toBe<SerialSessionState>(S.Idle);
+        expect(controller.status).toBe(S.Idle);
       });
 
       it('honours an explicit initial unsupported runtime', () => {
@@ -111,7 +149,7 @@ describe('session-runtime', () => {
           createUnsupportedRuntime(),
         );
 
-        expect(controller.status).toBe<SerialSessionState>(S.Unsupported);
+        expect(controller.status).toBe(S.Unsupported);
       });
     });
 
@@ -121,7 +159,7 @@ describe('session-runtime', () => {
 
         const state = await firstValueFrom(controller.state$);
 
-        expect(state).toBe<SerialSessionState>(S.Idle);
+        expect(state).toEqual<SerialSessionState>({ status: S.Idle });
       });
 
       it('emits every valid transition in order', async () => {
@@ -139,11 +177,11 @@ describe('session-runtime', () => {
         controller.transition(createIdleRuntime());
 
         await expect(collected).resolves.toEqual<SerialSessionState[]>([
-          S.Idle,
-          S.Connecting,
-          S.Connected,
-          S.Disconnecting,
-          S.Idle,
+          { status: S.Idle },
+          { status: S.Connecting },
+          { status: S.Connected, portInfo: stubPortInfo },
+          { status: S.Disconnecting },
+          { status: S.Idle },
         ]);
       });
     });
@@ -157,20 +195,20 @@ describe('session-runtime', () => {
         expect(
           controller.transition(createConnectingRuntime(() => undefined)),
         ).toBe(true);
-        expect(controller.status).toBe<SerialSessionState>(S.Connecting);
+        expect(controller.status).toBe(S.Connecting);
 
         expect(
           controller.transition(createConnectedRuntime(port, pump)),
         ).toBe(true);
-        expect(controller.status).toBe<SerialSessionState>(S.Connected);
+        expect(controller.status).toBe(S.Connected);
 
         expect(
           controller.transition(createDisconnectingRuntime(port)),
         ).toBe(true);
-        expect(controller.status).toBe<SerialSessionState>(S.Disconnecting);
+        expect(controller.status).toBe(S.Disconnecting);
 
         expect(controller.transition(createIdleRuntime())).toBe(true);
-        expect(controller.status).toBe<SerialSessionState>(S.Idle);
+        expect(controller.status).toBe(S.Idle);
       });
     });
 
@@ -181,14 +219,18 @@ describe('session-runtime', () => {
 
         const fromConnecting = createSessionRuntimeController(createIdleRuntime());
         fromConnecting.transition(createConnectingRuntime(() => undefined));
-        expect(fromConnecting.transition(createErrorRuntime())).toBe(true);
-        expect(fromConnecting.status).toBe<SerialSessionState>(S.Error);
+        expect(fromConnecting.transition(createErrorRuntime(stubError))).toBe(
+          true,
+        );
+        expect(fromConnecting.status).toBe(S.Error);
 
         const fromConnected = createSessionRuntimeController(createIdleRuntime());
         fromConnected.transition(createConnectingRuntime(() => undefined));
         fromConnected.transition(createConnectedRuntime(port, pump));
-        expect(fromConnected.transition(createErrorRuntime())).toBe(true);
-        expect(fromConnected.status).toBe<SerialSessionState>(S.Error);
+        expect(fromConnected.transition(createErrorRuntime(stubError))).toBe(
+          true,
+        );
+        expect(fromConnected.status).toBe(S.Error);
 
         const fromDisconnecting = createSessionRuntimeController(
           createIdleRuntime(),
@@ -196,24 +238,26 @@ describe('session-runtime', () => {
         fromDisconnecting.transition(createConnectingRuntime(() => undefined));
         fromDisconnecting.transition(createConnectedRuntime(port, pump));
         fromDisconnecting.transition(createDisconnectingRuntime(port));
-        expect(fromDisconnecting.transition(createErrorRuntime())).toBe(true);
-        expect(fromDisconnecting.status).toBe<SerialSessionState>(S.Error);
+        expect(fromDisconnecting.transition(createErrorRuntime(stubError))).toBe(
+          true,
+        );
+        expect(fromDisconnecting.status).toBe(S.Error);
       });
 
       it('recovers from error back to idle and forward to connecting', () => {
         const controller = createSessionRuntimeController(createIdleRuntime());
         controller.transition(createConnectingRuntime(() => undefined));
-        controller.transition(createErrorRuntime());
+        controller.transition(createErrorRuntime(stubError));
 
         expect(controller.transition(createIdleRuntime())).toBe(true);
-        expect(controller.status).toBe<SerialSessionState>(S.Idle);
+        expect(controller.status).toBe(S.Idle);
 
         controller.transition(createConnectingRuntime(() => undefined));
-        controller.transition(createErrorRuntime());
+        controller.transition(createErrorRuntime(stubError));
         expect(
           controller.transition(createConnectingRuntime(() => undefined)),
         ).toBe(true);
-        expect(controller.status).toBe<SerialSessionState>(S.Connecting);
+        expect(controller.status).toBe(S.Connecting);
       });
     });
 
@@ -226,7 +270,7 @@ describe('session-runtime', () => {
         expect(
           controller.transition(createConnectedRuntime(port, pump)),
         ).toBe(false);
-        expect(controller.status).toBe<SerialSessionState>(S.Idle);
+        expect(controller.status).toBe(S.Idle);
         expect(warnSpy).toHaveBeenCalledTimes(1);
       });
 
@@ -238,7 +282,7 @@ describe('session-runtime', () => {
         controller.transition(createConnectedRuntime(port, pump));
 
         expect(controller.transition(createIdleRuntime())).toBe(false);
-        expect(controller.status).toBe<SerialSessionState>(S.Connected);
+        expect(controller.status).toBe(S.Connected);
         expect(warnSpy).toHaveBeenCalledTimes(1);
       });
 
@@ -251,7 +295,7 @@ describe('session-runtime', () => {
         const states = await lastValueFrom(
           controller.state$.pipe(take(1), toArray()),
         );
-        expect(states).toEqual<SerialSessionState[]>([S.Idle]);
+        expect(states).toEqual<SerialSessionState[]>([{ status: S.Idle }]);
       });
     });
 
@@ -273,8 +317,8 @@ describe('session-runtime', () => {
         expect(
           controller.transition(createDisconnectingRuntime(port)),
         ).toBe(false);
-        expect(controller.transition(createErrorRuntime())).toBe(false);
-        expect(controller.status).toBe<SerialSessionState>(S.Unsupported);
+        expect(controller.transition(createErrorRuntime(stubError))).toBe(false);
+        expect(controller.status).toBe(S.Unsupported);
       });
     });
 
@@ -285,18 +329,18 @@ describe('session-runtime', () => {
 
         const fromIdle = createSessionRuntimeController(createIdleRuntime());
         expect(fromIdle.transition(createDisposedRuntime())).toBe(true);
-        expect(fromIdle.status).toBe<SerialSessionState>(S.Disposed);
+        expect(fromIdle.status).toBe(S.Disposed);
 
         const fromConnecting = createSessionRuntimeController(createIdleRuntime());
         fromConnecting.transition(createConnectingRuntime(() => undefined));
         expect(fromConnecting.transition(createDisposedRuntime())).toBe(true);
-        expect(fromConnecting.status).toBe<SerialSessionState>(S.Disposed);
+        expect(fromConnecting.status).toBe(S.Disposed);
 
         const fromConnected = createSessionRuntimeController(createIdleRuntime());
         fromConnected.transition(createConnectingRuntime(() => undefined));
         fromConnected.transition(createConnectedRuntime(port, pump));
         expect(fromConnected.transition(createDisposedRuntime())).toBe(true);
-        expect(fromConnected.status).toBe<SerialSessionState>(S.Disposed);
+        expect(fromConnected.status).toBe(S.Disposed);
 
         const fromDisconnecting = createSessionRuntimeController(
           createIdleRuntime(),
@@ -305,13 +349,13 @@ describe('session-runtime', () => {
         fromDisconnecting.transition(createConnectedRuntime(port, pump));
         fromDisconnecting.transition(createDisconnectingRuntime(port));
         expect(fromDisconnecting.transition(createDisposedRuntime())).toBe(true);
-        expect(fromDisconnecting.status).toBe<SerialSessionState>(S.Disposed);
+        expect(fromDisconnecting.status).toBe(S.Disposed);
 
         const fromError = createSessionRuntimeController(createIdleRuntime());
         fromError.transition(createConnectingRuntime(() => undefined));
-        fromError.transition(createErrorRuntime());
+        fromError.transition(createErrorRuntime(stubError));
         expect(fromError.transition(createDisposedRuntime())).toBe(true);
-        expect(fromError.status).toBe<SerialSessionState>(S.Disposed);
+        expect(fromError.status).toBe(S.Disposed);
       });
 
       it('rejects every transition once entered', () => {
@@ -330,8 +374,8 @@ describe('session-runtime', () => {
         expect(
           controller.transition(createDisconnectingRuntime(port)),
         ).toBe(false);
-        expect(controller.transition(createErrorRuntime())).toBe(false);
-        expect(controller.status).toBe<SerialSessionState>(S.Disposed);
+        expect(controller.transition(createErrorRuntime(stubError))).toBe(false);
+        expect(controller.status).toBe(S.Disposed);
       });
     });
 
@@ -345,8 +389,8 @@ describe('session-runtime', () => {
         controller.complete();
 
         await expect(collected).resolves.toEqual<SerialSessionState[]>([
-          S.Idle,
-          S.Connecting,
+          { status: S.Idle },
+          { status: S.Connecting },
         ]);
       });
     });
