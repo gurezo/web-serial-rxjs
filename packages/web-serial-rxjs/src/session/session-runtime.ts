@@ -108,7 +108,9 @@ export function isValidTransition(
   if (from === to) {
     return false;
   }
-  return ALLOWED_TRANSITIONS[from].includes(to);
+  return (ALLOWED_TRANSITIONS[from] as readonly SerialSessionState[]).includes(
+    to,
+  );
 }
 
 /** @internal */
