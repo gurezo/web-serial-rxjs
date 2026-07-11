@@ -12,8 +12,8 @@ import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
 import type { SerialPayload } from '../types';
 import { buildRequestOptions } from './internal/build-request-options';
-import { resolveErrorSeverity } from './internal/error-severity';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
+import { createSessionErrorReporter } from './internal/session-error-reporter';
 import { createLineBuffer } from './internal/line-buffer';
 import {
   createReceiveReplayBuffer,
@@ -36,7 +36,6 @@ import {
   createConnectingRuntime,
   createDisconnectingRuntime,
   createDisposedRuntime,
-  createErrorRuntime,
   createIdleRuntime,
   createInitialRuntime,
   createSessionRuntimeController,
@@ -163,12 +162,6 @@ export function createSerialSession(
   const isDisposed = (): boolean =>
     controller.status === SerialSessionState.Disposed;
 
-  const createDisposedError = (): SerialError =>
-    new SerialError(
-      SerialErrorCode.SESSION_DISPOSED,
-      'SerialSession has been disposed',
-    );
-
   const updatePortInfo = (port: SerialPort | null): void => {
     portInfoSubject.next(port ? port.getInfo() : null);
   };
@@ -256,44 +249,15 @@ export function createSerialSession(
       void run();
     });
 
-  /**
-   * Single entry point for every error that should reach `errors$`.
-   *
-   * Responsibilities:
-   *
-   * 1. Normalise the input through {@link normalizeSerialError} so every
-   *    emission is a well-formed {@link SerialError}.
-   * 2. Multiplex the normalised error on `errors$`.
-   * 3. Resolve severity from the normalised {@link SerialError.code} via
-   *    {@link resolveErrorSeverity} (see `ERROR_SEVERITY` in
-   *    `error-severity.ts`).
-   * 4. For fatal severities, drive `state$` to `'error'`, clear the send
-   *    queue so pending writes fail fast, and tear down the live pump +
-   *    port off the hot path.
-   *
-   * Returning the normalised error keeps call sites terse: they can hand
-   * the result straight to `subscriber.error(...)` without re-normalising.
-   */
-  const reportError = (
-    error: unknown,
-    options: NormalizeSerialErrorOptions,
-  ): SerialError => {
-    const serialError = normalizeSerialError(error, options);
-    if (isDisposed()) {
-      return serialError;
-    }
-    errorsSubject.next(serialError);
-    if (resolveErrorSeverity(serialError.code) === 'fatal') {
-      const runtime = controller.runtime;
-      const portToClose = getRuntimePort(runtime);
-      const pump = getRuntimePump(runtime);
-      controller.transition(createErrorRuntime());
-      sendQueue.clear();
-      updatePortInfo(null);
-      void teardownPump(pump).then(() => closePortSafely(portToClose));
-    }
-    return serialError;
-  };
+  const { reportError, createDisposedError } = createSessionErrorReporter({
+    controller,
+    errorsSubject,
+    sendQueue,
+    isDisposed,
+    updatePortInfo,
+    teardownPump,
+    closePortSafely,
+  });
 
   const writeToPort = async (payload: Uint8Array): Promise<void> => {
     const runtime = controller.runtime;
