@@ -30,7 +30,19 @@ import {
   type SerialSessionOptions,
 } from './serial-session-options';
 import { SerialSessionState } from './serial-session-state';
-import { SessionStateMachine } from './session-state-machine';
+import {
+  createConnectedRuntime,
+  createConnectingRuntime,
+  createDisconnectingRuntime,
+  createDisposedRuntime,
+  createErrorRuntime,
+  createIdleRuntime,
+  createInitialRuntime,
+  createSessionRuntimeController,
+  getRuntimePort,
+  getRuntimePump,
+  type SessionRuntime,
+} from './session-runtime';
 
 /**
  * Internal error classification used by the single `reportError` entry
@@ -57,8 +69,8 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
  * Key behaviors:
  *
  * - `isBrowserSupported()` returns whether `navigator.serial` is available.
- * - `state$` replays the current lifecycle state driven by
- *   {@link SessionStateMachine}.
+ * - `state$` replays the current lifecycle state driven by the internal
+ *   {@link SessionRuntime} controller.
  * - `connect$()` opens a user-selected port, starts the internal read pump,
  *   and transitions `idle -> connecting -> connected`.
  * - `disconnect$()` stops the read pump, closes the port, and transitions
@@ -89,6 +101,7 @@ type ReportErrorSeverity = 'fatal' | 'non-fatal';
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/202 | Issue #202}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/397 | Issue #397}
  */
 export function createSerialSession(
   options?: SerialSessionOptions,
@@ -96,8 +109,8 @@ export function createSerialSession(
   const resolvedOptions = resolveSerialSessionOptions(options);
 
   const supported = hasWebSerialSupport();
-  const machine = new SessionStateMachine(
-    supported ? SerialSessionState.Idle : SerialSessionState.Unsupported,
+  const controller = createSessionRuntimeController(
+    createInitialRuntime(supported),
   );
   const errorsSubject = new Subject<SerialError>();
   const receiveSubject = new Subject<string>();
@@ -114,7 +127,7 @@ export function createSerialSession(
     resolvedOptions.terminalBuffer,
   ).text$;
 
-  const isConnected$ = machine.state$.pipe(
+  const isConnected$ = controller.state$.pipe(
     map((state) => state === SerialSessionState.Connected),
     distinctUntilChanged(),
   );
@@ -157,10 +170,8 @@ export function createSerialSession(
     ? receiveReplayStream$.pipe(switchMap((inner) => inner), share())
     : receive$;
 
-  let activePort: SerialPort | null = null;
-  let activePump: ReadPump | null = null;
-  let activeConnectCancel: (() => void) | null = null;
-  let disposed = false;
+  const isDisposed = (): boolean =>
+    controller.status === SerialSessionState.Disposed;
 
   const createDisposedError = (): SerialError =>
     new SerialError(
@@ -168,78 +179,12 @@ export function createSerialSession(
       'SerialSession has been disposed',
     );
 
-  const completeSession = async (): Promise<void> => {
-    const current = machine.current;
-
-    if (current === SerialSessionState.Connecting) {
-      activeConnectCancel?.();
-    }
-
-    sendQueue.clear();
-
-    if (
-      current === SerialSessionState.Connected ||
-      current === SerialSessionState.Error ||
-      current === SerialSessionState.Disconnecting
-    ) {
-      const portToClose = activePort;
-      await teardownPump();
-      await closePortSafely(portToClose);
-      setActivePort(null);
-    }
-
-    lineBuffer.clear();
-    machine.toDisposed();
-    machine.complete();
-    errorsSubject.complete();
-    receiveSubject.complete();
-    linesSubject.complete();
-    portInfoSubject.complete();
-    receiveReplayStream$?.complete();
-  };
-
-  const dispose$ = (): Observable<void> =>
-    new Observable<void>((subscriber) => {
-      if (disposed) {
-        subscriber.next();
-        subscriber.complete();
-        return;
-      }
-
-      disposed = true;
-
-      const run = async (): Promise<void> => {
-        try {
-          await completeSession();
-          subscriber.next();
-          subscriber.complete();
-        } catch (error) {
-          const serialError = normalizeSerialError(error, {
-            fallbackCode: SerialErrorCode.UNKNOWN,
-            messagePrefix: 'Unexpected dispose failure',
-          });
-          subscriber.error(serialError);
-        }
-      };
-
-      void run();
-    });
-
-  const clearActiveConnectCancel = (cancel: () => void): void => {
-    if (activeConnectCancel === cancel) {
-      activeConnectCancel = null;
-    }
-  };
-
-  const setActivePort = (port: SerialPort | null): void => {
-    activePort = port;
+  const updatePortInfo = (port: SerialPort | null): void => {
     portInfoSubject.next(port ? port.getInfo() : null);
   };
 
-  const teardownPump = async (): Promise<void> => {
+  const teardownPump = async (pump: ReadPump | null): Promise<void> => {
     clearLiveReceiveReplay();
-    const pump = activePump;
-    activePump = null;
     lineBuffer.clear();
     if (pump) {
       await pump.stop();
@@ -258,6 +203,68 @@ export function createSerialSession(
       // dedicated error path for close failures initiated by the user.
     }
   };
+
+  const teardownFromSnapshot = async (
+    snapshot: SessionRuntime,
+  ): Promise<void> => {
+    if (snapshot.status === SerialSessionState.Connecting) {
+      snapshot.cancel();
+    }
+
+    sendQueue.clear();
+
+    if (
+      snapshot.status === SerialSessionState.Connected ||
+      snapshot.status === SerialSessionState.Disconnecting ||
+      snapshot.status === SerialSessionState.Error
+    ) {
+      const portToClose = getRuntimePort(snapshot);
+      const pump = getRuntimePump(snapshot);
+      await teardownPump(pump);
+      await closePortSafely(portToClose);
+      updatePortInfo(null);
+    }
+
+    lineBuffer.clear();
+  };
+
+  const completeSubjects = (): void => {
+    controller.complete();
+    errorsSubject.complete();
+    receiveSubject.complete();
+    linesSubject.complete();
+    portInfoSubject.complete();
+    receiveReplayStream$?.complete();
+  };
+
+  const dispose$ = (): Observable<void> =>
+    new Observable<void>((subscriber) => {
+      if (isDisposed()) {
+        subscriber.next();
+        subscriber.complete();
+        return;
+      }
+
+      const snapshot = controller.runtime;
+      controller.transition(createDisposedRuntime());
+
+      const run = async (): Promise<void> => {
+        try {
+          await teardownFromSnapshot(snapshot);
+          completeSubjects();
+          subscriber.next();
+          subscriber.complete();
+        } catch (error) {
+          const serialError = normalizeSerialError(error, {
+            fallbackCode: SerialErrorCode.UNKNOWN,
+            messagePrefix: 'Unexpected dispose failure',
+          });
+          subscriber.error(serialError);
+        }
+      };
+
+      void run();
+    });
 
   /**
    * Single entry point for every error that should reach `errors$`.
@@ -280,29 +287,34 @@ export function createSerialSession(
     options: NormalizeSerialErrorOptions,
   ): SerialError => {
     const serialError = normalizeSerialError(error, options);
-    if (disposed) {
+    if (isDisposed()) {
       return serialError;
     }
     errorsSubject.next(serialError);
     if (severity === 'fatal') {
-      machine.toError();
+      const runtime = controller.runtime;
+      const portToClose = getRuntimePort(runtime);
+      const pump = getRuntimePump(runtime);
+      controller.transition(createErrorRuntime());
       sendQueue.clear();
-      const portToClose = activePort;
-      setActivePort(null);
-      void teardownPump().then(() => closePortSafely(portToClose));
+      updatePortInfo(null);
+      void teardownPump(pump).then(() => closePortSafely(portToClose));
     }
     return serialError;
   };
 
   const writeToPort = async (payload: Uint8Array): Promise<void> => {
-    const port = activePort;
-    if (machine.current !== SerialSessionState.Connected || !port || !port.writable) {
+    const runtime = controller.runtime;
+    if (
+      runtime.status !== SerialSessionState.Connected ||
+      !runtime.port.writable
+    ) {
       throw new SerialError(
         SerialErrorCode.PORT_NOT_OPEN,
         'Cannot send data while session is not connected',
       );
     }
-    const writer = port.writable.getWriter();
+    const writer = runtime.port.writable.getWriter();
     try {
       await writer.write(payload);
     } finally {
@@ -322,7 +334,7 @@ export function createSerialSession(
     },
     connect$(): Observable<void> {
       return new Observable<void>((subscriber) => {
-        if (disposed) {
+        if (isDisposed()) {
           subscriber.error(createDisposedError());
           return;
         }
@@ -340,7 +352,7 @@ export function createSerialSession(
           return;
         }
 
-        const current = machine.current;
+        const current = controller.status;
         if (
           current !== SerialSessionState.Idle &&
           current !== SerialSessionState.Error
@@ -360,12 +372,11 @@ export function createSerialSession(
         let cancelled = false;
         const cancelInFlightConnect = (): void => {
           cancelled = true;
-          if (machine.current === SerialSessionState.Connecting) {
-            machine.toIdle();
+          if (controller.status === SerialSessionState.Connecting) {
+            controller.transition(createIdleRuntime());
           }
         };
-        activeConnectCancel = cancelInFlightConnect;
-        machine.toConnecting();
+        controller.transition(createConnectingRuntime(cancelInFlightConnect));
 
         const run = async (): Promise<void> => {
           let selectedPort: SerialPort | null = null;
@@ -395,17 +406,16 @@ export function createSerialSession(
             return;
           }
 
-          if (cancelled || disposed) {
+          if (cancelled || isDisposed()) {
             await closePortSafely(selectedPort);
             return;
           }
 
-          setActivePort(selectedPort);
           lineBuffer.clear();
           if (resolvedOptions.receiveReplay.enabled) {
             startLiveReceiveReplay();
           }
-          activePump = createReadPump(selectedPort, {
+          const pump = createReadPump(selectedPort, {
             onChunk: (text) => {
               receiveSubject.next(text);
               if (activeReceiveReplay) {
@@ -444,7 +454,7 @@ export function createSerialSession(
                 messagePrefix: 'Read pump failed',
               }),
             onDone: () => {
-              if (machine.current !== SerialSessionState.Connected) {
+              if (controller.status !== SerialSessionState.Connected) {
                 return;
               }
               reportError(
@@ -459,15 +469,15 @@ export function createSerialSession(
               );
             },
           });
-          activePump.start();
+          pump.start();
           sendQueue.clear();
-          if (disposed) {
-            await teardownPump();
+          if (isDisposed()) {
+            await teardownPump(pump);
             await closePortSafely(selectedPort);
-            setActivePort(null);
             return;
           }
-          machine.toConnected();
+          controller.transition(createConnectedRuntime(selectedPort, pump));
+          updatePortInfo(selectedPort);
           subscriber.next();
           subscriber.complete();
         };
@@ -475,46 +485,45 @@ export function createSerialSession(
         void run();
 
         return () => {
-          clearActiveConnectCancel(cancelInFlightConnect);
           cancelInFlightConnect();
         };
       });
     },
     disconnect$(): Observable<void> {
       return new Observable<void>((subscriber) => {
-        if (disposed) {
+        if (isDisposed()) {
           subscriber.next();
           subscriber.complete();
           return;
         }
 
-        const current = machine.current;
+        const runtime = controller.runtime;
 
         if (
-          current === SerialSessionState.Idle ||
-          current === SerialSessionState.Unsupported ||
-          current === SerialSessionState.Disconnecting
+          runtime.status === SerialSessionState.Idle ||
+          runtime.status === SerialSessionState.Unsupported ||
+          runtime.status === SerialSessionState.Disconnecting
         ) {
           subscriber.next();
           subscriber.complete();
           return;
         }
 
-        if (current === SerialSessionState.Connecting) {
-          activeConnectCancel?.();
+        if (runtime.status === SerialSessionState.Connecting) {
+          runtime.cancel();
           subscriber.next();
           subscriber.complete();
           return;
         }
 
         if (
-          current !== SerialSessionState.Connected &&
-          current !== SerialSessionState.Error
+          runtime.status !== SerialSessionState.Connected &&
+          runtime.status !== SerialSessionState.Error
         ) {
           const error = reportError(
             new SerialError(
               SerialErrorCode.PORT_NOT_OPEN,
-              `Cannot disconnect while session state is '${current}'`,
+              `Cannot disconnect while session state is '${runtime.status}'`,
             ),
             'non-fatal',
             { fallbackCode: SerialErrorCode.PORT_NOT_OPEN },
@@ -523,18 +532,19 @@ export function createSerialSession(
           return;
         }
 
-        machine.toDisconnecting();
+        const portToClose = getRuntimePort(runtime);
+        controller.transition(createDisconnectingRuntime(portToClose));
         sendQueue.clear();
-        const portToClose = activePort;
 
         const run = async (): Promise<void> => {
           try {
-            await teardownPump();
+            const pump = getRuntimePump(controller.runtime);
+            await teardownPump(pump);
             if (portToClose) {
               try {
                 await portToClose.close();
               } catch (error) {
-                setActivePort(null);
+                updatePortInfo(null);
                 const serialError = reportError(error, 'fatal', {
                   fallbackCode: SerialErrorCode.CONNECTION_LOST,
                   messagePrefix: 'Failed to close port',
@@ -543,9 +553,9 @@ export function createSerialSession(
                 return;
               }
             }
-            setActivePort(null);
-            if (!disposed) {
-              machine.toIdle();
+            updatePortInfo(null);
+            if (!isDisposed()) {
+              controller.transition(createIdleRuntime());
             }
             subscriber.next();
             subscriber.complete();
@@ -564,7 +574,7 @@ export function createSerialSession(
     dispose$,
     destroy$: dispose$,
     send$(data: SerialPayload): Observable<void> {
-      if (disposed) {
+      if (isDisposed()) {
         return new Observable<void>((subscriber) => {
           subscriber.error(createDisposedError());
         });
@@ -583,14 +593,14 @@ export function createSerialSession(
         }
       });
     },
-    state$: machine.state$,
+    state$: controller.state$,
     isConnected$,
     portInfo$,
     getPortInfo(): SerialPortInfo | null {
       return portInfoSubject.getValue();
     },
     getCurrentPort(): SerialPort | null {
-      return activePort;
+      return getRuntimePort(controller.runtime);
     },
     errors$,
     receive$,

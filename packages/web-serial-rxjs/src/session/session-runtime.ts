@@ -45,7 +45,7 @@ export interface ConnectedRuntime {
 /** @internal */
 export interface DisconnectingRuntime {
   readonly status: typeof SerialSessionState.Disconnecting;
-  readonly port: SerialPort;
+  readonly port: SerialPort | null;
 }
 
 /** @internal */
@@ -117,7 +117,9 @@ export function createConnectedRuntime(
 }
 
 /** @internal */
-export function createDisconnectingRuntime(port: SerialPort): DisconnectingRuntime {
+export function createDisconnectingRuntime(
+  port: SerialPort | null,
+): DisconnectingRuntime {
   return { status: S.Disconnecting, port };
 }
 
