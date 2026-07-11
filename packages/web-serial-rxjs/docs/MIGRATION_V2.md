@@ -45,7 +45,7 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 | `readableToObservable`            | Not needed; `receive$` is the stream                             |
 | `buildRequestOptions`             | Pass `filters` to `createSerialSession` directly                 |
 
-`SerialError` and `SerialErrorCode` are unchanged.
+`SerialError` and `SerialErrorCode` are unchanged in v2. In v3, `SerialErrorCode` becomes a const object + type alias (see [Migrating to v3](./MIGRATION_V3.md)); runtime member names and values stay the same.
 
 ## Method / field mapping
 

@@ -24,7 +24,7 @@
  * }
  * ```
  */
-export enum SerialErrorCode {
+export const SerialErrorCode = {
   /**
    * Browser does not support the Web Serial API.
    *
@@ -34,7 +34,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Inform the user to use a supported browser.
    */
-  BROWSER_NOT_SUPPORTED = 'BROWSER_NOT_SUPPORTED',
+  BROWSER_NOT_SUPPORTED: 'BROWSER_NOT_SUPPORTED',
 
   /**
    * Serial port is not available.
@@ -45,7 +45,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Check if the port is available or being used by another application.
    */
-  PORT_NOT_AVAILABLE = 'PORT_NOT_AVAILABLE',
+  PORT_NOT_AVAILABLE: 'PORT_NOT_AVAILABLE',
 
   /**
    * Failed to open the serial port.
@@ -55,7 +55,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Verify connection parameters and check hardware connections.
    */
-  PORT_OPEN_FAILED = 'PORT_OPEN_FAILED',
+  PORT_OPEN_FAILED: 'PORT_OPEN_FAILED',
 
   /**
    * Serial port is already open.
@@ -65,7 +65,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Disconnect the current port before connecting a new one.
    */
-  PORT_ALREADY_OPEN = 'PORT_ALREADY_OPEN',
+  PORT_ALREADY_OPEN: 'PORT_ALREADY_OPEN',
 
   /**
    * Serial port is not open.
@@ -75,7 +75,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Call {@link SerialClient.connect} before reading or writing.
    */
-  PORT_NOT_OPEN = 'PORT_NOT_OPEN',
+  PORT_NOT_OPEN: 'PORT_NOT_OPEN',
 
   /**
    * Failed to read from the serial port.
@@ -85,7 +85,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Check the connection and hardware, then retry the read operation.
    */
-  READ_FAILED = 'READ_FAILED',
+  READ_FAILED: 'READ_FAILED',
 
   /**
    * Failed to write to the serial port.
@@ -95,7 +95,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Check the connection and hardware, then retry the write operation.
    */
-  WRITE_FAILED = 'WRITE_FAILED',
+  WRITE_FAILED: 'WRITE_FAILED',
 
   /**
    * Serial port connection was lost.
@@ -106,7 +106,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Check the physical connection and reconnect if needed.
    */
-  CONNECTION_LOST = 'CONNECTION_LOST',
+  CONNECTION_LOST: 'CONNECTION_LOST',
 
   /**
    * Invalid filter options provided.
@@ -116,7 +116,7 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Verify filter options match the expected format and value ranges.
    */
-  INVALID_FILTER_OPTIONS = 'INVALID_FILTER_OPTIONS',
+  INVALID_FILTER_OPTIONS: 'INVALID_FILTER_OPTIONS',
 
   /**
    * Operation was cancelled by the user.
@@ -127,7 +127,7 @@ export enum SerialErrorCode {
    * **Suggested action**: This is a normal condition - no action required, but you may want
    * to inform the user that the operation was cancelled.
    */
-  OPERATION_CANCELLED = 'OPERATION_CANCELLED',
+  OPERATION_CANCELLED: 'OPERATION_CANCELLED',
 
   /**
    * Operation timed out before completion.
@@ -135,7 +135,7 @@ export enum SerialErrorCode {
    * This error occurs when an operation waits for a condition (for example, prompt
    * detection) and the timeout period elapses first.
    */
-  OPERATION_TIMEOUT = 'OPERATION_TIMEOUT',
+  OPERATION_TIMEOUT: 'OPERATION_TIMEOUT',
 
   /**
    * Internal line buffer exceeded its configured size limit.
@@ -147,7 +147,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Increase `lineBuffer.maxChars`, handle framing on `receive$`,
    * or ensure the device sends line terminators.
    */
-  LINE_BUFFER_OVERFLOW = 'LINE_BUFFER_OVERFLOW',
+  LINE_BUFFER_OVERFLOW: 'LINE_BUFFER_OVERFLOW',
 
   /**
    * Invalid receive replay options provided.
@@ -158,7 +158,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Verify `receiveReplay` options match the documented
    * ranges and value types.
    */
-  INVALID_RECEIVE_REPLAY_OPTIONS = 'INVALID_RECEIVE_REPLAY_OPTIONS',
+  INVALID_RECEIVE_REPLAY_OPTIONS: 'INVALID_RECEIVE_REPLAY_OPTIONS',
 
   /**
    * Invalid terminal buffer options provided.
@@ -169,7 +169,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Verify `terminalBuffer` options match the documented
    * ranges and value types.
    */
-  INVALID_TERMINAL_BUFFER_OPTIONS = 'INVALID_TERMINAL_BUFFER_OPTIONS',
+  INVALID_TERMINAL_BUFFER_OPTIONS: 'INVALID_TERMINAL_BUFFER_OPTIONS',
 
   /**
    * Invalid line buffer options provided.
@@ -180,7 +180,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Verify `lineBuffer` options match the documented
    * ranges and value types.
    */
-  INVALID_LINE_BUFFER_OPTIONS = 'INVALID_LINE_BUFFER_OPTIONS',
+  INVALID_LINE_BUFFER_OPTIONS: 'INVALID_LINE_BUFFER_OPTIONS',
 
   /**
    * Invalid connection options provided.
@@ -191,7 +191,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Verify connection options match the documented
    * ranges and value types.
    */
-  INVALID_CONNECTION_OPTIONS = 'INVALID_CONNECTION_OPTIONS',
+  INVALID_CONNECTION_OPTIONS: 'INVALID_CONNECTION_OPTIONS',
 
   /**
    * Receive replay buffer exceeded its configured character limit.
@@ -203,7 +203,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Increase `receiveReplay.maxChars`, reduce chunk size at
    * the source, or subscribe earlier to avoid relying on a large replay buffer.
    */
-  RECEIVE_REPLAY_BUFFER_OVERFLOW = 'RECEIVE_REPLAY_BUFFER_OVERFLOW',
+  RECEIVE_REPLAY_BUFFER_OVERFLOW: 'RECEIVE_REPLAY_BUFFER_OVERFLOW',
 
   /**
    * Session has been disposed and can no longer be used.
@@ -215,7 +215,7 @@ export enum SerialErrorCode {
    * **Suggested action**: Call {@link SerialSession.dispose$} only when
    * permanently tearing down a session, then create a new one if needed.
    */
-  SESSION_DISPOSED = 'SESSION_DISPOSED',
+  SESSION_DISPOSED: 'SESSION_DISPOSED',
 
   /**
    * Unknown error occurred.
@@ -225,5 +225,12 @@ export enum SerialErrorCode {
    *
    * **Suggested action**: Check the error message and originalError for more details.
    */
-  UNKNOWN = 'UNKNOWN',
-}
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+/**
+ * String union of allowed {@link SerialErrorCode} runtime values
+ * (same set as the values on the {@link SerialErrorCode} object).
+ */
+export type SerialErrorCode =
+  (typeof SerialErrorCode)[keyof typeof SerialErrorCode];
