@@ -315,10 +315,11 @@ export function resolveSerialSessionOptions(
   options?: SerialSessionOptions,
 ): ResolvedSerialSessionOptions {
   const connection = resolveConnectionOptions(options);
+  const filters = validateSerialPortFilters(options?.filters);
 
   return {
     ...connection,
-    filters: validateSerialPortFilters(options?.filters),
+    ...(filters !== undefined ? { filters } : {}),
     receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
     terminalBuffer: resolveTerminalBufferOptions(options?.terminalBuffer),
     lineBuffer: resolveLineBufferOptions(options?.lineBuffer),
