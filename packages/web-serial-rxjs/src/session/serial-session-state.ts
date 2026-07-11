@@ -26,6 +26,7 @@ export const SerialSessionState = {
   Disconnecting: 'disconnecting',
   Unsupported: 'unsupported',
   Error: 'error',
+  Disposed: 'disposed',
 } as const;
 
 /**
