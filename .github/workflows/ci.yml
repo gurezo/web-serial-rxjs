@@ -46,5 +46,8 @@ jobs:
       - name: Run build
         run: pnpm exec nx run-many --target=build --all
 
+      - name: Verify publish dist artifacts
+        run: pnpm exec nx run web-serial-rxjs:verify-dist
+
       - name: Run tests
         run: pnpm test

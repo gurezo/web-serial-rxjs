@@ -6,18 +6,22 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/esbuild:esbuild",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outputPath": "packages/web-serial-rxjs/dist",
-        "main": "packages/web-serial-rxjs/src/index.ts",
-        "tsConfig": "packages/web-serial-rxjs/tsconfig.lib.json",
-        "format": ["esm"],
-        "generatePackageJson": false
+        "command": "pnpm run build",
+        "cwd": "packages/web-serial-rxjs"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "verify-dist": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run verify:dist",
+        "cwd": "packages/web-serial-rxjs"
+      }
     }
   }
 }

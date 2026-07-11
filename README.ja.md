@@ -16,6 +16,7 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 - [ドキュメント](#ドキュメント)
 - [サンプル](#サンプル)
 - [プロジェクトアイコンについて](#プロジェクトアイコンについて)
+- [AI アシスタント（MCP）](#ai-アシスタントmcp)
 - [貢献](#貢献)
 - [ライセンス](#ライセンス)
 - [リンク](#リンク)
@@ -122,6 +123,31 @@ Web Serial を表すシリアルコネクタのモチーフを組み合わせた
 
 本プロジェクトは **[ReactiveX](http://reactivex.io/) / [RxJS](https://rxjs.dev/) 公式とは関係のない独立したオープンソースプロジェクト** であり、
 公式な提携・承認・スポンサー関係はありません。
+
+## AI アシスタント（MCP）
+
+このプロジェクトには、AI 支援開発向けの [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) サーバー設定が含まれています。利用可能な MCP サーバーは次のとおりです。
+
+| サーバー | 用途 |
+| -------- | ---- |
+| **nx-mcp** | Nx ワークスペース分析、プロジェクトグラフ、CI 監視、ドキュメント |
+| **angular-cli** | example-angular 向け Angular CLI ツール（コード生成、ドキュメント、ベストプラクティス） |
+| **svelte** | example-svelte 向け Svelte / SvelteKit ドキュメントとコード分析 |
+
+**設定ファイル:**
+
+- `.mcp.json` — 標準 MCP 設定（Cursor、VS Code、Claude など）
+- `.cursor/mcp.json` — Cursor 専用設定
+
+Cursor では `.cursor/mcp.json` から設定が自動的に読み込まれます。VS Code では MCP 拡張機能を追加し `.mcp.json` を使うか、MCP 設定にサーバー定義を追加してください。
+
+### Cursor rules と agents
+
+このリポジトリには `.cursor/rules/` 配下に [Cursor](https://www.cursor.com/) 用ルールも同梱されています（トピック別: Conventional Commits と PR タイトル用の `commits/`、`typescript/`、`rxjs/`、`angular/`、Nx ワークスペースタスクと **commit scope** ガイドを含む `nx/`、`examples/`、`workflow/`）。ルールは責務ごとに小さな `.mdc` ファイルへ分割し、重複を減らしてプロンプトを絞り込んでいます。
+
+- `.cursor/agents/ci-monitor-subagent.md` — Nx Cloud CI 監視が有効な場合に `/monitor-ci` および Nx MCP の `ci_information` / `update_self_healing_fix` ツールと併用する任意の CI ヘルパー
+
+commit scope の表は `commitlint.config.js` と整合します。例と scope 一覧は `.cursor/skills/conventional-commits/` を参照してください。
 
 ## 開発とリリース戦略
 

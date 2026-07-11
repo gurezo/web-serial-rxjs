@@ -75,7 +75,11 @@ pnpm run prepare
 
 これにより、コミット時に Conventional Commits に準拠しているかが自動的にチェックされます。
 
-### 5. Cursor を使う場合（任意）
+### 5. AI アシスタント（MCP）— 任意
+
+このプロジェクトには、AI 支援開発向けの MCP（Model Context Protocol）サーバー設定が含まれています。利用可能なサーバー（Nx、Angular CLI、Svelte）と設定の詳細は、README の [AI アシスタント（MCP）](README.ja.md#ai-アシスタントmcp) セクションを参照してください。
+
+### 6. Cursor Rules / Skills — 任意
 
 [Cursor](https://www.cursor.com/) でこのリポジトリを開くと、以下の Rules / Skills が自動的に適用され、AI が Conventional Commits 準拠の commit message / PR タイトルを生成できるようになります。
 
@@ -380,12 +384,17 @@ nx test web-serial-rxjs --watch
 # すべてのプロジェクトをビルド
 nx run-many --target=build --all
 
-# 特定のパッケージをビルド
+# 特定のパッケージをビルド（packages/web-serial-rxjs の package scripts に委譲）
 nx build web-serial-rxjs
+
+# package.json exports が参照する配布用 dist 成果物を検証
+nx run web-serial-rxjs:verify-dist
 
 # 特定のアプリをビルド
 nx build example-angular
 ```
+
+`nx build web-serial-rxjs` は、npm publish が `prepublishOnly` 経由で使うのと同じ `pnpm run build` パイプライン（`tsc` + `esbuild`）を実行するため、CI と release は同じ `dist/index.mjs` と `dist/index.d.ts` を検証します。
 
 PRを提出する前に、コードが正常にビルドされることを確認してください。
 

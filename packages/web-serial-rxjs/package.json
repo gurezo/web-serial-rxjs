@@ -26,6 +26,7 @@
     "build:bundle": "node esbuild.config.mjs",
     "build:copy-files": "cp ../../LICENSE . 2>/dev/null || true",
     "build:cleanup": "rm -rf dist/packages dist/package.json 2>/dev/null || true",
+    "verify:dist": "node scripts/verify-dist.mjs",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
