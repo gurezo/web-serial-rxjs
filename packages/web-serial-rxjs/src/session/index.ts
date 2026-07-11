@@ -14,7 +14,6 @@ export type { SerialPayload, SerialConnectionOptions } from '../types';
 export { SerialSessionStatus } from './serial-session-state';
 export type {
   SerialSessionState,
-  SerialSessionStatus,
   IdleSessionState,
   ConnectingSessionState,
   ConnectedSessionState,

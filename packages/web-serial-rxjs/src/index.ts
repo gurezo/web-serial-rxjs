@@ -68,7 +68,6 @@ export { createSerialSession, SerialSessionStatus, DEFAULT_LINE_BUFFER_OPTIONS, 
 export type {
   SerialSession,
   SerialSessionState,
-  SerialSessionStatus,
   IdleSessionState,
   ConnectingSessionState,
   ConnectedSessionState,
