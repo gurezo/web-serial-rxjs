@@ -15,6 +15,13 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "verify-dist": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run verify:dist",
+        "cwd": "packages/web-serial-rxjs"
+      }
     }
   }
 }
