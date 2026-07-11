@@ -1,6 +1,8 @@
 import {
   createSerialSession,
+  type SerialConnectionOptions,
   type SerialError,
+  type SerialPayload,
   type SerialSession,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
@@ -14,7 +16,7 @@ import {
 } from 'rxjs';
 
 export interface SerialSessionControllerOptions {
-  initialBaudRate?: number;
+  initialBaudRate?: SerialConnectionOptions['baudRate'];
 }
 
 export interface SerialSessionController {
@@ -24,9 +26,9 @@ export interface SerialSessionController {
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
   isBrowserSupported(): boolean;
-  connect$(baudRate?: number): Observable<void>;
+  connect$(baudRate?: SerialConnectionOptions['baudRate']): Observable<void>;
   disconnect$(): Observable<void>;
-  send$(data: string | Uint8Array): Observable<void>;
+  send$(data: SerialPayload): Observable<void>;
   resetTerminalBuffer(): void;
   dispose(): void;
 }
@@ -71,7 +73,7 @@ export function createSerialSessionController(
     terminalBufferEpoch$.next(terminalBufferEpoch$.value + 1);
   };
 
-  const connect$ = (baudRate?: number): Observable<void> => {
+  const connect$ = (baudRate?: SerialConnectionOptions['baudRate']): Observable<void> => {
     resetTerminalBuffer();
     if (baudRate !== undefined && baudRate !== currentBaudRate) {
       const previousSession = currentSession;
@@ -87,7 +89,7 @@ export function createSerialSessionController(
 
   const disconnect$ = (): Observable<void> => currentSession.disconnect$();
 
-  const send$ = (data: string | Uint8Array): Observable<void> =>
+  const send$ = (data: SerialPayload): Observable<void> =>
     currentSession.send$(data);
 
   const dispose = (): void => {
