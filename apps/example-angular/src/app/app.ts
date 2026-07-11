@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -60,19 +60,17 @@ export class App {
       });
   }
 
-  get connecting(): boolean {
-    return this.state().status === SerialSessionStatus.Connecting;
-  }
+  readonly connecting = computed(
+    () => this.state().status === SerialSessionStatus.Connecting,
+  );
 
-  get disconnecting(): boolean {
-    return this.state().status === SerialSessionStatus.Disconnecting;
-  }
+  readonly disconnecting = computed(
+    () => this.state().status === SerialSessionStatus.Disconnecting,
+  );
 
-  get hasReceivedData(): boolean {
-    return this.receivedData().length > 0;
-  }
+  readonly hasReceivedData = computed(() => this.receivedData().length > 0);
 
-  get status(): { type: StatusType; message: string } {
+  readonly status = computed((): { type: StatusType; message: string } => {
     const error = this.errorMessage();
     if (error) {
       return { type: 'error', message: `エラー: ${error}` };
@@ -95,7 +93,7 @@ export class App {
       default:
         return { type: 'info', message: 'シリアルポートに接続していません。' };
     }
-  }
+  });
 
   handleConnect(): void {
     this.resetTerminalView();
