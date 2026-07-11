@@ -9,7 +9,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "exactOptionalPropertyTypes": true
   },
   "files": [],
   "include": [],

@@ -218,7 +218,6 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS: Required<
   parity: 'none',
   bufferSize: 255,
   flowControl: 'none',
-  filters: undefined,
   receiveReplay: { ...DEFAULT_RECEIVE_REPLAY },
   terminalBuffer: { ...DEFAULT_TERMINAL_BUFFER_OPTIONS },
   lineBuffer: { ...DEFAULT_LINE_BUFFER_OPTIONS },

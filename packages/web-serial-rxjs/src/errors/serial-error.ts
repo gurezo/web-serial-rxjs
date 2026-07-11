@@ -59,7 +59,9 @@ export class SerialError extends Error {
     super(message);
     this.name = 'SerialError';
     this.code = code;
-    this.originalError = originalError;
+    if (originalError !== undefined) {
+      this.originalError = originalError;
+    }
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
