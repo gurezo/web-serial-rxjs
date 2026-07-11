@@ -17,6 +17,7 @@ import { SerialSessionState } from './serial-session-state';
  *                                                \-> error
  * error -> idle            (reset / retry)
  * unsupported              (terminal; entered only at construction time)
+ * (any) -> disposed        (permanent teardown via dispose$)
  * ```
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
@@ -27,12 +28,13 @@ const S = SerialSessionState;
 const ALLOWED_TRANSITIONS: Readonly<
   Record<SerialSessionState, readonly SerialSessionState[]>
 > = {
-  [S.Idle]: [S.Connecting, S.Error],
-  [S.Connecting]: [S.Connected, S.Error, S.Idle],
-  [S.Connected]: [S.Disconnecting, S.Error],
-  [S.Disconnecting]: [S.Idle, S.Error],
-  [S.Error]: [S.Idle, S.Connecting],
-  [S.Unsupported]: [],
+  [S.Idle]: [S.Connecting, S.Error, S.Disposed],
+  [S.Connecting]: [S.Connected, S.Error, S.Idle, S.Disposed],
+  [S.Connected]: [S.Disconnecting, S.Error, S.Disposed],
+  [S.Disconnecting]: [S.Idle, S.Error, S.Disposed],
+  [S.Error]: [S.Idle, S.Connecting, S.Disposed],
+  [S.Unsupported]: [S.Disposed],
+  [S.Disposed]: [],
 };
 
 /**
@@ -94,6 +96,10 @@ export class SessionStateMachine {
 
   toUnsupported(): boolean {
     return this.transition(S.Unsupported);
+  }
+
+  toDisposed(): boolean {
+    return this.transition(S.Disposed);
   }
 
   complete(): void {

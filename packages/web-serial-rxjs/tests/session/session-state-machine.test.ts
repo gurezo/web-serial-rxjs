@@ -168,6 +168,50 @@ describe('SessionStateMachine', () => {
     });
   });
 
+  describe('disposed (terminal)', () => {
+    it('allows transition to disposed from every active state', () => {
+      const fromIdle = new SessionStateMachine();
+      expect(fromIdle.toDisposed()).toBe(true);
+      expect(fromIdle.current).toBe<SerialSessionState>(S.Disposed);
+
+      const fromConnecting = new SessionStateMachine();
+      fromConnecting.toConnecting();
+      expect(fromConnecting.toDisposed()).toBe(true);
+      expect(fromConnecting.current).toBe<SerialSessionState>(S.Disposed);
+
+      const fromConnected = new SessionStateMachine();
+      fromConnected.toConnecting();
+      fromConnected.toConnected();
+      expect(fromConnected.toDisposed()).toBe(true);
+      expect(fromConnected.current).toBe<SerialSessionState>(S.Disposed);
+
+      const fromDisconnecting = new SessionStateMachine();
+      fromDisconnecting.toConnecting();
+      fromDisconnecting.toConnected();
+      fromDisconnecting.toDisconnecting();
+      expect(fromDisconnecting.toDisposed()).toBe(true);
+      expect(fromDisconnecting.current).toBe<SerialSessionState>(S.Disposed);
+
+      const fromError = new SessionStateMachine();
+      fromError.toConnecting();
+      fromError.toError();
+      expect(fromError.toDisposed()).toBe(true);
+      expect(fromError.current).toBe<SerialSessionState>(S.Disposed);
+    });
+
+    it('rejects every transition once entered', () => {
+      const machine = new SessionStateMachine();
+      machine.toDisposed();
+
+      expect(machine.toIdle()).toBe(false);
+      expect(machine.toConnecting()).toBe(false);
+      expect(machine.toConnected()).toBe(false);
+      expect(machine.toDisconnecting()).toBe(false);
+      expect(machine.toError()).toBe(false);
+      expect(machine.current).toBe<SerialSessionState>(S.Disposed);
+    });
+  });
+
   describe('complete', () => {
     it('completes the state$ stream', async () => {
       const machine = new SessionStateMachine();

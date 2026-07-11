@@ -93,7 +93,8 @@ The same union is available as a **const object** `SerialSessionState` (e.g. `Se
 - `'connected'` — port is open and the read pump is running.
 - `'disconnecting'` — `disconnect$` is in flight.
 - `'unsupported'` — `navigator.serial` was not available at session creation time.
-- `'error'` — a fatal failure occurred. Call `disconnect$` or recreate the session to recover.
+- `'error'` — a fatal failure occurred. Call `disconnect$` to recover, or create a new session.
+- `'disposed'` — the session was permanently torn down via `dispose$` / `destroy$`. All observables complete; create a new session to continue.
 
 Valid transitions:
 
@@ -102,6 +103,7 @@ idle -> connecting -> connected -> disconnecting -> idle
                               \-> error
 idle / connected / connecting / disconnecting / error -> error (fatal failure)
 any -> unsupported (when navigator.serial is missing at construction)
+(any active state) -> disposed (permanent teardown via dispose$)
 ```
 
 ## SerialSession
@@ -112,6 +114,8 @@ interface SerialSession {
 
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
+  dispose$(): Observable<void>;
+  destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
   readonly isConnected$: Observable<boolean>;
@@ -135,7 +139,13 @@ Opens a user-selected serial port and starts the internal read pump. Completes o
 
 ### `disconnect$(): Observable<void>`
 
-Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`.
+Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown.
+
+### `dispose$(): Observable<void>` / `destroy$(): Observable<void>`
+
+Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`, `receiveReplay$`, `portInfo$`, `isConnected$`). Safe to call multiple times; subsequent calls complete immediately. `destroy$` is an alias for `dispose$`.
+
+After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOSED`. `disconnect$` completes immediately. Create a new `SerialSession` instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -189,4 +199,5 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 | `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `OPERATION_TIMEOUT`      | Internal operation timed out.                                       |
+| `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$` / `destroy$`.         |
 | `UNKNOWN`                | Unclassified failure; see `originalError`.                          |
