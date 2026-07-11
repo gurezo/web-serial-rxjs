@@ -10,6 +10,7 @@ import {
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
+import type { SerialPayload } from '../types';
 import { buildRequestOptions } from './internal/build-request-options';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
 import { createLineBuffer } from './internal/line-buffer';
@@ -562,7 +563,7 @@ export function createSerialSession(
     },
     dispose$,
     destroy$: dispose$,
-    send$(data: string | Uint8Array): Observable<void> {
+    send$(data: SerialPayload): Observable<void> {
       if (disposed) {
         return new Observable<void>((subscriber) => {
           subscriber.error(createDisposedError());

@@ -19,6 +19,8 @@
  * - {@link LineBufferOptions} - memory limits for lines$ incomplete line tail
  * - {@link SerialSession} - the runtime interface
  * - {@link SerialSessionOptions} - connection options
+ * - {@link SerialPayload} - payload accepted by {@link SerialSession.send$}
+ * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
  * - {@link SerialSessionState} - `state$` payload values (const + type)
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
  *
@@ -60,12 +62,14 @@
 
 export { assertNever } from './internal/assert-never';
 
-export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions } from './session';
+export { createSerialSession, SerialSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions, MAX_RECEIVE_REPLAY_BUFFER_SIZE, MAX_RECEIVE_REPLAY_MAX_CHARS } from './session';
 export type {
   SerialSession,
   SerialSessionOptions,
   SerialSessionReceiveReplayOptions,
   ResolvedSerialSessionOptions,
+  SerialPayload,
+  SerialConnectionOptions,
   LineBufferOptions,
 } from './session';
 
