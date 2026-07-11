@@ -19,13 +19,14 @@ Before releasing, ensure the following:
 
 1. **All changes are merged to `main`**: The release should be based on the latest `main` branch
 2. **Tests pass**: Run `pnpm test` locally to ensure everything works
-3. **Build succeeds**: Run `pnpm exec nx build web-serial-rxjs` to verify the build
-4. **Version number**: Determine the appropriate version number following [Semantic Versioning](https://semver.org/)
+3. **Build succeeds**: Run `pnpm exec nx build web-serial-rxjs` to verify the build. This Nx target delegates to `packages/web-serial-rxjs` package scripts (`tsc` + `esbuild`) and produces the same `dist/index.mjs` and `dist/index.d.ts` artifacts used for npm publish.
+4. **Dist verification**: Run `pnpm exec nx run web-serial-rxjs:verify-dist` to confirm `package.json` exports match built artifacts.
+5. **Version number**: Determine the appropriate version number following [Semantic Versioning](https://semver.org/)
    - **MAJOR** (e.g., `1.0.0` → `2.0.0`): Breaking changes
    - **MINOR** (e.g., `1.0.0` → `1.1.0`): New features (backward compatible)
    - **PATCH** (e.g., `1.0.0` → `1.0.1`): Bug fixes (backward compatible)
-5. **package.json version**: Update the version in `packages/web-serial-rxjs/package.json` to match the tag
-6. **Documentation**: Update `CHANGELOG.md` if maintained (optional)
+6. **package.json version**: Update the version in `packages/web-serial-rxjs/package.json` to match the tag
+7. **Documentation**: Update `CHANGELOG.md` if maintained (optional)
 
 ## Release Steps
 
@@ -90,11 +91,12 @@ Once you push the tag, GitHub Actions automatically:
 1. ✅ Checks out the code at the tagged commit
 2. ✅ Installs dependencies (`pnpm install --frozen-lockfile`)
 3. ✅ Runs tests (`pnpm test`)
-4. ✅ Builds the package (`pnpm exec nx build web-serial-rxjs`)
-5. ✅ Creates a release zip file
-6. ✅ Publishes to npm using Trusted Publishing (OIDC) - no tokens needed!
-7. ✅ Creates a GitHub Release with auto-generated release notes
-8. ✅ Attaches the release zip to the GitHub Release
+4. ✅ Builds the package (`pnpm exec nx build web-serial-rxjs`) via the same package scripts used for npm publish
+5. ✅ Verifies publish dist artifacts (`dist/index.mjs`, `dist/index.d.ts`) and npm pack contents
+6. ✅ Creates a release zip file
+7. ✅ Publishes to npm using Trusted Publishing (OIDC) - no tokens needed!
+8. ✅ Creates a GitHub Release with auto-generated release notes
+9. ✅ Attaches the release zip to the GitHub Release
 
 You can monitor the progress in the [Actions tab](https://github.com/gurezo/web-serial-rxjs/actions) on GitHub.
 

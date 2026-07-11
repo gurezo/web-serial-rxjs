@@ -382,12 +382,17 @@ nx test web-serial-rxjs --watch
 # Build all projects
 nx run-many --target=build --all
 
-# Build a specific package
+# Build a specific package (delegates to packages/web-serial-rxjs package scripts)
 nx build web-serial-rxjs
+
+# Verify publish dist artifacts referenced by package.json exports
+nx run web-serial-rxjs:verify-dist
 
 # Build a specific app
 nx build example-angular
 ```
+
+`nx build web-serial-rxjs` runs the same `pnpm run build` pipeline (`tsc` + `esbuild`) that npm publish uses via `prepublishOnly`, so CI and release validate the same `dist/index.mjs` and `dist/index.d.ts` artifacts.
 
 Ensure your code builds successfully before submitting a PR.
 
