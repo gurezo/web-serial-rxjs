@@ -12,6 +12,7 @@ module.exports = {
         'example-svelte',
         'example-vanilla-js',
         'example-vanilla-ts',
+        'examples-shared',
         'workspace',
         'docs',
         'readme',

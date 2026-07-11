@@ -5,6 +5,7 @@
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -14,7 +15,8 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
-      "@gurezo/web-serial-rxjs": ["./packages/web-serial-rxjs/src/index.ts"]
+      "@gurezo/web-serial-rxjs": ["./packages/web-serial-rxjs/src/index.ts"],
+      "@gurezo/examples-shared": ["./libs/examples-shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

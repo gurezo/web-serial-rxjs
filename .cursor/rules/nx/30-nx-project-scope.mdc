@@ -20,6 +20,7 @@ alwaysApply: false
 | `example-svelte` | `apps/example-svelte` | Svelte サンプル |
 | `example-vanilla-js` | `apps/example-vanilla-js` | Vanilla JS サンプル |
 | `example-vanilla-ts` | `apps/example-vanilla-ts` | Vanilla TS サンプル |
+| `examples-shared` | `libs/examples-shared` | example 用 shared adapter |
 | `workspace` | ルート設定・複数 project | `nx.json` / `tsconfig.base.json` / `.cursor/` 等 |
 | `docs` | ドキュメント全般 | README / CONTRIBUTING / docs 等 |
 | `readme` | README 単体 | |
@@ -41,7 +42,7 @@ libs/**/project.json
 packages/**/project.json
 ```
 
-`libs/` は現状未使用だが、将来追加された場合も `project.json` の `name` を scope として採用する。
+`libs/` の project も `project.json` の `name` を scope として採用する。
 
 ## scope 選択方針
 
