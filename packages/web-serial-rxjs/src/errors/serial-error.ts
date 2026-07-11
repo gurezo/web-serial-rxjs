@@ -9,15 +9,15 @@ import {
 export { SerialErrorCode };
 export type { SerialErrorCauseContext, SerialErrorContextMap };
 
-interface ErrorConstructorWithCaptureStackTrace extends ErrorConstructor {
-  captureStackTrace?: (
+interface V8ErrorCaptureStackTrace {
+  captureStackTrace?(
     targetObject: object,
     constructorOpt?: abstract new (...args: never[]) => unknown,
-  ) => void;
+  ): void;
 }
 
-const ErrorWithCaptureStackTrace =
-  Error as ErrorConstructorWithCaptureStackTrace;
+const ErrorWithCaptureStackTrace = Error as typeof Error &
+  V8ErrorCaptureStackTrace;
 
 /**
  * Custom error class for serial port operations.

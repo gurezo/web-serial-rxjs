@@ -342,7 +342,7 @@ export function resolveConnectionOptions(
     ...options,
   };
 
-  const { baudRate } = merged;
+  const { baudRate, bufferSize } = merged;
 
   if (!Number.isSafeInteger(baudRate) || baudRate <= 0) {
     throw new SerialError(
@@ -357,7 +357,9 @@ export function resolveConnectionOptions(
     parity: merged.parity,
     flowControl: merged.flowControl,
     baudRate: brandBaudRate(baudRate),
-    bufferSize: brandSerialPortBufferSize(merged.bufferSize),
+    bufferSize: brandSerialPortBufferSize(
+      bufferSize ?? DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize,
+    ),
   };
 }
 

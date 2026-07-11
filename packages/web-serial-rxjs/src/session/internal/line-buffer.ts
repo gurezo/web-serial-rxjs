@@ -1,5 +1,6 @@
 import { createNewlineTokenizer } from '../../internal/newline-tokenizer';
 import type { MaxChars } from '../../internal/branded-numbers';
+import { brandMaxChars } from '../../internal/branded-numbers';
 
 /**
  * Options for {@link createLineBuffer}.
@@ -56,8 +57,9 @@ export function createLineBuffer(
   options?: LineBufferOptions | LineBufferLimits,
 ): LineBuffer {
   const limits: LineBufferLimits = {
-    maxChars:
-      options?.maxChars ?? (DEFAULT_LINE_BUFFER_OPTIONS.maxChars as MaxChars),
+    maxChars: brandMaxChars(
+      options?.maxChars ?? DEFAULT_LINE_BUFFER_OPTIONS.maxChars,
+    ),
   };
 
   const tokenizer = createNewlineTokenizer('line');
