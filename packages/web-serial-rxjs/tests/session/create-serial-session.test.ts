@@ -840,6 +840,7 @@ describe('createSerialSession', () => {
 
       const error = await errorPromise;
       expect(error.code).toBe(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW);
+      expect(error.context).toEqual({ maxChars: 4, bufferSize: 10 });
     });
 
     it('does not mutate state$ when receive replay overflows (non-fatal)', async () => {
@@ -972,6 +973,7 @@ describe('createSerialSession', () => {
 
       const error = await errorPromise;
       expect(error.code).toBe(SerialErrorCode.LINE_BUFFER_OVERFLOW);
+      expect(error.context).toEqual({ maxChars: 4 });
     });
 
     it('does not mutate state$ when line buffer overflows (non-fatal)', async () => {

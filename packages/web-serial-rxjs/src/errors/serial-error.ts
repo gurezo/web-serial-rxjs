@@ -1,7 +1,13 @@
 import { SerialErrorCode } from './serial-error-code';
+import {
+  isCauseContextCode,
+  type SerialErrorCauseContext,
+  type SerialErrorContextMap,
+} from './serial-error-context';
 
 // Re-export SerialErrorCode for convenience
 export { SerialErrorCode };
+export type { SerialErrorCauseContext, SerialErrorContextMap };
 
 /**
  * Custom error class for serial port operations.
@@ -22,6 +28,10 @@ export { SerialErrorCode };
  *       console.error(`Original error:`, error.originalError);
  *     }
  *
+ *     if (error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)) {
+ *       console.error(`maxChars: ${error.context.maxChars}`);
+ *     }
+ *
  *     // Check specific error code
  *     if (error.is(SerialErrorCode.BROWSER_NOT_SUPPORTED)) {
  *       // Handle browser not supported
@@ -30,7 +40,9 @@ export { SerialErrorCode };
  * }
  * ```
  */
-export class SerialError extends Error {
+export class SerialError<
+  TCode extends SerialErrorCode = SerialErrorCode,
+> extends Error {
   /**
    * The error code identifying the type of error that occurred.
    *
@@ -38,13 +50,25 @@ export class SerialError extends Error {
    *
    * @see {@link SerialErrorCode} for all available error codes
    */
-  public readonly code: SerialErrorCode;
+  public readonly code: TCode;
+
+  /**
+   * Structured metadata associated with {@link code}.
+   *
+   * When {@link is} returns `true`, TypeScript narrows this property to the
+   * context shape defined in {@link SerialErrorContextMap} for that code.
+   */
+  public readonly context: SerialErrorContextMap[TCode];
 
   /**
    * The original error that caused this SerialError, if available.
    *
    * This property contains the underlying error (e.g., DOMException, TypeError)
    * that was wrapped in this SerialError. It may be undefined if no original error exists.
+   *
+   * @deprecated Prefer {@link context} for cause-bearing codes. This property is
+   *   retained for backward compatibility and is kept in sync when a cause is
+   *   provided.
    */
   public readonly originalError?: Error;
 
@@ -54,13 +78,31 @@ export class SerialError extends Error {
    * @param code - The error code identifying the type of error
    * @param message - A human-readable error message
    * @param originalError - The original error that caused this SerialError, if any
+   * @param context - Structured metadata for the error code. When omitted, cause-bearing
+   *   codes derive `{ cause }` from `originalError`.
    */
-  constructor(code: SerialErrorCode, message: string, originalError?: Error) {
+  constructor(
+    code: TCode,
+    message: string,
+    originalError?: Error,
+    context?: SerialErrorContextMap[TCode],
+  ) {
     super(message);
     this.name = 'SerialError';
     this.code = code;
     if (originalError !== undefined) {
       this.originalError = originalError;
+    }
+
+    if (context !== undefined) {
+      this.context = context;
+    } else if (
+      originalError !== undefined &&
+      isCauseContextCode(code)
+    ) {
+      this.context = { cause: originalError } as SerialErrorContextMap[TCode];
+    } else {
+      this.context = undefined as SerialErrorContextMap[TCode];
     }
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
@@ -76,22 +118,23 @@ export class SerialError extends Error {
    *
    * This is a convenience method for checking the error code without directly
    * comparing the code property. When this method returns `true`, TypeScript
-   * narrows `this.code` to the literal type of the provided `code` argument.
+   * narrows `this.code` and `this.context` to the shapes defined for the
+   * provided `code` argument.
    *
    * @param code - The error code to check against
    * @returns Type predicate: `true` if this error's code matches the provided
-   *   code (and `this.code` is narrowed to that literal type), `false` otherwise
+   *   code (and `this.code` / `this.context` are narrowed), `false` otherwise
    *
    * @example
    * ```typescript
-   * if (error.is(SerialErrorCode.PORT_NOT_OPEN)) {
-   *   // error.code is narrowed to SerialErrorCode.PORT_NOT_OPEN
+   * if (error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)) {
+   *   // error.code and error.context.maxChars are narrowed
    * }
    * ```
    */
   public is<C extends SerialErrorCode>(
     code: C,
-  ): this is SerialError & { readonly code: C } {
-    return this.code === code;
+  ): this is SerialError<C> {
+    return (this.code as SerialErrorCode) === code;
   }
 }

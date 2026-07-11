@@ -195,7 +195,14 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 
 ## SerialError / SerialErrorCode
 
-`SerialError` extends `Error` with a `code: SerialErrorCode` and an optional `originalError: Error`. It exposes `is(code): boolean` for ergonomic comparison.
+`SerialError` extends `Error` with a `code: SerialErrorCode`, an optional `originalError: Error`, and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code. `originalError` is retained for backward compatibility; prefer `context.cause` for cause-bearing codes.
+
+| Code                     | `context` shape | When it is emitted                                                  |
+| ------------------------ | --------------- | ------------------------------------------------------------------- |
+| `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
+| Cause-bearing codes (e.g. `PORT_OPEN_FAILED`) | `{ cause: unknown }` | See table below. `originalError` is kept in sync. |
+| Other codes              | `undefined`     | See table below.                                                    |
 
 | Code                     | When it is emitted                                                  |
 | ------------------------ | ------------------------------------------------------------------- |
@@ -206,8 +213,6 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 | `PORT_NOT_OPEN`          | `send$` called while not `'connected'`.                             |
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
-| `LINE_BUFFER_OVERFLOW`   | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
-| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
 | `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry (at session creation).         |
 | `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. |

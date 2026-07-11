@@ -107,7 +107,12 @@ export function createReceivePipeline(
         reportError(
           new SerialError(
             SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
-            `Receive replay buffer exceeded configured limits; oldest chunks were discarded`,
+            'Receive replay buffer exceeded configured limits; oldest chunks were discarded',
+            undefined,
+            {
+              maxChars: resolvedOptions.receiveReplay.maxChars,
+              bufferSize: resolvedOptions.receiveReplay.bufferSize,
+            },
           ),
           {
             fallbackCode: SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
@@ -120,7 +125,9 @@ export function createReceivePipeline(
       reportError(
         new SerialError(
           SerialErrorCode.LINE_BUFFER_OVERFLOW,
-          `Line buffer exceeded maxChars (${resolvedOptions.lineBuffer.maxChars}); leading data was discarded`,
+          'Line buffer exceeded maxChars; leading data was discarded',
+          undefined,
+          { maxChars: resolvedOptions.lineBuffer.maxChars },
         ),
         { fallbackCode: SerialErrorCode.LINE_BUFFER_OVERFLOW },
       );

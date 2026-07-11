@@ -195,7 +195,14 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ## SerialError / SerialErrorCode
 
-`SerialError` は `Error` を継承し、`code: SerialErrorCode` と任意の `originalError: Error` を持ちます。`is(code): boolean` で簡潔にコード判定できます。
+`SerialError` は `Error` を継承し、`code: SerialErrorCode`、任意の `originalError: Error`、および code 別の構造化メタデータ `context` を持ちます。`is(code)` は `code` と `context` を literal 型に narrow します。`originalError` は後方互換のため残されていますが、cause 系コードでは `context.cause` を優先してください。
+
+| Code                     | `context` の形 | emit されるタイミング                                              |
+| ------------------------ | -------------- | ------------------------------------------------------------------ |
+| `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` バッファが `receiveReplay` の上限を超過。古いチャンクを破棄（non-fatal） |
+| `PORT_OPEN_FAILED` など cause 系 | `{ cause: unknown }` | 下表の各タイミング。`originalError` も同期して保持 |
+| その他                   | `undefined`    | 下表の各タイミング                                                 |
 
 | Code                     | emit されるタイミング                                              |
 | ------------------------ | ------------------------------------------------------------------ |
@@ -206,8 +213,6 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 | `PORT_NOT_OPEN`          | 許可されない状態で `send$` / `disconnect$` を呼んだ                |
 | `READ_FAILED`            | 内部 read pump でエラーが発生                                      |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` が reject                      |
-| `LINE_BUFFER_OVERFLOW`   | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |
-| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` バッファが `receiveReplay` の上限を超過。古いチャンクを破棄（non-fatal） |
 | `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
 | `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる（セッション生成時）                 |
 | `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` または `receiveReplay.maxChars` が範囲外（セッション生成時） |
