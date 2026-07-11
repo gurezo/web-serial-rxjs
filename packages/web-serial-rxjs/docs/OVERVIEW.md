@@ -25,11 +25,11 @@ Start here from the TypeDoc top page:
 
 ## Features
 
-- **Session-oriented reactive API**: a single `SerialSession` exposes `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, plus `connect$`, `disconnect$`, and `send$`
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, plus `connect$`, `disconnect$`, `dispose$`, and `send$`
 - **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
 - **Ordered send queue**: concurrent `send$` calls are serialized internally in call order, without the caller having to manage a writer
 - **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
-- **Explicit lifecycle**: `state$` emits `idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` so UIs can drive directly from it
+- **Explicit lifecycle**: `state$` emits `idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed` so UIs can drive directly from it
 - **TypeScript support**: full TypeScript type definitions included
 - **Framework agnostic**: works with any JavaScript/TypeScript framework or vanilla JavaScript
 
@@ -48,7 +48,7 @@ This library is framework-agnostic and can be used with:
 
 | Surface | Role |
 | --- | --- |
-| `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported`. Replays the current state on subscribe. Compare with **`SerialSessionState`** instead of string literals. |
+| `state$` | **Connection lifecycle** — `idle` / `connecting` / `connected` / `disconnecting` / `error` / `unsupported` / `disposed`. Replays the current state on subscribe. Compare with **`SerialSessionState`** instead of string literals. |
 | `SerialSessionState` | **State constants** — exported const object (e.g. `SerialSessionState.Connected`, `SerialSessionState.Idle`) with the same values `state$` emits. |
 | `isConnected$` | **Connected flag** — `true` only when `state$` is `SerialSessionState.Connected`; `false` in every other state (derived from `state$` with `distinctUntilChanged`). |
 | `receive$` | **Raw decoder chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
@@ -56,7 +56,8 @@ This library is framework-agnostic and can be used with:
 | `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring raw terminal streams where `\r` must stay intact. |
 | `errors$` | **All `SerialError` instances** from connect / read / write / close (primary error channel). |
 | `connect$()` | **Open** a user-selected port and start the internal read pump. |
-| `disconnect$()` | **Close** the port and stop the pump. |
+| `disconnect$()` | **Close** the port and stop the pump. The session stays reusable (`idle`). |
+| `dispose$()` / `destroy$()` | **Permanently tear down** the session: close any active connection, complete all observables, and prevent reuse. `destroy$` is an alias for `dispose$`. |
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
 | `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
 
@@ -72,6 +73,7 @@ This library is framework-agnostic and can be used with:
 | `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
 | `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial was not available when the session was created. |
 | `SerialSessionState.Error` | `'error'` | Fatal I/O or lifecycle failure; call `disconnect$` or build a new session. |
+| `SerialSessionState.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`; all observables complete. Create a new session to continue. |
 
 **`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 

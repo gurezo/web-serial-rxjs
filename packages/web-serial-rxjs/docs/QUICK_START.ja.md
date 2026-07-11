@@ -14,6 +14,7 @@
 | `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
 | `SerialSessionState.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
 | `SerialSessionState.Error` | `'error'` | 致命的な失敗。`disconnect$` または新しいセッションで復帰。 |
+| `SerialSessionState.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
 遷移・詳細は [API リファレンスの SerialSessionState](./API_REFERENCE.ja.md#serialsessionstate) を参照してください。
 
@@ -56,13 +57,25 @@ session.state$.subscribe((s) => {
 
 ## 切断する
 
-ポートを閉じるときは `disconnect$` を呼びます。
+ポートを閉じつつセッションを再利用可能なままにしたいときは `disconnect$` を呼びます。
 
 ```typescript
 session.disconnect$().subscribe({
   error: (e) => console.error('切断エラー:', e),
 });
 ```
+
+## 破棄する
+
+baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$`（または `destroy$`）を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。
+
+```typescript
+session.dispose$().subscribe({
+  error: (e) => console.error('破棄エラー:', e),
+});
+```
+
+破棄後は古いインスタンスを再利用せず、新しい `createSerialSession()` を作成してください。
 
 ## 次のステップ
 

@@ -14,6 +14,7 @@ Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`**
 | `SerialSessionState.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
 | `SerialSessionState.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
 | `SerialSessionState.Error` | `'error'` | Fatal failure; `disconnect$` or a new session. |
+| `SerialSessionState.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`; all observables complete. |
 
 Details and lifecycle: [API Reference – SerialSessionState](./API_REFERENCE.md#serialsessionstate).
 
@@ -58,13 +59,25 @@ session.state$.subscribe((s) => {
 
 ## Disconnect
 
-Call `disconnect$` when you want to close the port.
+Call `disconnect$` when you want to close the port while keeping the session reusable.
 
 ```typescript
 session.disconnect$().subscribe({
   error: (e) => console.error('Disconnect error:', e),
 });
 ```
+
+## Dispose
+
+Call `dispose$` (or `destroy$`) when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables.
+
+```typescript
+session.dispose$().subscribe({
+  error: (e) => console.error('Dispose error:', e),
+});
+```
+
+After disposal, create a new `createSerialSession()` instance instead of reusing the old one.
 
 ## Next steps
 
