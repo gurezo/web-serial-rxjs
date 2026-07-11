@@ -773,6 +773,30 @@ describe('createSerialSession', () => {
       }
     });
 
+    it('throws INVALID_CONNECTION_OPTIONS for invalid baudRate at factory time', () => {
+      expect(() => createSerialSession({ baudRate: -1 })).toThrow(SerialError);
+      try {
+        createSerialSession({ baudRate: 0 });
+      } catch (error) {
+        expect(error).toBeInstanceOf(SerialError);
+        expect((error as SerialError).code).toBe(
+          SerialErrorCode.INVALID_CONNECTION_OPTIONS,
+        );
+      }
+    });
+
+    it('throws INVALID_FILTER_OPTIONS for invalid filters at factory time', () => {
+      expect(() => createSerialSession({ filters: [{}] })).toThrow(SerialError);
+      try {
+        createSerialSession({ filters: [{ usbVendorId: -1 }] });
+      } catch (error) {
+        expect(error).toBeInstanceOf(SerialError);
+        expect((error as SerialError).code).toBe(
+          SerialErrorCode.INVALID_FILTER_OPTIONS,
+        );
+      }
+    });
+
     it('applies receiveReplay.maxChars from SerialSessionOptions', async () => {
       const { stream, controller } = makeStream();
       const port = makeMockPort(stream);
