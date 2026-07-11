@@ -311,13 +311,11 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS = {
 } satisfies ResolvedSerialSessionOptions;
 
 /** Resolved W3C connection fields for {@link ResolvedSerialSessionOptions}. */
-export type ResolvedSerialSessionConnectionOptions = {
+export type ResolvedSerialSessionConnectionOptions = Required<
+  Omit<SerialSessionConnectionFields, 'baudRate' | 'bufferSize'>
+> & {
   baudRate: BaudRate;
-  dataBits: SerialSessionConnectionFields['dataBits'];
-  stopBits: SerialSessionConnectionFields['stopBits'];
-  parity: SerialSessionConnectionFields['parity'];
   bufferSize: SerialPortBufferSize;
-  flowControl: SerialSessionConnectionFields['flowControl'];
 };
 
 /**
@@ -352,10 +350,11 @@ export function resolveConnectionOptions(
   }
 
   return {
-    dataBits: merged.dataBits,
-    stopBits: merged.stopBits,
-    parity: merged.parity,
-    flowControl: merged.flowControl,
+    dataBits: merged.dataBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.dataBits,
+    stopBits: merged.stopBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.stopBits,
+    parity: merged.parity ?? DEFAULT_SERIAL_SESSION_OPTIONS.parity,
+    flowControl:
+      merged.flowControl ?? DEFAULT_SERIAL_SESSION_OPTIONS.flowControl,
     baudRate: brandBaudRate(baudRate),
     bufferSize: brandSerialPortBufferSize(
       bufferSize ?? DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize,
