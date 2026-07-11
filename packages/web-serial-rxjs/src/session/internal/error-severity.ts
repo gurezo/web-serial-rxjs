@@ -40,5 +40,8 @@ export const ERROR_SEVERITY = {
 export function resolveErrorSeverity(
   code: SerialErrorCode,
 ): ReportErrorSeverity {
-  return ERROR_SEVERITY[code] ?? 'fatal';
+  if (code in ERROR_SEVERITY) {
+    return ERROR_SEVERITY[code as keyof typeof ERROR_SEVERITY];
+  }
+  return 'fatal';
 }
