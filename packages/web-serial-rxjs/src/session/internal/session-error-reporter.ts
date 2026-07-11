@@ -91,7 +91,7 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
       const runtime = controller.runtime;
       const portToClose = getRuntimePort(runtime);
       const pump = getRuntimePump(runtime);
-      controller.transition(createErrorRuntime());
+      controller.transition(createErrorRuntime(serialError));
       sendQueue.clear();
       updatePortInfo(null);
       void teardownPump(pump).then(() => closePortSafely(portToClose));
