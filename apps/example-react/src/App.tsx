@@ -1,4 +1,4 @@
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { useState } from 'react';
 import { useSerialSession } from './hooks/useSerialSession';
 
@@ -19,8 +19,8 @@ export function App() {
     clearReceivedData,
   } = useSerialSession(baudRate);
 
-  const connecting = state === SerialSessionState.Connecting;
-  const disconnecting = state === SerialSessionState.Disconnecting;
+  const connecting = state.status === SerialSessionStatus.Connecting;
+  const disconnecting = state.status === SerialSessionStatus.Disconnecting;
 
   const status: { type: StatusType; message: string } = errorMessage
     ? { type: 'error', message: `エラー: ${errorMessage}` }

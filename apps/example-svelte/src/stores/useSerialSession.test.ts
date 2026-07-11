@@ -14,7 +14,7 @@ import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialSession } from './useSerialSession';
 
-const SS = webSerialRxjs.SerialSessionState;
+const SS = webSerialRxjs.SerialSessionStatus;
 
 interface MockCore {
   session: SerialSession;
@@ -30,7 +30,7 @@ interface MockCore {
 }
 
 const createMockCore = (supported = true): MockCore => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
+  const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const isConnectedSubject = new BehaviorSubject(false);
@@ -122,7 +122,7 @@ describe('useSerialSession', () => {
 
   it('初期状態は idle、receivedData は空、errorMessage は null、browserSupported は true', () => {
     const s = useSerialSession();
-    expect(get(s.state)).toBe(SS.Idle);
+    expect(get(s.state)).toEqual({ status: SS.Idle });
     expect(get(s.isConnected)).toBe(false);
     expect(get(s.receivedData)).toBe('');
     expect(get(s.errorMessage)).toBeNull();
@@ -145,10 +145,10 @@ describe('useSerialSession', () => {
   it('state$ の変化が state に反映される', () => {
     const s = useSerialSession();
     const unsub = s.state.subscribe(() => void 0);
-    latestMock().stateSubject.next(SS.Connecting);
-    expect(get(s.state)).toBe(SS.Connecting);
-    latestMock().stateSubject.next(SS.Connected);
-    expect(get(s.state)).toBe(SS.Connected);
+    latestMock().stateSubject.next({ status: SS.Connecting });
+    expect(get(s.state)).toEqual({ status: SS.Connecting });
+    latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
+    expect(get(s.state)).toEqual({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     unsub();
   });
 
@@ -174,7 +174,7 @@ describe('useSerialSession', () => {
     const unsub = s.errorMessage.subscribe(() => void 0);
     latestMock().errorsSubject.next({ message: 'boom' } as SerialError);
     expect(get(s.errorMessage)).toBe('boom');
-    latestMock().stateSubject.next(SS.Connected);
+    latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     expect(get(s.errorMessage)).toBeNull();
     unsub();
   });
@@ -216,8 +216,8 @@ describe('useSerialSession', () => {
       vi.mocked(webSerialRxjs.createSerialSession),
     ).toHaveBeenLastCalledWith({ baudRate: 115200 });
 
-    latestMock().stateSubject.next(SS.Connecting);
-    expect(get(s.state)).toBe(SS.Connecting);
+    latestMock().stateSubject.next({ status: SS.Connecting });
+    expect(get(s.state)).toEqual({ status: SS.Connecting });
     unsub();
   });
 

@@ -14,7 +14,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialClient } from './useSerialClient';
 
-const SS = webSerialRxjs.SerialSessionState;
+const SS = webSerialRxjs.SerialSessionStatus;
 
 interface MockCore {
   session: SerialSession;
@@ -30,7 +30,7 @@ interface MockCore {
 }
 
 const createMockCore = (supported = true): MockCore => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
+  const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const isConnectedSubject = new BehaviorSubject(false);
@@ -134,7 +134,7 @@ describe('useSerialClient', () => {
   it('should initialize with default refs', () => {
     const { api } = mountHarness();
     expect(api.browserSupported.value).toBe(true);
-    expect(api.state.value).toBe(SS.Idle);
+    expect(api.state.value).toEqual({ status: SS.Idle });
     expect(api.isConnected.value).toBe(false);
     expect(api.receivedData.value).toBe('');
     expect(api.errorMessage.value).toBe(null);
@@ -150,11 +150,11 @@ describe('useSerialClient', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
-    mock.stateSubject.next(SS.Connecting);
-    expect(api.state.value).toBe(SS.Connecting);
+    mock.stateSubject.next({ status: SS.Connecting });
+    expect(api.state.value).toEqual({ status: SS.Connecting });
 
-    mock.stateSubject.next(SS.Connected);
-    expect(api.state.value).toBe(SS.Connected);
+    mock.stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
+    expect(api.state.value).toEqual({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
   });
 
   it('should clear errorMessage when returning to idle or connected', () => {
@@ -164,7 +164,7 @@ describe('useSerialClient', () => {
     mock.errorsSubject.next({ message: 'boom' } as SerialError);
     expect(api.errorMessage.value).toBe('boom');
 
-    mock.stateSubject.next(SS.Connected);
+    mock.stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     expect(api.errorMessage.value).toBe(null);
   });
 

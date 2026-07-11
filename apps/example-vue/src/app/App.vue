@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { computed, ref } from 'vue';
 import { useSerialClient } from '../composables/useSerialClient';
 
@@ -21,30 +21,30 @@ const {
 } = useSerialClient(baudRate.value);
 
 const connecting = computed(
-  () => state.value === SerialSessionState.Connecting,
+  () => state.value.status === SerialSessionStatus.Connecting,
 );
 const disconnecting = computed(
-  () => state.value === SerialSessionState.Disconnecting,
+  () => state.value.status === SerialSessionStatus.Disconnecting,
 );
 
 const status = computed<{ type: StatusType; message: string }>(() => {
   if (errorMessage.value) {
     return { type: 'error', message: `エラー: ${errorMessage.value}` };
   }
-  switch (state.value) {
-    case SerialSessionState.Connecting:
+  switch (state.value.status) {
+    case SerialSessionStatus.Connecting:
       return { type: 'info', message: '接続中...' };
-    case SerialSessionState.Disconnecting:
+    case SerialSessionStatus.Disconnecting:
       return { type: 'info', message: '切断中...' };
-    case SerialSessionState.Connected:
+    case SerialSessionStatus.Connected:
       return { type: 'success', message: 'シリアルポートに接続しました。' };
-    case SerialSessionState.Unsupported:
+    case SerialSessionStatus.Unsupported:
       return {
         type: 'error',
         message:
           'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
       };
-    case SerialSessionState.Error:
+    case SerialSessionStatus.Error:
       return { type: 'error', message: 'エラーが発生しました。' };
     default:
       return { type: 'info', message: 'シリアルポートに接続していません。' };

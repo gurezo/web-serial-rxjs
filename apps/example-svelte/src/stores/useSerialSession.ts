@@ -1,6 +1,7 @@
 import {
-  SerialSessionState,
+  SerialSessionStatus,
   type SerialError,
+  type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { createSerialSessionController } from '@gurezo/examples-shared';
 import { type Observable, Subscription } from 'rxjs';
@@ -29,10 +30,13 @@ export function useSerialSession(
 
   const browserSupported = readable(controller.isBrowserSupported());
 
-  const state = readable<SerialSessionState>(SerialSessionState.Idle, (set) => {
-    const sub = controller.state$.subscribe((next) => set(next));
-    return () => sub.unsubscribe();
-  });
+  const state = readable<SerialSessionState>(
+    { status: SerialSessionStatus.Idle },
+    (set) => {
+      const sub = controller.state$.subscribe((next) => set(next));
+      return () => sub.unsubscribe();
+    },
+  );
 
   const isConnected = readable<boolean>(false, (set) => {
     const sub = controller.isConnected$.subscribe((next) => set(next));
@@ -52,8 +56,8 @@ export function useSerialSession(
     subs.add(
       controller.state$.subscribe((next) => {
         if (
-          next === SerialSessionState.Connected ||
-          next === SerialSessionState.Idle
+          next.status === SerialSessionStatus.Connected ||
+          next.status === SerialSessionStatus.Idle
         )
           set(null);
       }),

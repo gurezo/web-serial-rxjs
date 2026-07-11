@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
 
-const SS = webSerialRxjs.SerialSessionState;
+const SS = webSerialRxjs.SerialSessionStatus;
 
 interface MockSession {
   session: SerialSession;
@@ -26,22 +26,22 @@ interface MockSession {
 }
 
 const createMockSession = (): MockSession => {
-  const stateSubject = new BehaviorSubject<SerialSessionState>(SS.Idle);
+  const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
   const isConnected$ = stateSubject.pipe(
-    map((s) => s === SS.Connected),
+    map((s) => s.status === SS.Connected),
     distinctUntilChanged(),
   );
   const connect$ = vi.fn(() => {
-    stateSubject.next(SS.Connecting);
-    stateSubject.next(SS.Connected);
+    stateSubject.next({ status: SS.Connecting });
+    stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     return of(undefined);
   });
   const disconnect$ = vi.fn(() => {
-    stateSubject.next(SS.Disconnecting);
-    stateSubject.next(SS.Idle);
+    stateSubject.next({ status: SS.Disconnecting });
+    stateSubject.next({ status: SS.Idle });
     return of(undefined);
   });
   const dispose$ = vi.fn(() => of(undefined));
