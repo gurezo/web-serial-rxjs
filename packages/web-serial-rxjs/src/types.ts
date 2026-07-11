@@ -1,5 +1,3 @@
-import type { SerialSessionOptions } from './session/serial-session-options';
-
 /**
  * Payload accepted by {@link SerialSession.send$}.
  *
@@ -11,10 +9,13 @@ export type SerialPayload = string | Uint8Array;
 /**
  * Connection parameters passed to `port.open` when opening a serial port.
  *
- * Excludes {@link SerialSessionOptions.filters}, which apply only to
+ * Derived from the W3C {@link SerialOptions} type. Excludes
+ * {@link SerialSessionOptions.filters}, which apply only to
  * `navigator.serial.requestPort`.
+ *
+ * @see {@link SerialOptions}
  */
 export type SerialConnectionOptions = Pick<
-  SerialSessionOptions,
+  SerialOptions,
   'baudRate' | 'dataBits' | 'stopBits' | 'parity' | 'bufferSize' | 'flowControl'
 >;

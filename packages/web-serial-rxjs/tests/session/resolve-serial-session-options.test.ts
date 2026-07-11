@@ -7,6 +7,7 @@ import {
 import {
   DEFAULT_SERIAL_SESSION_OPTIONS,
   resolveSerialSessionOptions,
+  type SerialSessionOptions,
 } from '../../src/session/serial-session-options';
 import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../../src/terminal/create-terminal-buffer';
 
@@ -99,5 +100,42 @@ describe('resolveSerialSessionOptions', () => {
         SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
       );
     }
+  });
+
+  it('accepts representative SerialSessionOptions shapes', () => {
+    const emptyOptions: SerialSessionOptions = {};
+    const partialConnectionOptions: SerialSessionOptions = { baudRate: 115200 };
+    const mixedOptions: SerialSessionOptions = {
+      baudRate: 9600,
+      receiveReplay: { enabled: true },
+      terminalBuffer: { maxLines: 50 },
+      lineBuffer: { maxChars: 1024 },
+      filters: [{ usbVendorId: 0x1234 }],
+    };
+
+    expect(resolveSerialSessionOptions(emptyOptions)).toEqual(
+      DEFAULT_SERIAL_SESSION_OPTIONS,
+    );
+    expect(resolveSerialSessionOptions(partialConnectionOptions)).toEqual({
+      ...DEFAULT_SERIAL_SESSION_OPTIONS,
+      baudRate: 115200,
+    });
+    expect(resolveSerialSessionOptions(mixedOptions)).toEqual({
+      ...DEFAULT_SERIAL_SESSION_OPTIONS,
+      baudRate: 9600,
+      receiveReplay: {
+        ...DEFAULT_SERIAL_SESSION_OPTIONS.receiveReplay,
+        enabled: true,
+      },
+      terminalBuffer: {
+        ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
+        maxLines: 50,
+      },
+      lineBuffer: {
+        ...DEFAULT_LINE_BUFFER_OPTIONS,
+        maxChars: 1024,
+      },
+      filters: [{ usbVendorId: 0x1234 }],
+    });
   });
 });

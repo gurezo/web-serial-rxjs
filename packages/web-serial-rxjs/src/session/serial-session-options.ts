@@ -8,11 +8,24 @@ import {
 } from './internal/line-buffer';
 
 /**
+ * W3C connection fields shared with {@link SerialOptions}.
+ *
+ * @internal
+ */
+type SerialSessionConnectionFields = Pick<
+  SerialOptions,
+  'baudRate' | 'dataBits' | 'stopBits' | 'parity' | 'bufferSize' | 'flowControl'
+>;
+
+/**
  * Options for creating a {@link SerialSession} via {@link createSerialSession}.
  *
- * These options configure the serial port connection parameters used when
- * calling `port.open` and `navigator.serial.requestPort`. All properties
- * are optional; omitted fields fall back to {@link DEFAULT_SERIAL_SESSION_OPTIONS}.
+ * Connection parameters (`baudRate`, `dataBits`, `stopBits`, `parity`,
+ * `bufferSize`, `flowControl`) are derived from the W3C {@link SerialOptions}
+ * type and passed to `port.open`. All connection fields are optional here;
+ * omitted values fall back to {@link DEFAULT_SERIAL_SESSION_OPTIONS}
+ * (`baudRate` 9600, `dataBits` 8, `stopBits` 1, `parity` `'none'`,
+ * `bufferSize` 255, `flowControl` `'none'`).
  *
  * @example
  * ```typescript
@@ -26,55 +39,13 @@ import {
  * });
  * ```
  *
+ * @see {@link SerialOptions}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/402 | Issue #402}
  */
-export interface SerialSessionOptions {
-  /**
-   * Baud rate for the serial port connection (bits per second).
-   *
-   * Common values include 9600, 19200, 38400, 57600, 115200, etc.
-   * Must match the baud rate configured on the connected device.
-   *
-   * @default 9600
-   */
-  baudRate?: number;
-
-  /**
-   * Number of data bits per character (7 or 8).
-   *
-   * @default 8
-   */
-  dataBits?: 7 | 8;
-
-  /**
-   * Number of stop bits (1 or 2).
-   *
-   * @default 1
-   */
-  stopBits?: 1 | 2;
-
-  /**
-   * Parity checking mode.
-   *
-   * @default 'none'
-   */
-  parity?: 'none' | 'even' | 'odd';
-
-  /**
-   * Buffer size for the underlying read stream, in bytes.
-   *
-   * @default 255
-   */
-  bufferSize?: number;
-
-  /**
-   * Flow control mode.
-   *
-   * @default 'none'
-   */
-  flowControl?: 'none' | 'hardware';
-
+export interface SerialSessionOptions
+  extends Partial<SerialSessionConnectionFields> {
   /**
    * Filters for port selection when requesting a port.
    *
