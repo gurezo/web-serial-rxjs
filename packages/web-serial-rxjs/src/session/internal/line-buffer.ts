@@ -28,6 +28,16 @@ export interface LineBufferFeedResult {
 }
 
 /**
+ * Handle returned by {@link createLineBuffer}.
+ *
+ * @internal
+ */
+export interface LineBuffer {
+  feed(chunk: string): LineBufferFeedResult;
+  clear(): void;
+}
+
+/**
  * Streaming UTF-16 text to newline-delimited lines for {@link createSerialSession}.
  * Supports `\r\n` and `\n` per #237; a lone `\r` that is not the last character
  * in the buffer is treated as a line end (compatibility with some devices). A
@@ -36,10 +46,7 @@ export interface LineBufferFeedResult {
  *
  * @internal
  */
-export function createLineBuffer(options?: LineBufferOptions): {
-  feed(chunk: string): LineBufferFeedResult;
-  clear(): void;
-} {
+export function createLineBuffer(options?: LineBufferOptions): LineBuffer {
   const limits: Required<LineBufferOptions> = {
     ...DEFAULT_LINE_BUFFER_OPTIONS,
     ...options,
