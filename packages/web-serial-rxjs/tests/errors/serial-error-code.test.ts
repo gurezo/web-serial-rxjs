@@ -17,6 +17,12 @@ describe('SerialErrorCode', () => {
     expect(SerialErrorCode.OPERATION_CANCELLED).toBe('OPERATION_CANCELLED');
     expect(SerialErrorCode.OPERATION_TIMEOUT).toBe('OPERATION_TIMEOUT');
     expect(SerialErrorCode.LINE_BUFFER_OVERFLOW).toBe('LINE_BUFFER_OVERFLOW');
+    expect(SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS).toBe(
+      'INVALID_RECEIVE_REPLAY_OPTIONS',
+    );
+    expect(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW).toBe(
+      'RECEIVE_REPLAY_BUFFER_OVERFLOW',
+    );
     expect(SerialErrorCode.UNKNOWN).toBe('UNKNOWN');
   });
 
