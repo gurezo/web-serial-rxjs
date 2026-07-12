@@ -2,9 +2,9 @@
 
 This is an Angular example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API. This example uses Angular Services to encapsulate serial port communication logic.
 
-**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/QUICK_START.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
+**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/guide/en/quick-start.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
 
-**Scope**: Minimal smoke test—connect, display via `terminalText$` (`\r`-safe shells), optional line logging with `lines$`, UI via `state$` narrowing, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
+**Scope**: Minimal smoke test—connect, display via `terminalText$` (`\r`-safe shells), optional line logging with `lines$`, UI via `state$` narrowing, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/guide/en/advanced-usage.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
 
 ## API Guide
 
@@ -97,7 +97,7 @@ This example uses Angular Services and RxJS observables to handle serial port co
 
 4. **Data Sending**: Users can type text in the input field and send it to the serial port via the service's `send$` method.
 
-5. **Data Receiving**: The service exposes **`terminalText$`** for textarea display (carriage-return redraws collapsed). **`lines$`** is for newline-delimited logging or parsers only—not for raw terminal mirrors. Raw chunks use **`receive$`** directly (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+5. **Data Receiving**: The service exposes **`terminalText$`** for textarea display (carriage-return redraws collapsed). **`lines$`** is for newline-delimited logging or parsers only—not for raw terminal mirrors. Raw chunks use **`receive$`** directly (see [Advanced Usage](../../packages/web-serial-rxjs/docs/guide/en/advanced-usage.md)).
 
 ## Code Structure
 

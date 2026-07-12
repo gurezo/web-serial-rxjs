@@ -81,7 +81,7 @@ pnpm add rxjs
 
 機能一覧と **`SerialSession` 早見表**、**`SerialSessionState` 表**、**最小サンプル**の正本は次のパッケージドキュメントにあります。
 
-- **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)**（[English](packages/web-serial-rxjs/docs/OVERVIEW.md)）
+- **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)**（[English](packages/web-serial-rxjs/docs/guide/en/overview.md)）
 
 npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md) は短い目次に留め、初回接続の手順は [クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md) を参照してください。
 
@@ -89,12 +89,13 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 ## ドキュメント
 
-ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。日本語 Guide は [guide/ja/](packages/web-serial-rxjs/docs/guide/ja/README.md) に配置しています。
+ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。日本語 Guide は [guide/ja/](packages/web-serial-rxjs/docs/guide/ja/README.md)、English Guide は [guide/en/](packages/web-serial-rxjs/docs/guide/en/README.md) に配置しています。
 
 | ドキュメント | 用途 |
 | --- | --- |
 | **この README** | モノレポのハブ：機能要約、サンプル、貢献導線。 |
 | **[日本語 Guide 索引](packages/web-serial-rxjs/docs/guide/ja/README.md)** | Getting Started の読み順と一覧。 |
+| **[English Guide 索引](packages/web-serial-rxjs/docs/guide/en/README.md)** | Getting Started reading order and full index. |
 | **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
 | **[クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |

@@ -45,7 +45,7 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 | `readableToObservable`            | Not needed; `receive$` is the stream                             |
 | `buildRequestOptions`             | Pass `filters` to `createSerialSession` directly                 |
 
-`SerialError` and `SerialErrorCode` are unchanged in v2. In v3, `SerialErrorCode` becomes a const object + type alias (see [Migrating to v3](./MIGRATION_V3.md)); runtime member names and values stay the same.
+`SerialError` and `SerialErrorCode` are unchanged in v2. In v3, `SerialErrorCode` becomes a const object + type alias (see [Migrating to v3](./migration-v3.md)); runtime member names and values stay the same.
 
 ## Method / field mapping
 
@@ -67,7 +67,7 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 
 ## `state$` shape changes
 
-> **Note (v3):** In v3, `state$` changed again from a flat string to a discriminated union with `status` plus per-variant fields (`portInfo`, `error`). Constants were renamed to `SerialSessionStatus`. If you are on v3 or upgrading from v2 typings, see [Migrating to v3](./MIGRATION_V3.md) instead of the patterns below.
+> **Note (v3):** In v3, `state$` changed again from a flat string to a discriminated union with `status` plus per-variant fields (`portInfo`, `error`). Constants were renamed to `SerialSessionStatus`. If you are on v3 or upgrading from v2 typings, see [Migrating to v3](./migration-v3.md) instead of the patterns below.
 
 v1 `SerialState` was a discriminated object (for example `{ connected: true, connecting: false, ... }`). v2 exposes the same flat strings as a **const object** plus a type alias, so UIs can switch on `SerialSessionState.Connected` or on `'connected'` interchangeably:
 

@@ -395,7 +395,7 @@ Operations such as `getSignals()` / `setSignals()` that previously required a ra
 
 ## 8. `SerialErrorCode` runtime emission audit
 
-Some members of the public `SerialErrorCode` contract were not emitted by the v3.x runtime. To prevent unreachable error-handling branches, all 19 codes were audited ([#438](https://github.com/gurezo/web-serial-rxjs/issues/438)) and the results are recorded here and in the [API Reference](./API_REFERENCE.md#serialerror--serialerrorcode).
+Some members of the public `SerialErrorCode` contract were not emitted by the v3.x runtime. To prevent unreachable error-handling branches, all 19 codes were audited ([#438](https://github.com/gurezo/web-serial-rxjs/issues/438)) and the results are recorded here and in the [API Reference](./concepts.md#serialerror--serialerrorcode).
 
 ### Classification
 
@@ -441,7 +441,7 @@ Fatal vs non-fatal follows `ERROR_SEVERITY` inside `reportError`. Factory-thrown
 
 - [ ] Remove error handling for `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` (unreachable in v3.x).
 - [ ] Handle port acquisition failures with `PORT_OPEN_FAILED` / `OPERATION_CANCELLED`.
-- [ ] See [API Reference – SerialError / SerialErrorCode](./API_REFERENCE.md#serialerror--serialerrorcode) for per-code emit conditions.
+- [ ] See [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode) for per-code emit conditions.
 
 ### Follow-up
 
@@ -451,7 +451,7 @@ Structured context for validation errors (`INVALID_*`) was added in [#439](https
 
 ## 9. `assertNever` public export audit
 
-`assertNever` is a TypeScript utility for exhaustive switch checking. It was added as an internal exhaustiveness helper ([#394](https://github.com/gurezo/web-serial-rxjs/issues/394) / PR #410) but was also exposed as a public export. Because it is not part of the Web Serial / SerialSession domain API, usage was audited ([#440](https://github.com/gurezo/web-serial-rxjs/issues/440)) and the results are recorded here and in the [API Reference](./API_REFERENCE.md#deprecated-exports).
+`assertNever` is a TypeScript utility for exhaustive switch checking. It was added as an internal exhaustiveness helper ([#394](https://github.com/gurezo/web-serial-rxjs/issues/394) / PR #410) but was also exposed as a public export. Because it is not part of the Web Serial / SerialSession domain API, usage was audited ([#440](https://github.com/gurezo/web-serial-rxjs/issues/440)) and the results are recorded here and in the [API Reference](./concepts.md#deprecated-exports).
 
 ### Audit results
 
@@ -559,7 +559,7 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 - `SerialSessionFeatureOptions` — `filters`, `receiveReplay`, `terminalBuffer`, `lineBuffer` (library-specific)
 - `SerialSessionOptions` — composition of the two (factory argument)
 
-See [API Reference – SerialSessionOptions](./API_REFERENCE.md#serialsessionoptions) for details.
+See [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions) for details.
 
 ### v3.x compatibility
 
@@ -569,11 +569,11 @@ The `createSerialSession(options?)` signature and existing options object litera
 
 ## See also
 
-- [Migrating from v1 to v2](./MIGRATION_V2.md)
-- [API Reference – SerialSessionState / SerialSessionStatus](./API_REFERENCE.md#serialsessionstate--serialsessionstatus)
-- [API Reference – SerialError / SerialErrorCode](./API_REFERENCE.md#serialerror--serialerrorcode)
-- [API Reference – dispose$ / destroy$](./API_REFERENCE.md#dispose-observablevoid)
-- [API Reference – portInfo$ / getPortInfo()](./API_REFERENCE.md#portinfo-observableserialportinfo--null)
-- [API Reference – isConnected$](./API_REFERENCE.md#isconnected-observableboolean)
-- [API Reference – Deprecated exports](./API_REFERENCE.md#deprecated-exports)
-- [API Reference – SerialSessionOptions](./API_REFERENCE.md#serialsessionoptions)
+- [Migrating from v1 to v2](./migration-v2.md)
+- [API Reference – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
+- [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
+- [API Reference – dispose$ / destroy$](./concepts.md#dispose-observablevoid)
+- [API Reference – portInfo$ / getPortInfo()](./concepts.md#portinfo-observableserialportinfo--null)
+- [API Reference – isConnected$](./concepts.md#isconnected-observableboolean)
+- [API Reference – Deprecated exports](./concepts.md#deprecated-exports)
+- [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions)

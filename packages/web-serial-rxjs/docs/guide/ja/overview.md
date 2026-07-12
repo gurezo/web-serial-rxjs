@@ -117,6 +117,6 @@ session.send$('hello\r\n').subscribe();
 | **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
 | **[API Reference（TypeDoc）](https://gurezo.github.io/web-serial-rxjs/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
-| **[v2 → v3 マイグレーション](./migration-v3.md)**（[English](../../MIGRATION_V3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
-| **[v1 → v2 マイグレーション](./migration-v2.md)**（[English](../../MIGRATION_V2.md)） | 削除された v1 API からの対応表。 |
+| **[v2 → v3 マイグレーション](./migration-v3.md)**（[English](../en/migration-v3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
+| **[v1 → v2 マイグレーション](./migration-v2.md)**（[English](../en/migration-v2.md)） | 削除された v1 API からの対応表。 |
 | **[Phase 5（アーカイブ）](./archive/migration-phase5.md)** | 旧 v1 ドキュメントの参照用。 |

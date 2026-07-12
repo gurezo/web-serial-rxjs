@@ -1,4 +1,7 @@
-# API Reference
+# API concepts and design notes
+
+For exhaustive public API specifications, see the [English TypeDoc API Reference](https://gurezo.github.io/web-serial-rxjs/modules.html). This page is a Guide supplement (tables and design notes)—not a TypeDoc substitute.
+
 
 The public surface consists of a single factory (`createSerialSession`), the runtime `SerialSession` interface, one options type, one state union, and two error types.
 
@@ -24,7 +27,7 @@ import {
 
 ## Deprecated exports
 
-The following remain available from the public export in v3.x but are not part of the canonical API. They are scheduled for removal in the next major version. See [Migrating to v3 – §9 `assertNever` public export audit](./MIGRATION_V3.md#9-public-export-audit).
+The following remain available from the public export in v3.x but are not part of the canonical API. They are scheduled for removal in the next major version. See [Migrating to v3 – §9 `assertNever` public export audit](./migration-v3.md#9-public-export-audit).
 
 | Export | Status | Migration |
 | --- | --- | --- |
@@ -58,7 +61,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 SerialSessionOptions = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
 ```
 
-See [Migrating to v3 – §10 Session options type responsibility audit](./MIGRATION_V3.md#10-session-options-type-responsibility-audit) for the audit rationale.
+See [Migrating to v3 – §10 Session options type responsibility audit](./migration-v3.md#10-session-options-type-responsibility-audit) for the audit rationale.
 
 ### Connection options (`SerialConnectionOptions`)
 
@@ -186,7 +189,7 @@ session.state$
   });
 ```
 
-See [Migrating to v3](./MIGRATION_V3.md) for the v2 string migration.
+See [Migrating to v3](./migration-v3.md) for the v2 string migration.
 
 ## SerialSession
 
@@ -238,7 +241,7 @@ After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOS
 
 ### `destroy$(): Observable<void>`
 
-**Deprecated** — alias for `dispose$()`. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. See [Migrating to v3 – destroy$ deprecation](./MIGRATION_V3.md#4-destroy-deprecation).
+**Deprecated** — alias for `dispose$()`. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. See [Migrating to v3 – destroy$ deprecation](./migration-v3.md#4-destroy-deprecation).
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -246,15 +249,15 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 
 ### `isConnected$: Observable<boolean>`
 
-**Deprecated** — `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` or derive a boolean from `state$`. See [Migrating to v3 – isConnected$ deprecation](./MIGRATION_V3.md#6-isconnected-deprecation).
+**Deprecated** — `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` or derive a boolean from `state$`. See [Migrating to v3 – isConnected$ deprecation](./migration-v3.md#6-isconnected-deprecation).
 
 ### `portInfo$: Observable<SerialPortInfo | null>`
 
-**Deprecated** — convenience stream that emits the active port's `SerialPort.getInfo()` snapshot, or `null` when no port is open. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./MIGRATION_V3.md#5-portinfo--getportinfo-deprecation).
+**Deprecated** — convenience stream that emits the active port's `SerialPort.getInfo()` snapshot, or `null` when no port is open. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./migration-v3.md#5-portinfo--getportinfo-deprecation).
 
 ### `getPortInfo(): SerialPortInfo | null`
 
-**Deprecated** — synchronous read of the last `portInfo$` value. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./MIGRATION_V3.md#5-portinfo--getportinfo-deprecation).
+**Deprecated** — synchronous read of the last `portInfo$` value. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./migration-v3.md#5-portinfo--getportinfo-deprecation).
 
 ### `errors$: Observable<SerialError>`
 
@@ -284,7 +287,7 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 
 `SerialError` extends `Error` with a `code: SerialErrorCode` and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code.
 
-For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version. See [Migrating to v3 – originalError deprecation](./MIGRATION_V3.md#3-originalerror-deprecation).
+For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version. See [Migrating to v3 – originalError deprecation](./migration-v3.md#3-originalerror-deprecation).
 
 ```typescript
 session.errors$.subscribe((error) => {
@@ -302,9 +305,9 @@ try {
 }
 ```
 
-The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./MIGRATION_V3.md) for the enum-to-const declaration change.
+The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./migration-v3.md) for the enum-to-const declaration change.
 
-Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](./MIGRATION_V3.md#8-serialerrorcode-runtime-emission-audit).
+Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit).
 
 | Code                     | `context` shape | When it is emitted                                                  |
 | ------------------------ | --------------- | ------------------------------------------------------------------- |

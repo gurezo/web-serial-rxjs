@@ -2,9 +2,9 @@
 
 This is a vanilla TypeScript example application demonstrating how to use the `@gurezo/web-serial-rxjs` library with RxJS to interact with serial ports through the Web Serial API.
 
-**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/QUICK_START.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
+**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/guide/en/quick-start.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
 
-**Scope**: Minimal smoke test—connect, display via `terminalText$` (session-following subscription), UI toggles via `state$` narrowing, send, disconnect. Use `lines$` only for line-delimited logging. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
+**Scope**: Minimal smoke test—connect, display via `terminalText$` (session-following subscription), UI toggles via `state$` narrowing, send, disconnect. Use `lines$` only for line-delimited logging. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/guide/en/advanced-usage.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
 
 ## API Guide
 

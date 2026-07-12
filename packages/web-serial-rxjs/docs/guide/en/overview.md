@@ -1,10 +1,10 @@
 # SerialSession overview
 
 <p align="center">
-  <img src="../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
+  <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference](modules.html).
+This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference (TypeDoc)](https://gurezo.github.io/web-serial-rxjs/modules.html).
 
 ## Table of Contents
 
@@ -16,13 +16,13 @@ This page is the **mental model** for the public API: what each `SerialSession` 
 
 ## Documentation
 
-Start here from the TypeDoc top page:
+Start here:
 
-- [Quick Start](./QUICK_START.md)
-- [Advanced Usage](./ADVANCED_USAGE.md)
-- [API Concepts and design notes](./API_REFERENCE.md)
-- [v2 to v3 Migration Guide](./MIGRATION_V3.md)
-- [v1 to v2 Migration Guide](./MIGRATION_V2.md)
+- [Quick Start](./quick-start.md)
+- [Advanced Usage](./advanced-usage.md)
+- [API concepts and design notes](./concepts.md)
+- [v2 to v3 Migration Guide](./migration-v3.md)
+- [v1 to v2 Migration Guide](./migration-v2.md)
 
 ## Features
 
@@ -45,7 +45,7 @@ This library is framework-agnostic and can be used with:
 
 ## SerialSession at a glance
 
-`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](./ADVANCED_USAGE.md)).
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](./advanced-usage.md)).
 
 | Surface | Role |
 | --- | --- |
@@ -77,11 +77,11 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 | `SerialSessionStatus.Error` | `'error'` | Fatal failure (`error` included). |
 | `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`. |
 
-**`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
+**`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./advanced-usage.md#line-framing)).
 
-**`isConnected$` (deprecated convenience)** — a read-only `Observable<boolean>`. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. When you only need a boolean for UI toggles, derive it from `state$` or narrow on `state.status === SerialSessionStatus.Connected`. See [Migrating to v3](./MIGRATION_V3.md#6-isconnected-deprecation).
+**`isConnected$` (deprecated convenience)** — a read-only `Observable<boolean>`. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. When you only need a boolean for UI toggles, derive it from `state$` or narrow on `state.status === SerialSessionStatus.Connected`. See [Migrating to v3](./migration-v3.md#6-isconnected-deprecation).
 
-**`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
+**`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./advanced-usage.md#line-framing)).
 
 ### Minimal example
 
@@ -106,16 +106,17 @@ session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```
 
-In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](./QUICK_START.md).
+In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscribe({ error })` (errors are also on `errors$`). A fuller walkthrough is in [Quick Start](./quick-start.md).
 
 ## Documentation index
 
 | Doc | Use it for |
 | --- | --- |
+| **[English Guide index](./README.md)** | Getting Started reading order and full index. |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
-| **[Quick Start](./QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
-| **[Advanced Usage](./ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
-| **[API Reference](modules.html)** | Options, `SerialSessionState`, and `SerialError` details (generated TypeDoc); narrative tables also on [GitHub](./API_REFERENCE.md). |
-| **[v2 → v3 Migration Guide](./MIGRATION_V3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
-| **[v1 → v2 Migration Guide](./MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
-| **[Phase 5 archive (legacy v1 doc)](./archive/MIGRATION_PHASE5.md)** | Historical v1 context only. |
+| **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
+| **[Advanced Usage](./advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
+| **[API Reference (TypeDoc)](https://gurezo.github.io/web-serial-rxjs/modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
+| **[v2 → v3 Migration Guide](./migration-v3.md)** ([日本語](../ja/migration-v3.md)) | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
+| **[v1 → v2 Migration Guide](./migration-v2.md)** ([日本語](../ja/migration-v2.md)) | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
+| **[Phase 5 archive (legacy v1 doc)](./archive/migration-phase5.md)** | Historical v1 context only. |
