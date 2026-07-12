@@ -15,6 +15,8 @@ import {
   type SerialSession,
   type SerialSessionState,
   type SerialSessionOptions,
+  type SerialSessionFeatureOptions,
+  type SerialConnectionOptions,
   type SerialSessionReceiveReplayOptions,
   type TerminalBufferOptions,
 } from '@gurezo/web-serial-rxjs';
@@ -50,6 +52,18 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 
 ## SerialSessionOptions
 
+`SerialSessionOptions` は W3C connection parameters（`SerialConnectionOptions`）と library-specific session features（`SerialSessionFeatureOptions`）の composition です。`createSerialSession` の factory 引数として使用します。
+
+```text
+SerialSessionOptions = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
+```
+
+詳細は [v3 への移行 – §10 Session options 型責務監査](./MIGRATION_V3.ja.md#10-session-options-型責務監査) を参照してください。
+
+### Connection options（`SerialConnectionOptions`）
+
+W3C `SerialOptions` から派生し、`port.open` に渡されます。factory 時点ではすべて optional で、省略時は下表の既定値が適用されます。
+
 | フィールド    | 型                                  | 既定値    | 説明                                                                         |
 | ------------- | ----------------------------------- | --------- | ---------------------------------------------------------------------------- |
 | `baudRate`    | `number`                            | `9600`    | ボーレート（bps）                                                            |
@@ -58,6 +72,13 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `parity`      | `'none' \| 'even' \| 'odd'`         | `'none'`  | パリティ                                                                     |
 | `bufferSize`  | `number`                            | `255`     | リードストリームのバッファサイズ（バイト）                                   |
 | `flowControl` | `'none' \| 'hardware'`              | `'none'`  | フロー制御                                                                   |
+
+### Session feature options（`SerialSessionFeatureOptions`）
+
+`web-serial-rxjs` 固有の session 機能です。W3C `port.open` には渡されません。
+
+| フィールド    | 型                                  | 既定値    | 説明                                                                         |
+| ------------- | ----------------------------------- | --------- | ---------------------------------------------------------------------------- |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —         | ポート選択ダイアログに渡される `navigator.serial.requestPort` 用フィルタ     |
 | `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512, maxChars: 0 }` | 受信チャンクの接続単位 replay。`receiveReplay$` を参照。 |
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }` | `terminalText$` のメモリ上限と ANSI 除去。`createTerminalBuffer` を参照。 |
