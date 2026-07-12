@@ -129,12 +129,13 @@ export type SerialSessionState =
 - [ ] **定数**として使っていた `SerialSessionState` を `SerialSessionStatus` に置き換える。
 - [ ] `state === SerialSessionState.X` を `state.status === SerialSessionStatus.X` に置き換える。
 - [ ] `switch (state)` を `switch (state.status)` に置き換える（または `if` で `state.status` を比較）。
-- [ ] `connected` 時は `state.portInfo` を利用（任意 — `portInfo$` も引き続き利用可能）。
+- [ ] `connected` 時は `state.portInfo` を利用する（推奨 — `portInfo$` と `getPortInfo()` は非推奨）。
 - [ ] `error` 時は `state.error` を利用（fatal error は `errors$` と同一インスタンス）。
 
 ### 変更なし
 
-- `portInfo$`、`getPortInfo()`、`errors$`、`isConnected$` は引き続き利用可能。
+- `errors$` と `isConnected$` は引き続き利用可能。
+- `portInfo$` と `getPortInfo()` は v3.x では引き続き利用可能ですが、**非推奨**です（[§5](#5-portinfo--getportinfo-の非推奨化) を参照）。
 - `isConnected$` は内部で connected 状態から派生します。
 
 ---
@@ -215,9 +216,55 @@ session.dispose$().subscribe({
 
 ---
 
+## 5. `portInfo$` / `getPortInfo()` の非推奨化
+
+v3.0.0 では `state$` が discriminated union になりました。`state.status` が `SerialSessionStatus.Connected` のとき、**`state.portInfo`** がアクティブポートの `SerialPort.getInfo()` スナップショットの canonical source です。TypeScript の narrowing により、存在が型で保証されます。
+
+`portInfo$` と `getPortInfo()` は後方互換のため v3.x に残っていますが、**非推奨**で、次回 major version で削除予定です。これらは `SerialPortInfo | null` を返すため、接続状態とポート情報の関係を型で表現できません。
+
+### v2 / 旧パターン（非推奨）
+
+```typescript
+session.portInfo$.subscribe((portInfo) => {
+  if (portInfo) {
+    console.log(portInfo);
+  }
+});
+
+const snapshot = session.getPortInfo();
+```
+
+### v3 推奨パターン
+
+```typescript
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
+  }
+});
+```
+
+### 移行チェックリスト
+
+- [ ] `portInfo$` の購読を `state$` に置き換え、`state.status === SerialSessionStatus.Connected` のとき `state.portInfo` を参照する。
+- [ ] `getPortInfo()` を `state$` の narrowing と `state.portInfo` に置き換える。
+- [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
+- [ ] 新規コードとドキュメントでは `state.portInfo` を使用する。
+
+### v3.x での互換性
+
+- `portInfo$` と `getPortInfo()` は v3.x では引き続き利用可能です。
+- ランタイム挙動は変更されません。接続中は `state.portInfo` と値が同期します。
+- `errors$` は非推奨化の対象ではありません。lifecycle state ではなく、独立した error event channel です。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)
 - [API リファレンス – SerialSessionState / SerialSessionStatus](./API_REFERENCE.ja.md#serialsessionstate--serialsessionstatus)
 - [API リファレンス – SerialError / SerialErrorCode](./API_REFERENCE.ja.md#serialerror--serialerrorcode)
 - [API リファレンス – dispose$ / destroy$](./API_REFERENCE.ja.md#dispose-observablevoid)
+- [API リファレンス – portInfo$ / getPortInfo()](./API_REFERENCE.ja.md#portinfo-observableserialportinfo--null)

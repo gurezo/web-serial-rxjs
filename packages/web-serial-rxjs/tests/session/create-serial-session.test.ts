@@ -146,6 +146,7 @@ describe('createSerialSession', () => {
       expect(typeof session.getCurrentPort).toBe('function');
       expect(session.state$).toBeDefined();
       expect(session.isConnected$).toBeDefined();
+      // portInfo$ and getPortInfo remain available during v3.x deprecation.
       expect(session.portInfo$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
@@ -585,6 +586,39 @@ describe('createSerialSession', () => {
 
       expect(session.getPortInfo()).toBeNull();
       expect(session.getCurrentPort()).toBeNull();
+      expect(await firstValueFrom(session.portInfo$)).toBeNull();
+    });
+
+    it('keeps state.portInfo in sync with getPortInfo() while connected', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const state = await firstValueFrom(session.state$);
+      expect(state.status).toBe(S.Connected);
+      if (state.status === S.Connected) {
+        expect(state.portInfo).toEqual(stubPortInfo);
+        expect(session.getPortInfo()).toEqual(state.portInfo);
+      } else {
+        throw new Error('expected connected state');
+      }
+    });
+
+    it('clears state.portInfo and getPortInfo() together on disconnect', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+      await firstValueFrom(session.disconnect$());
+
+      const state = await firstValueFrom(session.state$);
+      expect(state.status).toBe(S.Idle);
+      expect(session.getPortInfo()).toBeNull();
       expect(await firstValueFrom(session.portInfo$)).toBeNull();
     });
 

@@ -1,0 +1,252 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>MIGRATION_V3.ja | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="" aria-current="page">MIGRATION_V3.ja</a></li></ul></div>
+<div class="tsd-panel tsd-typography"><h1 id="v3-への移行" class="tsd-anchor-link">v3 への移行<a href="#v3-への移行" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<p>v3 では TypeScript 向けに次の 2 つの破壊的変更があります。</p>
+<ol>
+<li><strong><code>SerialErrorCode</code></strong> — <code>enum</code> から const object + union type へ（ランタイム値は不変）。</li>
+<li><strong><code>state$</code> の payload</strong> — フラットな文字列から、状態ごとの詳細を持つ discriminated union へ。</li>
+</ol>
+<p>本ガイドでは両方を説明します。エラーコードのランタイム文字列は変わりません（<code>SerialErrorCode.READ_FAILED</code> は引き続き <code>'READ_FAILED'</code> です）。</p>
+<h2 id="tldr" class="tsd-anchor-link">TL;DR<a href="#tldr" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-2">SerialError</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialErrorCode</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionState</span><span class="hl-1">,</span><br/><span class="hl-1">} </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">: </span><span class="hl-10">SerialSessionState</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">switch</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-0">case</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">:</span><br/><span class="hl-1">      </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">      </span><span class="hl-0">break</span><span class="hl-1">;</span><br/><span class="hl-1">    </span><span class="hl-0">case</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Error</span><span class="hl-1">:</span><br/><span class="hl-1">      </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">error</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-1">      </span><span class="hl-0">break</span><span class="hl-1">;</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">error</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-6">is</span><span class="hl-1">(</span><span class="hl-2">SerialErrorCode</span><span class="hl-1">.</span><span class="hl-5">READ_FAILED</span><span class="hl-1">)) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">error</span><span class="hl-1">(</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-2">context</span><span class="hl-1">.</span><span class="hl-2">cause</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<hr>
+<h2 id="1-const-object" class="tsd-anchor-link">1. <code>SerialErrorCode</code> const object<a href="#1-const-object" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<h3 id="変更内容" class="tsd-anchor-link">変更内容<a href="#変更内容" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>v2</th>
+<th>v3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>export enum SerialErrorCode { ... }</code></td>
+<td><code>export const SerialErrorCode = { ... } as const</code> + <code>export type SerialErrorCode</code></td>
+</tr>
+<tr>
+<td>TypeDoc: <code>enums/SerialErrorCode.html</code></td>
+<td>TypeDoc: <code>variables/SerialErrorCode.html</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="移行不要（典型的なパターン）" class="tsd-anchor-link">移行不要（典型的なパターン）<a href="#移行不要（典型的なパターン）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>SerialErrorCode.BROWSER_NOT_SUPPORTED</code>（他のメンバーも同様）</li>
+<li><code>error.code === SerialErrorCode.WRITE_FAILED</code></li>
+<li><code>error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)</code> による <code>context</code> の narrowing</li>
+<li><code>switch (error.code) { case SerialErrorCode.READ_FAILED: ... }</code></li>
+</ul>
+<h3 id="更新が必要な場合" class="tsd-anchor-link">更新が必要な場合<a href="#更新が必要な場合" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><strong>型のみの import</strong> — <code>import type { SerialErrorCode } from '@gurezo/web-serial-rxjs'</code> のまま利用可能。</li>
+<li><strong>TypeDoc の深いリンク</strong> — <code>enums/SerialErrorCode.html</code> から <code>variables/SerialErrorCode.html</code> へ更新。</li>
+<li><strong><code>.d.ts</code> を解析するツール</strong> — 宣言形が <code>enum</code> から <code>const</code> + type alias に変わります。</li>
+</ul>
+<hr>
+<h2 id="2-discriminated-union" class="tsd-anchor-link">2. discriminated union <code>state$</code><a href="#2-discriminated-union" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<h3 id="変更内容-1" class="tsd-anchor-link">変更内容<a href="#変更内容-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>v2</th>
+<th>v3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>state$: Observable&lt;'idle' | 'connected' | ...&gt;</code></td>
+<td><code>state$: Observable&lt;SerialSessionState&gt;</code>（discriminated union）</td>
+</tr>
+<tr>
+<td><code>SerialSessionState</code> const（文字列リテラル）</td>
+<td><strong><code>SerialSessionStatus</code></strong> const（文字列リテラル）</td>
+</tr>
+<tr>
+<td><code>state === SerialSessionState.Connected</code></td>
+<td><code>state.status === SerialSessionStatus.Connected</code></td>
+</tr>
+<tr>
+<td><code>state$</code> と <code>portInfo$</code> / <code>errors$</code> を手動で相関</td>
+<td><code>connected</code> に <code>portInfo</code>、<code>error</code> に <code>SerialError</code> を同梱</td>
+</tr>
+</tbody>
+</table>
+<h3 id="v2（変更前）" class="tsd-anchor-link">v2（変更前）<a href="#v2（変更前）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionState</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionState</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">getPortInfo</span><span class="hl-1">(); </span><span class="hl-9">// 別途取得</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="v3（変更後）" class="tsd-anchor-link">v3（変更後）<a href="#v3（変更後）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">switch</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-0">case</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">:</span><br/><span class="hl-1">      </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">      </span><span class="hl-0">break</span><span class="hl-1">;</span><br/><span class="hl-1">    </span><span class="hl-0">case</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Error</span><span class="hl-1">:</span><br/><span class="hl-1">      </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">error</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-1">      </span><span class="hl-0">break</span><span class="hl-1">;</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="型の形" class="tsd-anchor-link">型の形<a href="#型の形" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">export</span><span class="hl-1"> </span><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">SerialSessionStatus</span><span class="hl-1"> = {</span><br/><span class="hl-1">  </span><span class="hl-2">Idle:</span><span class="hl-1"> </span><span class="hl-3">&#39;idle&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">Connecting:</span><span class="hl-1"> </span><span class="hl-3">&#39;connecting&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">Connected:</span><span class="hl-1"> </span><span class="hl-3">&#39;connected&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">Disconnecting:</span><span class="hl-1"> </span><span class="hl-3">&#39;disconnecting&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">Unsupported:</span><span class="hl-1"> </span><span class="hl-3">&#39;unsupported&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">Error:</span><span class="hl-1"> </span><span class="hl-3">&#39;error&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">Disposed:</span><span class="hl-1"> </span><span class="hl-3">&#39;disposed&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">} </span><span class="hl-0">as</span><span class="hl-1"> </span><span class="hl-4">const</span><span class="hl-1">;</span><br/><br/><span class="hl-0">export</span><span class="hl-1"> </span><span class="hl-4">type</span><span class="hl-1"> </span><span class="hl-10">SerialSessionState</span><span class="hl-1"> =</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Idle</span><span class="hl-1"> }</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connecting</span><span class="hl-1"> }</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">; </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">portInfo</span><span class="hl-1">: </span><span class="hl-10">SerialPortInfo</span><span class="hl-1"> }</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Disconnecting</span><span class="hl-1"> }</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Unsupported</span><span class="hl-1"> }</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Error</span><span class="hl-1">; </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">error</span><span class="hl-1">: </span><span class="hl-10">SerialError</span><span class="hl-1"> }</span><br/><span class="hl-1">  | { </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">status</span><span class="hl-1">: </span><span class="hl-4">typeof</span><span class="hl-1"> </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Disposed</span><span class="hl-1"> };</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="移行チェックリスト" class="tsd-anchor-link">移行チェックリスト<a href="#移行チェックリスト" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] <strong>定数</strong>として使っていた <code>SerialSessionState</code> を <code>SerialSessionStatus</code> に置き換える。</li>
+<li>[ ] <code>state === SerialSessionState.X</code> を <code>state.status === SerialSessionStatus.X</code> に置き換える。</li>
+<li>[ ] <code>switch (state)</code> を <code>switch (state.status)</code> に置き換える（または <code>if</code> で <code>state.status</code> を比較）。</li>
+<li>[ ] <code>connected</code> 時は <code>state.portInfo</code> を利用する（推奨 — <code>portInfo$</code> と <code>getPortInfo()</code> は非推奨）。</li>
+<li>[ ] <code>error</code> 時は <code>state.error</code> を利用（fatal error は <code>errors$</code> と同一インスタンス）。</li>
+</ul>
+<h3 id="変更なし" class="tsd-anchor-link">変更なし<a href="#変更なし" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>errors$</code> と <code>isConnected$</code> は引き続き利用可能。</li>
+<li><code>portInfo$</code> と <code>getPortInfo()</code> は v3.x では引き続き利用可能ですが、<strong>非推奨</strong>です（<a href="#5-portinfo--getportinfo-%E3%81%AE%E9%9D%9E%E6%8E%A8%E5%A5%A8%E5%8C%96">§5</a> を参照）。</li>
+<li><code>isConnected$</code> は内部で connected 状態から派生します。</li>
+</ul>
+<hr>
+<h2 id="3-の非推奨化" class="tsd-anchor-link">3. <code>originalError</code> の非推奨化<a href="#3-の非推奨化" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>v3.0.0 では typed <code>SerialError.context</code> を導入しました。cause 系 error code では <strong><code>context.cause</code></strong> が原因エラーの canonical source です。</p>
+<p>後方互換のため <code>SerialError.originalError</code> と constructor の legacy 第 3 引数は v3.x で残っていますが、<strong>非推奨</strong>です。次回 major version で削除予定です。</p>
+<h3 id="v2-旧パターン（非推奨）" class="tsd-anchor-link">v2 / 旧パターン（非推奨）<a href="#v2-旧パターン（非推奨）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">error</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-2">code</span><span class="hl-1"> === </span><span class="hl-2">SerialErrorCode</span><span class="hl-1">.</span><span class="hl-5">READ_FAILED</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">error</span><span class="hl-1">(</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-2">originalError</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="v3-推奨パターン" class="tsd-anchor-link">v3 推奨パターン<a href="#v3-推奨パターン" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">error</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-6">is</span><span class="hl-1">(</span><span class="hl-2">SerialErrorCode</span><span class="hl-1">.</span><span class="hl-5">READ_FAILED</span><span class="hl-1">)) {</span><br/><span class="hl-1">    </span><span class="hl-9">// error.context.cause は unknown — Error 以外の throw も保持</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">error</span><span class="hl-1">(</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-2">context</span><span class="hl-1">.</span><span class="hl-2">cause</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="移行チェックリスト-1" class="tsd-anchor-link">移行チェックリスト<a href="#移行チェックリスト-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] <code>error.originalError</code> を <code>error.context.cause</code> に置き換える（<code>error.is(code)</code> で narrowing してからアクセス）。</li>
+<li>[ ] 独自に <code>new SerialError(code, message, cause)</code> としていた場合は <code>new SerialError(code, message, undefined, { cause })</code> に変更する。</li>
+<li>[ ] TypeScript の <code>@deprecated</code> 警告が出たら、上記パターンへ移行する。</li>
+</ul>
+<h3 id="v3x-での互換性" class="tsd-anchor-link">v3.x での互換性<a href="#v3x-での互換性" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>originalError</code> は v3.x では引き続き利用可能です。</li>
+<li><code>context.cause</code> が <code>Error</code> インスタンスの場合、<code>originalError</code> も同期して設定されます（legacy 利用者向け）。</li>
+<li><code>context.cause</code> の型は <code>unknown</code> です（JavaScript では <code>Error</code> 以外も throw 可能なため）。</li>
+</ul>
+<hr>
+<h2 id="4-の非推奨化" class="tsd-anchor-link">4. <code>destroy$</code> の非推奨化<a href="#4-の非推奨化" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>SerialSession</code> は <code>dispose$()</code> と <code>destroy$()</code> の両方を公開しています。これらは同一関数であり、<code>destroy$</code> は legacy エイリアスです。lifecycle terminology（<code>dispose</code>、<code>disposed</code>、<code>SESSION_DISPOSED</code>）はすでに <strong><code>dispose$</code></strong> を canonical API として使用しています。</p>
+<p>後方互換のため <code>destroy$()</code> は v3.x に残っていますが、<strong>非推奨</strong>です。次回 major version で削除予定です。</p>
+<h3 id="v2-旧パターン（非推奨）-1" class="tsd-anchor-link">v2 / 旧パターン（非推奨）<a href="#v2-旧パターン（非推奨）-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">destroy$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-6">complete</span><span class="hl-2">:</span><span class="hl-1"> () </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-3">&#39;session destroyed&#39;</span><span class="hl-1">),</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="v3-推奨パターン-1" class="tsd-anchor-link">v3 推奨パターン<a href="#v3-推奨パターン-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">dispose$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-6">complete</span><span class="hl-2">:</span><span class="hl-1"> () </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-3">&#39;session disposed&#39;</span><span class="hl-1">),</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="移行チェックリスト-2" class="tsd-anchor-link">移行チェックリスト<a href="#移行チェックリスト-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] <code>session.destroy$()</code> を <code>session.dispose$()</code> に置き換える。</li>
+<li>[ ] TypeScript の <code>@deprecated</code> 警告が出たら <code>dispose$</code> へ移行する。</li>
+<li>[ ] 新規コードとドキュメントでは <code>dispose$</code> を使用する。</li>
+</ul>
+<h3 id="v3x-での互換性-1" class="tsd-anchor-link">v3.x での互換性<a href="#v3x-での互換性-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>destroy$</code> は v3.x では引き続き利用可能で、<code>dispose$</code> と同じ実装に委譲します。</li>
+<li>ランタイム挙動は変更されません。非推奨化されるのはエイリアスのみです。</li>
+</ul>
+<hr>
+<h2 id="5-の非推奨化" class="tsd-anchor-link">5. <code>portInfo$</code> / <code>getPortInfo()</code> の非推奨化<a href="#5-の非推奨化" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>v3.0.0 では <code>state$</code> が discriminated union になりました。<code>state.status</code> が <code>SerialSessionStatus.Connected</code> のとき、<strong><code>state.portInfo</code></strong> がアクティブポートの <code>SerialPort.getInfo()</code> スナップショットの canonical source です。TypeScript の narrowing により、存在が型で保証されます。</p>
+<p><code>portInfo$</code> と <code>getPortInfo()</code> は後方互換のため v3.x に残っていますが、<strong>非推奨</strong>で、次回 major version で削除予定です。これらは <code>SerialPortInfo | null</code> を返すため、接続状態とポート情報の関係を型で表現できません。</p>
+<h3 id="v2-旧パターン（非推奨）-2" class="tsd-anchor-link">v2 / 旧パターン（非推奨）<a href="#v2-旧パターン（非推奨）-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">portInfo$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">portInfo</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">portInfo</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">snapshot</span><span class="hl-1"> = </span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">getPortInfo</span><span class="hl-1">();</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="v3-推奨パターン-2" class="tsd-anchor-link">v3 推奨パターン<a href="#v3-推奨パターン-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="移行チェックリスト-3" class="tsd-anchor-link">移行チェックリスト<a href="#移行チェックリスト-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] <code>portInfo$</code> の購読を <code>state$</code> に置き換え、<code>state.status === SerialSessionStatus.Connected</code> のとき <code>state.portInfo</code> を参照する。</li>
+<li>[ ] <code>getPortInfo()</code> を <code>state$</code> の narrowing と <code>state.portInfo</code> に置き換える。</li>
+<li>[ ] TypeScript の <code>@deprecated</code> 警告が出たら、上記パターンへ移行する。</li>
+<li>[ ] 新規コードとドキュメントでは <code>state.portInfo</code> を使用する。</li>
+</ul>
+<h3 id="v3x-での互換性-2" class="tsd-anchor-link">v3.x での互換性<a href="#v3x-での互換性-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>portInfo$</code> と <code>getPortInfo()</code> は v3.x では引き続き利用可能です。</li>
+<li>ランタイム挙動は変更されません。接続中は <code>state.portInfo</code> と値が同期します。</li>
+<li><code>errors$</code> は非推奨化の対象ではありません。lifecycle state ではなく、独立した error event channel です。</li>
+</ul>
+<hr>
+<h2 id="関連ドキュメント" class="tsd-anchor-link">関連ドキュメント<a href="#関連ドキュメント" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
+<li><a href="MIGRATION_V2.ja.html">v1 から v2 への移行</a></li>
+<li><a href="API_REFERENCE.ja.html#serialsessionstate--serialsessionstatus">API リファレンス – SerialSessionState / SerialSessionStatus</a></li>
+<li><a href="API_REFERENCE.ja.html#serialerror--serialerrorcode">API リファレンス – SerialError / SerialErrorCode</a></li>
+<li><a href="API_REFERENCE.ja.html#dispose-observablevoid">API リファレンス – dispose$ / destroy$</a></li>
+<li><a href="API_REFERENCE.ja.html#portinfo-observableserialportinfo--null">API リファレンス – portInfo$ / getPortInfo()</a></li>
+</ul>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#v3-への移行"><span>v3 への移行</span></a>
+<ul>
+<li><a href="#tldr"><span>TL;<wbr/>DR</span></a></li>
+<li><a href="#1-const-object"><span>1.  const object</span></a></li>
+<li>
+<ul>
+<li><a href="#変更内容"><span>変更内容</span></a></li>
+<li><a href="#移行不要（典型的なパターン）"><span>移行不要（典型的なパターン）</span></a></li>
+<li><a href="#更新が必要な場合"><span>更新が必要な場合</span></a></li></ul></li>
+<li><a href="#2-discriminated-union"><span>2. discriminated union </span></a></li>
+<li>
+<ul>
+<li><a href="#変更内容-1"><span>変更内容</span></a></li>
+<li><a href="#v2（変更前）"><span>v2（変更前）</span></a></li>
+<li><a href="#v3（変更後）"><span>v3（変更後）</span></a></li>
+<li><a href="#型の形"><span>型の形</span></a></li>
+<li><a href="#移行チェックリスト"><span>移行チェックリスト</span></a></li>
+<li><a href="#変更なし"><span>変更なし</span></a></li></ul></li>
+<li><a href="#3-の非推奨化"><span>3.  の非推奨化</span></a></li>
+<li>
+<ul>
+<li><a href="#v2-旧パターン（非推奨）"><span>v2 / 旧パターン（非推奨）</span></a></li>
+<li><a href="#v3-推奨パターン"><span>v3 推奨パターン</span></a></li>
+<li><a href="#移行チェックリスト-1"><span>移行チェックリスト</span></a></li>
+<li><a href="#v3x-での互換性"><span>v3.x での互換性</span></a></li></ul></li>
+<li><a href="#4-の非推奨化"><span>4.  の非推奨化</span></a></li>
+<li>
+<ul>
+<li><a href="#v2-旧パターン（非推奨）-1"><span>v2 / 旧パターン（非推奨）</span></a></li>
+<li><a href="#v3-推奨パターン-1"><span>v3 推奨パターン</span></a></li>
+<li><a href="#移行チェックリスト-2"><span>移行チェックリスト</span></a></li>
+<li><a href="#v3x-での互換性-1"><span>v3.x での互換性</span></a></li></ul></li>
+<li><a href="#5-の非推奨化"><span>5.  /  の非推奨化</span></a></li>
+<li>
+<ul>
+<li><a href="#v2-旧パターン（非推奨）-2"><span>v2 / 旧パターン（非推奨）</span></a></li>
+<li><a href="#v3-推奨パターン-2"><span>v3 推奨パターン</span></a></li>
+<li><a href="#移行チェックリスト-3"><span>移行チェックリスト</span></a></li>
+<li><a href="#v3x-での互換性-2"><span>v3.x での互換性</span></a></li></ul></li>
+<li><a href="#関連ドキュメント"><span>関連ドキュメント</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer></footer>
+<div class="overlay"></div></body></html>

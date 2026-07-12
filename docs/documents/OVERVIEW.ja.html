@@ -1,14 +1,25 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>OVERVIEW.ja | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a><div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="" aria-current="page">OVERVIEW.ja</a></li></ul></div><div class="tsd-panel tsd-typography"><h1 id="serialsession（v2）の概要" class="tsd-anchor-link">SerialSession（v2）の概要<a href="#serialsession（v2）の概要" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>OVERVIEW.ja | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="" aria-current="page">OVERVIEW.ja</a></li></ul></div>
+<div class="tsd-panel tsd-typography"><h1 id="serialsession-の概要" class="tsd-anchor-link">SerialSession の概要<a href="#serialsession-の概要" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
 <p align="center">
   <img src="../media/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
-<p>このページは v2 公開 API の<strong>考え方</strong>をまとめたものです。各 <code>SerialSession</code> 面の役割、<code>SerialSessionState</code> と <code>state$</code> の対応、<code>receive$</code> と <code>lines$</code> の使い分け。オプション、エラーコード、型の詳細は <a href="https://gurezo.github.io/web-serial-rxjs/modules.html">API リファレンス</a> を参照してください。</p>
+<p>このページは公開 API の<strong>考え方</strong>をまとめたものです。各 <code>SerialSession</code> 面の役割、<code>SerialSessionState</code> と <code>state$</code> の対応、<code>receive$</code> と <code>lines$</code> の使い分け。<strong><code>state$</code></strong> が canonical lifecycle source、<strong><code>errors$</code></strong> が canonical error event channel です。オプション、エラーコード、型の詳細は <a href="https://gurezo.github.io/web-serial-rxjs/modules.html">API リファレンス</a> を参照してください。</p>
 <h2 id="目次" class="tsd-anchor-link">目次<a href="#目次" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="#%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88">ドキュメント</a></li>
 <li><a href="#%E6%A9%9F%E8%83%BD">機能</a></li>
 <li><a href="#%E5%AF%BE%E5%BF%9C%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%E3%83%AF%E3%83%BC%E3%82%AF">対応フレームワーク</a></li>
-<li><a href="#serialsessionv2%E3%81%AE%E5%85%A8%E4%BD%93%E5%83%8F">SerialSession（v2）の全体像</a></li>
+<li><a href="#serialsession%E3%81%AE%E5%85%A8%E4%BD%93%E5%83%8F">SerialSession の全体像</a></li>
 <li><a href="#%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%E7%B4%A2%E5%BC%95">ドキュメント索引</a></li>
 </ul>
 <h2 id="ドキュメント" class="tsd-anchor-link">ドキュメント<a href="#ドキュメント" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -17,15 +28,16 @@
 <li><a href="QUICK_START.ja.html">クイックスタート</a></li>
 <li><a href="ADVANCED_USAGE.ja.html">高度な使用方法</a></li>
 <li><a href="API_REFERENCE.ja.html">API の概念と設計メモ</a></li>
+<li><a href="MIGRATION_V3.ja.html">v2 から v3 への移行ガイド</a></li>
 <li><a href="MIGRATION_V2.ja.html">v1 から v2 への移行ガイド</a></li>
 </ul>
 <h2 id="機能" class="tsd-anchor-link">機能<a href="#機能" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
-<li><strong>Session 指向のリアクティブ API</strong>: 1 つの <code>SerialSession</code> が <code>state$</code> / <code>isConnected$</code> / <code>receive$</code> / <code>lines$</code> / <code>errors$</code> と <code>connect$</code> / <code>disconnect$</code> / <code>send$</code> を公開</li>
+<li><strong>Session 指向のリアクティブ API</strong>: 1 つの <code>SerialSession</code> が <code>state$</code>（canonical lifecycle discriminated union）/ <code>errors$</code>（error event channel）/ <code>receive$</code> / <code>lines$</code> と convenience stream の <code>isConnected$</code>、<code>connect$</code> / <code>disconnect$</code> / <code>dispose$</code> / <code>send$</code> を公開</li>
 <li><strong>UTF-8 テキストストリーム</strong>: <code>receive$</code> は内部でストリーミング <code>TextDecoder</code> を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます</li>
 <li><strong>順序保証された送信キュー</strong>: 並行する <code>send$</code> 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます</li>
 <li><strong>統一エラーチャネル</strong>: すべての I/O エラーは <code>SerialError</code> に正規化され <code>errors$</code> に多重化されます</li>
-<li><strong>明示的なライフサイクル</strong>: <code>state$</code> は <code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>unsupported</code> / <code>error</code> を emit するので UI から直接駆動できます</li>
+<li><strong>明示的なライフサイクル</strong>: <code>state$</code> は <code>status</code> を持つ discriminated union（<code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>unsupported</code> / <code>error</code> / <code>disposed</code>）を emit するので、<code>state.status</code> で narrowing できます</li>
 <li><strong>TypeScript サポート</strong>: 完全な TypeScript 型定義を同梱</li>
 <li><strong>フレームワーク非依存</strong>: 任意の JavaScript/TypeScript フレームワークまたはバニラ JavaScript で利用可能</li>
 </ul>
@@ -37,8 +49,8 @@
 <li>Svelte</li>
 <li>Vanilla JavaScript / TypeScript</li>
 </ul>
-<h2 id="serialsession（v2）の全体像" class="tsd-anchor-link">SerialSession（v2）の全体像<a href="#serialsession（v2）の全体像" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<p><code>createSerialSession</code> が返す <strong>SerialSession</strong> だけを使います。公開 API は意図的に小さく、<strong>ターミナルにそのまま出す出力</strong>は <strong><code>receive$</code></strong>、<strong>改行区切りのログや解析</strong>は <strong><code>lines$</code></strong> が担当します。独自区切りが必要なときは <strong><code>receive$</code></strong> 上に RxJS で組み立てます（<a href="ADVANCED_USAGE.ja.html">高度な使用方法</a>）。接続真偽は <code>isConnected$</code> も利用できます。</p>
+<h2 id="serialsession-の全体像" class="tsd-anchor-link">SerialSession の全体像<a href="#serialsession-の全体像" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>createSerialSession</code> が返す <strong>SerialSession</strong> だけを使います。公開 API は意図的に小さく、<strong>ターミナルにそのまま出す出力</strong>は <strong><code>receive$</code></strong>、<strong>改行区切りのログや解析</strong>は <strong><code>lines$</code></strong> が担当します。ライフサイクル UI には <strong><code>state$</code></strong> の <code>state.status</code> narrowing を優先してください。</p>
 <table>
 <thead>
 <tr>
@@ -49,15 +61,19 @@
 <tbody>
 <tr>
 <td><code>state$</code></td>
-<td><strong>接続ライフサイクル</strong> — <code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>error</code> / <code>unsupported</code>。購読時に現在値をリプレイ。分岐は文字列直書きではなく <strong><code>SerialSessionState</code></strong> との比較を推奨。</td>
+<td><strong>Canonical 接続ライフサイクル</strong> — discriminated union（<code>status</code> + 必要に応じ <code>portInfo</code> / <code>error</code>）。購読時に現在値をリプレイ。分岐は <strong><code>SerialSessionStatus</code></strong> との比較を推奨。</td>
+</tr>
+<tr>
+<td><code>SerialSessionStatus</code></td>
+<td><strong>状態定数</strong> — エクスポートされる const object（例: <code>SerialSessionStatus.Connected</code> → <code>'connected'</code>）。<code>state$.status</code> と比較する。</td>
 </tr>
 <tr>
 <td><code>SerialSessionState</code></td>
-<td><strong>状態定数</strong> — エクスポートされる const object（例: <code>SerialSessionState.Connected</code>, <code>SerialSessionState.Idle</code>）。<code>state$</code> が emit する値と同じ。</td>
+<td><strong><code>state$</code> の payload 型</strong> — discriminated union。</td>
 </tr>
 <tr>
 <td><code>isConnected$</code></td>
-<td><strong>接続中かどうか</strong> — <code>state$</code> が <code>SerialSessionState.Connected</code> のときだけ <code>true</code>、それ以外は <code>false</code>（<code>state$</code> から <code>distinctUntilChanged</code> 付きで派生）。</td>
+<td><strong>接続中フラグ（convenience）</strong> — <code>state$.status</code> が <code>SerialSessionStatus.Connected</code> のときだけ <code>true</code>。フル lifecycle UI には <code>state$</code> を優先。</td>
 </tr>
 <tr>
 <td><code>receive$</code></td>
@@ -65,7 +81,7 @@
 </tr>
 <tr>
 <td><code>terminalText$</code></td>
-<td><strong>ターミナル表示向けの累積テキスト</strong> — <code>receive$</code> 由来の表示用テキスト。<code>\r</code> による上書きを折りたたみつつ通常の改行挙動は維持するため、ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。</td>
+<td><strong>ターミナル表示向けの累積テキスト</strong> — <code>receive$</code> 由来の表示用テキスト。<code>\r</code> による上書きを折りたたみつつ通常の改行挙動は維持します。既定ではプレーンテキスト UI 向けに ANSI エスケープを除去します（生データは <code>receive$</code>）。ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持します（<code>SerialSessionOptions.terminalBuffer</code> で変更可能）。</td>
 </tr>
 <tr>
 <td><code>lines$</code></td>
@@ -73,7 +89,7 @@
 </tr>
 <tr>
 <td><code>errors$</code></td>
-<td><strong>すべての <code>SerialError</code></strong>（接続・読み取り・書き込み・クローズ）の主チャネル。</td>
+<td><strong>Canonical error event channel</strong> — 接続・読み取り・書き込み・クローズのすべての <code>SerialError</code>（fatal / non-fatal）。</td>
 </tr>
 <tr>
 <td><code>connect$()</code></td>
@@ -81,7 +97,11 @@
 </tr>
 <tr>
 <td><code>disconnect$()</code></td>
-<td>ポートを閉じ、pump を停止。</td>
+<td>ポートを閉じ、pump を停止。セッションは <code>idle</code> に戻り再利用可能。</td>
+</tr>
+<tr>
+<td><code>dispose$()</code></td>
+<td>セッションを<strong>永久破棄</strong>。接続を閉じ、すべての Observable を complete し、再利用不可にする。</td>
 </tr>
 <tr>
 <td><code>send$(string | Uint8Array)</code></td>
@@ -93,8 +113,8 @@
 </tr>
 </tbody>
 </table>
-<h3 id="serialsessionstate（早見表）" class="tsd-anchor-link">SerialSessionState（早見表）<a href="#serialsessionstate（早見表）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p><code>state$</code> が emit する文字列のユニオンです。コードでは <strong>const オブジェクト</strong>（例: <code>SerialSessionState.Connected</code> → <code>'connected'</code>）での比較を推奨します。有効な遷移・例外系の扱いの詳細は <a href="https://gurezo.github.io/web-serial-rxjs/variables/SerialSessionState.html">API リファレンスの SerialSessionState</a> および <a href="API_REFERENCE.ja.html#serialsessionstate">GitHub 上の表・図</a> を参照してください。</p>
+<h3 id="serialsessionstatus（早見表）" class="tsd-anchor-link">SerialSessionStatus（早見表）<a href="#serialsessionstatus（早見表）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p><code>state$</code> の各 variant は <code>status</code> フィールドを持ちます。コードでは <strong>const オブジェクト</strong>（例: <code>SerialSessionStatus.Connected</code> → <code>'connected'</code>）での比較を推奨します。</p>
 <table>
 <thead>
 <tr>
@@ -105,42 +125,47 @@
 </thead>
 <tbody>
 <tr>
-<td><code>SerialSessionState.Idle</code></td>
+<td><code>SerialSessionStatus.Idle</code></td>
 <td><code>'idle'</code></td>
 <td>ポート未接続。Web Serial 利用可能な場合の初期値。</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Connecting</code></td>
+<td><code>SerialSessionStatus.Connecting</code></td>
 <td><code>'connecting'</code></td>
 <td><code>connect$</code> 実行中。</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Connected</code></td>
+<td><code>SerialSessionStatus.Connected</code></td>
 <td><code>'connected'</code></td>
-<td>ポートが開き、内部 read pump が動作中。</td>
+<td>ポートが開き、内部 read pump が動作中。<code>portInfo</code> 付き。</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Disconnecting</code></td>
+<td><code>SerialSessionStatus.Disconnecting</code></td>
 <td><code>'disconnecting'</code></td>
 <td><code>disconnect$</code> 実行中。</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Unsupported</code></td>
+<td><code>SerialSessionStatus.Unsupported</code></td>
 <td><code>'unsupported'</code></td>
 <td>セッション生成時点で Web Serial が利用できない。</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Error</code></td>
+<td><code>SerialSessionStatus.Error</code></td>
 <td><code>'error'</code></td>
-<td>接続まわりの致命エラー。<code>disconnect$</code> か新しいセッションで復帰。</td>
+<td>接続まわりの致命エラー。<code>error</code> 付き。</td>
+</tr>
+<tr>
+<td><code>SerialSessionStatus.Disposed</code></td>
+<td><code>'disposed'</code></td>
+<td><code>dispose$</code> により永久破棄。すべての Observable が complete。</td>
 </tr>
 </tbody>
 </table>
 <p><strong><code>receive$</code> と <code>lines$</code>:</strong> 機器から来たバイト列を<strong>そのまま</strong>画面に反映する（シェル、<code>ls</code> のプログレス、<code>\r</code> で行を描き直す出力など）ときは <strong><code>receive$</code></strong> を使います。<strong>改行区切りのログ</strong>や<strong>1 行ずつ処理するプロトコル</strong>では <strong><code>lines$</code></strong> が適しています。ターミナル表示に <strong><code>lines$</code></strong> を繋ぐと、内部で <code>\r</code> を行境界として扱うため <strong>上書き表示が壊れる</strong>ことがあります。独自区切りは <strong><code>receive$</code> 上で RxJS を合成</strong>します（<a href="ADVANCED_USAGE.ja.html">高度な使用方法 — 行単位のフレーミング</a>）。</p>
-<p><strong><code>isConnected$</code>（UI 用）</strong> — 読み取り専用の <code>Observable&lt;boolean&gt;</code> です。<code>state$</code> を <code>SerialSessionState.Connected</code> と毎回比較しなくても接続有無の UI 分岐に使えます。独自ルールが必要な場合は、従来どおり <code>state$</code> から <code>map</code> で派生しても構いません。</p>
+<p><strong><code>isConnected$</code>（convenience）</strong> — 読み取り専用の <code>Observable&lt;boolean&gt;</code> です。boolean だけ欲しい UI 分岐に使います。スピナー、エラーバナー、port info には <strong><code>state$</code></strong> の <code>state.status</code> narrowing を優先してください。</p>
 <p><strong><code>lines$</code>（行区切り）</strong> — 組み込みの行分割。ターミナルのミラーや <code>\r</code> を保持したいときは <strong><code>receive$</code></strong> を購読します（<a href="ADVANCED_USAGE.ja.html">高度な使用方法 — 行単位のフレーミング</a>）。</p>
 <h3 id="最小サンプル" class="tsd-anchor-link">最小サンプル<a href="#最小サンプル" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">createSerialSession</span><span class="hl-1">, </span><span class="hl-2">SerialSessionState</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">filter</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">session</span><span class="hl-1"> = </span><span class="hl-6">createSerialSession</span><span class="hl-1">({ </span><span class="hl-2">baudRate:</span><span class="hl-1"> </span><span class="hl-7">115200</span><span class="hl-1"> });</span><br/><br/><span class="hl-0">if</span><span class="hl-1"> (!</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">isBrowserSupported</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-0">throw</span><span class="hl-1"> </span><span class="hl-4">new</span><span class="hl-1"> </span><span class="hl-6">Error</span><span class="hl-1">(</span><span class="hl-3">&#39;このブラウザでは Web Serial を利用できません&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">lines$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">log</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><br/><span class="hl-1">  .</span><span class="hl-6">pipe</span><span class="hl-1">(</span><span class="hl-6">filter</span><span class="hl-1">((</span><span class="hl-2">s</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">s</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionState</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">))</span><br/><span class="hl-1">  .</span><span class="hl-6">subscribe</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-8">/* 例: ポートが開いてから有効化する UI */</span><br/><span class="hl-1">  });</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">connect$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">();</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-3">&#39;hello</span><span class="hl-9">\r\n</span><span class="hl-3">&#39;</span><span class="hl-1">).</span><span class="hl-6">subscribe</span><span class="hl-1">();</span>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">createSerialSession</span><span class="hl-1">, </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">filter</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">session</span><span class="hl-1"> = </span><span class="hl-6">createSerialSession</span><span class="hl-1">({ </span><span class="hl-2">baudRate:</span><span class="hl-1"> </span><span class="hl-7">115200</span><span class="hl-1"> });</span><br/><br/><span class="hl-0">if</span><span class="hl-1"> (!</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">isBrowserSupported</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-0">throw</span><span class="hl-1"> </span><span class="hl-4">new</span><span class="hl-1"> </span><span class="hl-6">Error</span><span class="hl-1">(</span><span class="hl-3">&#39;このブラウザでは Web Serial を利用できません&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">lines$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">log</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><br/><span class="hl-1">  .</span><span class="hl-6">pipe</span><span class="hl-1">(</span><span class="hl-6">filter</span><span class="hl-1">((</span><span class="hl-2">s</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">s</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">))</span><br/><span class="hl-1">  .</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  });</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">connect$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">();</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-3">&#39;hello</span><span class="hl-8">\r\n</span><span class="hl-3">&#39;</span><span class="hl-1">).</span><span class="hl-6">subscribe</span><span class="hl-1">();</span>
 </code><button type="button">Copy</button></pre>
 
 <p>実アプリでは <code>connect$</code> / <code>send$</code> の <code>subscribe</code> で <code>error</code> も扱ってください（<code>errors$</code> にも流れます）。手順の全体は <a href="QUICK_START.ja.html">クイックスタート</a> を参照してください。</p>
@@ -170,6 +195,10 @@
 <td>オプション、<code>SerialSessionState</code>、<code>SerialError</code> の詳細（TypeDoc）。表・図は <a href="API_REFERENCE.ja.html">GitHub</a> も参照。</td>
 </tr>
 <tr>
+<td><strong><a href="MIGRATION_V3.ja.html">v2 → v3 マイグレーション</a></strong>（<a href="MIGRATION_V3.html">English</a>）</td>
+<td><code>state$</code> discriminated union、<code>SerialSessionStatus</code>、<code>context.cause</code>。</td>
+</tr>
+<tr>
 <td><strong><a href="MIGRATION_V2.ja.html">v1 → v2 マイグレーション</a></strong>（<a href="MIGRATION_V2.html">English</a>）</td>
 <td>削除された v1 API からの対応表。</td>
 </tr>
@@ -179,4 +208,35 @@
 </tr>
 </tbody>
 </table>
-</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#serialsession（v2）の概要"><span>Serial<wbr/>Session（v2）の概要</span></a><ul><li><a href="#目次"><span>目次</span></a></li><li><a href="#ドキュメント"><span>ドキュメント</span></a></li><li><a href="#機能"><span>機能</span></a></li><li><a href="#対応フレームワーク"><span>対応フレームワーク</span></a></li><li><a href="#serialsession（v2）の全体像"><span>Serial<wbr/>Session（v2）の全体像</span></a></li><li><ul><li><a href="#serialsessionstate（早見表）"><span>Serial<wbr/>Session<wbr/>State（早見表）</span></a></li><li><a href="#最小サンプル"><span>最小サンプル</span></a></li></ul></li><li><a href="#ドキュメント索引"><span>ドキュメント索引</span></a></li></ul></div></details></div><div class="site-menu"><nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer></footer><div class="overlay"></div></body></html>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#serialsession-の概要"><span>Serial<wbr/>Session の概要</span></a>
+<ul>
+<li><a href="#目次"><span>目次</span></a></li>
+<li><a href="#ドキュメント"><span>ドキュメント</span></a></li>
+<li><a href="#機能"><span>機能</span></a></li>
+<li><a href="#対応フレームワーク"><span>対応フレームワーク</span></a></li>
+<li><a href="#serialsession-の全体像"><span>Serial<wbr/>Session の全体像</span></a></li>
+<li>
+<ul>
+<li><a href="#serialsessionstatus（早見表）"><span>Serial<wbr/>Session<wbr/>Status（早見表）</span></a></li>
+<li><a href="#最小サンプル"><span>最小サンプル</span></a></li></ul></li>
+<li><a href="#ドキュメント索引"><span>ドキュメント索引</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer></footer>
+<div class="overlay"></div></body></html>

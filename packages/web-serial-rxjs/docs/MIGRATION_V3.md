@@ -129,12 +129,13 @@ export type SerialSessionState =
 - [ ] Replace `import { SerialSessionState }` used as **constants** with `SerialSessionStatus`.
 - [ ] Replace `state === SerialSessionState.X` with `state.status === SerialSessionStatus.X`.
 - [ ] Replace `switch (state)` with `switch (state.status)` (or compare `state.status` in `if`).
-- [ ] Use `state.portInfo` when `state.status === 'connected'` instead of correlating `portInfo$` (optional — `portInfo$` still works).
+- [ ] Use `state.portInfo` when `state.status === SerialSessionStatus.Connected` (recommended — `portInfo$` and `getPortInfo()` are deprecated).
 - [ ] Use `state.error` when `state.status === 'error'` (same instance as `errors$` for fatal errors).
 
 ### Unchanged
 
-- `portInfo$`, `getPortInfo()`, `errors$`, and `isConnected$` remain available.
+- `errors$` and `isConnected$` remain available.
+- `portInfo$` and `getPortInfo()` remain available in v3.x but are **deprecated** (see [§5](#5-portinfo--getportinfo-deprecation)).
 - `isConnected$` still derives from connected status internally.
 
 ---
@@ -215,9 +216,55 @@ session.dispose$().subscribe({
 
 ---
 
+## 5. `portInfo$` / `getPortInfo()` deprecation
+
+v3.0.0 made `state$` a discriminated union. When `state.status` is `SerialSessionStatus.Connected`, **`state.portInfo`** is the canonical source for the active port's `SerialPort.getInfo()` snapshot — TypeScript narrowing guarantees it is present.
+
+`portInfo$` and `getPortInfo()` remain in v3.x for backward compatibility but are **deprecated** and scheduled for removal in the next major version. They expose `SerialPortInfo | null`, which does not encode the relationship between connection state and port information.
+
+### v2 / legacy pattern (deprecated)
+
+```typescript
+session.portInfo$.subscribe((portInfo) => {
+  if (portInfo) {
+    console.log(portInfo);
+  }
+});
+
+const snapshot = session.getPortInfo();
+```
+
+### v3 recommended pattern
+
+```typescript
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
+  }
+});
+```
+
+### Migration checklist
+
+- [ ] Replace `portInfo$` subscriptions with `state$` and read `state.portInfo` when `state.status === SerialSessionStatus.Connected`.
+- [ ] Replace `getPortInfo()` with `state$` narrowing and `state.portInfo`.
+- [ ] Address TypeScript `@deprecated` warnings by migrating to the pattern above.
+- [ ] Prefer `state.portInfo` in new code and documentation.
+
+### Compatibility in v3.x
+
+- `portInfo$` and `getPortInfo()` remain available in v3.x.
+- Runtime behavior is unchanged; values stay in sync with `state.portInfo` while connected.
+- `errors$` is not deprecated — it is an independent error event channel, not a duplicate of lifecycle state.
+
+---
+
 ## See also
 
 - [Migrating from v1 to v2](./MIGRATION_V2.md)
 - [API Reference – SerialSessionState / SerialSessionStatus](./API_REFERENCE.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./API_REFERENCE.md#serialerror--serialerrorcode)
 - [API Reference – dispose$ / destroy$](./API_REFERENCE.md#dispose-observablevoid)
+- [API Reference – portInfo$ / getPortInfo()](./API_REFERENCE.md#portinfo-observableserialportinfo--null)

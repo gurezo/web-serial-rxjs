@@ -140,6 +140,7 @@ interface SerialSession {
 
   readonly state$: Observable<SerialSessionState>;
   readonly isConnected$: Observable<boolean>;
+  /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing し `state.portInfo` を使用してください。次回 major version で削除予定です。 */
   readonly portInfo$: Observable<SerialPortInfo | null>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
@@ -147,6 +148,7 @@ interface SerialSession {
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
 
+  /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing し `state.portInfo` を使用してください。次回 major version で削除予定です。 */
   getPortInfo(): SerialPortInfo | null;
   getCurrentPort(): SerialPort | null;
 
@@ -183,6 +185,18 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 ### `isConnected$: Observable<boolean>`
 
 convenience stream: `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。フル lifecycle や `state.portInfo` が必要な場合は `state$` を優先してください。
+
+### `portInfo$: Observable<SerialPortInfo | null>`
+
+**非推奨** — アクティブポートの `SerialPort.getInfo()` スナップショットを emit する convenience stream です。ポートが開いていないときは `null` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./MIGRATION_V3.ja.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
+
+### `getPortInfo(): SerialPortInfo | null`
+
+**非推奨** — 最後の `portInfo$` 値の同期読み取りです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./MIGRATION_V3.ja.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
+
+### `getCurrentPort(): SerialPort | null`
+
+接続中は内部の `SerialPort` を、それ以外は `null` を返します。`port.close()` の直接呼び出しやストリームの差し替えは session lifecycle と競合するため避けてください。デバイス識別には `state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を優先してください。
 
 ### `errors$: Observable<SerialError>`
 

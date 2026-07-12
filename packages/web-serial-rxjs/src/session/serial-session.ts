@@ -130,14 +130,28 @@ export interface SerialSession {
    *
    * Emits the current value on subscribe. Use with {@link state$} to know when
    * the value is valid for your UI.
+   *
+   * @deprecated Prefer narrowing {@link state$} with
+   *   {@link SerialSessionStatus.Connected} and using `state.portInfo`.
+   *   Retained for backward compatibility; scheduled for removal in the next
+   *   major version.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/434 | Issue #434}
    */
   readonly portInfo$: Observable<SerialPortInfo | null>;
 
   /**
    * Synchronous read of the last {@link portInfo$} value.
    *
+   * @deprecated Prefer narrowing {@link state$} with
+   *   {@link SerialSessionStatus.Connected} and using `state.portInfo`.
+   *   Retained for backward compatibility; scheduled for removal in the next
+   *   major version.
+   *
    * @returns The same as {@link SerialPort.getInfo} for the open port, or
    *   `null` when not connected.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/434 | Issue #434}
    */
   getPortInfo(): SerialPortInfo | null;
 
@@ -145,7 +159,9 @@ export interface SerialSession {
    * The underlying `SerialPort` while connected, or `null` otherwise.
    *
    * Avoid calling `port.close()` or replacing streams yourself; that conflicts
-   * with session lifecycle. Prefer {@link getPortInfo} for identification.
+   * with session lifecycle. Prefer narrowing {@link state$} with
+   * {@link SerialSessionStatus.Connected} and using {@link ConnectedSessionState.portInfo}
+   * for identification.
    */
   getCurrentPort(): SerialPort | null;
 

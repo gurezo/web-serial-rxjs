@@ -1,14 +1,24 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="./"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="index.html" class="title">web-serial-rxjs API Documentation</a><div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><h1>web-serial-rxjs API Documentation</h1></div><div class="tsd-panel tsd-typography"><h1 id="serialsession-v2-overview" class="tsd-anchor-link">SerialSession (v2) overview<a href="#serialsession-v2-overview" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<!DOCTYPE html><html class="default" lang="en" data-base="./"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="index.html" class="title">web-serial-rxjs API Documentation</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<h1>web-serial-rxjs API Documentation</h1></div>
+<div class="tsd-panel tsd-typography"><h1 id="serialsession-overview" class="tsd-anchor-link">SerialSession overview<a href="#serialsession-overview" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h1>
 <p align="center">
   <img src="media/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
-<p>This page is the <strong>mental model</strong> for the v2 public API: what each <code>SerialSession</code> surface does, how <code>SerialSessionState</code> maps to <code>state$</code>, and how to choose between <code>receive$</code> and <code>lines$</code>. For options, error codes, and formal type details, see <a href="modules.html">API Reference</a>.</p>
+<p>This page is the <strong>mental model</strong> for the public API: what each <code>SerialSession</code> surface does, how <code>SerialSessionState</code> maps to <code>state$</code>, and how to choose between <code>receive$</code> and <code>lines$</code>. <strong><code>state$</code></strong> is the canonical lifecycle source; <strong><code>errors$</code></strong> is the canonical error event channel. For options, error codes, and formal type details, see <a href="modules.html">API Reference</a>.</p>
 <h2 id="table-of-contents" class="tsd-anchor-link">Table of Contents<a href="#table-of-contents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="#documentation">Documentation</a></li>
 <li><a href="#features">Features</a></li>
 <li><a href="#framework-support">Framework support</a></li>
-<li><a href="#serialsession-v2-at-a-glance">SerialSession (v2) at a glance</a></li>
+<li><a href="#serialsession-at-a-glance">SerialSession at a glance</a></li>
 <li><a href="#documentation-index">Documentation index</a></li>
 </ul>
 <h2 id="documentation" class="tsd-anchor-link">Documentation<a href="#documentation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -17,15 +27,16 @@
 <li><a href="documents/QUICK_START.html">Quick Start</a></li>
 <li><a href="documents/ADVANCED_USAGE.html">Advanced Usage</a></li>
 <li><a href="documents/API_REFERENCE.html">API Concepts and design notes</a></li>
+<li><a href="documents/MIGRATION_V3.html">v2 to v3 Migration Guide</a></li>
 <li><a href="documents/MIGRATION_V2.html">v1 to v2 Migration Guide</a></li>
 </ul>
 <h2 id="features" class="tsd-anchor-link">Features<a href="#features" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
-<li><strong>Session-oriented reactive API</strong>: a single <code>SerialSession</code> exposes <code>state$</code>, <code>isConnected$</code>, <code>receive$</code>, <code>lines$</code>, <code>errors$</code>, plus <code>connect$</code>, <code>disconnect$</code>, and <code>send$</code></li>
+<li><strong>Session-oriented reactive API</strong>: a single <code>SerialSession</code> exposes <code>state$</code> (canonical lifecycle discriminated union), <code>errors$</code> (error event channel), <code>receive$</code>, <code>lines$</code>, plus convenience streams such as <code>isConnected$</code>, and <code>connect$</code>, <code>disconnect$</code>, <code>dispose$</code>, and <code>send$</code></li>
 <li><strong>UTF-8 text stream</strong>: <code>receive$</code> is already decoded with a streaming <code>TextDecoder</code>, so multi-byte characters split across chunks are joined correctly</li>
 <li><strong>Ordered send queue</strong>: concurrent <code>send$</code> calls are serialized internally in call order, without the caller having to manage a writer</li>
 <li><strong>Unified error channel</strong>: every I/O error is normalised into <code>SerialError</code> and multiplexed on <code>errors$</code></li>
-<li><strong>Explicit lifecycle</strong>: <code>state$</code> emits <code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>unsupported</code> / <code>error</code> so UIs can drive directly from it</li>
+<li><strong>Explicit lifecycle</strong>: <code>state$</code> emits a discriminated union with <code>status</code> (<code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>unsupported</code> / <code>error</code> / <code>disposed</code>) so UIs can narrow on <code>state.status</code> and access per-state data</li>
 <li><strong>TypeScript support</strong>: full TypeScript type definitions included</li>
 <li><strong>Framework agnostic</strong>: works with any JavaScript/TypeScript framework or vanilla JavaScript</li>
 </ul>
@@ -37,7 +48,7 @@
 <li>Svelte</li>
 <li>Vanilla JavaScript / TypeScript</li>
 </ul>
-<h2 id="serialsession-v2-at-a-glance" class="tsd-anchor-link">SerialSession (v2) at a glance<a href="#serialsession-v2-at-a-glance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<h2 id="serialsession-at-a-glance" class="tsd-anchor-link">SerialSession at a glance<a href="#serialsession-at-a-glance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p><code>createSerialSession</code> returns a single <strong>SerialSession</strong>. All interaction goes through the fields below. The public API is intentionally small; <strong><code>receive$</code></strong> is for <strong>raw decoder output</strong> (including terminals and <code>\r</code> redraws), <strong><code>lines$</code></strong> for <strong>newline-delimited logs and parsers</strong>. When you need <strong>custom</strong> framing, compose plain RxJS on <code>receive$</code> (see <a href="documents/ADVANCED_USAGE.html">Advanced Usage</a>).</p>
 <table>
 <thead>
@@ -49,15 +60,19 @@
 <tbody>
 <tr>
 <td><code>state$</code></td>
-<td><strong>Connection lifecycle</strong> — <code>idle</code> / <code>connecting</code> / <code>connected</code> / <code>disconnecting</code> / <code>error</code> / <code>unsupported</code>. Replays the current state on subscribe. Compare with <strong><code>SerialSessionState</code></strong> instead of string literals.</td>
+<td><strong>Canonical connection lifecycle</strong> — discriminated union (<code>status</code> plus optional <code>portInfo</code> / <code>error</code>). Replays on subscribe. Compare <strong><code>state.status</code></strong> with <strong><code>SerialSessionStatus</code></strong>.</td>
+</tr>
+<tr>
+<td><code>SerialSessionStatus</code></td>
+<td><strong>Status constants</strong> — const object (e.g. <code>SerialSessionStatus.Connected</code> → <code>'connected'</code>). Compare with <code>state$.status</code>.</td>
 </tr>
 <tr>
 <td><code>SerialSessionState</code></td>
-<td><strong>State constants</strong> — exported const object (e.g. <code>SerialSessionState.Connected</code>, <code>SerialSessionState.Idle</code>) with the same values <code>state$</code> emits.</td>
+<td><strong>Payload type</strong> for <code>state$</code> (discriminated union).</td>
 </tr>
 <tr>
 <td><code>isConnected$</code></td>
-<td><strong>Connected flag</strong> — <code>true</code> only when <code>state$</code> is <code>SerialSessionState.Connected</code>; <code>false</code> in every other state (derived from <code>state$</code> with <code>distinctUntilChanged</code>).</td>
+<td><strong>Connected flag (convenience)</strong> — <code>true</code> only when <code>state$.status</code> is <code>SerialSessionStatus.Connected</code>. Prefer <code>state$</code> for full lifecycle UI.</td>
 </tr>
 <tr>
 <td><code>receive$</code></td>
@@ -65,7 +80,7 @@
 </tr>
 <tr>
 <td><code>terminalText$</code></td>
-<td><strong>Terminal-ready cumulative text</strong> — display-oriented text derived from <code>receive$</code> that folds carriage-return redraws while keeping normal newline behavior. Use when you want to bind one string directly to a terminal-like viewport.</td>
+<td><strong>Terminal-ready cumulative text</strong> — display-oriented text derived from <code>receive$</code> that folds carriage-return redraws while keeping normal newline behavior. By default strips ANSI escape sequences for plain-text UIs; use <code>receive$</code> for raw output. Use when you want to bind one string directly to a terminal-like viewport. By default retains at most 10,000 lines and 1,048,576 characters (configure via <code>SerialSessionOptions.terminalBuffer</code>).</td>
 </tr>
 <tr>
 <td><code>lines$</code></td>
@@ -73,7 +88,7 @@
 </tr>
 <tr>
 <td><code>errors$</code></td>
-<td><strong>All <code>SerialError</code> instances</strong> from connect / read / write / close (primary error channel).</td>
+<td><strong>Canonical error event channel</strong> — all <code>SerialError</code> instances from connect / read / write / close (fatal and non-fatal).</td>
 </tr>
 <tr>
 <td><code>connect$()</code></td>
@@ -81,7 +96,11 @@
 </tr>
 <tr>
 <td><code>disconnect$()</code></td>
-<td><strong>Close</strong> the port and stop the pump.</td>
+<td><strong>Close</strong> the port and stop the pump. The session stays reusable (<code>idle</code>).</td>
+</tr>
+<tr>
+<td><code>dispose$()</code></td>
+<td><strong>Permanently tear down</strong> the session: close any active connection, complete all observables, and prevent reuse.</td>
 </tr>
 <tr>
 <td><code>send$(string | Uint8Array)</code></td>
@@ -93,8 +112,8 @@
 </tr>
 </tbody>
 </table>
-<h3 id="serialsessionstate-quick-reference" class="tsd-anchor-link">SerialSessionState (quick reference)<a href="#serialsessionstate-quick-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p><code>state$</code> uses the string union below. Prefer the <strong>const object</strong> (e.g. <code>SerialSessionState.Connected</code> → <code>'connected'</code>) in code. Full lifecycle diagram, transitions, and edge cases: <a href="variables/SerialSessionState.html">API Reference – SerialSessionState</a>.</p>
+<h3 id="serialsessionstatus-quick-reference" class="tsd-anchor-link">SerialSessionStatus (quick reference)<a href="#serialsessionstatus-quick-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Each <code>state$</code> emission has a <code>status</code> field. Prefer the <strong>const object</strong> (e.g. <code>SerialSessionStatus.Connected</code> → <code>'connected'</code>).</p>
 <table>
 <thead>
 <tr>
@@ -105,42 +124,47 @@
 </thead>
 <tbody>
 <tr>
-<td><code>SerialSessionState.Idle</code></td>
+<td><code>SerialSessionStatus.Idle</code></td>
 <td><code>'idle'</code></td>
-<td>No open port; initial state when the browser supports Web Serial.</td>
+<td>No open port; initial when Web Serial is supported.</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Connecting</code></td>
+<td><code>SerialSessionStatus.Connecting</code></td>
 <td><code>'connecting'</code></td>
 <td><code>connect$</code> in progress.</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Connected</code></td>
+<td><code>SerialSessionStatus.Connected</code></td>
 <td><code>'connected'</code></td>
-<td>Port is open; internal read pump is running.</td>
+<td>Port open; read pump running (<code>portInfo</code> included).</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Disconnecting</code></td>
+<td><code>SerialSessionStatus.Disconnecting</code></td>
 <td><code>'disconnecting'</code></td>
 <td><code>disconnect$</code> in progress.</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Unsupported</code></td>
+<td><code>SerialSessionStatus.Unsupported</code></td>
 <td><code>'unsupported'</code></td>
-<td>Web Serial was not available when the session was created.</td>
+<td>Web Serial unavailable at session creation.</td>
 </tr>
 <tr>
-<td><code>SerialSessionState.Error</code></td>
+<td><code>SerialSessionStatus.Error</code></td>
 <td><code>'error'</code></td>
-<td>Fatal I/O or lifecycle failure; call <code>disconnect$</code> or build a new session.</td>
+<td>Fatal failure (<code>error</code> included).</td>
+</tr>
+<tr>
+<td><code>SerialSessionStatus.Disposed</code></td>
+<td><code>'disposed'</code></td>
+<td>Session permanently torn down via <code>dispose$</code>.</td>
 </tr>
 </tbody>
 </table>
 <p><strong><code>receive$</code> vs <code>lines$</code>:</strong> use <strong><code>receive$</code></strong> when the UI must show <strong>exactly</strong> what the device sent (e.g. interactive shells, <code>ls</code> progress, any stream using <code>\r</code> to redraw a line). Use <strong><code>lines$</code></strong> for <strong>newline-oriented</strong> consumers—logs, one-line replies, parsers. Feeding <strong><code>lines$</code></strong> into a terminal widget can drop or split on <code>\r</code> and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on <strong><code>receive$</code></strong> (<a href="documents/ADVANCED_USAGE.html#line-framing">Advanced Usage</a>).</p>
-<p><strong><code>isConnected$</code> (for simple UIs)</strong> — a read-only <code>Observable&lt;boolean&gt;</code>. Use it for “port open?” toggles without comparing <code>state$</code> to <code>SerialSessionState.Connected</code> yourself. You can still derive your own boolean from <code>state$</code> with <code>map</code> if you need different rules.</p>
+<p><strong><code>isConnected$</code> (convenience for simple UIs)</strong> — a read-only <code>Observable&lt;boolean&gt;</code>. Use it for “port open?” toggles when you do not need full lifecycle phases. For spinners, error banners, and port info, prefer <strong><code>state$</code></strong> with <code>state.status</code> narrowing.</p>
 <p><strong><code>lines$</code> (newline framing)</strong> — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to <strong><code>receive$</code></strong> instead (recipes in <a href="documents/ADVANCED_USAGE.html#line-framing">Advanced Usage</a>).</p>
 <h3 id="minimal-example" class="tsd-anchor-link">Minimal example<a href="#minimal-example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">createSerialSession</span><span class="hl-1">, </span><span class="hl-2">SerialSessionState</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">filter</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">session</span><span class="hl-1"> = </span><span class="hl-6">createSerialSession</span><span class="hl-1">({ </span><span class="hl-2">baudRate:</span><span class="hl-1"> </span><span class="hl-7">115200</span><span class="hl-1"> });</span><br/><br/><span class="hl-0">if</span><span class="hl-1"> (!</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">isBrowserSupported</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-0">throw</span><span class="hl-1"> </span><span class="hl-4">new</span><span class="hl-1"> </span><span class="hl-6">Error</span><span class="hl-1">(</span><span class="hl-3">&#39;Web Serial is not available in this browser&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">lines$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">log</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><br/><span class="hl-1">  .</span><span class="hl-6">pipe</span><span class="hl-1">(</span><span class="hl-6">filter</span><span class="hl-1">((</span><span class="hl-2">s</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">s</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionState</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">))</span><br/><span class="hl-1">  .</span><span class="hl-6">subscribe</span><span class="hl-1">(() </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-8">/* e.g. enable UI that must wait until the port is open */</span><br/><span class="hl-1">  });</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">connect$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">();</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-3">&#39;hello</span><span class="hl-9">\r\n</span><span class="hl-3">&#39;</span><span class="hl-1">).</span><span class="hl-6">subscribe</span><span class="hl-1">();</span>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">createSerialSession</span><span class="hl-1">, </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">filter</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">session</span><span class="hl-1"> = </span><span class="hl-6">createSerialSession</span><span class="hl-1">({ </span><span class="hl-2">baudRate:</span><span class="hl-1"> </span><span class="hl-7">115200</span><span class="hl-1"> });</span><br/><br/><span class="hl-0">if</span><span class="hl-1"> (!</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">isBrowserSupported</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-0">throw</span><span class="hl-1"> </span><span class="hl-4">new</span><span class="hl-1"> </span><span class="hl-6">Error</span><span class="hl-1">(</span><span class="hl-3">&#39;Web Serial is not available in this browser&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">lines$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">log</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">(</span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-2">error</span><span class="hl-1">);</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><br/><span class="hl-1">  .</span><span class="hl-6">pipe</span><span class="hl-1">(</span><span class="hl-6">filter</span><span class="hl-1">((</span><span class="hl-2">s</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">s</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">))</span><br/><span class="hl-1">  .</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  });</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">connect$</span><span class="hl-1">().</span><span class="hl-6">subscribe</span><span class="hl-1">();</span><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-3">&#39;hello</span><span class="hl-8">\r\n</span><span class="hl-3">&#39;</span><span class="hl-1">).</span><span class="hl-6">subscribe</span><span class="hl-1">();</span>
 </code><button type="button">Copy</button></pre>
 
 <p>In real apps, handle <code>connect$().subscribe({ next, error })</code> and <code>send$().subscribe({ error })</code> (errors are also on <code>errors$</code>). A fuller walkthrough is in <a href="documents/QUICK_START.html">Quick Start</a>.</p>
@@ -170,6 +194,10 @@
 <td>Options, <code>SerialSessionState</code>, and <code>SerialError</code> details (generated TypeDoc); narrative tables also on <a href="documents/API_REFERENCE.html">GitHub</a>.</td>
 </tr>
 <tr>
+<td><strong><a href="documents/MIGRATION_V3.html">v2 → v3 Migration Guide</a></strong></td>
+<td><code>state$</code> discriminated union, <code>SerialSessionStatus</code>, and <code>context.cause</code>.</td>
+</tr>
+<tr>
 <td><strong><a href="documents/MIGRATION_V2.html">v1 → v2 Migration Guide</a></strong></td>
 <td>Replacing the removed v1 <code>SerialClient</code> / <code>ShellClient</code> API.</td>
 </tr>
@@ -179,4 +207,35 @@
 </tr>
 </tbody>
 </table>
-</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#serialsession-v2-overview"><span>Serial<wbr/>Session (v2) overview</span></a><ul><li><a href="#table-of-contents"><span>Table of <wbr/>Contents</span></a></li><li><a href="#documentation"><span>Documentation</span></a></li><li><a href="#features"><span>Features</span></a></li><li><a href="#framework-support"><span>Framework support</span></a></li><li><a href="#serialsession-v2-at-a-glance"><span>Serial<wbr/>Session (v2) at a glance</span></a></li><li><ul><li><a href="#serialsessionstate-quick-reference"><span>Serial<wbr/>Session<wbr/>State (quick reference)</span></a></li><li><a href="#minimal-example"><span>Minimal example</span></a></li></ul></li><li><a href="#documentation-index"><span>Documentation index</span></a></li></ul></div></details></div><div class="site-menu"><nav class="tsd-navigation"><a href="modules.html">web-serial-rxjs API Documentation</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer></footer><div class="overlay"></div></body></html>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#serialsession-overview"><span>Serial<wbr/>Session overview</span></a>
+<ul>
+<li><a href="#table-of-contents"><span>Table of <wbr/>Contents</span></a></li>
+<li><a href="#documentation"><span>Documentation</span></a></li>
+<li><a href="#features"><span>Features</span></a></li>
+<li><a href="#framework-support"><span>Framework support</span></a></li>
+<li><a href="#serialsession-at-a-glance"><span>Serial<wbr/>Session at a glance</span></a></li>
+<li>
+<ul>
+<li><a href="#serialsessionstatus-quick-reference"><span>Serial<wbr/>Session<wbr/>Status (quick reference)</span></a></li>
+<li><a href="#minimal-example"><span>Minimal example</span></a></li></ul></li>
+<li><a href="#documentation-index"><span>Documentation index</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="modules.html">web-serial-rxjs API Documentation</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer></footer>
+<div class="overlay"></div></body></html>

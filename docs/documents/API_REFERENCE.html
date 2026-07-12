@@ -1,11 +1,22 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>API_REFERENCE | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a><div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="" aria-current="page">API_REFERENCE</a></li></ul></div><div class="tsd-panel tsd-typography"><h1 id="api-reference" class="tsd-anchor-link">API Reference<a href="#api-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
-<p>The v2 public surface consists of a single factory (<code>createSerialSession</code>), the runtime <code>SerialSession</code> interface, one options type, one state union, and two error types.</p>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>API_REFERENCE | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="" aria-current="page">API_REFERENCE</a></li></ul></div>
+<div class="tsd-panel tsd-typography"><h1 id="api-reference" class="tsd-anchor-link">API Reference<a href="#api-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<p>The public surface consists of a single factory (<code>createSerialSession</code>), the runtime <code>SerialSession</code> interface, one options type, one state union, and two error types.</p>
 <h2 id="public-exports" class="tsd-anchor-link">Public exports<a href="#public-exports" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-2">createSerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialError</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialErrorCode</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialSessionState</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionReceiveReplayOptions</span><span class="hl-1">,</span><br/><span class="hl-1">} </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-2">createSerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">createTerminalBuffer</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">DEFAULT_TERMINAL_BUFFER_OPTIONS</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialError</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialErrorCode</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionState</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionReceiveReplayOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">TerminalBufferOptions</span><span class="hl-1">,</span><br/><span class="hl-1">} </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span>
 </code><button type="button">Copy</button></pre>
 
 <h2 id="createserialsessionoptions" class="tsd-anchor-link">createSerialSession(options?)<a href="#createserialsessionoptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<p>Factory that returns a new <code>SerialSession</code>. Safe to call when <code>navigator.serial</code> is unavailable; in that case <code>state$</code> is seeded with <code>'unsupported'</code> and <code>connect$</code> rejects with <code>SerialErrorCode.BROWSER_NOT_SUPPORTED</code>.</p>
+<p>Factory that returns a new <code>SerialSession</code>. Safe to call when <code>navigator.serial</code> is unavailable; in that case <code>state$</code> is seeded with <code>{ status: 'unsupported' }</code> and <code>connect$</code> rejects with <code>SerialErrorCode.BROWSER_NOT_SUPPORTED</code>.</p>
 <h3 id="signature" class="tsd-anchor-link">Signature<a href="#signature" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <pre><code class="typescript"><span class="hl-4">function</span><span class="hl-1"> </span><span class="hl-6">createSerialSession</span><span class="hl-1">(</span><span class="hl-2">options</span><span class="hl-1">?: </span><span class="hl-10">SerialSessionOptions</span><span class="hl-1">): </span><span class="hl-10">SerialSession</span><span class="hl-1">;</span>
 </code><button type="button">Copy</button></pre>
@@ -66,8 +77,57 @@
 <tr>
 <td><code>receiveReplay</code></td>
 <td><code>SerialSessionReceiveReplayOptions</code></td>
-<td><code>{ enabled: false, bufferSize: 512 }</code></td>
+<td><code>{ enabled: false, bufferSize: 512, maxChars: 0 }</code></td>
 <td>Optional per-connection replay of decoded receive chunks; see <code>receiveReplay$</code>.</td>
+</tr>
+<tr>
+<td><code>terminalBuffer</code></td>
+<td><code>TerminalBufferOptions</code></td>
+<td><code>{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }</code></td>
+<td>Memory limits and ANSI stripping for <code>terminalText$</code>; see <code>createTerminalBuffer</code>.</td>
+</tr>
+<tr>
+<td><code>lineBuffer</code></td>
+<td><code>LineBufferOptions</code></td>
+<td><code>{ maxChars: 1048576 }</code></td>
+<td>Memory limit for the incomplete line tail used by <code>lines$</code>; see below.</td>
+</tr>
+</tbody>
+</table>
+<p>At <code>createSerialSession</code> time (factory), <code>resolveSerialSessionOptions</code> validates the following. Invalid values throw <code>SerialError</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Validation</th>
+<th>Error code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baudRate</code></td>
+<td>safe integer and <code>&gt; 0</code></td>
+<td><code>INVALID_CONNECTION_OPTIONS</code></td>
+</tr>
+<tr>
+<td><code>filters</code></td>
+<td>USB vendor/product ID ranges</td>
+<td><code>INVALID_FILTER_OPTIONS</code></td>
+</tr>
+<tr>
+<td><code>receiveReplay</code></td>
+<td><code>bufferSize</code> / <code>maxChars</code> ranges</td>
+<td><code>INVALID_RECEIVE_REPLAY_OPTIONS</code></td>
+</tr>
+<tr>
+<td><code>terminalBuffer</code></td>
+<td><code>maxLines</code> / <code>maxChars</code> are safe integers and <code>&gt;= 0</code></td>
+<td><code>INVALID_TERMINAL_BUFFER_OPTIONS</code></td>
+</tr>
+<tr>
+<td><code>lineBuffer</code></td>
+<td><code>maxChars</code> is a safe integer and <code>&gt;= 0</code></td>
+<td><code>INVALID_LINE_BUFFER_OPTIONS</code></td>
 </tr>
 </tbody>
 </table>
@@ -92,51 +152,168 @@
 <td><code>bufferSize</code></td>
 <td><code>number</code></td>
 <td><code>512</code></td>
-<td>Max number of text chunks to retain in the replay buffer for the active connection. Not a character or byte count.</td>
+<td>Max number of text chunks to retain in the replay buffer for the active connection (1–65536). Not a character or byte count.</td>
+</tr>
+<tr>
+<td><code>maxChars</code></td>
+<td><code>number</code></td>
+<td><code>0</code></td>
+<td>Max total characters across retained replay chunks. When exceeded, <strong>oldest</strong> chunks are discarded and <code>RECEIVE_REPLAY_BUFFER_OVERFLOW</code> is emitted on <code>errors$</code> (non-fatal). <code>0</code> disables the limit.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="serialsessionstate" class="tsd-anchor-link">SerialSessionState<a href="#serialsessionstate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<p>The same union is available as a <strong>const object</strong> <code>SerialSessionState</code> (e.g. <code>SerialSessionState.Connected</code> is <code>'connected'</code>) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons.</p>
-<p><code>state$</code> emits one of:</p>
-<ul>
-<li><code>'idle'</code> — no active port; initial state when Web Serial is supported.</li>
-<li><code>'connecting'</code> — <code>connect$</code> is in flight.</li>
-<li><code>'connected'</code> — port is open and the read pump is running.</li>
-<li><code>'disconnecting'</code> — <code>disconnect$</code> is in flight.</li>
-<li><code>'unsupported'</code> — <code>navigator.serial</code> was not available at session creation time.</li>
-<li><code>'error'</code> — a fatal failure occurred. Call <code>disconnect$</code> or recreate the session to recover.</li>
-</ul>
-<p>Valid transitions:</p>
-<pre><code><span class="hl-2">idle</span><span class="hl-1"> -&gt; </span><span class="hl-2">connecting</span><span class="hl-1"> -&gt; </span><span class="hl-2">connected</span><span class="hl-1"> -&gt; </span><span class="hl-2">disconnecting</span><span class="hl-1"> -&gt; </span><span class="hl-2">idle</span><br/><span class="hl-1">                              \-&gt; </span><span class="hl-2">error</span><br/><span class="hl-2">idle</span><span class="hl-1"> / </span><span class="hl-2">connected</span><span class="hl-1"> / </span><span class="hl-2">connecting</span><span class="hl-1"> / </span><span class="hl-2">disconnecting</span><span class="hl-1"> / </span><span class="hl-2">error</span><span class="hl-1"> -&gt; </span><span class="hl-6">error</span><span class="hl-1"> (</span><span class="hl-2">fatal</span><span class="hl-1"> </span><span class="hl-2">failure</span><span class="hl-1">)</span><br/><span class="hl-2">any</span><span class="hl-1"> -&gt; </span><span class="hl-6">unsupported</span><span class="hl-1"> (</span><span class="hl-2">when</span><span class="hl-1"> </span><span class="hl-2">navigator</span><span class="hl-1">.</span><span class="hl-2">serial</span><span class="hl-1"> </span><span class="hl-2">is</span><span class="hl-1"> </span><span class="hl-2">missing</span><span class="hl-1"> </span><span class="hl-2">at</span><span class="hl-1"> </span><span class="hl-2">construction</span><span class="hl-1">)</span>
-</code><button>Copy</button></pre>
-
-<h2 id="serialsession" class="tsd-anchor-link">SerialSession<a href="#serialsession" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<pre><code class="typescript"><span class="hl-4">interface</span><span class="hl-1"> </span><span class="hl-10">SerialSession</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-6">isBrowserSupported</span><span class="hl-1">(): </span><span class="hl-10">boolean</span><span class="hl-1">;</span><br/><br/><span class="hl-1">  </span><span class="hl-6">connect$</span><span class="hl-1">(): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-6">disconnect$</span><span class="hl-1">(): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">state$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">SerialSessionState</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">isConnected$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">boolean</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">errors$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">SerialError</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">receive$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">receiveReplay$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">lines$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><br/><span class="hl-1">  </span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-2">data</span><span class="hl-1">: </span><span class="hl-10">string</span><span class="hl-1"> | </span><span class="hl-10">Uint8Array</span><span class="hl-1">): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">}</span>
+<p>Invalid <code>bufferSize</code> or <code>maxChars</code> values cause <code>createSerialSession</code> to throw <code>SerialError</code> with <code>INVALID_RECEIVE_REPLAY_OPTIONS</code>.</p>
+<h3 id="_-1" class="tsd-anchor-link"><code>TerminalBufferOptions</code><a href="#_-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Used by <code>createTerminalBuffer</code> and <code>SerialSessionOptions.terminalBuffer</code>. When a limit is exceeded, the <strong>oldest</strong> completed lines or leading characters are dropped so long-running terminal views do not grow without bound. Pass <code>0</code> for either field to disable that constraint.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maxLines</code></td>
+<td><code>number</code></td>
+<td><code>10000</code></td>
+<td>Max number of completed lines retained in the cumulative display text.</td>
+</tr>
+<tr>
+<td><code>maxChars</code></td>
+<td><code>number</code></td>
+<td><code>1048576</code></td>
+<td>Max total characters in the display text (<code>completed</code> + current line).</td>
+</tr>
+<tr>
+<td><code>stripAnsi</code></td>
+<td><code>boolean</code></td>
+<td><code>true</code></td>
+<td>When <code>true</code>, removes ANSI escape sequences before folding <code>\r</code> redraws. Set <code>false</code> to preserve raw escape codes in <code>terminalText$</code>. <code>receive$</code> is always unchanged.</td>
+</tr>
+</tbody>
+</table>
+<p>Invalid <code>maxLines</code> or <code>maxChars</code> values cause <code>createSerialSession</code> to throw <code>SerialError</code> with <code>INVALID_TERMINAL_BUFFER_OPTIONS</code>.</p>
+<h3 id="_-2" class="tsd-anchor-link"><code>LineBufferOptions</code><a href="#_-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Used by <code>SerialSessionOptions.lineBuffer</code> for the <strong>incomplete line tail</strong> held while framing <code>lines$</code>. When <code>maxChars</code> is exceeded, <strong>leading</strong> characters of the tail are discarded and a non-fatal <code>SerialError</code> with <code>SerialErrorCode.LINE_BUFFER_OVERFLOW</code> is emitted on <code>errors$</code>. Completed lines are emitted in full before the tail is trimmed. Pass <code>0</code> to disable the limit.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maxChars</code></td>
+<td><code>number</code></td>
+<td><code>1048576</code></td>
+<td>Max characters retained in the incomplete line tail (no line terminator yet).</td>
+</tr>
+</tbody>
+</table>
+<p>Invalid <code>maxChars</code> values cause <code>createSerialSession</code> to throw <code>SerialError</code> with <code>INVALID_LINE_BUFFER_OPTIONS</code>.</p>
+<h2 id="createterminalbufferreceive-options" class="tsd-anchor-link">createTerminalBuffer(receive$, options?)<a href="#createterminalbufferreceive-options" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Builds a terminal-oriented cumulative text stream from any <code>Observable&lt;string&gt;</code> of decoded chunks (typically <code>SerialSession.receive$</code>). Folds <code>\r</code> redraws while preserving normal newline behavior. Defaults match <code>DEFAULT_TERMINAL_BUFFER_OPTIONS</code>.</p>
+<pre><code class="typescript"><span class="hl-4">function</span><span class="hl-1"> </span><span class="hl-6">createTerminalBuffer</span><span class="hl-1">(</span><br/><span class="hl-1">  </span><span class="hl-2">receive$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;,</span><br/><span class="hl-1">  </span><span class="hl-2">options</span><span class="hl-1">?: </span><span class="hl-10">TerminalBufferOptions</span><span class="hl-1">,</span><br/><span class="hl-1">): </span><span class="hl-10">TerminalBuffer</span><span class="hl-1">;</span>
 </code><button type="button">Copy</button></pre>
 
-<h3 id="_-1" class="tsd-anchor-link"><code>isBrowserSupported(): boolean</code><a href="#_-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h2 id="serialsessionstate-serialsessionstatus" class="tsd-anchor-link">SerialSessionState / SerialSessionStatus<a href="#serialsessionstate-serialsessionstatus" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>v3 exposes <strong><code>SerialSessionStatus</code></strong> as lifecycle string constants (e.g. <code>SerialSessionStatus.Connected</code> is <code>'connected'</code>) and <strong><code>SerialSessionState</code></strong> as the discriminated union type emitted by <code>state$</code>.</p>
+<p><code>state$</code> emits objects such as:</p>
+<ul>
+<li><code>{ status: 'idle' }</code> — no active port; initial state when Web Serial is supported.</li>
+<li><code>{ status: 'connecting' }</code> — <code>connect$</code> is in flight.</li>
+<li><code>{ status: 'connected', portInfo }</code> — port is open and the read pump is running.</li>
+<li><code>{ status: 'disconnecting' }</code> — <code>disconnect$</code> is in flight.</li>
+<li><code>{ status: 'unsupported' }</code> — <code>navigator.serial</code> was not available at session creation time.</li>
+<li><code>{ status: 'error', error }</code> — fatal failure; <code>error</code> is the same <code>SerialError</code> instance on <code>errors$</code>.</li>
+<li><code>{ status: 'disposed' }</code> — session permanently torn down via <code>dispose$</code>.</li>
+</ul>
+<p>Example:</p>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<p>See <a href="MIGRATION_V3.html">Migrating to v3</a> for the v2 string migration.</p>
+<h2 id="serialsession" class="tsd-anchor-link">SerialSession<a href="#serialsession" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<pre><code class="typescript"><span class="hl-4">interface</span><span class="hl-1"> </span><span class="hl-10">SerialSession</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-6">isBrowserSupported</span><span class="hl-1">(): </span><span class="hl-10">boolean</span><span class="hl-1">;</span><br/><br/><span class="hl-1">  </span><span class="hl-6">connect$</span><span class="hl-1">(): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-6">disconnect$</span><span class="hl-1">(): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-6">dispose$</span><span class="hl-1">(): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-9">/** </span><span class="hl-4">@deprecated</span><span class="hl-9"> Use </span><span class="hl-10">{</span><span class="hl-4">@link</span><span class="hl-10"> </span><span class="hl-2">dispose$</span><span class="hl-10">}</span><span class="hl-9">. Scheduled for removal in the next major version. */</span><br/><span class="hl-1">  </span><span class="hl-6">destroy$</span><span class="hl-1">(): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">state$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">SerialSessionState</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">isConnected$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">boolean</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-9">/** </span><span class="hl-4">@deprecated</span><span class="hl-9"> Prefer </span><span class="hl-10">{</span><span class="hl-4">@link</span><span class="hl-10"> </span><span class="hl-2">state$</span><span class="hl-10">}</span><span class="hl-9"> narrowing with </span><span class="hl-10">{</span><span class="hl-4">@link</span><span class="hl-10"> </span><span class="hl-2">SerialSessionStatus.Connected</span><span class="hl-10">}</span><span class="hl-9"> and `state.portInfo`. Scheduled for removal in the next major version. */</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">portInfo$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">SerialPortInfo</span><span class="hl-1"> | </span><span class="hl-10">null</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">errors$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">SerialError</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">receive$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">receiveReplay$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">terminalText$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">  </span><span class="hl-4">readonly</span><span class="hl-1"> </span><span class="hl-2">lines$</span><span class="hl-1">: </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">string</span><span class="hl-1">&gt;;</span><br/><br/><span class="hl-1">  </span><span class="hl-9">/** </span><span class="hl-4">@deprecated</span><span class="hl-9"> Prefer </span><span class="hl-10">{</span><span class="hl-4">@link</span><span class="hl-10"> </span><span class="hl-2">state$</span><span class="hl-10">}</span><span class="hl-9"> narrowing with </span><span class="hl-10">{</span><span class="hl-4">@link</span><span class="hl-10"> </span><span class="hl-2">SerialSessionStatus.Connected</span><span class="hl-10">}</span><span class="hl-9"> and `state.portInfo`. Scheduled for removal in the next major version. */</span><br/><span class="hl-1">  </span><span class="hl-6">getPortInfo</span><span class="hl-1">(): </span><span class="hl-10">SerialPortInfo</span><span class="hl-1"> | </span><span class="hl-10">null</span><span class="hl-1">;</span><br/><span class="hl-1">  </span><span class="hl-6">getCurrentPort</span><span class="hl-1">(): </span><span class="hl-10">SerialPort</span><span class="hl-1"> | </span><span class="hl-10">null</span><span class="hl-1">;</span><br/><br/><span class="hl-1">  </span><span class="hl-6">send$</span><span class="hl-1">(</span><span class="hl-2">data</span><span class="hl-1">: </span><span class="hl-10">string</span><span class="hl-1"> | </span><span class="hl-10">Uint8Array</span><span class="hl-1">): </span><span class="hl-10">Observable</span><span class="hl-1">&lt;</span><span class="hl-10">void</span><span class="hl-1">&gt;;</span><br/><span class="hl-1">}</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="_-3" class="tsd-anchor-link"><code>isBrowserSupported(): boolean</code><a href="#_-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p>Synchronous feature check. Returns <code>true</code> when <code>navigator.serial</code> is available.</p>
-<h3 id="_-2" class="tsd-anchor-link"><code>connect$(): Observable&lt;void&gt;</code><a href="#_-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h3 id="_-4" class="tsd-anchor-link"><code>connect$(): Observable&lt;void&gt;</code><a href="#_-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p>Opens a user-selected serial port and starts the internal read pump. Completes on success; errors via <code>errors$</code> and the subscriber on failure. Transitions <code>idle → connecting → connected</code>.</p>
-<h3 id="_-3" class="tsd-anchor-link"><code>disconnect$(): Observable&lt;void&gt;</code><a href="#_-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p>Stops the read pump and closes the port. Safe to call when already idle. Transitions <code>connected → disconnecting → idle</code>. When called from <code>'error'</code> it still tears the port down and returns to <code>idle</code>.</p>
-<h3 id="_-4" class="tsd-anchor-link"><code>state$: Observable&lt;SerialSessionState&gt;</code><a href="#_-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h3 id="_-5" class="tsd-anchor-link"><code>disconnect$(): Observable&lt;void&gt;</code><a href="#_-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during <code>'connecting'</code>, cancels the in-flight <code>connect$()</code> (closes any opened port) and returns to <code>'idle'</code> without reaching <code>'connected'</code>. Transitions <code>connected → disconnecting → idle</code>. When called from <code>'error'</code> it still tears the port down and returns to <code>idle</code>. The session remains reusable after <code>disconnect$</code>; use <code>dispose$</code> for permanent teardown.</p>
+<h3 id="_-6" class="tsd-anchor-link"><code>dispose$(): Observable&lt;void&gt;</code><a href="#_-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Permanently tears down the session. Closes any active connection (same port/pump cleanup as <code>disconnect$</code>), emits <code>'disposed'</code> on <code>state$</code>, and <strong>completes every session observable</strong> (<code>state$</code>, <code>errors$</code>, <code>receive$</code>, <code>lines$</code>, <code>terminalText$</code>, <code>receiveReplay$</code>, <code>portInfo$</code>, <code>isConnected$</code>). Safe to call multiple times; subsequent calls complete immediately.</p>
+<p>After disposal, <code>connect$</code> and <code>send$</code> fail with <code>SerialErrorCode.SESSION_DISPOSED</code>. <code>disconnect$</code> completes immediately. Create a new <code>SerialSession</code> instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).</p>
+<h3 id="_-7" class="tsd-anchor-link"><code>destroy$(): Observable&lt;void&gt;</code><a href="#_-7" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p><strong>Deprecated</strong> — alias for <code>dispose$()</code>. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. See <a href="MIGRATION_V3.html#4-destroy-deprecation">Migrating to v3 – destroy$ deprecation</a>.</p>
+<h3 id="_-8" class="tsd-anchor-link"><code>state$: Observable&lt;SerialSessionState&gt;</code><a href="#_-8" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p>Replays the current state on subscribe. Prefer driving your UI from this stream instead of rebuilding a <code>BehaviorSubject</code>.</p>
-<h3 id="_-5" class="tsd-anchor-link"><code>isConnected$: Observable&lt;boolean&gt;</code><a href="#_-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p><code>true</code> when the session is in <code>'connected'</code>; <code>false</code> for every other <code>SerialSessionState</code> value. Derived from <code>state$</code> with <code>distinctUntilChanged</code> so simple UIs can bind without repeating string comparisons (you can still <code>map</code> <code>state$</code> yourself if you prefer).</p>
-<h3 id="_-6" class="tsd-anchor-link"><code>errors$: Observable&lt;SerialError&gt;</code><a href="#_-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p>Primary error channel. Every connect / read / write / close failure is normalised to <code>SerialError</code> and pushed here. Fatal failures additionally drive <code>state$</code> to <code>'error'</code> and tear down the live pump and port.</p>
-<h3 id="_-7" class="tsd-anchor-link"><code>receive$: Observable&lt;string&gt;</code><a href="#_-7" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h3 id="_-9" class="tsd-anchor-link"><code>isConnected$: Observable&lt;boolean&gt;</code><a href="#_-9" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Convenience stream: <code>true</code> when <code>state$.status</code> is <code>SerialSessionStatus.Connected</code>; <code>false</code> otherwise. Prefer <code>state$</code> when you need full lifecycle phases or <code>state.portInfo</code>.</p>
+<h3 id="_-10" class="tsd-anchor-link"><code>portInfo$: Observable&lt;SerialPortInfo | null&gt;</code><a href="#_-10" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p><strong>Deprecated</strong> — convenience stream that emits the active port's <code>SerialPort.getInfo()</code> snapshot, or <code>null</code> when no port is open. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing <code>state$</code> with <code>SerialSessionStatus.Connected</code> and reading <code>state.portInfo</code>. See <a href="MIGRATION_V3.html#5-portinfo--getportinfo-deprecation">Migrating to v3 – portInfo$ / getPortInfo() deprecation</a>.</p>
+<h3 id="_-11" class="tsd-anchor-link"><code>getPortInfo(): SerialPortInfo | null</code><a href="#_-11" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p><strong>Deprecated</strong> — synchronous read of the last <code>portInfo$</code> value. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing <code>state$</code> with <code>SerialSessionStatus.Connected</code> and reading <code>state.portInfo</code>. See <a href="MIGRATION_V3.html#5-portinfo--getportinfo-deprecation">Migrating to v3 – portInfo$ / getPortInfo() deprecation</a>.</p>
+<h3 id="_-12" class="tsd-anchor-link"><code>getCurrentPort(): SerialPort | null</code><a href="#_-12" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Returns the underlying <code>SerialPort</code> while connected, or <code>null</code> otherwise. Avoid calling <code>port.close()</code> or replacing streams yourself — that conflicts with session lifecycle. Prefer narrowing <code>state$</code> with <code>SerialSessionStatus.Connected</code> and using <code>state.portInfo</code> for device identification.</p>
+<h3 id="_-13" class="tsd-anchor-link"><code>errors$: Observable&lt;SerialError&gt;</code><a href="#_-13" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Primary error channel. Every connect / read / write / close failure is normalised to <code>SerialError</code> and pushed here. Fatal failures additionally drive <code>state$</code> to <code>{ status: 'error', error }</code> and tear down the live pump and port.</p>
+<h3 id="_-14" class="tsd-anchor-link"><code>receive$: Observable&lt;string&gt;</code><a href="#_-14" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p>UTF-8 decoded text pushed by the internal read pump as <strong>decoder chunks</strong> (not line-oriented). <strong>Not subscription-lazy</strong> — the pump is started by <code>connect$</code> and chunks are multicast. Late subscribers see only new data. Carriage returns and other control characters are preserved. Use <strong><code>receive$</code></strong> for terminal-like mirrors and any output that depends on <code>\r</code> (for example interactive shells or progress lines). Use <strong><code>lines$</code></strong> for newline-framed logs and line-by-line parsing.</p>
-<h3 id="_-8" class="tsd-anchor-link"><code>receiveReplay$: Observable&lt;string&gt;</code><a href="#_-8" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p>Same data path as <code>receive$</code>, but when <code>SerialSessionOptions.receiveReplay.enabled</code> is <code>true</code> it <strong>replays</strong> the last <em>N</em> <strong>chunks</strong> (decoder emissions) for the current connection to new subscribers. When <code>enabled</code> is <code>false</code> (default), this is the same observable instance as <code>receive$</code>. The replay buffer is reset when the port disconnects. Does not change <code>lines$</code> (line framing is not replayed here).</p>
-<h3 id="_-9" class="tsd-anchor-link"><code>lines$: Observable&lt;string&gt;</code><a href="#_-9" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<p>The same UTF-8 stream split into <strong>complete lines</strong> using <code>\n</code>, <code>\r\n</code>, and a lone interior <code>\r</code> (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. <strong>Not subscription-lazy</strong> with respect to the read pump, like <code>receive$</code>. Choose <strong><code>lines$</code></strong> for logs and parsers; for raw terminal display where <code>\r</code> redraw semantics matter, subscribe to <strong><code>receive$</code></strong> instead.</p>
-<h3 id="_-10" class="tsd-anchor-link"><code>send$(data: string | Uint8Array): Observable&lt;void&gt;</code><a href="#_-10" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h3 id="_-15" class="tsd-anchor-link"><code>receiveReplay$: Observable&lt;string&gt;</code><a href="#_-15" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Same data path as <code>receive$</code>, but when <code>SerialSessionOptions.receiveReplay.enabled</code> is <code>true</code> it <strong>replays</strong> the last <em>N</em> <strong>chunks</strong> (decoder emissions) for the current connection to new subscribers. When <code>enabled</code> is <code>false</code> (default), this is the same observable instance as <code>receive$</code>. The replay buffer is reset when the port disconnects. Optional <code>maxChars</code> bounds total buffered characters by discarding oldest chunks. Does not change <code>lines$</code> (line framing is not replayed here).</p>
+<h3 id="_-16" class="tsd-anchor-link"><code>terminalText$: Observable&lt;string&gt;</code><a href="#_-16" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Terminal-display oriented cumulative text derived from <code>receive$</code>. Collapses <code>\r</code> redraws while keeping normal newline behavior. By default strips ANSI escape sequences for plain-text views (for example <code>&lt;textarea&gt;</code>). Raw escape codes remain available on <code>receive$</code>. Equivalent to <code>createTerminalBuffer(receive$, options.terminalBuffer).text$</code>. By default retains at most 10,000 completed lines and 1,048,576 characters; configure via <code>SerialSessionOptions.terminalBuffer</code> or pass <code>{ maxLines: 0, maxChars: 0 }</code> for unlimited growth.</p>
+<h3 id="_-17" class="tsd-anchor-link"><code>lines$: Observable&lt;string&gt;</code><a href="#_-17" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>The same UTF-8 stream split into <strong>complete lines</strong> using <code>\n</code>, <code>\r\n</code>, and a lone interior <code>\r</code> (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. By default the incomplete tail is capped at 1,048,576 characters via <code>SerialSessionOptions.lineBuffer</code>; overflow discards leading tail data and emits <code>LINE_BUFFER_OVERFLOW</code> on <code>errors$</code> without disconnecting. <strong>Not subscription-lazy</strong> with respect to the read pump, like <code>receive$</code>. Choose <strong><code>lines$</code></strong> for logs and parsers; for raw terminal display where <code>\r</code> redraw semantics matter, subscribe to <strong><code>receive$</code></strong> instead.</p>
+<h3 id="_-18" class="tsd-anchor-link"><code>send$(data: string | Uint8Array): Observable&lt;void&gt;</code><a href="#_-18" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p>Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared <code>TextEncoder</code>. Concurrent <code>send$</code> calls are serialised in call order by an internal FIFO queue. Write failures are normalised to <code>SerialError</code> with <code>SerialErrorCode.WRITE_FAILED</code>, multiplexed on <code>errors$</code>, and surfaced to the subscriber. Calling <code>send$</code> while not <code>'connected'</code> fails fast with <code>SerialErrorCode.PORT_NOT_OPEN</code>.</p>
 <h2 id="serialerror-serialerrorcode" class="tsd-anchor-link">SerialError / SerialErrorCode<a href="#serialerror-serialerrorcode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<p><code>SerialError</code> extends <code>Error</code> with a <code>code: SerialErrorCode</code> and an optional <code>originalError: Error</code>. It exposes <code>is(code): boolean</code> for ergonomic comparison.</p>
+<p><code>SerialError</code> extends <code>Error</code> with a <code>code: SerialErrorCode</code> and structured per-code metadata on <code>context</code>. <code>is(code)</code> narrows both <code>code</code> and <code>context</code> to the literal types for that code.</p>
+<p>For cause-bearing error codes, <strong><code>context.cause</code></strong> (<code>unknown</code>) is the canonical source for the underlying failure. <code>originalError</code> remains in v3.x for backward compatibility but is <strong>deprecated</strong> and scheduled for removal in the next major version. See <a href="MIGRATION_V3.html#3-originalerror-deprecation">Migrating to v3 – originalError deprecation</a>.</p>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">errors$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">error</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-6">is</span><span class="hl-1">(</span><span class="hl-2">SerialErrorCode</span><span class="hl-1">.</span><span class="hl-5">READ_FAILED</span><span class="hl-1">)) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">error</span><span class="hl-1">(</span><span class="hl-2">error</span><span class="hl-1">.</span><span class="hl-2">context</span><span class="hl-1">.</span><span class="hl-2">cause</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<p>The same union is available as a <strong>const object</strong> <code>SerialErrorCode</code> (e.g. <code>SerialErrorCode.READ_FAILED</code> is <code>'READ_FAILED'</code>) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See <a href="MIGRATION_V3.html">Migrating to v3</a> for the enum-to-const declaration change.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th><code>context</code> shape</th>
+<th>When it is emitted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LINE_BUFFER_OVERFLOW</code></td>
+<td><code>{ maxChars: number }</code></td>
+<td><code>lines$</code> incomplete tail exceeded <code>lineBuffer.maxChars</code>; leading data discarded (non-fatal).</td>
+</tr>
+<tr>
+<td><code>RECEIVE_REPLAY_BUFFER_OVERFLOW</code></td>
+<td><code>{ maxChars: number; bufferSize: number }</code></td>
+<td><code>receiveReplay$</code> buffer exceeded <code>receiveReplay</code> limits; oldest chunks discarded (non-fatal).</td>
+</tr>
+<tr>
+<td>Cause-bearing codes (e.g. <code>PORT_OPEN_FAILED</code>)</td>
+<td><code>{ cause: unknown }</code></td>
+<td>See table below. Narrow with <code>error.is(code)</code> before reading <code>context.cause</code>.</td>
+</tr>
+<tr>
+<td>Other codes</td>
+<td><code>undefined</code></td>
+<td>See table below.</td>
+</tr>
+</tbody>
+</table>
 <table>
 <thead>
 <tr>
@@ -163,7 +340,7 @@
 </tr>
 <tr>
 <td><code>PORT_NOT_OPEN</code></td>
-<td><code>send$</code> / <code>disconnect$</code> called in a state that disallows it.</td>
+<td><code>send$</code> called while not <code>'connected'</code>.</td>
 </tr>
 <tr>
 <td><code>READ_FAILED</code></td>
@@ -179,7 +356,23 @@
 </tr>
 <tr>
 <td><code>INVALID_FILTER_OPTIONS</code></td>
-<td><code>filters</code> contained an invalid entry.</td>
+<td><code>filters</code> contained an invalid entry (at session creation).</td>
+</tr>
+<tr>
+<td><code>INVALID_RECEIVE_REPLAY_OPTIONS</code></td>
+<td><code>receiveReplay.bufferSize</code> or <code>receiveReplay.maxChars</code> was out of range at session creation.</td>
+</tr>
+<tr>
+<td><code>INVALID_TERMINAL_BUFFER_OPTIONS</code></td>
+<td><code>terminalBuffer.maxLines</code> or <code>terminalBuffer.maxChars</code> was out of range at session creation.</td>
+</tr>
+<tr>
+<td><code>INVALID_LINE_BUFFER_OPTIONS</code></td>
+<td><code>lineBuffer.maxChars</code> was out of range at session creation.</td>
+</tr>
+<tr>
+<td><code>INVALID_CONNECTION_OPTIONS</code></td>
+<td><code>baudRate</code> was out of range at session creation.</td>
 </tr>
 <tr>
 <td><code>OPERATION_CANCELLED</code></td>
@@ -190,9 +383,67 @@
 <td>Internal operation timed out.</td>
 </tr>
 <tr>
+<td><code>SESSION_DISPOSED</code></td>
+<td><code>connect$</code> or <code>send$</code> called after <code>dispose$</code>.</td>
+</tr>
+<tr>
 <td><code>UNKNOWN</code></td>
-<td>Unclassified failure; see <code>originalError</code>.</td>
+<td>Unclassified failure; see <code>context.cause</code>.</td>
 </tr>
 </tbody>
 </table>
-</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#api-reference"><span>API <wbr/>Reference</span></a><ul><li><a href="#public-exports"><span>Public exports</span></a></li><li><a href="#createserialsessionoptions"><span>create<wbr/>Serial<wbr/>Session(options?)</span></a></li><li><ul><li><a href="#signature"><span>Signature</span></a></li></ul></li><li><a href="#serialsessionoptions"><span>Serial<wbr/>Session<wbr/>Options</span></a></li><li><ul><li><a href="#_"><span></span></a></li></ul></li><li><a href="#serialsessionstate"><span>Serial<wbr/>Session<wbr/>State</span></a></li><li><a href="#serialsession"><span>Serial<wbr/>Session</span></a></li><li><ul><li><a href="#_-1"><span></span></a></li><li><a href="#_-2"><span></span></a></li><li><a href="#_-3"><span></span></a></li><li><a href="#_-4"><span></span></a></li><li><a href="#_-5"><span></span></a></li><li><a href="#_-6"><span></span></a></li><li><a href="#_-7"><span></span></a></li><li><a href="#_-8"><span></span></a></li><li><a href="#_-9"><span></span></a></li><li><a href="#_-10"><span></span></a></li></ul></li><li><a href="#serialerror-serialerrorcode"><span>Serial<wbr/>Error / <wbr/>Serial<wbr/>Error<wbr/>Code</span></a></li></ul></div></details></div><div class="site-menu"><nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer></footer><div class="overlay"></div></body></html>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#api-reference"><span>API <wbr/>Reference</span></a>
+<ul>
+<li><a href="#public-exports"><span>Public exports</span></a></li>
+<li><a href="#createserialsessionoptions"><span>create<wbr/>Serial<wbr/>Session(options?)</span></a></li>
+<li>
+<ul>
+<li><a href="#signature"><span>Signature</span></a></li></ul></li>
+<li><a href="#serialsessionoptions"><span>Serial<wbr/>Session<wbr/>Options</span></a></li>
+<li>
+<ul>
+<li><a href="#_"><span></span></a></li>
+<li><a href="#_-1"><span></span></a></li>
+<li><a href="#_-2"><span></span></a></li></ul></li>
+<li><a href="#createterminalbufferreceive-options"><span>create<wbr/>Terminal<wbr/>Buffer(receive$, options?)</span></a></li>
+<li><a href="#serialsessionstate-serialsessionstatus"><span>Serial<wbr/>Session<wbr/>State / <wbr/>Serial<wbr/>Session<wbr/>Status</span></a></li>
+<li><a href="#serialsession"><span>Serial<wbr/>Session</span></a></li>
+<li>
+<ul>
+<li><a href="#_-3"><span></span></a></li>
+<li><a href="#_-4"><span></span></a></li>
+<li><a href="#_-5"><span></span></a></li>
+<li><a href="#_-6"><span></span></a></li>
+<li><a href="#_-7"><span></span></a></li>
+<li><a href="#_-8"><span></span></a></li>
+<li><a href="#_-9"><span></span></a></li>
+<li><a href="#_-10"><span></span></a></li>
+<li><a href="#_-11"><span></span></a></li>
+<li><a href="#_-12"><span></span></a></li>
+<li><a href="#_-13"><span></span></a></li>
+<li><a href="#_-14"><span></span></a></li>
+<li><a href="#_-15"><span></span></a></li>
+<li><a href="#_-16"><span></span></a></li>
+<li><a href="#_-17"><span></span></a></li>
+<li><a href="#_-18"><span></span></a></li></ul></li>
+<li><a href="#serialerror-serialerrorcode"><span>Serial<wbr/>Error / <wbr/>Serial<wbr/>Error<wbr/>Code</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer></footer>
+<div class="overlay"></div></body></html>

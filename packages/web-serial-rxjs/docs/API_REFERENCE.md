@@ -140,6 +140,7 @@ interface SerialSession {
 
   readonly state$: Observable<SerialSessionState>;
   readonly isConnected$: Observable<boolean>;
+  /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected} and `state.portInfo`. Scheduled for removal in the next major version. */
   readonly portInfo$: Observable<SerialPortInfo | null>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
@@ -147,6 +148,7 @@ interface SerialSession {
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
 
+  /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected} and `state.portInfo`. Scheduled for removal in the next major version. */
   getPortInfo(): SerialPortInfo | null;
   getCurrentPort(): SerialPort | null;
 
@@ -183,6 +185,18 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 ### `isConnected$: Observable<boolean>`
 
 Convenience stream: `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Prefer `state$` when you need full lifecycle phases or `state.portInfo`.
+
+### `portInfo$: Observable<SerialPortInfo | null>`
+
+**Deprecated** — convenience stream that emits the active port's `SerialPort.getInfo()` snapshot, or `null` when no port is open. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./MIGRATION_V3.md#5-portinfo--getportinfo-deprecation).
+
+### `getPortInfo(): SerialPortInfo | null`
+
+**Deprecated** — synchronous read of the last `portInfo$` value. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./MIGRATION_V3.md#5-portinfo--getportinfo-deprecation).
+
+### `getCurrentPort(): SerialPort | null`
+
+Returns the underlying `SerialPort` while connected, or `null` otherwise. Avoid calling `port.close()` or replacing streams yourself — that conflicts with session lifecycle. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and using `state.portInfo` for device identification.
 
 ### `errors$: Observable<SerialError>`
 
