@@ -59,7 +59,7 @@ TypeDoc のトップページから、まず以下を参照してください。
 | `errors$` | **Canonical error event channel** — 接続・読み取り・書き込み・クローズのすべての `SerialError`（fatal / non-fatal）。 |
 | `connect$()` | ポート選択 → オープン → 内部 read pump 開始。 |
 | `disconnect$()` | ポートを閉じ、pump を停止。セッションは `idle` に戻り再利用可能。 |
-| `dispose$()` / `destroy$()` | セッションを**永久破棄**。接続を閉じ、すべての Observable を complete し、再利用不可にする。`dispose$` を優先し、`destroy$` はエイリアス。 |
+| `dispose$()` | セッションを**永久破棄**。接続を閉じ、すべての Observable を complete し、再利用不可にする。 |
 | `send$(string \| Uint8Array)` | 送信を **FIFO** で直列化（並行 `send$` も呼び出し順）。 |
 | `isBrowserSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
 

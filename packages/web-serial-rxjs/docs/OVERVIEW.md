@@ -59,7 +59,7 @@ This library is framework-agnostic and can be used with:
 | `errors$` | **Canonical error event channel** — all `SerialError` instances from connect / read / write / close (fatal and non-fatal). |
 | `connect$()` | **Open** a user-selected port and start the internal read pump. |
 | `disconnect$()` | **Close** the port and stop the pump. The session stays reusable (`idle`). |
-| `dispose$()` / `destroy$()` | **Permanently tear down** the session: close any active connection, complete all observables, and prevent reuse. Prefer `dispose$`; `destroy$` is an alias. |
+| `dispose$()` | **Permanently tear down** the session: close any active connection, complete all observables, and prevent reuse. |
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
 | `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
 

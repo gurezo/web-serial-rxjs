@@ -135,6 +135,7 @@ interface SerialSession {
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
   dispose$(): Observable<void>;
+  /** @deprecated Use {@link dispose$}. Scheduled for removal in the next major version. */
   destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
@@ -165,11 +166,15 @@ Opens a user-selected serial port and starts the internal read pump. Completes o
 
 Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown.
 
-### `dispose$(): Observable<void>` / `destroy$(): Observable<void>`
+### `dispose$(): Observable<void>`
 
-Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`, `receiveReplay$`, `portInfo$`, `isConnected$`). Safe to call multiple times; subsequent calls complete immediately. `destroy$` is an alias for `dispose$`.
+Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`, `receiveReplay$`, `portInfo$`, `isConnected$`). Safe to call multiple times; subsequent calls complete immediately.
 
 After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOSED`. `disconnect$` completes immediately. Create a new `SerialSession` instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).
+
+### `destroy$(): Observable<void>`
+
+**Deprecated** — alias for `dispose$()`. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. See [Migrating to v3 – destroy$ deprecation](./MIGRATION_V3.md#4-destroy-deprecation).
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -243,5 +248,5 @@ The same union is available as a **const object** `SerialErrorCode` (e.g. `Seria
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `OPERATION_TIMEOUT`      | Internal operation timed out.                                       |
-| `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$` / `destroy$`.         |
+| `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$`.                       |
 | `UNKNOWN`                | Unclassified failure; see `context.cause`.                          |

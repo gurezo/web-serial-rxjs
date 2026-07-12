@@ -110,7 +110,7 @@ v3 では **`SerialSessionStatus`** が lifecycle 文字列定数（例: `Serial
 - `{ status: 'disconnecting' }` — `disconnect$` 実行中。
 - `{ status: 'unsupported' }` — `navigator.serial` が存在しない環境でセッションを生成した場合。
 - `{ status: 'error', error }` — 致命的な失敗。`error` は `errors$` に流れた `SerialError` と同一インスタンス。
-- `{ status: 'disposed' }` — `dispose$` / `destroy$` によりセッションが永久破棄された。
+- `{ status: 'disposed' }` — `dispose$` によりセッションが永久破棄された。
 
 比較例:
 
@@ -135,6 +135,7 @@ interface SerialSession {
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
   dispose$(): Observable<void>;
+  /** @deprecated {@link dispose$} を使用してください。次回 major version で削除予定です。 */
   destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
@@ -165,11 +166,15 @@ interface SerialSession {
 
 read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose$` を使います。
 
-### `dispose$(): Observable<void>` / `destroy$(): Observable<void>`
+### `dispose$(): Observable<void>`
 
-セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`、`receiveReplay$`、`portInfo$`、`isConnected$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。`destroy$` は `dispose$` のエイリアスです。
+セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`、`receiveReplay$`、`portInfo$`、`isConnected$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。
 
 dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で失敗します。`disconnect$` は即 complete します。baud rate 変更時の session 作り替えなどでは、破棄したインスタンスを再利用せず新しい `SerialSession` を作成してください。
+
+### `destroy$(): Observable<void>`
+
+**非推奨** — `dispose$()` のエイリアスです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。詳細は [v3 移行ガイド – destroy$ の非推奨化](./MIGRATION_V3.ja.md#4-destroy-の非推奨化) を参照してください。
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -243,5 +248,5 @@ session.errors$.subscribe((error) => {
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） |
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
 | `OPERATION_TIMEOUT`      | 内部操作がタイムアウト                                             |
-| `SESSION_DISPOSED`       | `dispose$` / `destroy$` 後に `connect$` または `send$` を呼んだ    |
+| `SESSION_DISPOSED`       | `dispose$` 後に `connect$` または `send$` を呼んだ                 |
 | `UNKNOWN`                | 分類不能なエラー。`context.cause` を確認                           |
