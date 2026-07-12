@@ -570,6 +570,25 @@ describe('createSerialSession', () => {
       });
     });
 
+    it('rejects connect$ with PORT_ALREADY_OPEN while connected without changing state$', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errorsPromise = firstValueFrom(session.errors$);
+      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+        name: 'SerialError',
+        code: SerialErrorCode.PORT_ALREADY_OPEN,
+      });
+
+      const emitted = await errorsPromise;
+      expect(emitted.code).toBe(SerialErrorCode.PORT_ALREADY_OPEN);
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+    });
+
     it('disconnect$ completes immediately when state is idle', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
       (globalThis as any).navigator = { serial: {} };

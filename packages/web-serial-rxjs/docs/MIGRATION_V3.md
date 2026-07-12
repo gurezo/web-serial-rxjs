@@ -393,6 +393,62 @@ Operations such as `getSignals()` / `setSignals()` that previously required a ra
 
 ---
 
+## 8. `SerialErrorCode` runtime emission audit
+
+Some members of the public `SerialErrorCode` contract were not emitted by the v3.x runtime. To prevent unreachable error-handling branches, all 19 codes were audited ([#438](https://github.com/gurezo/web-serial-rxjs/issues/438)) and the results are recorded here and in the [API Reference](./API_REFERENCE.md#serialerror--serialerrorcode).
+
+### Classification
+
+| Category | Count | Description |
+| --- | --- | --- |
+| **Implemented** | 17 | Emitted at runtime in v3.x (or thrown at factory time) |
+| **Reserved** | 2 | Present in the public API but not emitted in v3.x; scheduled for removal in the next major version |
+
+### Reserved codes (not emitted in v3.x)
+
+| Code | Reason | Alternative |
+| --- | --- | --- |
+| `PORT_NOT_AVAILABLE` | Current implementation uses only `navigator.serial.requestPort`; no `getPorts` API path exists | Use `PORT_OPEN_FAILED` or `OPERATION_CANCELLED` for port acquisition failures |
+| `OPERATION_TIMEOUT` | No timeout / prompt detection / transaction API yet | None (revisit when a future API is added) |
+
+v3.x adds `@deprecated` annotations only; runtime values and exports are unchanged. Removal is deferred to the next major version.
+
+### Implemented codes
+
+| Code | Emit location | fatal / non-fatal | `context` | Tests |
+| --- | --- | --- | --- | --- |
+| `BROWSER_NOT_SUPPORTED` | `connect$` (no `navigator.serial`) | non-fatal | `undefined` | integration |
+| `PORT_OPEN_FAILED` | `connect$` (`port.open()` reject) | fatal | `{ cause }` | integration |
+| `PORT_ALREADY_OPEN` | `connect$` (not in `'idle'` / `'error'`) | non-fatal | `undefined` | integration |
+| `PORT_NOT_OPEN` | `send$` / `disconnect$` (invalid state) | non-fatal | `undefined` | integration |
+| `READ_FAILED` | read pump error | fatal | `{ cause }` | integration |
+| `WRITE_FAILED` | `send$` write failure | non-fatal | `{ cause }` | integration |
+| `CONNECTION_LOST` | `port.close()` failure / stream drop | fatal | `{ cause }` | integration |
+| `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `undefined` | unit + integration |
+| `OPERATION_CANCELLED` | `requestPort` dialog cancelled | fatal | `{ cause }` | integration |
+| `LINE_BUFFER_OVERFLOW` | `lines$` tail overflow | non-fatal | `{ maxChars }` | integration |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | throw | `undefined` | unit + integration |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `undefined` | unit |
+| `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `undefined` | unit |
+| `INVALID_CONNECTION_OPTIONS` | factory | throw | `undefined` | unit + integration |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` overflow | non-fatal | `{ maxChars, bufferSize }` | integration |
+| `SESSION_DISPOSED` | `connect$` / `send$` after `dispose$` | fatal | `undefined` | integration |
+| `UNKNOWN` | unclassified dispose / disconnect fallback | fatal | `{ cause }` | unit |
+
+Fatal vs non-fatal follows `ERROR_SEVERITY` inside `reportError`. Factory-thrown `INVALID_*` codes bypass `reportError` and throw directly to the caller.
+
+### Migration checklist
+
+- [ ] Remove error handling for `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` (unreachable in v3.x).
+- [ ] Handle port acquisition failures with `PORT_OPEN_FAILED` / `OPERATION_CANCELLED`.
+- [ ] See [API Reference – SerialError / SerialErrorCode](./API_REFERENCE.md#serialerror--serialerrorcode) for per-code emit conditions.
+
+### Follow-up
+
+Structured context for validation errors (`INVALID_*`) is planned in [#439](https://github.com/gurezo/web-serial-rxjs/issues/439).
+
+---
+
 ## See also
 
 - [Migrating from v1 to v2](./MIGRATION_V2.md)
