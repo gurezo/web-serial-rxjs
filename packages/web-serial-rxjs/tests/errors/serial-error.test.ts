@@ -14,25 +14,25 @@ describe('SerialError', () => {
       expect(error.name).toBe('SerialError');
       expect(error.code).toBe(SerialErrorCode.PORT_NOT_AVAILABLE);
       expect(error.message).toBe('Port is not available');
-      expect(error.originalError).toBeUndefined();
       expect(error.context).toBeUndefined();
     });
 
-    it('should derive cause context from originalError for cause-bearing codes', () => {
-      const originalError = new Error('Original error');
+    it('should accept explicit structured context with cause', () => {
+      const cause = new Error('Original error');
       const error = new SerialError(
         SerialErrorCode.READ_FAILED,
         'Failed to read',
-        originalError,
+        undefined,
+        { cause },
       );
 
       expect(error.code).toBe(SerialErrorCode.READ_FAILED);
       expect(error.message).toBe('Failed to read');
-      expect(error.originalError).toBe(originalError);
-      expect(error.context).toEqual({ cause: originalError });
+      expect(error.context).toEqual({ cause });
+      expect(error.originalError).toBe(cause);
     });
 
-    it('should accept explicit structured context', () => {
+    it('should accept explicit structured context without cause', () => {
       const error = new SerialError(
         SerialErrorCode.LINE_BUFFER_OVERFLOW,
         'Line buffer overflow',
@@ -58,6 +58,36 @@ describe('SerialError', () => {
         expect(error.stack).toBeDefined();
         expect(error.stack).toContain('SerialError');
       }
+    });
+  });
+
+  describe('backward compatibility', () => {
+    it('should derive cause context from legacy originalError constructor argument', () => {
+      const originalError = new Error('Original error');
+      const error = new SerialError(
+        SerialErrorCode.READ_FAILED,
+        'Failed to read',
+        originalError,
+      );
+
+      expect(error.code).toBe(SerialErrorCode.READ_FAILED);
+      expect(error.message).toBe('Failed to read');
+      expect(error.context).toEqual({ cause: originalError });
+      expect(error.originalError).toBe(originalError);
+    });
+
+    it('should preserve legacy originalError information for Error causes', () => {
+      const originalError = new TypeError('Type error');
+      const error = new SerialError(
+        SerialErrorCode.WRITE_FAILED,
+        'Write failed',
+        originalError,
+      );
+
+      expect(error.context).toEqual({ cause: originalError });
+      expect(error.originalError).toBe(originalError);
+      expect(error.originalError?.message).toBe('Type error');
+      expect(error.originalError).toBeInstanceOf(TypeError);
     });
   });
 
@@ -143,20 +173,6 @@ describe('SerialError', () => {
       );
 
       expect(error.message).toBe('Read failed message');
-    });
-
-    it('should preserve original error information', () => {
-      const originalError = new TypeError('Type error');
-      const error = new SerialError(
-        SerialErrorCode.WRITE_FAILED,
-        'Write failed',
-        originalError,
-      );
-
-      expect(error.originalError).toBe(originalError);
-      expect(error.context).toEqual({ cause: originalError });
-      expect(error.originalError?.message).toBe('Type error');
-      expect(error.originalError).toBeInstanceOf(TypeError);
     });
   });
 });
