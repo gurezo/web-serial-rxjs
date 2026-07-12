@@ -22,7 +22,7 @@ import {
 
 ## Deprecated exports
 
-The following remain available from the public export in v3.x but are not part of the canonical API. They are scheduled for removal in the next major version. See [Migrating to v3 – §9 `assertNever` public export audit](./MIGRATION_V3.md#9-assertnever-public-export-audit).
+The following remain available from the public export in v3.x but are not part of the canonical API. They are scheduled for removal in the next major version. See [Migrating to v3 – §9 `assertNever` public export audit](./MIGRATION_V3.md#9-public-export-audit).
 
 | Export | Status | Migration |
 | --- | --- | --- |

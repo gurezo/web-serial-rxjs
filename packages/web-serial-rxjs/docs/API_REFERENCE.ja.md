@@ -22,7 +22,7 @@ import {
 
 ## Deprecated exports
 
-以下は v3.x で引き続き public export から利用できますが、canonical API ではありません。次回 major version で削除予定です。詳細は [v3 への移行 – §9 `assertNever` public export 監査](./MIGRATION_V3.ja.md#9-assertnever-public-export-監査) を参照してください。
+以下は v3.x で引き続き public export から利用できますが、canonical API ではありません。次回 major version で削除予定です。詳細は [v3 への移行 – §9 `assertNever` public export 監査](./MIGRATION_V3.ja.md#9-public-export-監査) を参照してください。
 
 | Export | 状態 | 移行先 |
 | --- | --- | --- |
