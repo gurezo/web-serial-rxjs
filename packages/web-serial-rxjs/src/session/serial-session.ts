@@ -162,16 +162,6 @@ export interface SerialSession {
   getPortInfo(): SerialPortInfo | null;
 
   /**
-   * The underlying `SerialPort` while connected, or `null` otherwise.
-   *
-   * Avoid calling `port.close()` or replacing streams yourself; that conflicts
-   * with session lifecycle. Prefer narrowing {@link state$} with
-   * {@link SerialSessionStatus.Connected} and using {@link ConnectedSessionState.portInfo}
-   * for identification.
-   */
-  getCurrentPort(): SerialPort | null;
-
-  /**
    * Primary error channel.
    *
    * All {@link SerialError} instances produced by the session (connect /

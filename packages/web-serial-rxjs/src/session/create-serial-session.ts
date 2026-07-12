@@ -24,7 +24,6 @@ import { SerialSessionStatus } from './serial-session-state';
 import {
   createInitialRuntime,
   createSessionRuntimeController,
-  getRuntimePort,
 } from './session-runtime';
 
 /**
@@ -176,9 +175,6 @@ export function createSerialSession(
     portInfo$,
     getPortInfo(): SerialPortInfo | null {
       return portInfoSubject.getValue();
-    },
-    getCurrentPort(): SerialPort | null {
-      return getRuntimePort(controller.runtime);
     },
     errors$,
     receive$,
