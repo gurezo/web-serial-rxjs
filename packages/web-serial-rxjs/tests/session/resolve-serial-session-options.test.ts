@@ -51,6 +51,10 @@ describe('resolveSerialSessionOptions', () => {
     });
   });
 
+  it('defaults terminalBuffer.stripAnsi to true', () => {
+    expect(resolveSerialSessionOptions().terminalBuffer.stripAnsi).toBe(true);
+  });
+
   it('merges nested lineBuffer options', () => {
     expect(
       resolveSerialSessionOptions({
@@ -126,7 +130,7 @@ describe('resolveSerialSessionOptions', () => {
       resolveSerialSessionOptions({
         terminalBuffer: { maxLines: 0, maxChars: 0 },
       }).terminalBuffer,
-    ).toEqual({ maxLines: 0, maxChars: 0 });
+    ).toEqual({ maxLines: 0, maxChars: 0, stripAnsi: true });
   });
 
   it.each([

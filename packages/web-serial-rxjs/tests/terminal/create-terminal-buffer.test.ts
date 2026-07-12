@@ -166,4 +166,40 @@ describe('createTerminalBuffer', () => {
     expect(last).toBe('-rw-r--r--  1 bob    staff  123 ./foo\n');
     expect(last).not.toContain('alice');
   });
+
+  it('issue #428: strips ansi color codes from ls -la output by default', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$);
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+
+    receive$.next('pi@raspberrypi:~$ ls -la\n');
+    receive$.next('合計 36\n');
+    receive$.next(
+      'drwx------ 5 pi   pi   4096  6月  4 13:35 \u001b[0m\u001b[01;34m.\u001b[0m\n',
+    );
+    receive$.next(
+      'lrwxrwxrwx 1 pi   pi     18  6月  4 13:19 \u001b[01;36mnode_modules\u001b[0m -> \u001b[01;34mmyApp/node_modules\u001b[0m\n',
+    );
+
+    expect(last).toContain('合計 36');
+    expect(last).toContain('node_modules -> myApp/node_modules');
+    expect(last).not.toContain('[0m');
+    expect(last).not.toContain('[01;34m');
+    expect(last).not.toContain('[01;36m');
+  });
+
+  it('issue #428: preserves ansi sequences when stripAnsi is false', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$, { stripAnsi: false });
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
+
+    receive$.next('prompt\u001b[?2004h');
+    expect(last).toContain('[?2004h');
+  });
 });

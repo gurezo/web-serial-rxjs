@@ -6,6 +6,7 @@ import {
   type MaxLines,
 } from '../internal/branded-numbers';
 import { createNewlineTokenizer } from '../internal/newline-tokenizer';
+import { createAnsiStripper } from '../internal/strip-ansi-sequences';
 
 /** @internal Folded state between {@link createTerminalBuffer} emissions. */
 export interface TerminalBufferState {
@@ -16,7 +17,9 @@ export interface TerminalBufferState {
 /**
  * Applies one raw decoder chunk to terminal display state.
  * Handles `\r\n` and lone `\n` as line endings, and lone `\r` as
- * carriage return (clear current line for redraw). Does not interpret ANSI escapes.
+ * carriage return (clear current line for redraw). When
+ * {@link TerminalBufferOptions.stripAnsi} is enabled (default), ANSI escape
+ * sequences are removed before line folding.
  *
  * @internal Exported for unit tests.
  */
@@ -149,6 +152,16 @@ export interface TerminalBufferOptions {
    * @default 1048576
    */
   maxChars?: number;
+
+  /**
+   * When `true`, strips ANSI escape sequences from incoming chunks before
+   * folding carriage-return redraws. Use `false` to preserve raw escape
+   * codes in {@link TerminalBuffer.text$}.
+   *
+   * @default true
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/428 | Issue #428}
+   */
+  stripAnsi?: boolean;
 }
 
 /** Default limits applied when options are omitted. */
@@ -156,6 +169,7 @@ export const DEFAULT_TERMINAL_BUFFER_OPTIONS: Required<TerminalBufferOptions> =
   {
     maxLines: 10_000,
     maxChars: 1_048_576,
+    stripAnsi: true,
   };
 
 function resolveTerminalBufferLimits(
@@ -191,10 +205,15 @@ export function createTerminalBuffer(
   options?: TerminalBufferOptions,
 ): TerminalBuffer {
   const limits = resolveTerminalBufferLimits(options);
+  const stripAnsi =
+    options?.stripAnsi ?? DEFAULT_TERMINAL_BUFFER_OPTIONS.stripAnsi;
+  const ansiStripper = stripAnsi ? createAnsiStripper() : null;
 
   const text$ = receive$.pipe(
     scan((state, chunk: string) => {
-      const next = applyTerminalChunk(state, chunk);
+      const normalized =
+        ansiStripper !== null ? ansiStripper.feed(chunk) : chunk;
+      const next = applyTerminalChunk(state, normalized);
       return trimTerminalState(next, limits);
     }, initialTerminalState),
     map(terminalDisplayText),

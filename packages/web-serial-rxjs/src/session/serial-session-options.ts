@@ -204,6 +204,7 @@ export function resolveReceiveReplayOptions(
 export type ResolvedTerminalBufferOptions = {
   maxLines: MaxLines;
   maxChars: MaxChars;
+  stripAnsi: boolean;
 };
 
 export function resolveTerminalBufferOptions(
@@ -233,6 +234,7 @@ export function resolveTerminalBufferOptions(
   return {
     maxLines: brandMaxLines(maxLines),
     maxChars: brandMaxChars(maxChars),
+    stripAnsi: merged.stripAnsi,
   };
 }
 
