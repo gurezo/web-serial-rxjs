@@ -64,7 +64,6 @@ const createMockSession = (): MockSession => {
     isConnected$,
     portInfo$: portInfoSubject.asObservable(),
     getPortInfo: () => portInfoSubject.getValue(),
-    getCurrentPort: () => null,
   };
 
   return {

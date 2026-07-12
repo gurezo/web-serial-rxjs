@@ -143,7 +143,6 @@ describe('createSerialSession', () => {
       expect(session.destroy$).toBe(session.dispose$);
       expect(typeof session.send$).toBe('function');
       expect(typeof session.getPortInfo).toBe('function');
-      expect(typeof session.getCurrentPort).toBe('function');
       expect(session.state$).toBeDefined();
       // isConnected$ remains available during v3.x deprecation.
       expect(session.isConnected$).toBeDefined();
@@ -613,7 +612,6 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
 
       expect(session.getPortInfo()).toBeNull();
-      expect(session.getCurrentPort()).toBeNull();
       expect(await firstValueFrom(session.portInfo$)).toBeNull();
     });
 
@@ -664,7 +662,6 @@ describe('createSerialSession', () => {
 
       expect(port.getInfo).toHaveBeenCalled();
       expect(session.getPortInfo()).toEqual(stubPortInfo);
-      expect(session.getCurrentPort()).toBe(port as unknown as SerialPort);
 
       const infos = await infoDuringConnect;
       expect(infos[0]).toBeNull();
@@ -679,7 +676,6 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.disconnect$());
 
       expect(session.getPortInfo()).toBeNull();
-      expect(session.getCurrentPort()).toBeNull();
       expect(await nullAfterDisconnect).toBeNull();
     });
 
@@ -697,7 +693,6 @@ describe('createSerialSession', () => {
       await errorPromise;
 
       expect(session.getPortInfo()).toBeNull();
-      expect(session.getCurrentPort()).toBeNull();
       expect(await firstValueFrom(session.portInfo$)).toBeNull();
     });
   });
@@ -1555,7 +1550,6 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.dispose$());
 
       expect(port.close).toHaveBeenCalledTimes(1);
-      expect(session.getCurrentPort()).toBeNull();
       expect(session.getPortInfo()).toBeNull();
       await expect(states).resolves.toEqual([
         connectedState(),
