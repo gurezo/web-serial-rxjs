@@ -57,6 +57,19 @@ isConnected$.subscribe((isOpen) => {
 
 **`isConnected$`** は v3.x で非推奨です。多段階の UI では下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
 
+RxJS pipeline 内で `portInfo` など connected 専用フィールドにアクセスする場合は、`filter()` と `isConnectedSessionState` を組み合わせてください。inline の status 比較では TypeScript の narrowing は行われません。
+
+```typescript
+import { filter } from 'rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
+```
+
 ## 1 行送信（`sendLine` / `sendLine$` 相当）
 
 対話シェルでは CRLF 終端の 1 行を期待することが多いです。ライブラリに API を増やさず、`send$` の薄いラッパーにします。

@@ -115,13 +115,36 @@ v3 exposes **`SerialSessionStatus`** as lifecycle string constants (e.g. `Serial
 Example:
 
 ```typescript
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { filter } from 'rxjs';
+import { isConnectedSessionState, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 session.state$.subscribe((state) => {
   if (state.status === SerialSessionStatus.Connected) {
     console.log(state.portInfo);
   }
 });
+
+// RxJS pipelines: use the type predicate so TypeScript keeps ConnectedSessionState
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
+```
+
+### `isConnectedSessionState(state)`
+
+Type predicate for `ConnectedSessionState`. Use with RxJS `filter()` to preserve discriminated union narrowing in pipelines. Inline `filter((s) => s.status === SerialSessionStatus.Connected)` does not narrow types in TypeScript.
+
+```typescript
+import { filter } from 'rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
 ```
 
 See [Migrating to v3](./MIGRATION_V3.md) for the v2 string migration.

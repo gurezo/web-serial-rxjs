@@ -25,6 +25,7 @@
  * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
  * - {@link SerialSessionStatus} - lifecycle status literals for `state$.status`
  * - {@link SerialSessionState} - discriminated union emitted by `state$`
+ * - {@link isConnectedSessionState} - type predicate for connected `state$` narrowing in RxJS pipelines
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
  * - {@link SerialErrorContextMap} - structured metadata per error code
  *
@@ -47,8 +48,10 @@
  *
  * @example
  * ```typescript
+ * import { filter } from 'rxjs';
  * import {
  *   createSerialSession,
+ *   isConnectedSessionState,
  *   SerialSessionStatus,
  *   SerialErrorCode,
  * } from '@gurezo/web-serial-rxjs';
@@ -63,6 +66,11 @@
  *       console.log('port:', state.portInfo);
  *     }
  *   });
+ *   session.state$
+ *     .pipe(filter(isConnectedSessionState))
+ *     .subscribe((state) => {
+ *       console.log('port:', state.portInfo);
+ *     });
  *   session.receive$.subscribe((chunk) => console.log('rx:', chunk));
  *   session.errors$.subscribe((error) => {
  *     if (error.is(SerialErrorCode.READ_FAILED)) {
@@ -78,7 +86,7 @@
 
 export { assertNever } from './internal/assert-never';
 
-export { createSerialSession, SerialSessionStatus, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions, MAX_RECEIVE_REPLAY_BUFFER_SIZE, MAX_RECEIVE_REPLAY_MAX_CHARS } from './session';
+export { createSerialSession, SerialSessionStatus, isConnectedSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions, MAX_RECEIVE_REPLAY_BUFFER_SIZE, MAX_RECEIVE_REPLAY_MAX_CHARS } from './session';
 export type {
   SerialSession,
   SerialSessionState,
