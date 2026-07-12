@@ -89,6 +89,8 @@ Choosing **`receive$`** versus **`lines$`**—terminal-style mirrors and bufferi
 
 ## Documentation
 
+Documentation is split into **Guide** (how to use; Japanese and English hand-written Markdown) and **API Reference** (English TypeDoc from TypeScript JSDoc). The canonical layout is defined in [Documentation Architecture](packages/web-serial-rxjs/docs/ARCHITECTURE.md) ([日本語](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)). Guide files will move to `packages/web-serial-rxjs/docs/guide/{en,ja}/` in upcoming issues; links below point to the current paths until then.
+
 | Doc | Use it for |
 | --- | --- |
 | **This README** | Monorepo hub: feature summary, examples, and contribution links. |

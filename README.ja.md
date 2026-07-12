@@ -89,6 +89,8 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 ## ドキュメント
 
+ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。Guide は今後 `packages/web-serial-rxjs/docs/guide/{ja,en}/` へ移行します。移行完了までは下記リンクは現行パスを指します。
+
 | ドキュメント | 用途 |
 | --- | --- |
 | **この README** | モノレポのハブ：機能要約、サンプル、貢献導線。 |
