@@ -2,7 +2,7 @@
 
 `@gurezo/web-serial-rxjs` の利用方法を説明する手書き Markdown Guide です。公開 API の型・引数・戻り値の網羅的な仕様は [英語 TypeDoc API Reference](../../api/modules.html) を参照してください。
 
-canonical なドキュメント構成は [ARCHITECTURE.ja.md](../../ARCHITECTURE.ja.md) を参照してください。
+canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md) を参照してください。
 
 ## Getting Started（推奨する読み順）
 

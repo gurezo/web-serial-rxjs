@@ -112,6 +112,10 @@ function mdPathToHtmlPath(mdRelativePath) {
   return dir ? `${dir}/${htmlFile}` : htmlFile;
 }
 
+function guidePrefixDepth(htmlRelativePath) {
+  return htmlRelativePath.split('/').length - 1;
+}
+
 function rewriteMdLinks(html, currentHtmlRelativePath) {
   return html.replace(/href="([^"]+)"/g, (match, href) => {
     if (
@@ -130,9 +134,21 @@ function rewriteMdLinks(html, currentHtmlRelativePath) {
 
     const currentDir = dirname(currentHtmlRelativePath);
     const resolved = normalize(join(currentDir, pathPart)).replace(/\\/g, '/');
-    const rewritten = `${mdPathToHtmlPath(resolved)}${hash ? `#${hash}` : ''}`;
-    return `href="${rewritten}"`;
+    let rewritten = mdPathToHtmlPath(resolved);
+    if (/^(en|ja)\//.test(resolved)) {
+      const prefix = currentDir === '.' ? '../' : '../../';
+      rewritten = `${prefix}${rewritten}`;
+    } else if (currentDir !== '.' && !resolved.includes('/')) {
+      rewritten = `../${rewritten}`;
+    }
+    return `href="${rewritten}${hash ? `#${hash}` : ''}"`;
   });
+}
+
+function rewriteApiLinksForGuide(html, htmlRelativePath) {
+  const depth = guidePrefixDepth(htmlRelativePath);
+  const upToDocs = '../'.repeat(depth + 2);
+  return html.replace(/href="modules\.html/g, `href="${upToDocs}api/modules.html`);
 }
 
 function rewriteApiTreeLinksForGuide(html) {
@@ -152,15 +168,18 @@ function rewriteOverviewImage(html) {
 function buildNav(locale, htmlRelativePath) {
   const labels = PAGE_LABELS[locale];
   const otherLocale = locale === 'ja' ? 'en' : 'ja';
-  const samePageMd = htmlRelativePath.replace(/\.html$/i, '.md').replace(/README\.md$/i, 'README.md');
-  const otherHtmlPath = `../${otherLocale}/${htmlRelativePath}`;
+  const depth = guidePrefixDepth(htmlRelativePath);
+  const toLocaleRoot = depth === 0 ? '' : '../'.repeat(depth);
+  const toDocsRoot = '../'.repeat(depth + 2);
+  const guideIndexHref = `${toLocaleRoot}README.html`;
+  const otherHtmlPath = `${toLocaleRoot}../${otherLocale}/${htmlRelativePath}`;
 
   return `
 <nav class="site-nav" aria-label="Documentation">
-  <a href="README.html">${labels.guideIndex}</a>
+  <a href="${guideIndexHref}">${labels.guideIndex}</a>
   <a href="${otherHtmlPath}">${labels.otherLocale}</a>
-  <a href="../../api/modules.html">${labels.apiReference}</a>
-  <a href="../../index.html">${labels.siteTop}</a>
+  <a href="${toDocsRoot}api/modules.html">${labels.apiReference}</a>
+  <a href="${toDocsRoot}index.html">${labels.siteTop}</a>
 </nav>`;
 }
 
@@ -207,6 +226,7 @@ for (const locale of LOCALES) {
     let bodyHtml = md.render(markdown);
     bodyHtml = rewriteOverviewImage(bodyHtml);
     bodyHtml = rewriteMdLinks(bodyHtml, htmlRelative);
+    bodyHtml = rewriteApiLinksForGuide(bodyHtml, htmlRelative);
     bodyHtml = rewriteApiTreeLinksForGuide(bodyHtml);
 
     const page = wrapPage({

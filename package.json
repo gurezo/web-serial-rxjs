@@ -9,7 +9,7 @@
     "docs:guide": "node packages/web-serial-rxjs/scripts/build-guide.mjs",
     "docs:index": "node packages/web-serial-rxjs/scripts/build-docs-index.mjs",
     "docs:check-links": "node packages/web-serial-rxjs/scripts/check-docs-links.mjs",
-    "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json",
+    "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json && node packages/web-serial-rxjs/scripts/fix-typedoc-links.mjs",
     "docs:gitignore": "node -e \"require('fs').writeFileSync('docs/.gitignore','# Generated documentation output — do not commit.\\n# Source lives under packages/web-serial-rxjs/docs/guide/\\n# See packages/web-serial-rxjs/docs/ARCHITECTURE.md\\n*\\n!.gitignore\\n')\"",
     "docs:clean": "node -e \"const fs=require('fs'),p=require('path'),d='docs';fs.mkdirSync(d,{recursive:true});for(const e of fs.readdirSync(d))e!=='.gitignore'&&fs.rmSync(p.join(d,e),{recursive:true,force:true});\"",
     "docs": "pnpm run docs:clean && pnpm run docs:guide && pnpm run docs:generate && pnpm run docs:index && pnpm run docs:check-links && pnpm run docs:gitignore",

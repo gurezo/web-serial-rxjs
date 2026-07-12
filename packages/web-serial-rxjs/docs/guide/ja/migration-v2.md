@@ -150,4 +150,4 @@ async function query(
 
 ## フレームワーク別の例
 
-Angular / Vue / React / Svelte / Vanilla JS・TS 向けの具体的な before / after は各 example の README（[`apps/`](../apps/)）を参照してください。
+Angular / Vue / React / Svelte / Vanilla JS・TS 向けの具体的な before / after は各 example の README（[`apps/`](https://github.com/gurezo/web-serial-rxjs/tree/main/apps)）を参照してください。

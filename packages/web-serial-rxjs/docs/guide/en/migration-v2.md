@@ -148,4 +148,4 @@ At `createSerialSession` factory time, `resolveSerialSessionOptions` validates `
 
 ## Framework examples
 
-Concrete before / after wrappers for Angular, Vue, React, Svelte, and Vanilla JS/TS are in each example's README under [`apps/`](../apps/).
+Concrete before / after wrappers for Angular, Vue, React, Svelte, and Vanilla JS/TS are in each example's README under [`apps/`](https://github.com/gurezo/web-serial-rxjs/tree/main/apps).
