@@ -1,6 +1,6 @@
 # API Reference
 
-The v2 public surface consists of a single factory (`createSerialSession`), the runtime `SerialSession` interface, one options type, one state union, and two error types.
+The public surface consists of a single factory (`createSerialSession`), the runtime `SerialSession` interface, one options type, one state union, and two error types.
 
 ## Public exports
 
@@ -11,8 +11,9 @@ import {
   DEFAULT_TERMINAL_BUFFER_OPTIONS,
   SerialError,
   SerialErrorCode,
-  SerialSessionState,
+  SerialSessionStatus,
   type SerialSession,
+  type SerialSessionState,
   type SerialSessionOptions,
   type SerialSessionReceiveReplayOptions,
   type TerminalBufferOptions,
@@ -21,7 +22,7 @@ import {
 
 ## createSerialSession(options?)
 
-Factory that returns a new `SerialSession`. Safe to call when `navigator.serial` is unavailable; in that case `state$` is seeded with `'unsupported'` and `connect$` rejects with `SerialErrorCode.BROWSER_NOT_SUPPORTED`.
+Factory that returns a new `SerialSession`. Safe to call when `navigator.serial` is unavailable; in that case `state$` is seeded with `{ status: 'unsupported' }` and `connect$` rejects with `SerialErrorCode.BROWSER_NOT_SUPPORTED`.
 
 ### Signature
 
@@ -138,11 +139,15 @@ interface SerialSession {
 
   readonly state$: Observable<SerialSessionState>;
   readonly isConnected$: Observable<boolean>;
+  readonly portInfo$: Observable<SerialPortInfo | null>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
   readonly receiveReplay$: Observable<string>;
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
+
+  getPortInfo(): SerialPortInfo | null;
+  getCurrentPort(): SerialPort | null;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -172,7 +177,7 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 
 ### `isConnected$: Observable<boolean>`
 
-`true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise.
+Convenience stream: `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Prefer `state$` when you need full lifecycle phases or `state.portInfo`.
 
 ### `errors$: Observable<SerialError>`
 
@@ -229,4 +234,4 @@ The same union is available as a **const object** `SerialErrorCode` (e.g. `Seria
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `OPERATION_TIMEOUT`      | Internal operation timed out.                                       |
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$` / `destroy$`.         |
-| `UNKNOWN`                | Unclassified failure; see `originalError`.                          |
+| `UNKNOWN`                | Unclassified failure; see `context.cause`.                          |

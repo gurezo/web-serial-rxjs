@@ -1,6 +1,6 @@
 # API リファレンス
 
-v2 の公開 API は、1 つのファクトリ（`createSerialSession`）、1 つのランタイムインターフェイス（`SerialSession`）、1 つの options 型、1 つの状態ユニオン、2 つのエラー型のみで構成されます。
+公開 API は、1 つのファクトリ（`createSerialSession`）、1 つのランタイムインターフェイス（`SerialSession`）、1 つの options 型、1 つの状態ユニオン、2 つのエラー型のみで構成されます。
 
 ## 公開 export
 
@@ -11,8 +11,9 @@ import {
   DEFAULT_TERMINAL_BUFFER_OPTIONS,
   SerialError,
   SerialErrorCode,
-  SerialSessionState,
+  SerialSessionStatus,
   type SerialSession,
+  type SerialSessionState,
   type SerialSessionOptions,
   type SerialSessionReceiveReplayOptions,
   type TerminalBufferOptions,
@@ -21,7 +22,7 @@ import {
 
 ## createSerialSession(options?)
 
-`SerialSession` を返すファクトリ。`navigator.serial` が存在しない環境でも安全に呼び出せます。その場合 `state$` の初期値は `'unsupported'` となり、`connect$` は `SerialErrorCode.BROWSER_NOT_SUPPORTED` で失敗します。
+`SerialSession` を返すファクトリ。`navigator.serial` が存在しない環境でも安全に呼び出せます。その場合 `state$` の初期値は `{ status: 'unsupported' }` となり、`connect$` は `SerialErrorCode.BROWSER_NOT_SUPPORTED` で失敗します。
 
 ### シグネチャ
 
@@ -138,11 +139,15 @@ interface SerialSession {
 
   readonly state$: Observable<SerialSessionState>;
   readonly isConnected$: Observable<boolean>;
+  readonly portInfo$: Observable<SerialPortInfo | null>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
   readonly receiveReplay$: Observable<string>;
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
+
+  getPortInfo(): SerialPortInfo | null;
+  getCurrentPort(): SerialPort | null;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -172,7 +177,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `isConnected$: Observable<boolean>`
 
-`state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。`state$` から `distinctUntilChanged` 付きで派生しており、接続有無の UI 分岐にそのまま使えます。必要に応じて従来どおり `state$` から自前の `map` でも構いません。
+convenience stream: `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。フル lifecycle や `state.portInfo` が必要な場合は `state$` を優先してください。
 
 ### `errors$: Observable<SerialError>`
 
@@ -229,4 +234,4 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
 | `OPERATION_TIMEOUT`      | 内部操作がタイムアウト                                             |
 | `SESSION_DISPOSED`       | `dispose$` / `destroy$` 後に `connect$` または `send$` を呼んだ    |
-| `UNKNOWN`                | 分類不能なエラー。`originalError` を確認                           |
+| `UNKNOWN`                | 分類不能なエラー。`context.cause` を確認                           |
