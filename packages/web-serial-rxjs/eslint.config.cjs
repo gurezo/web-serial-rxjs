@@ -12,6 +12,7 @@ module.exports = [
             '{projectRoot}/eslint.config.{js,cjs,mjs}',
             '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
             '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+            '{projectRoot}/scripts/**',
           ],
           ignoredDependencies: ['vitest', '@nx/vite'],
         },
