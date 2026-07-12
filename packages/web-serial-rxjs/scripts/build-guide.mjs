@@ -135,6 +135,13 @@ function rewriteMdLinks(html, currentHtmlRelativePath) {
   });
 }
 
+function rewriteApiTreeLinksForGuide(html) {
+  return html
+    .replace(/href="\.\.\/guide\/en\//g, 'href="../en/')
+    .replace(/href="\.\.\/guide\/ja\//g, 'href="../ja/')
+    .replace(/href="\.\.\/index\.html"/g, 'href="../../index.html"');
+}
+
 function rewriteOverviewImage(html) {
   return html.replace(
     /src="\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/assets\/icon\/web-serial-rxjs-icon\.png"/g,
@@ -200,6 +207,7 @@ for (const locale of LOCALES) {
     let bodyHtml = md.render(markdown);
     bodyHtml = rewriteOverviewImage(bodyHtml);
     bodyHtml = rewriteMdLinks(bodyHtml, htmlRelative);
+    bodyHtml = rewriteApiTreeLinksForGuide(bodyHtml);
 
     const page = wrapPage({
       title: extractTitle(markdown),

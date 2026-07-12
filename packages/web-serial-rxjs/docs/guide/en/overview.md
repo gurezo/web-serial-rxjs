@@ -24,6 +24,12 @@ Start here:
 - [v2 to v3 Migration Guide](./migration-v3.md)
 - [v1 to v2 Migration Guide](./migration-v2.md)
 
+Standalone guides (HTML):
+
+- [English Guide](../guide/en/README.md)
+- [日本語 Guide](../guide/ja/README.md)
+- [Documentation home](../index.html)
+
 ## Features
 
 - **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$` (`isConnected$` is a deprecated convenience stream in v3.x)
