@@ -4,11 +4,11 @@
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。v2 では単一の `SerialSession` を公開し、アプリケーション側は `state$` / `isConnected$` / `receive$` / `lines$` / `errors$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
+Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、アプリケーション側は `state$`（canonical lifecycle state）/ `errors$`（error event channel）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
 
 ## 目次
 
-- [SerialSession（v2）の全体像](#serialsessionv2の全体像)
+- [SerialSession の全体像](#serialsessionの全体像)
 - [機能](#機能)
 - [対応フレームワーク](#対応フレームワーク)
 - [ブラウザサポート](#ブラウザサポート)
@@ -23,11 +23,11 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 
 ## 機能
 
-- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$` / `isConnected$` / `receive$` / `lines$` / `errors$` と `connect$` / `disconnect$` / `send$` を公開
+- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（error event channel）/ `receive$` / `lines$` と convenience stream の `isConnected$`、`connect$` / `disconnect$` / `send$` を公開
 - **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます
 - **順序保証された送信キュー**: 並行する `send$` 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます
 - **統一エラーチャネル**: すべての I/O エラーは `SerialError` に正規化され `errors$` に多重化されます
-- **明示的なライフサイクル**: `state$` は `idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` を emit するので UI から直接駆動できます
+- **明示的なライフサイクル**: `state$` は `status` を持つ discriminated union（`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`）を emit するので、`state.status` で narrowing し `state.portInfo` などにアクセスできます
 - **TypeScript サポート**: 完全な TypeScript 型定義を同梱
 - **フレームワーク非依存**: 任意の JavaScript/TypeScript フレームワークまたはバニラ JavaScript で利用可能
 
@@ -77,11 +77,11 @@ pnpm add rxjs
 
 **最小要件バージョン**: RxJS ^7.8.0
 
-## SerialSession（v2）の全体像
+## SerialSession の全体像
 
 機能一覧と **`SerialSession` 早見表**、**`SerialSessionState` 表**、**最小サンプル**の正本は次のパッケージドキュメントにあります。
 
-- **[SerialSession（v2）の概要](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)**（[English](packages/web-serial-rxjs/docs/OVERVIEW.md)）
+- **[SerialSession の概要](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)**（[English](packages/web-serial-rxjs/docs/OVERVIEW.md)）
 
 npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md) は短い目次に留め、初回接続の手順は [クイックスタート](packages/web-serial-rxjs/docs/QUICK_START.ja.md) を参照してください。
 
@@ -92,10 +92,11 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 | ドキュメント | 用途 |
 | --- | --- |
 | **この README** | モノレポのハブ：機能要約、サンプル、貢献導線。 |
-| **[SerialSession（v2）の概要](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
+| **[SerialSession の概要](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
 | **[クイックスタート](packages/web-serial-rxjs/docs/QUICK_START.ja.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
 | **[API リファレンス](packages/web-serial-rxjs/docs/API_REFERENCE.ja.md)** | オプション、`SerialSessionState`、`SerialError` の詳細。 |
+| **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/MIGRATION_V3.ja.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
 | **[v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/MIGRATION_V2.ja.md)** | 削除された v1 API からの対応表。 |
 
 ## サンプル

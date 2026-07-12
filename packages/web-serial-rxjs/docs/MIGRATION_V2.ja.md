@@ -67,6 +67,8 @@ session.send$('hi').subscribe();
 
 ## `state$` の形の変更
 
+> **注記（v3）:** v3 では `state$` が再び変更され、フラットな文字列から `status` と variant ごとのフィールド（`portInfo`、`error`）を持つ discriminated union になりました。定数は `SerialSessionStatus` に改名されています。v3 を利用している、または v2 型から移行する場合は、以下のパターンではなく [v3 への移行](./MIGRATION_V3.ja.md) を参照してください。
+
 v1 の `SerialState` は `{ connected: true, connecting: false, ... }` のような discriminated object でした。v2 では同じ文字列を **const オブジェクト**と型エイリアスとして提供するため、`SerialSessionState.Connected` でも `'connected'` でも分岐・比較できます。
 
 ```typescript

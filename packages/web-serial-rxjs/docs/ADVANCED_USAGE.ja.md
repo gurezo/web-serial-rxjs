@@ -1,6 +1,6 @@
 # 高度な使用方法
 
-v2 の `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession（v2）の概要](./OVERVIEW.ja.md#serialsessionv2の全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。
+`SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession の概要](./OVERVIEW.ja.md#serialsessionの全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。ライフサイクルとエラーは `state$` の `state.status` narrowing と `errors$` の `error.is()` を優先してください — [v3 への移行](./MIGRATION_V3.ja.md) を参照。
 
 本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`** と **`isConnected$`** は `SerialSession` の組み込みとして用意されています。**`sendLine`・`readUntil`・`waitForState`** などは、引き続きコア API の上に組み立てるパターンです（専用の追加 export はありません）。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
 
@@ -39,7 +39,7 @@ customLines$
 
 ## 接続中フラグ（`isConnected$`）
 
-ボタンの有効／無効など「接続済みかどうか」だけが欲しい場合は **`isConnected$`**（`state$` から `distinctUntilChanged` 付きで派生）を使います。
+ボタンの有効／無効など「接続済みかどうか」だけが欲しい場合は **`isConnected$`**（`state$` から `distinctUntilChanged` 付きで派生した convenience stream）を使えます。多段階の UI では下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
 
 ```typescript
 session.isConnected$.subscribe((isOpen) => {
@@ -128,20 +128,20 @@ async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
 
 ## waitForState
 
-`connect$` や `disconnect$` のあと、特定の `SerialSessionState`（例: `SerialSessionState.Connected` や `SerialSessionState.Idle`）が立つまで **await** したい場合があります。`state$` に `filter`・`take(1)`・必要なら `timeout` を載せます。
+`connect$` や `disconnect$` のあと、特定のライフサイクル status（例: `SerialSessionStatus.Connected` や `SerialSessionStatus.Idle`）が立つまで **await** したい場合があります。`state$` に `filter`・`take(1)`・必要なら `timeout` を載せます。
 
 ```typescript
 import { filter, take, firstValueFrom, timeout } from 'rxjs';
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 async function waitForState(
-  target: SerialSessionState,
+  target: (typeof SerialSessionStatus)[keyof typeof SerialSessionStatus],
   options: { timeoutMs?: number } = {},
 ): Promise<void> {
   const timeoutMs = options.timeoutMs ?? 30_000;
   await firstValueFrom(
     session.state$.pipe(
-      filter((s) => s === target),
+      filter((s) => s.status === target),
       take(1),
       timeout(timeoutMs),
     ),
@@ -151,7 +151,7 @@ async function waitForState(
 // 例: connect$ 成功後はすでに 'connected' だが、他の非同期処理との整合や
 // タイムアウトを明示したいときに使う
 await firstValueFrom(session.connect$());
-await waitForState(SerialSessionState.Connected, { timeoutMs: 5000 });
+await waitForState(SerialSessionStatus.Connected, { timeoutMs: 5000 });
 ```
 
 ## state$ 駆動の UI
@@ -159,24 +159,24 @@ await waitForState(SerialSessionState.Connected, { timeoutMs: 5000 });
 真偽値を自分で追うのではなく、UI 遷移は `state$` で駆動します。
 
 ```typescript
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 session.state$.subscribe((state) => {
-  switch (state) {
-    case SerialSessionState.Idle:
+  switch (state.status) {
+    case SerialSessionStatus.Idle:
       showConnectButton();
       break;
-    case SerialSessionState.Connecting:
-    case SerialSessionState.Disconnecting:
+    case SerialSessionStatus.Connecting:
+    case SerialSessionStatus.Disconnecting:
       showSpinner();
       break;
-    case SerialSessionState.Connected:
-      showSendUi();
+    case SerialSessionStatus.Connected:
+      showSendUi(state.portInfo);
       break;
-    case SerialSessionState.Error:
-      showErrorBanner();
+    case SerialSessionStatus.Error:
+      showErrorBanner(state.error);
       break;
-    case SerialSessionState.Unsupported:
+    case SerialSessionStatus.Unsupported:
       showUnsupportedBanner();
       break;
   }
@@ -191,8 +191,9 @@ session.state$.subscribe((state) => {
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
 session.errors$.subscribe((error) => {
-  if (error.code === SerialErrorCode.READ_FAILED) {
+  if (error.is(SerialErrorCode.READ_FAILED)) {
     // 致命的エラー — session はすでに 'error' 状態でポートもテアダウン済み
+    console.error(error.context.cause);
     session.disconnect$().subscribe();
   }
 });
@@ -200,15 +201,15 @@ session.errors$.subscribe((error) => {
 
 ## 致命的エラー時の再接続
 
-致命的エラーは `state$` を `'error'` に遷移させるので、再接続ポリシーは素直に書けます。
+致命的エラーは `state$` を `{ status: 'error', error }` に遷移させるので、再接続ポリシーは素直に書けます。
 
 ```typescript
 import { filter, concatMap } from 'rxjs';
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 session.state$
   .pipe(
-    filter((state) => state === SerialSessionState.Error),
+    filter((state) => state.status === SerialSessionStatus.Error),
     concatMap(() => session.disconnect$()),
     concatMap(() => session.connect$()),
   )

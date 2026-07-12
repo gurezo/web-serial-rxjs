@@ -28,7 +28,7 @@ import {
 } from './session-runtime';
 
 /**
- * Create a v2 {@link SerialSession}.
+ * Create a {@link SerialSession}.
  *
  * This release wires the internal read pump (#202) and the internal send
  * queue (#203) into the session so that `connect$`, `disconnect$`,

@@ -28,26 +28,21 @@ const ErrorWithCaptureStackTrace = Error as typeof Error &
  *
  * @example
  * ```typescript
- * try {
- *   await client.connect().toPromise();
- * } catch (error) {
- *   if (error instanceof SerialError) {
+ * session.errors$.subscribe((error) => {
+ *   if (error.is(SerialErrorCode.READ_FAILED)) {
  *     console.error(`Error code: ${error.code}`);
  *     console.error(`Message: ${error.message}`);
- *     if (error.originalError) {
- *       console.error(`Original error:`, error.originalError);
- *     }
- *
- *     if (error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)) {
- *       console.error(`maxChars: ${error.context.maxChars}`);
- *     }
- *
- *     // Check specific error code
- *     if (error.is(SerialErrorCode.BROWSER_NOT_SUPPORTED)) {
- *       // Handle browser not supported
- *     }
+ *     console.error(`Cause:`, error.context.cause);
  *   }
- * }
+ *
+ *   if (error.is(SerialErrorCode.LINE_BUFFER_OVERFLOW)) {
+ *     console.error(`maxChars: ${error.context.maxChars}`);
+ *   }
+ *
+ *   if (error.is(SerialErrorCode.BROWSER_NOT_SUPPORTED)) {
+ *     // Handle browser not supported
+ *   }
+ * });
  * ```
  */
 export class SerialError<

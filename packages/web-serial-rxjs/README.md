@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/packages/web-serial-rxjs/web-serial-rxjs-icon.png" alt="@gurezo/web-serial-rxjs project icon" width="512" />
 </p>
 
-A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single `SerialSession` so applications can drive their UI from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$`, without rebuilding read loops or send queues themselves.
+A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The public API exposes a single `SerialSession` so applications can drive their UI from `state$` (canonical lifecycle state) + `errors$` (error event channel) + `receive$` + `lines$`, without rebuilding read loops or send queues themselves.
 
 ## Browser support
 
@@ -23,7 +23,7 @@ Supported desktop browsers:
 
 ## Port info (device identification)
 
-After a successful `connect$`, use `getPortInfo()` or subscribe to `portInfo$` for the `SerialPort.getInfo()` snapshot (e.g. USB vendor/product IDs when the device exposes them). Both yield `null` when disconnected. `getCurrentPort()` returns the underlying `SerialPort` while connected; do not call `close()` on it—use `disconnect$` for lifecycle.
+After a successful `connect$`, prefer `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected`. `getPortInfo()` and `portInfo$` remain available when you need a standalone snapshot. Both yield `null` when disconnected. `getCurrentPort()` returns the underlying `SerialPort` while connected; do not call `close()` on it—use `disconnect$` for lifecycle.
 
 ## Receive replay (`receive$` vs `receiveReplay$`)
 
@@ -83,7 +83,7 @@ pnpm add rxjs
 
 ## Where to go next
 
-- Full **v2 API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession (v2) overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.ja.md))
+- Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.ja.md))
 - Shortest path to an open port: [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md)
 - Browse as one integrated site (TypeDoc): [web-serial-rxjs API Documentation](https://gurezo.github.io/web-serial-rxjs/)
 
@@ -92,10 +92,11 @@ pnpm add rxjs
 | Doc | Use it for |
 | --- | --- |
 | [TypeDoc top page](https://gurezo.github.io/web-serial-rxjs/) | Start from OVERVIEW and move to guides/API in one site |
-| [Overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) | Features and the v2 `SerialSession` / `SerialSessionState` map |
+| [Overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) | Features and the `SerialSession` / `SerialSessionState` map |
 | [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md) | Open a port and wire subscriptions end-to-end |
 | [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) | Line framing, request/response-style flows, recovery |
 | [API Reference](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/API_REFERENCE.md) | `SerialSessionOptions`, `SerialError`, and formal details |
+| [v2 → v3 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V3.md) | `state$` discriminated union, `SerialSessionStatus`, `context.cause` |
 | [v1 → v2 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/MIGRATION_V2.md) | Replacing the removed v1 `SerialClient` / `ShellClient` API |
 | [Repository README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md) | Monorepo layout, **examples** under `apps/`, contributing, MCP, and project icon |
 

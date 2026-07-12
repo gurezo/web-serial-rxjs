@@ -2,7 +2,7 @@
 
 This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `isConnected$` / `errors$` into `readable` stores and binds **`receivedData`** to `session.terminalText$` for `\r`-safe terminal display.
 
-**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession (v2) overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
+**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
 **Scope**: Connect, terminal display via `terminalText$`, send, disconnect. Use `lines$` only for line-delimited logging or parsing—not for primary shell output. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
@@ -81,7 +81,7 @@ The example uses `createSerialSession` directly through `useSerialSession`:
 
 1. **Browser support check**: `useSerialSession` calls `session.isBrowserSupported()` once at creation time and exposes the result as the `browserSupported` store.
 2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`; when baud rate changes, the helper creates a new `SerialSession` with the selected baud rate and connects it.
-3. **State UI**: The helper subscribes to `session.state$` and `session.isConnected$`. `App.svelte` branches on `SerialSessionState` for status and uses `$isConnected` for button enablement.
+3. **State UI**: The helper subscribes to `session.state$` and `session.isConnected$`. `App.svelte` branches on `state.status` with `SerialSessionStatus` for status and uses `$isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.
 5. **Receiving**: The store reflects **`session.terminalText$`** in `receivedData`. **`lines$`** is for one-line-at-a-time logging or newline-only parsing; raw chunk streaming without terminal folding uses `receive$` (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 6. **Errors**: All connect/read/write/close failures are multiplexed through `session.errors$` and surfaced as the `errorMessage` store. No per-call try/catch wrappers are needed.

@@ -1,8 +1,8 @@
 # Quick Start
 
-This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, and the imperative methods, read [SerialSession (v2) overview](./OVERVIEW.md#serialsession-v2-at-a-glance) first.
+This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `errors$`, `receive$`, `lines$`, and the imperative methods, read [SerialSession overview](./OVERVIEW.md#serialsession-at-a-glance) first.
 
-Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). For a simple "are we connected?" boolean, use **`isConnected$`** (or still derive from `state$` with `map` if you prefer).
+Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI; **`isConnected$`** is a convenience stream when you only need a boolean flag.
 
 ### SerialSessionStatus (quick reference)
 
@@ -72,7 +72,7 @@ session.disconnect$().subscribe({
 
 ## Dispose
 
-Call `dispose$` (or `destroy$`) when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables.
+Call `dispose$` when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables. (`destroy$` is an alias for `dispose$`.)
 
 ```typescript
 session.dispose$().subscribe({
@@ -86,4 +86,5 @@ After disposal, create a new `createSerialSession()` instance instead of reusing
 
 - See the [API Reference](./API_REFERENCE.md) for the full list of streams and methods.
 - Chunk-mode reception, ordered sends, detailed error handling, port filters, and more recipes are in [Advanced Usage](./ADVANCED_USAGE.md).
+- Migrating from v2 typings is covered in [Migrating to v3](./MIGRATION_V3.md).
 - Migrating from v1 is covered in [Migration v1 → v2](./MIGRATION_V2.md).

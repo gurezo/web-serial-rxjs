@@ -67,6 +67,8 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 
 ## `state$` shape changes
 
+> **Note (v3):** In v3, `state$` changed again from a flat string to a discriminated union with `status` plus per-variant fields (`portInfo`, `error`). Constants were renamed to `SerialSessionStatus`. If you are on v3 or upgrading from v2 typings, see [Migrating to v3](./MIGRATION_V3.md) instead of the patterns below.
+
 v1 `SerialState` was a discriminated object (for example `{ connected: true, connecting: false, ... }`). v2 exposes the same flat strings as a **const object** plus a type alias, so UIs can switch on `SerialSessionState.Connected` or on `'connected'` interchangeably:
 
 ```typescript
