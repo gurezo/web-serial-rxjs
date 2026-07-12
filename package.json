@@ -6,10 +6,13 @@
   "scripts": {
     "prepare": "husky",
     "test": "nx run-many --target=test --all",
+    "docs:guide": "node packages/web-serial-rxjs/scripts/build-guide.mjs",
+    "docs:index": "node packages/web-serial-rxjs/scripts/build-docs-index.mjs",
+    "docs:check-links": "node packages/web-serial-rxjs/scripts/check-docs-links.mjs",
     "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json",
     "docs:gitignore": "node -e \"require('fs').writeFileSync('docs/.gitignore','# Generated documentation output — do not commit.\\n# Source lives under packages/web-serial-rxjs/docs/guide/\\n# See packages/web-serial-rxjs/docs/ARCHITECTURE.md\\n*\\n!.gitignore\\n')\"",
     "docs:clean": "node -e \"const fs=require('fs'),p=require('path'),d='docs';fs.mkdirSync(d,{recursive:true});for(const e of fs.readdirSync(d))e!=='.gitignore'&&fs.rmSync(p.join(d,e),{recursive:true,force:true});\"",
-    "docs": "pnpm run docs:clean && pnpm run docs:generate && pnpm run docs:gitignore",
+    "docs": "pnpm run docs:clean && pnpm run docs:guide && pnpm run docs:generate && pnpm run docs:index && pnpm run docs:check-links && pnpm run docs:gitignore",
     "publish:test": "pnpm publish --dry-run --no-git-checks --filter @gurezo/web-serial-rxjs",
     "publish": "pnpm publish --filter @gurezo/web-serial-rxjs"
   },
@@ -97,6 +100,9 @@
   "nx": {
     "includedScripts": [
       "docs",
+      "docs:guide",
+      "docs:index",
+      "docs:check-links",
       "docs:generate",
       "docs:clean",
       "publish",
