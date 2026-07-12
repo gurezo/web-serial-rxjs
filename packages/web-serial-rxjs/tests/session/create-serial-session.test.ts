@@ -138,6 +138,7 @@ describe('createSerialSession', () => {
       expect(typeof session.connect$).toBe('function');
       expect(typeof session.disconnect$).toBe('function');
       expect(typeof session.dispose$).toBe('function');
+      // destroy$ remains the same function reference as dispose$ during v3.x deprecation.
       expect(typeof session.destroy$).toBe('function');
       expect(session.destroy$).toBe(session.dispose$);
       expect(typeof session.send$).toBe('function');
@@ -1457,7 +1458,8 @@ describe('createSerialSession', () => {
     });
   });
 
-  describe('dispose$ and destroy$', () => {
+  // dispose$ is canonical; destroy$ alias behavior is retained for v3.x backward compatibility.
+  describe('dispose$ and deprecated destroy$ alias', () => {
     it('transitions idle -> disposed and completes state$', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
       (globalThis as any).navigator = { serial: {} };
@@ -1561,6 +1563,7 @@ describe('createSerialSession', () => {
       );
     });
 
+    // destroy$ must stay idempotent via the same implementation as dispose$.
     it('is idempotent for dispose$ and destroy$', async () => {
       const session = createSerialSession();
 
