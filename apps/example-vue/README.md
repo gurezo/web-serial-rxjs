@@ -4,7 +4,7 @@ This is a Vue example application demonstrating how to use the `@gurezo/web-seri
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
-**Scope**: Minimal smoke test—connect, terminal display via `terminalText$`, connection toggles via `isConnected$`, send, disconnect. Use `lines$` only for line-based logging. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Minimal smoke test—connect, terminal display via `terminalText$`, connection toggles via `state$` narrowing, send, disconnect. Use `lines$` only for line-based logging. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## API Guide
 
@@ -18,8 +18,7 @@ This is a Vue example application demonstrating how to use the `@gurezo/web-seri
 ### Advanced Usage
 
 - `receive$`: rawチャンクをそのまま扱う低レイヤー入力
-- `state$`
-- `isConnected$`
+- `state$` (derive `isConnected` from `state.status === SerialSessionStatus.Connected`)
 - `errors$`
 - `createTerminalBuffer()`
 

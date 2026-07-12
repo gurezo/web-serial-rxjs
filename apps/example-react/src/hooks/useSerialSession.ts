@@ -57,6 +57,7 @@ export function useSerialSession(
     sub.add(
       controller.state$.subscribe((next) => {
         setState(next);
+        setIsConnected(next.status === SerialSessionStatus.Connected);
         if (
           next.status === SerialSessionStatus.Connected ||
           next.status === SerialSessionStatus.Idle
@@ -64,7 +65,6 @@ export function useSerialSession(
           setErrorMessage(null);
       }),
     );
-    sub.add(controller.isConnected$.subscribe(setIsConnected));
     sub.add(controller.terminalText$.subscribe(setReceivedData));
     sub.add(
       controller.errors$.subscribe((e: SerialError) => setErrorMessage(e.message)),

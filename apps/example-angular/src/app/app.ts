@@ -30,9 +30,9 @@ export class App {
       status: SerialSessionStatus.Idle,
     } satisfies SerialSessionState,
   });
-  readonly isConnected = toSignal(this.serialService.isConnected$, {
-    initialValue: false,
-  });
+  readonly isConnected = computed(
+    () => this.state().status === SerialSessionStatus.Connected,
+  );
   private readonly terminalText = toSignal(this.serialService.terminalText$, {
     initialValue: '',
   });

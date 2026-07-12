@@ -33,15 +33,13 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   const stateSub = controller.state$.subscribe((next) => {
     state.value = next;
+    isConnected.value = next.status === SerialSessionStatus.Connected;
     if (
       next.status === SerialSessionStatus.Connected ||
       next.status === SerialSessionStatus.Idle
     ) {
       errorMessage.value = null;
     }
-  });
-  const isConnectedSub = controller.isConnected$.subscribe((next) => {
-    isConnected.value = next;
   });
   const receiveSub = controller.terminalText$.subscribe((text) => {
     receivedData.value = text;
@@ -64,7 +62,6 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
 
   onUnmounted(() => {
     stateSub.unsubscribe();
-    isConnectedSub.unsubscribe();
     receiveSub.unsubscribe();
     errorsSub.unsubscribe();
     controller.dispose();

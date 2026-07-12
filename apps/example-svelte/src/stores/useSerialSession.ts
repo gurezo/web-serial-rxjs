@@ -6,7 +6,7 @@ import {
 import { createSerialSessionController } from '@gurezo/examples-shared';
 import { type Observable, Subscription } from 'rxjs';
 import { onDestroy } from 'svelte';
-import { readable, writable, type Readable } from 'svelte/store';
+import { derived, readable, writable, type Readable } from 'svelte/store';
 
 /** v2 `SerialSession` を Svelte store に薄く写す。表示は `terminalText$`（再接続は世代でリセット）。 */
 export interface UseSerialSessionReturn {
@@ -38,10 +38,10 @@ export function useSerialSession(
     },
   );
 
-  const isConnected = readable<boolean>(false, (set) => {
-    const sub = controller.isConnected$.subscribe((next) => set(next));
-    return () => sub.unsubscribe();
-  });
+  const isConnected = derived(
+    state,
+    ($state) => $state.status === SerialSessionStatus.Connected,
+  );
 
   const receivedData = writable('');
   const terminalSub = controller.terminalText$.subscribe((t) => {
