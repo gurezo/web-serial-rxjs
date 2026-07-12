@@ -11,6 +11,15 @@ const ROOT_REPLACEMENTS = [
   [/href="\.\.\/api\/modules\.html"/g, 'href="modules.html"'],
   [/href="\.\.\/guide\/en\/README\.md"/g, 'href="../guide/en/README.html"'],
   [/href="\.\.\/guide\/ja\/README\.md"/g, 'href="../guide/ja/README.html"'],
+  [/href="documents\/((?:en|ja)_[^"]+\.html)"/g, (_match, docPath) => {
+    const base = docPath.replace(/\.html$/, '');
+    const locale = base.startsWith('ja_') ? 'ja' : 'en';
+    const slug = base.slice(3);
+    const page = slug.startsWith('archive_')
+      ? `${slug.replace(/^archive_/, 'archive/')}.html`
+      : `${slug}.html`;
+    return `href="../guide/${locale}/${page}"`;
+  }],
 ];
 
 const DOCUMENT_REPLACEMENTS = [

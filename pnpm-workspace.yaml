@@ -31,7 +31,6 @@ minimumReleaseAgeExclude:
   - eslint-plugin-*
   - esrap
   - linkify-it
-  - markdown-it
   - nx
   - playwright*
   - react
