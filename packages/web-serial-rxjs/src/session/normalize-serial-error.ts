@@ -64,7 +64,7 @@ const isDomExceptionWithName = (
  *    control-flow event, not a hard failure.
  * 3. Any other value is wrapped as a {@link SerialError} with
  *    {@link NormalizeSerialErrorOptions.fallbackCode}, preserving the
- *    original error as `originalError` for debugging.
+ *    underlying failure on {@link SerialError.context | context.cause}.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
@@ -84,7 +84,8 @@ export function normalizeSerialError(
     return new SerialError(
       SerialErrorCode.OPERATION_CANCELLED,
       'Port selection was cancelled by the user',
-      error,
+      undefined,
+      { cause: error },
     );
   }
 
@@ -92,6 +93,7 @@ export function normalizeSerialError(
   return new SerialError(
     options.fallbackCode,
     `${prefix}: ${cause.message}`,
-    cause,
+    undefined,
+    { cause },
   );
 }
