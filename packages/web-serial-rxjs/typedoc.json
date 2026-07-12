@@ -20,7 +20,10 @@
   "name": "web-serial-rxjs API Documentation",
   "includeVersion": false,
   "gitRevision": "main",
-  "projectDocuments": ["./docs/guide/en/**/*.md"],
+  "projectDocuments": [
+    "./docs/guide/en/**/*.md",
+    "./docs/guide/ja/**/*.md"
+  ],
   "searchInDocuments": true,
   "sourceLinkExternal": true,
   "markdownLinkExternal": true,
