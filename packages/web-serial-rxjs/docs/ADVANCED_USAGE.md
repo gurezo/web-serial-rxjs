@@ -1,6 +1,6 @@
 # Advanced Usage
 
-The v2 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read [SerialSession (v2) overview](./OVERVIEW.md#serialsession-v2-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the overview defers on purpose.
+`SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read [SerialSession overview](./OVERVIEW.md#serialsession-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the overview defers on purpose. For lifecycle and error patterns, prefer `state$` with `state.status` narrowing and `errors$` with `error.is()` — see [Migrating to v3](./MIGRATION_V3.md).
 
 This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`**, **`isConnected$`**, and the imperative methods cover common cases. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 
@@ -41,7 +41,7 @@ Many embedded shells use `\r\n` line endings. The default `lines$` already norma
 
 ## Connected boolean (UI) (`isConnected$`)
 
-For a simple "is the port open?" flag for buttons or templates, prefer **`isConnected$`** (derived from `state$` with `distinctUntilChanged`):
+For a simple "is the port open?" flag for buttons or templates, **`isConnected$`** is a convenience stream derived from `state$` with `distinctUntilChanged`. For full lifecycle UI, prefer `state$` directly (see [State-driven UI](#state-driven-ui) below):
 
 ```typescript
 session.isConnected$.subscribe((isOpen) => {
@@ -130,20 +130,20 @@ async function query(cmd: string, prompt = /device>\s$/): Promise<string> {
 
 ## waitForState
 
-Sometimes you need to **await** a specific `SerialSessionState` (for example `SerialSessionState.Connected` after UI-driven `connect$`, or `SerialSessionState.Idle` after `disconnect$`) instead of wiring everything through `subscribe`. Use `state$` with `filter`, `take(1)`, and an optional timeout:
+Sometimes you need to **await** a specific lifecycle status (for example `SerialSessionStatus.Connected` after UI-driven `connect$`, or `SerialSessionStatus.Idle` after `disconnect$`) instead of wiring everything through `subscribe`. Use `state$` with `filter`, `take(1)`, and an optional timeout:
 
 ```typescript
 import { filter, take, firstValueFrom, timeout } from 'rxjs';
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 async function waitForState(
-  target: SerialSessionState,
+  target: (typeof SerialSessionStatus)[keyof typeof SerialSessionStatus],
   options: { timeoutMs?: number } = {},
 ): Promise<void> {
   const timeoutMs = options.timeoutMs ?? 30_000;
   await firstValueFrom(
     session.state$.pipe(
-      filter((s) => s === target),
+      filter((s) => s.status === target),
       take(1),
       timeout(timeoutMs),
     ),
@@ -153,7 +153,7 @@ async function waitForState(
 // Example: after connect$ completes, you are already 'connected'; this is for
 // coordination with other async code or stricter timeout handling.
 await firstValueFrom(session.connect$());
-await waitForState(SerialSessionState.Connected, { timeoutMs: 5000 });
+await waitForState(SerialSessionStatus.Connected, { timeoutMs: 5000 });
 ```
 
 ## State-Driven UI
@@ -161,24 +161,24 @@ await waitForState(SerialSessionState.Connected, { timeoutMs: 5000 });
 Drive every UI transition from `state$` rather than tracking a boolean:
 
 ```typescript
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 session.state$.subscribe((state) => {
-  switch (state) {
-    case SerialSessionState.Idle:
+  switch (state.status) {
+    case SerialSessionStatus.Idle:
       showConnectButton();
       break;
-    case SerialSessionState.Connecting:
-    case SerialSessionState.Disconnecting:
+    case SerialSessionStatus.Connecting:
+    case SerialSessionStatus.Disconnecting:
       showSpinner();
       break;
-    case SerialSessionState.Connected:
-      showSendUi();
+    case SerialSessionStatus.Connected:
+      showSendUi(state.portInfo);
       break;
-    case SerialSessionState.Error:
-      showErrorBanner();
+    case SerialSessionStatus.Error:
+      showErrorBanner(state.error);
       break;
-    case SerialSessionState.Unsupported:
+    case SerialSessionStatus.Unsupported:
       showUnsupportedBanner();
       break;
   }
@@ -193,8 +193,9 @@ session.state$.subscribe((state) => {
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
 session.errors$.subscribe((error) => {
-  if (error.code === SerialErrorCode.READ_FAILED) {
+  if (error.is(SerialErrorCode.READ_FAILED)) {
     // fatal — session is already in 'error' and the port is torn down
+    console.error(error.context.cause);
     session.disconnect$().subscribe();
   }
 });
@@ -202,15 +203,15 @@ session.errors$.subscribe((error) => {
 
 ## Reconnect On Fatal Error
 
-Because fatal failures drive `state$` to `'error'`, a reconnect policy is straightforward:
+Because fatal failures drive `state$` to `{ status: 'error', error }`, a reconnect policy is straightforward:
 
 ```typescript
 import { filter, concatMap } from 'rxjs';
-import { SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 session.state$
   .pipe(
-    filter((state) => state === SerialSessionState.Error),
+    filter((state) => state.status === SerialSessionStatus.Error),
     concatMap(() => session.disconnect$()),
     concatMap(() => session.connect$()),
   )
