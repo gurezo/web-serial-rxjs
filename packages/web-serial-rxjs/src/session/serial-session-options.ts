@@ -173,6 +173,12 @@ export function resolveReceiveReplayOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
       `Invalid receiveReplay.bufferSize: ${bufferSize}. Must be a safe integer between 1 and ${MAX_RECEIVE_REPLAY_BUFFER_SIZE}.`,
+      undefined,
+      {
+        field: 'receiveReplay.bufferSize',
+        value: bufferSize,
+        constraint: 'receive-replay-buffer-size-range',
+      },
     );
   }
 
@@ -184,6 +190,12 @@ export function resolveReceiveReplayOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
       `Invalid receiveReplay.maxChars: ${maxChars}. Must be a safe integer between 0 and ${MAX_RECEIVE_REPLAY_MAX_CHARS}.`,
+      undefined,
+      {
+        field: 'receiveReplay.maxChars',
+        value: maxChars,
+        constraint: 'receive-replay-max-chars-range',
+      },
     );
   }
 
@@ -221,6 +233,12 @@ export function resolveTerminalBufferOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
       `Invalid terminalBuffer.maxLines: ${maxLines}. Must be a safe integer >= 0.`,
+      undefined,
+      {
+        field: 'terminalBuffer.maxLines',
+        value: maxLines,
+        constraint: 'non-negative-safe-integer',
+      },
     );
   }
 
@@ -228,6 +246,12 @@ export function resolveTerminalBufferOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
       `Invalid terminalBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+      undefined,
+      {
+        field: 'terminalBuffer.maxChars',
+        value: maxChars,
+        constraint: 'non-negative-safe-integer',
+      },
     );
   }
 
@@ -263,6 +287,12 @@ export function resolveLineBufferOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
       `Invalid lineBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+      undefined,
+      {
+        field: 'lineBuffer.maxChars',
+        value: maxChars,
+        constraint: 'non-negative-safe-integer',
+      },
     );
   }
 
@@ -348,6 +378,12 @@ export function resolveConnectionOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_CONNECTION_OPTIONS,
       `Invalid baudRate: ${baudRate}. Must be a safe integer > 0.`,
+      undefined,
+      {
+        field: 'baudRate',
+        value: baudRate,
+        constraint: 'positive-safe-integer',
+      },
     );
   }
 

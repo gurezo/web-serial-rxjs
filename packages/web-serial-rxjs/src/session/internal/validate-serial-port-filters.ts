@@ -18,11 +18,19 @@ export function validateSerialPortFilters(
     return filters;
   }
 
-  for (const filter of filters) {
+  for (let filterIndex = 0; filterIndex < filters.length; filterIndex++) {
+    const filter = filters[filterIndex];
     if (!filter.usbVendorId && !filter.usbProductId) {
       throw new SerialError(
         SerialErrorCode.INVALID_FILTER_OPTIONS,
         'Filter must have at least usbVendorId or usbProductId',
+        undefined,
+        {
+          field: 'filters',
+          value: filter,
+          constraint: 'at-least-one-usb-id',
+          filterIndex,
+        },
       );
     }
 
@@ -35,6 +43,13 @@ export function validateSerialPortFilters(
         throw new SerialError(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
           `Invalid usbVendorId: ${filter.usbVendorId}. Must be an integer between 0 and 65535.`,
+          undefined,
+          {
+            field: 'usbVendorId',
+            value: filter.usbVendorId,
+            constraint: 'usb-id-0-65535',
+            filterIndex,
+          },
         );
       }
     }
@@ -48,6 +63,13 @@ export function validateSerialPortFilters(
         throw new SerialError(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
           `Invalid usbProductId: ${filter.usbProductId}. Must be an integer between 0 and 65535.`,
+          undefined,
+          {
+            field: 'usbProductId',
+            value: filter.usbProductId,
+            constraint: 'usb-id-0-65535',
+            filterIndex,
+          },
         );
       }
     }
