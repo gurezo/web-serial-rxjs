@@ -139,6 +139,47 @@ export type SerialSessionState =
 
 ---
 
+## 3. `originalError` deprecation
+
+v3.0.0 introduced typed `SerialError.context`. For cause-bearing error codes, **`context.cause`** is the canonical source for the underlying failure.
+
+`SerialError.originalError` and the legacy constructor third argument remain in v3.x for backward compatibility but are **deprecated** and scheduled for removal in the next major version.
+
+### v2 / legacy pattern (deprecated)
+
+```typescript
+session.errors$.subscribe((error) => {
+  if (error.code === SerialErrorCode.READ_FAILED) {
+    console.error(error.originalError);
+  }
+});
+```
+
+### v3 recommended pattern
+
+```typescript
+session.errors$.subscribe((error) => {
+  if (error.is(SerialErrorCode.READ_FAILED)) {
+    // error.context.cause is unknown — non-Error throws are preserved
+    console.error(error.context.cause);
+  }
+});
+```
+
+### Migration checklist
+
+- [ ] Replace `error.originalError` with `error.context.cause` (narrow with `error.is(code)` first).
+- [ ] If you construct errors with `new SerialError(code, message, cause)`, switch to `new SerialError(code, message, undefined, { cause })`.
+- [ ] Address TypeScript `@deprecated` warnings by migrating to the patterns above.
+
+### Compatibility in v3.x
+
+- `originalError` remains available in v3.x.
+- When `context.cause` is an `Error` instance, `originalError` is kept in sync for legacy callers.
+- `context.cause` is typed as `unknown` because JavaScript allows throwing non-`Error` values.
+
+---
+
 ## See also
 
 - [Migrating from v1 to v2](./MIGRATION_V2.md)

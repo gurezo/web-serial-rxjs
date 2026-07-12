@@ -205,7 +205,17 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 
 ## SerialError / SerialErrorCode
 
-`SerialError` extends `Error` with a `code: SerialErrorCode`, an optional `originalError: Error`, and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code. `originalError` is retained for backward compatibility; prefer `context.cause` for cause-bearing codes.
+`SerialError` extends `Error` with a `code: SerialErrorCode` and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code.
+
+For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version. See [Migrating to v3 – originalError deprecation](./MIGRATION_V3.md#3-originalerror-deprecation).
+
+```typescript
+session.errors$.subscribe((error) => {
+  if (error.is(SerialErrorCode.READ_FAILED)) {
+    console.error(error.context.cause);
+  }
+});
+```
 
 The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./MIGRATION_V3.md) for the enum-to-const declaration change.
 
@@ -213,7 +223,7 @@ The same union is available as a **const object** `SerialErrorCode` (e.g. `Seria
 | ------------------------ | --------------- | ------------------------------------------------------------------- |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
 | `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
-| Cause-bearing codes (e.g. `PORT_OPEN_FAILED`) | `{ cause: unknown }` | See table below. `originalError` is kept in sync. |
+| Cause-bearing codes (e.g. `PORT_OPEN_FAILED`) | `{ cause: unknown }` | See table below. Narrow with `error.is(code)` before reading `context.cause`. |
 | Other codes              | `undefined`     | See table below.                                                    |
 
 | Code                     | When it is emitted                                                  |
