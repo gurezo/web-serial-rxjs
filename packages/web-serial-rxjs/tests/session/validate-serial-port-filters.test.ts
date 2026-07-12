@@ -18,12 +18,24 @@ describe('validateSerialPortFilters', () => {
   });
 
   it.each([
-    [{}],
-    [{ usbVendorId: -1 }],
-    [{ usbVendorId: 0x10000 }],
-    [{ usbProductId: -1 }],
-    [{ usbProductId: 0x10000 }],
-  ])('rejects invalid filter %j', (filter) => {
+    [{}, { field: 'filters', constraint: 'at-least-one-usb-id', filterIndex: 0 }],
+    [
+      { usbVendorId: -1 },
+      { field: 'usbVendorId', value: -1, constraint: 'usb-id-0-65535', filterIndex: 0 },
+    ],
+    [
+      { usbVendorId: 0x10000 },
+      { field: 'usbVendorId', value: 0x10000, constraint: 'usb-id-0-65535', filterIndex: 0 },
+    ],
+    [
+      { usbProductId: -1 },
+      { field: 'usbProductId', value: -1, constraint: 'usb-id-0-65535', filterIndex: 0 },
+    ],
+    [
+      { usbProductId: 0x10000 },
+      { field: 'usbProductId', value: 0x10000, constraint: 'usb-id-0-65535', filterIndex: 0 },
+    ],
+  ])('rejects invalid filter %j', (filter, expectedContext) => {
     expect(() => validateSerialPortFilters([filter])).toThrow(SerialError);
     try {
       validateSerialPortFilters([filter]);
@@ -32,6 +44,7 @@ describe('validateSerialPortFilters', () => {
       expect((error as SerialError).code).toBe(
         SerialErrorCode.INVALID_FILTER_OPTIONS,
       );
+      expect((error as SerialError).context).toMatchObject(expectedContext);
     }
   });
 });

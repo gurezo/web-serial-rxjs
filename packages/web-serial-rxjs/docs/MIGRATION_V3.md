@@ -424,13 +424,13 @@ v3.x adds `@deprecated` annotations only; runtime values and exports are unchang
 | `READ_FAILED` | read pump error | fatal | `{ cause }` | integration |
 | `WRITE_FAILED` | `send$` write failure | non-fatal | `{ cause }` | integration |
 | `CONNECTION_LOST` | `port.close()` failure / stream drop | fatal | `{ cause }` | integration |
-| `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `undefined` | unit + integration |
+| `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `ValidationErrorContext` | unit + integration |
 | `OPERATION_CANCELLED` | `requestPort` dialog cancelled | fatal | `{ cause }` | integration |
 | `LINE_BUFFER_OVERFLOW` | `lines$` tail overflow | non-fatal | `{ maxChars }` | integration |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | throw | `undefined` | unit + integration |
-| `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `undefined` | unit |
-| `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `undefined` | unit |
-| `INVALID_CONNECTION_OPTIONS` | factory | throw | `undefined` | unit + integration |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | throw | `ValidationErrorContext` | unit + integration |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
+| `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
+| `INVALID_CONNECTION_OPTIONS` | factory | throw | `ValidationErrorContext` | unit + integration |
 | `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` overflow | non-fatal | `{ maxChars, bufferSize }` | integration |
 | `SESSION_DISPOSED` | `connect$` / `send$` after `dispose$` | fatal | `undefined` | integration |
 | `UNKNOWN` | unclassified dispose / disconnect fallback | fatal | `{ cause }` | unit |
@@ -445,7 +445,7 @@ Fatal vs non-fatal follows `ERROR_SEVERITY` inside `reportError`. Factory-thrown
 
 ### Follow-up
 
-Structured context for validation errors (`INVALID_*`) is planned in [#439](https://github.com/gurezo/web-serial-rxjs/issues/439).
+Structured context for validation errors (`INVALID_*`) was added in [#439](https://github.com/gurezo/web-serial-rxjs/issues/439). Use `ValidationErrorContext` (`field`, `value`, `constraint`, optional `filterIndex`) instead of parsing `message`.
 
 ---
 

@@ -28,6 +28,7 @@
  * - {@link isConnectedSessionState} - type predicate for connected `state$` narrowing in RxJS pipelines
  * - {@link SerialError} / {@link SerialErrorCode} - unified error surface
  * - {@link SerialErrorContextMap} - structured metadata per error code
+ * - {@link ValidationErrorContext} - machine-readable validation error metadata
  *
  * ## Browser Support
  *
@@ -106,7 +107,12 @@ export type {
 } from './session';
 
 export { SerialError } from './errors/serial-error';
-export type { SerialErrorCauseContext, SerialErrorContextMap } from './errors/serial-error';
+export type {
+  SerialErrorCauseContext,
+  SerialErrorContextMap,
+  ValidationErrorConstraint,
+  ValidationErrorContext,
+} from './errors/serial-error';
 export { SerialErrorCode } from './errors/serial-error-code';
 
 export { createTerminalBuffer, DEFAULT_TERMINAL_BUFFER_OPTIONS } from './terminal/create-terminal-buffer';

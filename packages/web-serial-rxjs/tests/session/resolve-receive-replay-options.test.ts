@@ -43,16 +43,16 @@ describe('resolveReceiveReplayOptions', () => {
   });
 
   it.each([
-    ['bufferSize', { bufferSize: 0 }],
-    ['bufferSize', { bufferSize: -1 }],
-    ['bufferSize', { bufferSize: 1.5 }],
-    ['bufferSize', { bufferSize: NaN }],
-    ['bufferSize', { bufferSize: MAX_RECEIVE_REPLAY_BUFFER_SIZE + 1 }],
-    ['maxChars', { maxChars: -1 }],
-    ['maxChars', { maxChars: 1.5 }],
-    ['maxChars', { maxChars: NaN }],
-    ['maxChars', { maxChars: MAX_RECEIVE_REPLAY_MAX_CHARS + 1 }],
-  ])('rejects invalid %s', (_field, options) => {
+    ['bufferSize', { bufferSize: 0 }, 'receiveReplay.bufferSize', 'receive-replay-buffer-size-range'],
+    ['bufferSize', { bufferSize: -1 }, 'receiveReplay.bufferSize', 'receive-replay-buffer-size-range'],
+    ['bufferSize', { bufferSize: 1.5 }, 'receiveReplay.bufferSize', 'receive-replay-buffer-size-range'],
+    ['bufferSize', { bufferSize: NaN }, 'receiveReplay.bufferSize', 'receive-replay-buffer-size-range'],
+    ['bufferSize', { bufferSize: MAX_RECEIVE_REPLAY_BUFFER_SIZE + 1 }, 'receiveReplay.bufferSize', 'receive-replay-buffer-size-range'],
+    ['maxChars', { maxChars: -1 }, 'receiveReplay.maxChars', 'receive-replay-max-chars-range'],
+    ['maxChars', { maxChars: 1.5 }, 'receiveReplay.maxChars', 'receive-replay-max-chars-range'],
+    ['maxChars', { maxChars: NaN }, 'receiveReplay.maxChars', 'receive-replay-max-chars-range'],
+    ['maxChars', { maxChars: MAX_RECEIVE_REPLAY_MAX_CHARS + 1 }, 'receiveReplay.maxChars', 'receive-replay-max-chars-range'],
+  ])('rejects invalid %s', (field, options, contextField, constraint) => {
     expect(() => resolveReceiveReplayOptions(options)).toThrow(SerialError);
     try {
       resolveReceiveReplayOptions(options);
@@ -61,6 +61,11 @@ describe('resolveReceiveReplayOptions', () => {
       expect((error as SerialError).code).toBe(
         SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
       );
+      expect((error as SerialError).context).toEqual({
+        field: contextField,
+        value: field === 'bufferSize' ? options.bufferSize : options.maxChars,
+        constraint,
+      });
     }
   });
 });

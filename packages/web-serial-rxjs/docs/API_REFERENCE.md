@@ -253,6 +253,14 @@ session.errors$.subscribe((error) => {
     console.error(error.context.cause);
   }
 });
+
+try {
+  createSerialSession({ baudRate: 0 });
+} catch (error) {
+  if (error instanceof SerialError && error.is(SerialErrorCode.INVALID_CONNECTION_OPTIONS)) {
+    console.error(error.context.field, error.context.value, error.context.constraint);
+  }
+}
 ```
 
 The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./MIGRATION_V3.md) for the enum-to-const declaration change.
@@ -263,8 +271,11 @@ Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](.
 | ------------------------ | --------------- | ------------------------------------------------------------------- |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
 | `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
+| `INVALID_*` validation codes | `ValidationErrorContext` | Factory-time options validation; see below. Narrow with `error.is(code)`. |
 | Cause-bearing codes (e.g. `PORT_OPEN_FAILED`) | `{ cause: unknown }` | See table below. Narrow with `error.is(code)` before reading `context.cause`. |
 | Other codes              | `undefined`     | See table below.                                                    |
+
+`ValidationErrorContext` is `{ field: string; value: unknown; constraint: ValidationErrorConstraint; filterIndex?: number }`. `message` stays human-readable; use `context` for programmatic handling.
 
 ### Implemented (emitted in v3.x)
 
@@ -277,11 +288,11 @@ Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](.
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
-| `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry (at session creation).         |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. |
-| `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` or `terminalBuffer.maxChars` was out of range at session creation. |
-| `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. |
-| `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. |
+| `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry (at session creation).         | `ValidationErrorContext` |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. | `ValidationErrorContext` |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` or `terminalBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
+| `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
+| `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. | `ValidationErrorContext` |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$`.                       |
 | `UNKNOWN`                | Unclassified dispose / disconnect fallback; see `context.cause`.    |

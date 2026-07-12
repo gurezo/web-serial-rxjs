@@ -902,6 +902,11 @@ describe('createSerialSession', () => {
         expect((error as SerialError).code).toBe(
           SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
         );
+        expect((error as SerialError).context).toEqual({
+          field: 'receiveReplay.bufferSize',
+          value: 0,
+          constraint: 'receive-replay-buffer-size-range',
+        });
       }
     });
 
@@ -914,6 +919,11 @@ describe('createSerialSession', () => {
         expect((error as SerialError).code).toBe(
           SerialErrorCode.INVALID_CONNECTION_OPTIONS,
         );
+        expect((error as SerialError).context).toEqual({
+          field: 'baudRate',
+          value: 0,
+          constraint: 'positive-safe-integer',
+        });
       }
     });
 
@@ -926,6 +936,12 @@ describe('createSerialSession', () => {
         expect((error as SerialError).code).toBe(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
         );
+        expect((error as SerialError).context).toMatchObject({
+          field: 'usbVendorId',
+          value: -1,
+          constraint: 'usb-id-0-65535',
+          filterIndex: 0,
+        });
       }
     });
 

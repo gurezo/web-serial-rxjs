@@ -197,6 +197,11 @@
 <pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">distinctUntilChanged</span><span class="hl-1">, </span><span class="hl-2">map</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">isConnected$</span><span class="hl-1"> = </span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">pipe</span><span class="hl-1">(</span><br/><span class="hl-1">  </span><span class="hl-6">map</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">),</span><br/><span class="hl-1">  </span><span class="hl-6">distinctUntilChanged</span><span class="hl-1">(),</span><br/><span class="hl-1">);</span>
 </code><button type="button">Copy</button></pre>
 
+<h3 id="rxjs-with-connected-state-narrowing" class="tsd-anchor-link">RxJS <code>filter</code> with connected-state narrowing<a href="#rxjs-with-connected-state-narrowing" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>When you need <code>portInfo</code> or other connected-only fields inside a pipeline, use <code>isConnectedSessionState</code> with <code>filter()</code>. Inline <code>filter((s) =&gt; s.status === SerialSessionStatus.Connected)</code> does not narrow types in TypeScript.</p>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">filter</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">isConnectedSessionState</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><br/><span class="hl-1">  .</span><span class="hl-6">pipe</span><span class="hl-1">(</span><span class="hl-6">filter</span><span class="hl-1">(</span><span class="hl-2">isConnectedSessionState</span><span class="hl-1">))</span><br/><span class="hl-1">  .</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  });</span>
+</code><button type="button">Copy</button></pre>
+
 <h3 id="deriving-a-boolean-with-angular-signals" class="tsd-anchor-link">Deriving a boolean with Angular Signals<a href="#deriving-a-boolean-with-angular-signals" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">computed</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@angular/core&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">toSignal</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@angular/core/rxjs-interop&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">sessionState</span><span class="hl-1"> = </span><span class="hl-6">toSignal</span><span class="hl-1">(</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">);</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">isConnected</span><span class="hl-1"> = </span><span class="hl-6">computed</span><span class="hl-1">(</span><br/><span class="hl-1">  () </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-6">sessionState</span><span class="hl-1">().</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">,</span><br/><span class="hl-1">);</span>
 </code><button type="button">Copy</button></pre>
@@ -214,6 +219,243 @@
 <li>Runtime behavior is unchanged; values stay in sync with <code>state.status === SerialSessionStatus.Connected</code>.</li>
 <li>Framework-specific convenience state should be derived from <code>state$</code> in framework adapters and examples.</li>
 </ul>
+<hr>
+<h2 id="7-removal" class="tsd-anchor-link">7. <code>getCurrentPort()</code> removal<a href="#7-removal" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>SerialSession.getCurrentPort()</code> was a raw <code>SerialPort</code> escape hatch. Calling <code>port.close()</code> or <code>writable.getWriter()</code> on the returned port could conflict with the session lifecycle and break internal runtime invariants.</p>
+<p>A usage audit (<a href="https://github.com/gurezo/web-serial-rxjs/issues/437">#437</a>) found no production callers in this repository. Device identification is covered by <code>state.portInfo</code>, so <strong><code>getCurrentPort()</code> has been removed</strong> from the public API.</p>
+<h3 id="audit-results" class="tsd-anchor-link">Audit results<a href="#audit-results" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Finding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Library production code</td>
+<td>No <code>getCurrentPort()</code> callers</td>
+</tr>
+<tr>
+<td>Example apps</td>
+<td>Test mocks only</td>
+</tr>
+<tr>
+<td>Device identification alternative</td>
+<td><code>state.portInfo</code> after <code>state$</code> narrowing (canonical)</td>
+</tr>
+<tr>
+<td>Signals (DTR/RTS, etc.)</td>
+<td>No replacement API yet (future feature addition)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="old-pattern-removed" class="tsd-anchor-link">Old pattern (removed)<a href="#old-pattern-removed" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">port</span><span class="hl-1"> = </span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-6">getCurrentPort</span><span class="hl-1">();</span><br/><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">port</span><span class="hl-1">) {</span><br/><span class="hl-1">  </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">port</span><span class="hl-1">.</span><span class="hl-6">getInfo</span><span class="hl-1">());</span><br/><span class="hl-1">}</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="recommended-pattern-device-identification" class="tsd-anchor-link">Recommended pattern (device identification)<a href="#recommended-pattern-device-identification" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-2">console</span><span class="hl-1">.</span><span class="hl-6">log</span><span class="hl-1">(</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">portInfo</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="native-web-serial-operations-signals-etc" class="tsd-anchor-link">Native Web Serial operations (signals, etc.)<a href="#native-web-serial-operations-signals-etc" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Operations such as <code>getSignals()</code> / <code>setSignals()</code> that previously required a raw port have no <code>SerialSession</code> replacement yet. If you need them, open a separate issue to propose first-class APIs.</p>
+<h3 id="migration-checklist-5" class="tsd-anchor-link">Migration checklist<a href="#migration-checklist-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] Remove all <code>getCurrentPort()</code> calls.</li>
+<li>[ ] Use <code>state$</code> narrowed on <code>SerialSessionStatus.Connected</code> and read <code>state.portInfo</code> for device identification.</li>
+<li>[ ] If you depend on signals or other native operations, request a dedicated API via an issue.</li>
+</ul>
+<hr>
+<h2 id="8-runtime-emission-audit" class="tsd-anchor-link">8. <code>SerialErrorCode</code> runtime emission audit<a href="#8-runtime-emission-audit" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Some members of the public <code>SerialErrorCode</code> contract were not emitted by the v3.x runtime. To prevent unreachable error-handling branches, all 19 codes were audited (<a href="https://github.com/gurezo/web-serial-rxjs/issues/438">#438</a>) and the results are recorded here and in the <a href="API_REFERENCE.html#serialerror--serialerrorcode">API Reference</a>.</p>
+<h3 id="classification" class="tsd-anchor-link">Classification<a href="#classification" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Count</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Implemented</strong></td>
+<td>17</td>
+<td>Emitted at runtime in v3.x (or thrown at factory time)</td>
+</tr>
+<tr>
+<td><strong>Reserved</strong></td>
+<td>2</td>
+<td>Present in the public API but not emitted in v3.x; scheduled for removal in the next major version</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reserved-codes-not-emitted-in-v3x" class="tsd-anchor-link">Reserved codes (not emitted in v3.x)<a href="#reserved-codes-not-emitted-in-v3x" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Reason</th>
+<th>Alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PORT_NOT_AVAILABLE</code></td>
+<td>Current implementation uses only <code>navigator.serial.requestPort</code>; no <code>getPorts</code> API path exists</td>
+<td>Use <code>PORT_OPEN_FAILED</code> or <code>OPERATION_CANCELLED</code> for port acquisition failures</td>
+</tr>
+<tr>
+<td><code>OPERATION_TIMEOUT</code></td>
+<td>No timeout / prompt detection / transaction API yet</td>
+<td>None (revisit when a future API is added)</td>
+</tr>
+</tbody>
+</table>
+<p>v3.x adds <code>@deprecated</code> annotations only; runtime values and exports are unchanged. Removal is deferred to the next major version.</p>
+<h3 id="implemented-codes" class="tsd-anchor-link">Implemented codes<a href="#implemented-codes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Emit location</th>
+<th>fatal / non-fatal</th>
+<th><code>context</code></th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BROWSER_NOT_SUPPORTED</code></td>
+<td><code>connect$</code> (no <code>navigator.serial</code>)</td>
+<td>non-fatal</td>
+<td><code>undefined</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>PORT_OPEN_FAILED</code></td>
+<td><code>connect$</code> (<code>port.open()</code> reject)</td>
+<td>fatal</td>
+<td><code>{ cause }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>PORT_ALREADY_OPEN</code></td>
+<td><code>connect$</code> (not in <code>'idle'</code> / <code>'error'</code>)</td>
+<td>non-fatal</td>
+<td><code>undefined</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>PORT_NOT_OPEN</code></td>
+<td><code>send$</code> / <code>disconnect$</code> (invalid state)</td>
+<td>non-fatal</td>
+<td><code>undefined</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>READ_FAILED</code></td>
+<td>read pump error</td>
+<td>fatal</td>
+<td><code>{ cause }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>WRITE_FAILED</code></td>
+<td><code>send$</code> write failure</td>
+<td>non-fatal</td>
+<td><code>{ cause }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>CONNECTION_LOST</code></td>
+<td><code>port.close()</code> failure / stream drop</td>
+<td>fatal</td>
+<td><code>{ cause }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>INVALID_FILTER_OPTIONS</code></td>
+<td><code>createSerialSession</code> factory</td>
+<td>throw</td>
+<td><code>ValidationErrorContext</code></td>
+<td>unit + integration</td>
+</tr>
+<tr>
+<td><code>OPERATION_CANCELLED</code></td>
+<td><code>requestPort</code> dialog cancelled</td>
+<td>fatal</td>
+<td><code>{ cause }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>LINE_BUFFER_OVERFLOW</code></td>
+<td><code>lines$</code> tail overflow</td>
+<td>non-fatal</td>
+<td><code>{ maxChars }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>INVALID_RECEIVE_REPLAY_OPTIONS</code></td>
+<td>factory</td>
+<td>throw</td>
+<td><code>ValidationErrorContext</code></td>
+<td>unit + integration</td>
+</tr>
+<tr>
+<td><code>INVALID_TERMINAL_BUFFER_OPTIONS</code></td>
+<td>factory</td>
+<td>throw</td>
+<td><code>ValidationErrorContext</code></td>
+<td>unit</td>
+</tr>
+<tr>
+<td><code>INVALID_LINE_BUFFER_OPTIONS</code></td>
+<td>factory</td>
+<td>throw</td>
+<td><code>ValidationErrorContext</code></td>
+<td>unit</td>
+</tr>
+<tr>
+<td><code>INVALID_CONNECTION_OPTIONS</code></td>
+<td>factory</td>
+<td>throw</td>
+<td><code>ValidationErrorContext</code></td>
+<td>unit + integration</td>
+</tr>
+<tr>
+<td><code>RECEIVE_REPLAY_BUFFER_OVERFLOW</code></td>
+<td><code>receiveReplay$</code> overflow</td>
+<td>non-fatal</td>
+<td><code>{ maxChars, bufferSize }</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>SESSION_DISPOSED</code></td>
+<td><code>connect$</code> / <code>send$</code> after <code>dispose$</code></td>
+<td>fatal</td>
+<td><code>undefined</code></td>
+<td>integration</td>
+</tr>
+<tr>
+<td><code>UNKNOWN</code></td>
+<td>unclassified dispose / disconnect fallback</td>
+<td>fatal</td>
+<td><code>{ cause }</code></td>
+<td>unit</td>
+</tr>
+</tbody>
+</table>
+<p>Fatal vs non-fatal follows <code>ERROR_SEVERITY</code> inside <code>reportError</code>. Factory-thrown <code>INVALID_*</code> codes bypass <code>reportError</code> and throw directly to the caller.</p>
+<h3 id="migration-checklist-6" class="tsd-anchor-link">Migration checklist<a href="#migration-checklist-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] Remove error handling for <code>PORT_NOT_AVAILABLE</code> / <code>OPERATION_TIMEOUT</code> (unreachable in v3.x).</li>
+<li>[ ] Handle port acquisition failures with <code>PORT_OPEN_FAILED</code> / <code>OPERATION_CANCELLED</code>.</li>
+<li>[ ] See <a href="API_REFERENCE.html#serialerror--serialerrorcode">API Reference – SerialError / SerialErrorCode</a> for per-code emit conditions.</li>
+</ul>
+<h3 id="follow-up" class="tsd-anchor-link">Follow-up<a href="#follow-up" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Structured context for validation errors (<code>INVALID_*</code>) was added in <a href="https://github.com/gurezo/web-serial-rxjs/issues/439">#439</a>. Use <code>ValidationErrorContext</code> (<code>field</code>, <code>value</code>, <code>constraint</code>, optional <code>filterIndex</code>) instead of parsing <code>message</code>.</p>
 <hr>
 <h2 id="see-also" class="tsd-anchor-link">See also<a href="#see-also" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
@@ -284,9 +526,26 @@
 <li><a href="#v2-legacy-pattern-deprecated-3"><span>v2 / legacy pattern (deprecated)</span></a></li>
 <li><a href="#v3-recommended-pattern-narrowing"><span>v3 recommended pattern ( narrowing)</span></a></li>
 <li><a href="#deriving-a-boolean-with-rxjs"><span>Deriving a boolean with <wbr/>Rx<wbr/>JS</span></a></li>
+<li><a href="#rxjs-with-connected-state-narrowing"><span>Rx<wbr/>JS  with connected-<wbr/>state narrowing</span></a></li>
 <li><a href="#deriving-a-boolean-with-angular-signals"><span>Deriving a boolean with <wbr/>Angular <wbr/>Signals</span></a></li>
 <li><a href="#migration-checklist-4"><span>Migration checklist</span></a></li>
 <li><a href="#compatibility-in-v3x-3"><span>Compatibility in v3.x</span></a></li></ul></li>
+<li><a href="#7-removal"><span>7.  removal</span></a></li>
+<li>
+<ul>
+<li><a href="#audit-results"><span>Audit results</span></a></li>
+<li><a href="#old-pattern-removed"><span>Old pattern (removed)</span></a></li>
+<li><a href="#recommended-pattern-device-identification"><span>Recommended pattern (device identification)</span></a></li>
+<li><a href="#native-web-serial-operations-signals-etc"><span>Native <wbr/>Web <wbr/>Serial operations (signals, etc.)</span></a></li>
+<li><a href="#migration-checklist-5"><span>Migration checklist</span></a></li></ul></li>
+<li><a href="#8-runtime-emission-audit"><span>8.  runtime emission audit</span></a></li>
+<li>
+<ul>
+<li><a href="#classification"><span>Classification</span></a></li>
+<li><a href="#reserved-codes-not-emitted-in-v3x"><span>Reserved codes (not emitted in v3.x)</span></a></li>
+<li><a href="#implemented-codes"><span>Implemented codes</span></a></li>
+<li><a href="#migration-checklist-6"><span>Migration checklist</span></a></li>
+<li><a href="#follow-up"><span>Follow-<wbr/>up</span></a></li></ul></li>
 <li><a href="#see-also"><span>See also</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>

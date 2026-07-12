@@ -3,11 +3,18 @@ import {
   isCauseContextCode,
   type SerialErrorCauseContext,
   type SerialErrorContextMap,
+  type ValidationErrorConstraint,
+  type ValidationErrorContext,
 } from './serial-error-context';
 
 // Re-export SerialErrorCode for convenience
 export { SerialErrorCode };
-export type { SerialErrorCauseContext, SerialErrorContextMap };
+export type {
+  SerialErrorCauseContext,
+  SerialErrorContextMap,
+  ValidationErrorConstraint,
+  ValidationErrorContext,
+};
 
 interface V8ErrorCaptureStackTrace {
   captureStackTrace?(
