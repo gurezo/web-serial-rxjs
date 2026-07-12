@@ -189,9 +189,6 @@ importers:
       jsonc-eslint-parser:
         specifier: ^3.1.0
         version: 3.1.0
-      markdown-it:
-        specifier: ^14.3.0
-        version: 14.3.0
       nx:
         specifier: 23.0.1
         version: 23.0.1(@swc-node/register@1.11.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/core@1.15.43(@swc/helpers@0.5.23))(@swc/types@0.1.27)(typescript@6.0.3))(@swc/core@1.15.43(@swc/helpers@0.5.23))
