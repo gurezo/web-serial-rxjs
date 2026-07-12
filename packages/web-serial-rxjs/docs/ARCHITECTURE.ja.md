@@ -112,7 +112,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | `docs/api/**`、`docs/guide/**` | しない（CI 生成 artifact） |
 | `docs/.gitignore` | する（生成物を除外） |
 
-- ローカル生成: `pnpm run docs`（#457 まで現行 TypeDoc 設定）
+- ローカル生成: `pnpm run docs`（TypeDoc は `docs/api/` に出力）
 - 公開: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
@@ -131,7 +131,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 
 - [x] **#455** — 日本語 Guide を `guide/ja/` へ移行・更新
 - [x] **#456** — English Guide を `guide/en/` へ移行・更新
-- [ ] **#457** — TypeDoc `out` を `../../docs/api` に変更。`projectDocuments` は英語 Guide のみ
+- [x] **#457** — TypeDoc `out` を `../../docs/api` に変更。`projectDocuments` は英語 Guide のみ
 - [ ] **#458** — `docs/guide/{ja,en}/` をビルドし、Guide ↔ API Reference の導線を追加
 - [ ] **#151** — `docs/` artifact を Firebase へデプロイ（内部パスは再定義しない）
 

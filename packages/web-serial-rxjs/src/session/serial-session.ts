@@ -107,10 +107,12 @@ export interface SerialSession {
   destroy$(): Observable<void>;
 
   /**
-   * Reactive session lifecycle state as a discriminated union.
+   * Canonical lifecycle source for the session.
    *
-   * Replays the current state on subscribe. Switch on `state.status` and
-   * use the per-variant fields (`portInfo`, `error`) instead of correlating
+   * Reactive session lifecycle state as a discriminated union. Replays the
+   * current state on subscribe. Switch on `state.status` and use the
+   * per-variant fields (`portInfo` when {@link SerialSessionStatus.Connected},
+   * `error` when {@link SerialSessionStatus.Error}) instead of correlating
    * separate streams.
    */
   readonly state$: Observable<SerialSessionState>;
@@ -162,7 +164,7 @@ export interface SerialSession {
   getPortInfo(): SerialPortInfo | null;
 
   /**
-   * Primary error channel.
+   * Canonical fatal / non-fatal error channel.
    *
    * All {@link SerialError} instances produced by the session (connect /
    * read / write / close) are multiplexed here. This is the main channel,

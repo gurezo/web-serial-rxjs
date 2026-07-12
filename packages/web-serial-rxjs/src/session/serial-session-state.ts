@@ -45,7 +45,7 @@ export interface ConnectingSessionState {
   readonly status: typeof SerialSessionStatus.Connecting;
 }
 
-/** @see {@link SerialSessionState} */
+/** Connected lifecycle variant with narrowed {@link SerialPortInfo} access via `portInfo`. */
 export interface ConnectedSessionState {
   readonly status: typeof SerialSessionStatus.Connected;
   readonly portInfo: SerialPortInfo;
@@ -73,7 +73,8 @@ export interface DisposedSessionState {
 }
 
 /**
- * Discriminated union emitted by {@link SerialSession.state$}.
+ * Discriminated union emitted by {@link SerialSession.state$} — the
+ * canonical lifecycle source.
  *
  * Each variant carries the lifecycle `status` plus optional detail fields
  * (`portInfo` when connected, `error` when in a fatal error state).

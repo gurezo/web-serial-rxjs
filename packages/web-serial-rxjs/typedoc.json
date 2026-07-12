@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["./src/index.ts"],
-  "out": "../../docs",
+  "out": "../../docs/api",
   "tsconfig": "./tsconfig.lib.json",
   "exclude": [
     "**/*.spec.ts",
@@ -20,7 +20,7 @@
   "name": "web-serial-rxjs API Documentation",
   "includeVersion": false,
   "gitRevision": "main",
-  "projectDocuments": ["./docs/guide/en/**/*.md", "./docs/ARCHITECTURE.md"],
+  "projectDocuments": ["./docs/guide/en/**/*.md"],
   "searchInDocuments": true,
   "sourceLinkExternal": true,
   "markdownLinkExternal": true,
