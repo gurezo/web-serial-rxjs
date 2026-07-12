@@ -120,6 +120,12 @@ export interface SerialSession {
    *
    * Derived from `state$` with `distinctUntilChanged` so UIs can bind
    * connect/disabled flags without reimplementing the comparison.
+   *
+   * @deprecated Prefer narrowing {@link state$} with
+   *   {@link SerialSessionStatus.Connected}. Retained for backward compatibility;
+   *   scheduled for removal in the next major version.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/435 | Issue #435}
    */
   readonly isConnected$: Observable<boolean>;
 

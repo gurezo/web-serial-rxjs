@@ -134,9 +134,9 @@ export type SerialSessionState =
 
 ### 変更なし
 
-- `errors$` と `isConnected$` は引き続き利用可能。
+- `errors$` は引き続き利用可能です。
 - `portInfo$` と `getPortInfo()` は v3.x では引き続き利用可能ですが、**非推奨**です（[§5](#5-portinfo--getportinfo-の非推奨化) を参照）。
-- `isConnected$` は内部で connected 状態から派生します。
+- `isConnected$` は v3.x では引き続き利用可能ですが、**非推奨**です（[§6](#6-isconnected-の非推奨化) を参照）。
 
 ---
 
@@ -261,6 +261,75 @@ session.state$.subscribe((state) => {
 
 ---
 
+## 6. `isConnected$` の非推奨化
+
+v3.0.0 では `state$` が discriminated union になりました。`state.status` が `SerialSessionStatus.Connected` のとき、TypeScript の narrowing により接続状態と `state.portInfo` などの state-specific データへ型安全にアクセスできます。
+
+`isConnected$` は `Observable<boolean>` として接続の真偽値だけを返すため、discriminated union が持つ型情報を失います。後方互換のため v3.x に残っていますが、**非推奨**で、次回 major version で削除予定です。
+
+### v2 / 旧パターン（非推奨）
+
+```typescript
+session.isConnected$.subscribe((isConnected) => {
+  if (isConnected) {
+    // session state is not narrowed
+  }
+});
+```
+
+### v3 推奨パターン（`state$` narrowing）
+
+```typescript
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Connected) {
+    // state.portInfo and other connected fields are available
+  }
+});
+```
+
+### RxJS で boolean を derive する場合
+
+```typescript
+import { distinctUntilChanged, map } from 'rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+const isConnected$ = session.state$.pipe(
+  map((state) => state.status === SerialSessionStatus.Connected),
+  distinctUntilChanged(),
+);
+```
+
+### Angular Signals で boolean を derive する場合
+
+```typescript
+import { computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+const sessionState = toSignal(session.state$);
+
+const isConnected = computed(
+  () => sessionState().status === SerialSessionStatus.Connected,
+);
+```
+
+### 移行チェックリスト
+
+- [ ] `isConnected$` の購読を `state$` に置き換え、`state.status === SerialSessionStatus.Connected` で narrowing する。
+- [ ] boolean だけ必要な UI では `state$` から `map` / `computed` で derive する。
+- [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
+- [ ] 新規コードとドキュメントでは `state$` narrowing を使用する。
+
+### v3.x での互換性
+
+- `isConnected$` は v3.x では引き続き利用可能です。
+- ランタイム挙動は変更されません。接続中は `state.status === SerialSessionStatus.Connected` と値が同期します。
+- framework-specific convenience state は framework adapter / example 側で `state$` から derive してください。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)
@@ -268,3 +337,4 @@ session.state$.subscribe((state) => {
 - [API リファレンス – SerialError / SerialErrorCode](./API_REFERENCE.ja.md#serialerror--serialerrorcode)
 - [API リファレンス – dispose$ / destroy$](./API_REFERENCE.ja.md#dispose-observablevoid)
 - [API リファレンス – portInfo$ / getPortInfo()](./API_REFERENCE.ja.md#portinfo-observableserialportinfo--null)
+- [API リファレンス – isConnected$](./API_REFERENCE.ja.md#isconnected-observableboolean)

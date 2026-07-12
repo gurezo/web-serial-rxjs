@@ -2,7 +2,7 @@
 
 **最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./OVERVIEW.ja.md#serialsessionの全体像)を参照してください。
 
-標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。**`isConnected$`** は boolean だけ欲しい場合の convenience stream です。
+標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。**`isConnected$`** は v3.x で非推奨です — `state$` から derive してください。
 
 ### SerialSessionStatus（早見表）
 
@@ -27,7 +27,6 @@ if (!session.isBrowserSupported()) {
   console.error('このブラウザは Web Serial API をサポートしていません');
 }
 
-session.isConnected$.subscribe((isConnected) => console.log('接続中:', isConnected));
 session.lines$.subscribe((line) => console.log('行:', line));
 
 // 本番では errors$ を購読して SerialError を扱うことを推奨します

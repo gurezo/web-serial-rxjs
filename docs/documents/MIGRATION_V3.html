@@ -105,9 +105,9 @@
 </ul>
 <h3 id="unchanged" class="tsd-anchor-link">Unchanged<a href="#unchanged" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul>
-<li><code>errors$</code> and <code>isConnected$</code> remain available.</li>
+<li><code>errors$</code> remains available.</li>
 <li><code>portInfo$</code> and <code>getPortInfo()</code> remain available in v3.x but are <strong>deprecated</strong> (see <a href="#5-portinfo--getportinfo-deprecation">§5</a>).</li>
-<li><code>isConnected$</code> still derives from connected status internally.</li>
+<li><code>isConnected$</code> remains available in v3.x but is <strong>deprecated</strong> (see <a href="#6-isconnected-deprecation">§6</a>).</li>
 </ul>
 <hr>
 <h2 id="3-deprecation" class="tsd-anchor-link">3. <code>originalError</code> deprecation<a href="#3-deprecation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -182,6 +182,39 @@
 <li><code>errors$</code> is not deprecated — it is an independent error event channel, not a duplicate of lifecycle state.</li>
 </ul>
 <hr>
+<h2 id="6-deprecation" class="tsd-anchor-link">6. <code>isConnected$</code> deprecation<a href="#6-deprecation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>v3.0.0 made <code>state$</code> a discriminated union. When <code>state.status</code> is <code>SerialSessionStatus.Connected</code>, TypeScript narrowing gives type-safe access to <code>state.portInfo</code> and other state-specific fields.</p>
+<p><code>isConnected$</code> is an <code>Observable&lt;boolean&gt;</code> that only projects whether the session is connected, so it loses the type information carried by the discriminated union. It remains in v3.x for backward compatibility but is <strong>deprecated</strong> and scheduled for removal in the next major version.</p>
+<h3 id="v2-legacy-pattern-deprecated-3" class="tsd-anchor-link">v2 / legacy pattern (deprecated)<a href="#v2-legacy-pattern-deprecated-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">isConnected$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">isConnected</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">isConnected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-9">// session state is not narrowed</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="v3-recommended-pattern-narrowing" class="tsd-anchor-link">v3 recommended pattern (<code>state$</code> narrowing)<a href="#v3-recommended-pattern-narrowing" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-9">// state.portInfo and other connected fields are available</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="deriving-a-boolean-with-rxjs" class="tsd-anchor-link">Deriving a boolean with RxJS<a href="#deriving-a-boolean-with-rxjs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">distinctUntilChanged</span><span class="hl-1">, </span><span class="hl-2">map</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">isConnected$</span><span class="hl-1"> = </span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">pipe</span><span class="hl-1">(</span><br/><span class="hl-1">  </span><span class="hl-6">map</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">),</span><br/><span class="hl-1">  </span><span class="hl-6">distinctUntilChanged</span><span class="hl-1">(),</span><br/><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="deriving-a-boolean-with-angular-signals" class="tsd-anchor-link">Deriving a boolean with Angular Signals<a href="#deriving-a-boolean-with-angular-signals" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">computed</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@angular/core&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">toSignal</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@angular/core/rxjs-interop&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">sessionState</span><span class="hl-1"> = </span><span class="hl-6">toSignal</span><span class="hl-1">(</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">);</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">isConnected</span><span class="hl-1"> = </span><span class="hl-6">computed</span><span class="hl-1">(</span><br/><span class="hl-1">  () </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-6">sessionState</span><span class="hl-1">().</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">,</span><br/><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="migration-checklist-4" class="tsd-anchor-link">Migration checklist<a href="#migration-checklist-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] Replace <code>isConnected$</code> subscriptions with <code>state$</code> and narrow on <code>state.status === SerialSessionStatus.Connected</code>.</li>
+<li>[ ] When you only need a boolean for UI, derive it from <code>state$</code> with <code>map</code> or <code>computed</code>.</li>
+<li>[ ] Address TypeScript <code>@deprecated</code> warnings by migrating to the patterns above.</li>
+<li>[ ] Prefer <code>state$</code> narrowing in new code and documentation.</li>
+</ul>
+<h3 id="compatibility-in-v3x-3" class="tsd-anchor-link">Compatibility in v3.x<a href="#compatibility-in-v3x-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>isConnected$</code> remains available in v3.x.</li>
+<li>Runtime behavior is unchanged; values stay in sync with <code>state.status === SerialSessionStatus.Connected</code>.</li>
+<li>Framework-specific convenience state should be derived from <code>state$</code> in framework adapters and examples.</li>
+</ul>
+<hr>
 <h2 id="see-also" class="tsd-anchor-link">See also<a href="#see-also" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="MIGRATION_V2.html">Migrating from v1 to v2</a></li>
@@ -189,6 +222,7 @@
 <li><a href="API_REFERENCE.html#serialerror--serialerrorcode">API Reference – SerialError / SerialErrorCode</a></li>
 <li><a href="API_REFERENCE.html#dispose-observablevoid">API Reference – dispose$ / destroy$</a></li>
 <li><a href="API_REFERENCE.html#portinfo-observableserialportinfo--null">API Reference – portInfo$ / getPortInfo()</a></li>
+<li><a href="API_REFERENCE.html#isconnected-observableboolean">API Reference – isConnected$</a></li>
 </ul>
 </div></div>
 <div class="col-sidebar">
@@ -244,6 +278,15 @@
 <li><a href="#v3-recommended-pattern-2"><span>v3 recommended pattern</span></a></li>
 <li><a href="#migration-checklist-3"><span>Migration checklist</span></a></li>
 <li><a href="#compatibility-in-v3x-2"><span>Compatibility in v3.x</span></a></li></ul></li>
+<li><a href="#6-deprecation"><span>6.  deprecation</span></a></li>
+<li>
+<ul>
+<li><a href="#v2-legacy-pattern-deprecated-3"><span>v2 / legacy pattern (deprecated)</span></a></li>
+<li><a href="#v3-recommended-pattern-narrowing"><span>v3 recommended pattern ( narrowing)</span></a></li>
+<li><a href="#deriving-a-boolean-with-rxjs"><span>Deriving a boolean with <wbr/>Rx<wbr/>JS</span></a></li>
+<li><a href="#deriving-a-boolean-with-angular-signals"><span>Deriving a boolean with <wbr/>Angular <wbr/>Signals</span></a></li>
+<li><a href="#migration-checklist-4"><span>Migration checklist</span></a></li>
+<li><a href="#compatibility-in-v3x-3"><span>Compatibility in v3.x</span></a></li></ul></li>
 <li><a href="#see-also"><span>See also</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>

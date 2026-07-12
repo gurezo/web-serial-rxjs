@@ -1,6 +1,6 @@
 # React Example
 
-This is a minimal React example for the v2 `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `isConnected$` / `errors$` into React state and binds **`receivedData`** to `session.terminalText$` so `\r` redraws (e.g. `ls -la`) stay aligned. Use **`lines$`** only for newline-delimited logs or parsers, not as the primary terminal view.
+This is a minimal React example for the v2 `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `errors$` into React state and binds **`receivedData`** to `session.terminalText$` so `\r` redraws (e.g. `ls -la`) stay aligned. Use **`lines$`** only for newline-delimited logs or parsers, not as the primary terminal view.
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
@@ -18,8 +18,7 @@ This is a minimal React example for the v2 `SerialSession` API (Web Serial). The
 ### Advanced Usage
 
 - `receive$`: rawチャンクをそのまま扱う低レイヤー入力
-- `state$`
-- `isConnected$`
+- `state$` (derive `isConnected` from `state.status === SerialSessionStatus.Connected`)
 - `errors$`
 - `createTerminalBuffer()`
 
@@ -81,7 +80,7 @@ The example uses `createSerialSession` directly through `useSerialSession`:
 
 1. **Browser support check**: `useSerialSession` calls `session.isBrowserSupported()` once on mount and exposes the result as `browserSupported`.
 2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`; when baud rate changes, the hook creates a new `SerialSession` with the selected baud rate and connects it.
-3. **State UI**: The hook subscribes to `session.state$` and `session.isConnected$`. `App.tsx` uses `state.status` with `SerialSessionStatus` for status text and `isConnected` for button enablement.
+3. **State UI**: The hook subscribes to `session.state$` and derives `isConnected` from `state.status`. `App.tsx` branches on `state.status` with `SerialSessionStatus` for status text and uses `isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.
 5. **Receiving**: The hook subscribes to **`session.terminalText$`** and mirrors the result in `receivedData` (carriage-return safe). Use **`lines$`** for complete-line logging or simple parsers; it drops lone `\r` behavior (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
 6. **Errors**: All connect/read/write/close failures are multiplexed through `session.errors$` and surfaced as the hook's `errorMessage` state. No per-call try/catch wrappers are needed.

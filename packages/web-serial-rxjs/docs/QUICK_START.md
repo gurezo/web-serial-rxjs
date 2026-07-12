@@ -2,7 +2,7 @@
 
 This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `errors$`, `receive$`, `lines$`, and the imperative methods, read [SerialSession overview](./OVERVIEW.md#serialsession-at-a-glance) first.
 
-Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI; **`isConnected$`** is a convenience stream when you only need a boolean flag.
+Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is still the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./ADVANCED_USAGE.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. **`isConnected$`** is deprecated in v3.x — derive a boolean from `state$` instead.
 
 ### SerialSessionStatus (quick reference)
 
@@ -27,9 +27,6 @@ if (!session.isBrowserSupported()) {
   console.error('Web Serial API is not supported in this browser');
 }
 
-session.isConnected$.subscribe((isConnected) =>
-  console.log('Connected:', isConnected),
-);
 session.lines$.subscribe((line) => console.log('line:', line));
 
 // In production apps, subscribe to errors$ and handle SerialError

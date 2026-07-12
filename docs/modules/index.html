@@ -18,8 +18,9 @@ RxJS-based session surface.</p>
 <p>The public API exposes a single, session-oriented surface so that apps
 (Angular, Vue, React, Svelte, vanilla JS/TS) can drive their UI from
 <code>state$</code> (canonical lifecycle discriminated union) + <code>errors$</code> (error event
-channel) + <code>receive$</code> + <code>terminalText$</code> + <code>lines$</code> + convenience streams
-such as <code>isConnected$</code> without rebuilding state, read loops, or write queues.</p>
+channel) + <code>receive$</code> + <code>terminalText$</code> + <code>lines$</code> without rebuilding state,
+read loops, or write queues. Derive convenience booleans from <code>state$</code>
+narrowing; <code>isConnected$</code> is deprecated in v3.x.</p>
 <ul>
 <li><a href="../functions/index.createSerialSession.html" class="tsd-kind-function">createSerialSession</a> - factory for a <a href="../interfaces/index.SerialSession.html" class="tsd-kind-interface">SerialSession</a></li>
 <li><a href="../functions/index.createTerminalBuffer.html" class="tsd-kind-function">createTerminalBuffer</a> - terminal-style display text from <a href="../interfaces/index.SerialSession.html#receive" class="tsd-kind-property">SerialSession.receive$</a></li>

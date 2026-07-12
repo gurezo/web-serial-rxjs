@@ -4,7 +4,7 @@ This is an Angular example application demonstrating how to use the `@gurezo/web
 
 **Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
 
-**Scope**: Minimal smoke test—connect, display via `terminalText$` (`\r`-safe shells), optional line logging with `lines$`, UI via `isConnected$`, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Minimal smoke test—connect, display via `terminalText$` (`\r`-safe shells), optional line logging with `lines$`, UI via `state$` narrowing, send, disconnect. Richer patterns: [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
 
 ## API Guide
 
@@ -18,8 +18,7 @@ This is an Angular example application demonstrating how to use the `@gurezo/web
 ### Advanced Usage
 
 - `receive$`: rawチャンクをそのまま扱う低レイヤー入力
-- `state$`
-- `isConnected$`
+- `state$` (derive connected boolean via `state.status === SerialSessionStatus.Connected`)
 - `errors$`
 - `createTerminalBuffer()`
 

@@ -46,7 +46,7 @@ encapsulated by the implementation. Only Observables are exposed.</p>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-index-list"><a href="#errors" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>errors$</span></a>
-<a href="#isconnected" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Connected$</span></a>
+<a href="#isconnected" class="tsd-index-link deprecated"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Connected$</span></a>
 <a href="#lines" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>lines$</span></a>
 <a href="#portinfo" class="tsd-index-link deprecated"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>port<wbr/>Info$</span></a>
 <a href="#receive" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>receive$</span></a>
@@ -91,16 +91,25 @@ detected by the read pump on the next tick.</p>
 <h4 class="tsd-anchor-link" id="see-1">See<a href="#see-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/204">Issue #204</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L189" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:189</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L195" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:195</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="isconnected"><code class="tsd-tag">Readonly</code><span>is<wbr/>Connected$</span><a href="#isconnected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h3 class="tsd-anchor-link" id="isconnected"><code class="tsd-tag">Readonly</code><span class="deprecated">is<wbr/>Connected$</span><a href="#isconnected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">isConnected$</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></div>
 <div class="tsd-comment tsd-typography"><p><code>true</code> when <a href="#state" class="tsd-kind-property">state$</a> has <code>status: 'connected'</code>, <code>false</code> otherwise.</p>
 <p>Derived from <code>state$</code> with <code>distinctUntilChanged</code> so UIs can bind
 connect/disabled flags without reimplementing the comparison.</p>
-</div><aside class="tsd-sources">
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-deprecated">
+<h4 class="tsd-anchor-link" id="deprecated">Deprecated<a href="#deprecated" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer narrowing <a href="#state" class="tsd-kind-property">state$</a> with
+<a href="../variables/index.SerialSessionStatus.html#connected" class="tsd-kind-property">SerialSessionStatus.Connected</a>. Retained for backward compatibility;
+scheduled for removal in the next major version.</p>
+</div>
+<div class="tsd-tag-see">
+<h4 class="tsd-anchor-link" id="see-2">See<a href="#see-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/435">Issue #435</a></p>
+</div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L124" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:124</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L130" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:130</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="lines"><code class="tsd-tag">Readonly</code><span>lines$</span><a href="#lines" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">lines$</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -120,13 +129,13 @@ independent of subscribers.</p>
 </div>
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-2">See<a href="#see-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><ul>
+<h4 class="tsd-anchor-link" id="see-3">See<a href="#see-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><ul>
 <li><a href="https://github.com/gurezo/web-serial-rxjs/issues/273">Issue #273</a></li>
 <li><a href="https://github.com/gurezo/web-serial-rxjs/issues/371">Issue #371</a></li>
 </ul>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L262" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:262</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L268" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:268</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="portinfo"><code class="tsd-tag">Readonly</code><span class="deprecated">port<wbr/>Info$</span><a href="#portinfo" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">portInfo$</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">SerialPortInfo</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -138,16 +147,16 @@ the value is valid for your UI.</p>
 </div>
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-deprecated">
-<h4 class="tsd-anchor-link" id="deprecated">Deprecated<a href="#deprecated" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer narrowing <a href="#state" class="tsd-kind-property">state$</a> with
+<h4 class="tsd-anchor-link" id="deprecated-1">Deprecated<a href="#deprecated-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer narrowing <a href="#state" class="tsd-kind-property">state$</a> with
 <a href="../variables/index.SerialSessionStatus.html#connected" class="tsd-kind-property">SerialSessionStatus.Connected</a> and using <code>state.portInfo</code>.
 Retained for backward compatibility; scheduled for removal in the next
 major version.</p>
 </div>
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-3">See<a href="#see-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/434">Issue #434</a></p>
+<h4 class="tsd-anchor-link" id="see-4">See<a href="#see-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/434">Issue #434</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L141" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:141</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L147" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:147</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="receive"><code class="tsd-tag">Readonly</code><span>receive$</span><a href="#receive" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">receive$</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -167,10 +176,10 @@ split on interior <code>\r</code> and break redraw semantics.</p>
 </div>
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-4">See<a href="#see-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/273">Issue #273</a></p>
+<h4 class="tsd-anchor-link" id="see-5">See<a href="#see-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/273">Issue #273</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L211" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:211</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L217" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:217</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="receivereplay"><code class="tsd-tag">Readonly</code><span>receive<wbr/>Replay$</span><a href="#receivereplay" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">receiveReplay$</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -183,10 +192,10 @@ is off (default), this is the same hot stream as <a href="#receive" class="tsd-k
 </div>
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-5">See<a href="#see-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/265">Issue #265</a></p>
+<h4 class="tsd-anchor-link" id="see-6">See<a href="#see-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/265">Issue #265</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L241" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:241</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L247" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:247</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="state"><code class="tsd-tag">Readonly</code><span>state$</span><a href="#state" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">state$</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/index.SerialSessionState.html" class="tsd-signature-type tsd-kind-type-alias">SerialSessionState</a><span class="tsd-signature-symbol">&gt;</span></div>
@@ -212,7 +221,7 @@ characters; configure via <a href="index.SerialSessionOptions.html#terminalbuffe
 
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L228" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:228</a></li></ul></aside></section></section></details>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L234" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:234</a></li></ul></aside></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -243,11 +252,11 @@ the read pump is running. Subscribing to <code>receive$</code> before calling
 
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-deprecated">
-<h4 class="tsd-anchor-link" id="deprecated-1">Deprecated<a href="#deprecated-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer <a href="#dispose" class="tsd-kind-method">dispose$</a>. This alias is retained for backward
+<h4 class="tsd-anchor-link" id="deprecated-2">Deprecated<a href="#deprecated-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer <a href="#dispose" class="tsd-kind-method">dispose$</a>. This alias is retained for backward
 compatibility and is scheduled for removal in the next major version.</p>
 </div>
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-6">See<a href="#see-6" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/433">Issue #433</a></p>
+<h4 class="tsd-anchor-link" id="see-7">See<a href="#see-7" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/433">Issue #433</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
 <li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L107" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:107</a></li></ul></aside></div></li></ul></section>
@@ -286,7 +295,7 @@ session instead of reusing this instance.</p>
 
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-7">See<a href="#see-7" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/373">Issue #373</a></p>
+<h4 class="tsd-anchor-link" id="see-8">See<a href="#see-8" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/373">Issue #373</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
 <li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L95" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:95</a></li></ul></aside></div></li></ul></section>
@@ -304,7 +313,7 @@ for identification.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">SerialPort</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L166" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:166</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L172" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:172</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="getportinfo"><span class="deprecated">get<wbr/>Port<wbr/>Info</span><a href="#getportinfo" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -318,16 +327,16 @@ for identification.</p>
 
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-deprecated">
-<h4 class="tsd-anchor-link" id="deprecated-2">Deprecated<a href="#deprecated-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer narrowing <a href="#state" class="tsd-kind-property">state$</a> with
+<h4 class="tsd-anchor-link" id="deprecated-3">Deprecated<a href="#deprecated-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Prefer narrowing <a href="#state" class="tsd-kind-property">state$</a> with
 <a href="../variables/index.SerialSessionStatus.html#connected" class="tsd-kind-property">SerialSessionStatus.Connected</a> and using <code>state.portInfo</code>.
 Retained for backward compatibility; scheduled for removal in the next
 major version.</p>
 </div>
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-8">See<a href="#see-8" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/434">Issue #434</a></p>
+<h4 class="tsd-anchor-link" id="see-9">See<a href="#see-9" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/434">Issue #434</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L156" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:156</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L162" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:162</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="isbrowsersupported"><span>is<wbr/>Browser<wbr/>Supported</span><a href="#isbrowsersupported" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -372,10 +381,10 @@ flushed to the underlying writer.</p>
 
 <div class="tsd-comment tsd-typography">
 <div class="tsd-tag-see">
-<h4 class="tsd-anchor-link" id="see-9">See<a href="#see-9" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/203">Issue #203</a></p>
+<h4 class="tsd-anchor-link" id="see-10">See<a href="#see-10" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/203">Issue #203</a></p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L287" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:287</a></li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/session/serial-session.ts#L293" class="external" target="_blank">packages/web-serial-rxjs/src/session/serial-session.ts:293</a></li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

@@ -1,5 +1,6 @@
 import {
   createSerialSession,
+  SerialSessionStatus,
   type SerialConnectionOptions,
   type SerialError,
   type SerialPayload,
@@ -9,10 +10,12 @@ import {
 import {
   BehaviorSubject,
   combineLatest,
+  distinctUntilChanged,
   type Observable,
   ReplaySubject,
   shareReplay,
   switchMap,
+  map,
 } from 'rxjs';
 
 export interface SerialSessionControllerOptions {
@@ -52,9 +55,9 @@ export function createSerialSessionController(
     switchMap((session) => session.state$),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
-  const isConnected$ = sessions$.pipe(
-    switchMap((session) => session.isConnected$),
-    shareReplay({ bufferSize: 1, refCount: true }),
+  const isConnected$ = state$.pipe(
+    map((state) => state.status === SerialSessionStatus.Connected),
+    distinctUntilChanged(),
   );
   const receive$ = sessions$.pipe(
     switchMap((session) => session.receive$),

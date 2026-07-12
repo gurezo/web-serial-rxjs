@@ -50,12 +50,9 @@ export class App {
         state.status === SerialSessionStatus.Disconnecting;
       connectBtn.disabled = !supported || connected || busy;
       baudRateSelect.disabled = connected || busy;
+      disconnectBtn.disabled = !connected;
+      sendInput.disabled = sendBtn.disabled = !connected;
       setStatus(status, ...STATUS[state.status]);
-    });
-
-    this.controller.isConnected$.subscribe((isConnected) => {
-      disconnectBtn.disabled = !isConnected;
-      sendInput.disabled = sendBtn.disabled = !isConnected;
     });
 
     this.controller.terminalText$.subscribe((text) => {

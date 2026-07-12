@@ -58,12 +58,9 @@ export class App {
       const busy = state.status === S.Connecting || state.status === S.Disconnecting;
       connectBtn.disabled = !supported || connected || busy;
       baudRateSelect.disabled = connected || busy;
+      disconnectBtn.disabled = !connected;
+      sendInput.disabled = sendBtn.disabled = !connected;
       setStatus(status, ...STATUS[state.status]);
-    });
-
-    this.controller.isConnected$.subscribe((isConnected) => {
-      disconnectBtn.disabled = !isConnected;
-      sendInput.disabled = sendBtn.disabled = !isConnected;
     });
 
     this.controller.terminalText$.subscribe((text) => {

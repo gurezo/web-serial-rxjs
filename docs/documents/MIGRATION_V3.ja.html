@@ -105,9 +105,9 @@
 </ul>
 <h3 id="変更なし" class="tsd-anchor-link">変更なし<a href="#変更なし" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul>
-<li><code>errors$</code> と <code>isConnected$</code> は引き続き利用可能。</li>
+<li><code>errors$</code> は引き続き利用可能です。</li>
 <li><code>portInfo$</code> と <code>getPortInfo()</code> は v3.x では引き続き利用可能ですが、<strong>非推奨</strong>です（<a href="#5-portinfo--getportinfo-%E3%81%AE%E9%9D%9E%E6%8E%A8%E5%A5%A8%E5%8C%96">§5</a> を参照）。</li>
-<li><code>isConnected$</code> は内部で connected 状態から派生します。</li>
+<li><code>isConnected$</code> は v3.x では引き続き利用可能ですが、<strong>非推奨</strong>です（<a href="#6-isconnected-%E3%81%AE%E9%9D%9E%E6%8E%A8%E5%A5%A8%E5%8C%96">§6</a> を参照）。</li>
 </ul>
 <hr>
 <h2 id="3-の非推奨化" class="tsd-anchor-link">3. <code>originalError</code> の非推奨化<a href="#3-の非推奨化" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -182,6 +182,39 @@
 <li><code>errors$</code> は非推奨化の対象ではありません。lifecycle state ではなく、独立した error event channel です。</li>
 </ul>
 <hr>
+<h2 id="6-の非推奨化" class="tsd-anchor-link">6. <code>isConnected$</code> の非推奨化<a href="#6-の非推奨化" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>v3.0.0 では <code>state$</code> が discriminated union になりました。<code>state.status</code> が <code>SerialSessionStatus.Connected</code> のとき、TypeScript の narrowing により接続状態と <code>state.portInfo</code> などの state-specific データへ型安全にアクセスできます。</p>
+<p><code>isConnected$</code> は <code>Observable&lt;boolean&gt;</code> として接続の真偽値だけを返すため、discriminated union が持つ型情報を失います。後方互換のため v3.x に残っていますが、<strong>非推奨</strong>で、次回 major version で削除予定です。</p>
+<h3 id="v2-旧パターン（非推奨）-3" class="tsd-anchor-link">v2 / 旧パターン（非推奨）<a href="#v2-旧パターン（非推奨）-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">isConnected$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">isConnected</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">isConnected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-9">// session state is not narrowed</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="v3-推奨パターン（-narrowing）" class="tsd-anchor-link">v3 推奨パターン（<code>state$</code> narrowing）<a href="#v3-推奨パターン（-narrowing）" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">subscribe</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-0">if</span><span class="hl-1"> (</span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-9">// state.portInfo and other connected fields are available</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">});</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="rxjs-で-boolean-を-derive-する場合" class="tsd-anchor-link">RxJS で boolean を derive する場合<a href="#rxjs-で-boolean-を-derive-する場合" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">distinctUntilChanged</span><span class="hl-1">, </span><span class="hl-2">map</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;rxjs&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">isConnected$</span><span class="hl-1"> = </span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">.</span><span class="hl-6">pipe</span><span class="hl-1">(</span><br/><span class="hl-1">  </span><span class="hl-6">map</span><span class="hl-1">((</span><span class="hl-2">state</span><span class="hl-1">) </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-2">state</span><span class="hl-1">.</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">),</span><br/><span class="hl-1">  </span><span class="hl-6">distinctUntilChanged</span><span class="hl-1">(),</span><br/><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="angular-signals-で-boolean-を-derive-する場合" class="tsd-anchor-link">Angular Signals で boolean を derive する場合<a href="#angular-signals-で-boolean-を-derive-する場合" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">computed</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@angular/core&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">toSignal</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@angular/core/rxjs-interop&#39;</span><span class="hl-1">;</span><br/><span class="hl-0">import</span><span class="hl-1"> { </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1"> } </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">sessionState</span><span class="hl-1"> = </span><span class="hl-6">toSignal</span><span class="hl-1">(</span><span class="hl-2">session</span><span class="hl-1">.</span><span class="hl-2">state$</span><span class="hl-1">);</span><br/><br/><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">isConnected</span><span class="hl-1"> = </span><span class="hl-6">computed</span><span class="hl-1">(</span><br/><span class="hl-1">  () </span><span class="hl-4">=&gt;</span><span class="hl-1"> </span><span class="hl-6">sessionState</span><span class="hl-1">().</span><span class="hl-2">status</span><span class="hl-1"> === </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">.</span><span class="hl-2">Connected</span><span class="hl-1">,</span><br/><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="移行チェックリスト-4" class="tsd-anchor-link">移行チェックリスト<a href="#移行チェックリスト-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li>[ ] <code>isConnected$</code> の購読を <code>state$</code> に置き換え、<code>state.status === SerialSessionStatus.Connected</code> で narrowing する。</li>
+<li>[ ] boolean だけ必要な UI では <code>state$</code> から <code>map</code> / <code>computed</code> で derive する。</li>
+<li>[ ] TypeScript の <code>@deprecated</code> 警告が出たら、上記パターンへ移行する。</li>
+<li>[ ] 新規コードとドキュメントでは <code>state$</code> narrowing を使用する。</li>
+</ul>
+<h3 id="v3x-での互換性-3" class="tsd-anchor-link">v3.x での互換性<a href="#v3x-での互換性-3" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul>
+<li><code>isConnected$</code> は v3.x では引き続き利用可能です。</li>
+<li>ランタイム挙動は変更されません。接続中は <code>state.status === SerialSessionStatus.Connected</code> と値が同期します。</li>
+<li>framework-specific convenience state は framework adapter / example 側で <code>state$</code> から derive してください。</li>
+</ul>
+<hr>
 <h2 id="関連ドキュメント" class="tsd-anchor-link">関連ドキュメント<a href="#関連ドキュメント" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="MIGRATION_V2.ja.html">v1 から v2 への移行</a></li>
@@ -189,6 +222,7 @@
 <li><a href="API_REFERENCE.ja.html#serialerror--serialerrorcode">API リファレンス – SerialError / SerialErrorCode</a></li>
 <li><a href="API_REFERENCE.ja.html#dispose-observablevoid">API リファレンス – dispose$ / destroy$</a></li>
 <li><a href="API_REFERENCE.ja.html#portinfo-observableserialportinfo--null">API リファレンス – portInfo$ / getPortInfo()</a></li>
+<li><a href="API_REFERENCE.ja.html#isconnected-observableboolean">API リファレンス – isConnected$</a></li>
 </ul>
 </div></div>
 <div class="col-sidebar">
@@ -244,6 +278,15 @@
 <li><a href="#v3-推奨パターン-2"><span>v3 推奨パターン</span></a></li>
 <li><a href="#移行チェックリスト-3"><span>移行チェックリスト</span></a></li>
 <li><a href="#v3x-での互換性-2"><span>v3.x での互換性</span></a></li></ul></li>
+<li><a href="#6-の非推奨化"><span>6.  の非推奨化</span></a></li>
+<li>
+<ul>
+<li><a href="#v2-旧パターン（非推奨）-3"><span>v2 / 旧パターン（非推奨）</span></a></li>
+<li><a href="#v3-推奨パターン（-narrowing）"><span>v3 推奨パターン（ narrowing）</span></a></li>
+<li><a href="#rxjs-で-boolean-を-derive-する場合"><span>Rx<wbr/>JS で boolean を derive する場合</span></a></li>
+<li><a href="#angular-signals-で-boolean-を-derive-する場合"><span>Angular <wbr/>Signals で boolean を derive する場合</span></a></li>
+<li><a href="#移行チェックリスト-4"><span>移行チェックリスト</span></a></li>
+<li><a href="#v3x-での互換性-3"><span>v3.x での互換性</span></a></li></ul></li>
 <li><a href="#関連ドキュメント"><span>関連ドキュメント</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>

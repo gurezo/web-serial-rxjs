@@ -26,7 +26,7 @@ Start here from the TypeDoc top page:
 
 ## Features
 
-- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, plus convenience streams such as `isConnected$`, and `connect$`, `disconnect$`, `dispose$`, and `send$`
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$` (`isConnected$` is a deprecated convenience stream in v3.x)
 - **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
 - **Ordered send queue**: concurrent `send$` calls are serialized internally in call order, without the caller having to manage a writer
 - **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
@@ -52,7 +52,7 @@ This library is framework-agnostic and can be used with:
 | `state$` | **Canonical connection lifecycle** — discriminated union (`status` plus optional `portInfo` / `error`). Replays on subscribe. Compare **`state.status`** with **`SerialSessionStatus`**. |
 | `SerialSessionStatus` | **Status constants** — const object (e.g. `SerialSessionStatus.Connected` → `'connected'`). Compare with `state$.status`. |
 | `SerialSessionState` | **Payload type** for `state$` (discriminated union). |
-| `isConnected$` | **Connected flag (convenience)** — `true` only when `state$.status` is `SerialSessionStatus.Connected`. Prefer `state$` for full lifecycle UI. |
+| `isConnected$` | **Deprecated (convenience)** — `true` only when `state$.status` is `SerialSessionStatus.Connected`. Prefer `state$` narrowing or derive. |
 | `receive$` | **Raw decoder chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
 | `terminalText$` | **Terminal-ready cumulative text** — display-oriented text derived from `receive$` that folds carriage-return redraws while keeping normal newline behavior. By default strips ANSI escape sequences for plain-text UIs; use `receive$` for raw output. Use when you want to bind one string directly to a terminal-like viewport. By default retains at most 10,000 lines and 1,048,576 characters (configure via `SerialSessionOptions.terminalBuffer`). |
 | `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring raw terminal streams where `\r` must stay intact. |
@@ -79,7 +79,7 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 
 **`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 
-**`isConnected$` (convenience for simple UIs)** — a read-only `Observable<boolean>`. Use it for “port open?” toggles when you do not need full lifecycle phases. For spinners, error banners, and port info, prefer **`state$`** with `state.status` narrowing.
+**`isConnected$` (deprecated convenience)** — a read-only `Observable<boolean>`. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. When you only need a boolean for UI toggles, derive it from `state$` or narrow on `state.status === SerialSessionStatus.Connected`. See [Migrating to v3](./MIGRATION_V3.md#6-isconnected-deprecation).
 
 **`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./ADVANCED_USAGE.md#line-framing)).
 

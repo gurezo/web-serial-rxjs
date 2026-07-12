@@ -18,7 +18,6 @@ export class SerialClientService implements OnDestroy {
   readonly receive$: Observable<string> = this.controller.receive$;
   /** `\r` を畳んだターミナル表示用テキスト（Issue #275 `createTerminalBuffer`）。 */
   readonly terminalText$: Observable<string> = this.controller.terminalText$;
-  readonly isConnected$: Observable<boolean> = this.controller.isConnected$;
   readonly errors$: Observable<SerialError> = this.controller.errors$;
 
   ngOnDestroy(): void {
