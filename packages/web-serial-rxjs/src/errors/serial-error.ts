@@ -82,9 +82,13 @@ export class SerialError<
    *
    * @param code - The error code identifying the type of error
    * @param message - A human-readable error message
-   * @param originalError - The original error that caused this SerialError, if any
-   * @param context - Structured metadata for the error code. When omitted, cause-bearing
-   *   codes derive `{ cause }` from `originalError`.
+   * @param originalError - The original error that caused this SerialError, if any.
+   *   @deprecated Prefer passing `{ cause }` via {@link context}. When omitted,
+   *   cause-bearing codes derive `{ cause }` from this argument for backward
+   *   compatibility.
+   * @param context - Structured metadata for the error code. For cause-bearing
+   *   codes, pass `{ cause }` here. When omitted, cause-bearing codes derive
+   *   `{ cause }` from the legacy {@link originalError} argument.
    */
   constructor(
     code: TCode,
@@ -95,9 +99,6 @@ export class SerialError<
     super(message);
     this.name = 'SerialError';
     this.code = code;
-    if (originalError !== undefined) {
-      this.originalError = originalError;
-    }
 
     if (context !== undefined) {
       this.context = context;
@@ -108,6 +109,15 @@ export class SerialError<
       this.context = { cause: originalError } as SerialErrorContextMap[TCode];
     } else {
       this.context = undefined as SerialErrorContextMap[TCode];
+    }
+
+    if (originalError !== undefined) {
+      this.originalError = originalError;
+    } else if (isCauseContextCode(code) && this.context !== undefined) {
+      const causeContext = this.context as SerialErrorCauseContext;
+      if (causeContext.cause instanceof Error) {
+        this.originalError = causeContext.cause;
+      }
     }
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)

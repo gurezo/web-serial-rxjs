@@ -139,6 +139,47 @@ export type SerialSessionState =
 
 ---
 
+## 3. `originalError` の非推奨化
+
+v3.0.0 では typed `SerialError.context` を導入しました。cause 系 error code では **`context.cause`** が原因エラーの canonical source です。
+
+後方互換のため `SerialError.originalError` と constructor の legacy 第 3 引数は v3.x で残っていますが、**非推奨**です。次回 major version で削除予定です。
+
+### v2 / 旧パターン（非推奨）
+
+```typescript
+session.errors$.subscribe((error) => {
+  if (error.code === SerialErrorCode.READ_FAILED) {
+    console.error(error.originalError);
+  }
+});
+```
+
+### v3 推奨パターン
+
+```typescript
+session.errors$.subscribe((error) => {
+  if (error.is(SerialErrorCode.READ_FAILED)) {
+    // error.context.cause は unknown — Error 以外の throw も保持
+    console.error(error.context.cause);
+  }
+});
+```
+
+### 移行チェックリスト
+
+- [ ] `error.originalError` を `error.context.cause` に置き換える（`error.is(code)` で narrowing してからアクセス）。
+- [ ] 独自に `new SerialError(code, message, cause)` としていた場合は `new SerialError(code, message, undefined, { cause })` に変更する。
+- [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
+
+### v3.x での互換性
+
+- `originalError` は v3.x では引き続き利用可能です。
+- `context.cause` が `Error` インスタンスの場合、`originalError` も同期して設定されます（legacy 利用者向け）。
+- `context.cause` の型は `unknown` です（JavaScript では `Error` 以外も throw 可能なため）。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)

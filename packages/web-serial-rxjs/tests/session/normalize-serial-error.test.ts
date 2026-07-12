@@ -26,7 +26,6 @@ describe('normalizeSerialError', () => {
 
     expect(normalized).toBeInstanceOf(SerialError);
     expect(normalized.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
-    expect(normalized.originalError).toBe(dom);
     expect(normalized.context).toEqual({ cause: dom });
   });
 
@@ -40,11 +39,11 @@ describe('normalizeSerialError', () => {
 
     expect(normalized.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
     expect(normalized.message).toBe('Failed to open port: cannot open');
-    expect(normalized.originalError).toBe(cause);
     expect(normalized.context).toEqual({ cause });
+    expect(normalized.originalError).toBe(cause);
   });
 
-  it('wraps non-Error values into Error causes so originalError is always an Error', () => {
+  it('wraps non-Error values into Error causes on context.cause', () => {
     const normalized = normalizeSerialError('string failure', {
       fallbackCode: SerialErrorCode.WRITE_FAILED,
       messagePrefix: 'Failed to write data',
@@ -52,7 +51,8 @@ describe('normalizeSerialError', () => {
 
     expect(normalized.code).toBe(SerialErrorCode.WRITE_FAILED);
     expect(normalized.message).toBe('Failed to write data: string failure');
-    expect(normalized.originalError).toBeInstanceOf(Error);
+    expect(normalized.context?.cause).toBeInstanceOf(Error);
+    expect((normalized.context?.cause as Error).message).toBe('string failure');
     expect(normalized.originalError?.message).toBe('string failure');
   });
 
@@ -76,6 +76,6 @@ describe('normalizeSerialError', () => {
 
     expect(normalized.code).toBe(SerialErrorCode.CONNECTION_LOST);
     expect(normalized.message).toBe('Failed to close port: locked');
-    expect(normalized.originalError).toBe(dom);
+    expect(normalized.context).toEqual({ cause: dom });
   });
 });
