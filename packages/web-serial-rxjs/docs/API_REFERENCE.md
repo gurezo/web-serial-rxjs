@@ -20,6 +20,24 @@ import {
 } from '@gurezo/web-serial-rxjs';
 ```
 
+## Deprecated exports
+
+The following remain available from the public export in v3.x but are not part of the canonical API. They are scheduled for removal in the next major version. See [Migrating to v3 – §9 `assertNever` public export audit](./MIGRATION_V3.md#9-public-export-audit).
+
+| Export | Status | Migration |
+| --- | --- | --- |
+| `assertNever` | `@deprecated` in v3.x | Define a local helper in application code, or use `switch (state.status)` with `SerialSessionStatus` |
+
+```typescript
+// Deprecated (still works in v3.x but triggers warnings)
+import { assertNever } from '@gurezo/web-serial-rxjs';
+
+// Recommended: local helper
+function assertNever(value: never): never {
+  throw new Error(`Unexpected value: ${String(value)}`);
+}
+```
+
 ## createSerialSession(options?)
 
 Factory that returns a new `SerialSession`. Safe to call when `navigator.serial` is unavailable; in that case `state$` is seeded with `{ status: 'unsupported' }` and `connect$` rejects with `SerialErrorCode.BROWSER_NOT_SUPPORTED`.
