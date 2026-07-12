@@ -97,7 +97,12 @@ export interface SerialSession {
   /**
    * Alias for {@link dispose$}.
    *
+   * @deprecated Prefer {@link dispose$}. This alias is retained for backward
+   *   compatibility and is scheduled for removal in the next major version.
+   *
    * @returns An Observable that completes when disposal has finished.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/433 | Issue #433}
    */
   destroy$(): Observable<void>;
 
