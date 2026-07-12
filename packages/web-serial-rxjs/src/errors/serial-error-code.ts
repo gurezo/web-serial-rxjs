@@ -28,30 +28,34 @@ export const SerialErrorCode = {
   /**
    * Browser does not support the Web Serial API.
    *
-   * This error occurs when attempting to use serial port functionality in a browser
-   * that doesn't support the Web Serial API. Supported desktop browsers are Chrome,
-   * Edge, Opera, and Firefox 151+. Safari and mobile browsers are not supported.
+   * Emitted on `connect$` when `navigator.serial` is unavailable.
    *
    * **Suggested action**: Inform the user to use a supported browser.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
    */
   BROWSER_NOT_SUPPORTED: 'BROWSER_NOT_SUPPORTED',
 
   /**
    * Serial port is not available.
    *
-   * This error occurs when a requested port cannot be accessed, such as when
-   * getting previously granted ports fails or when the port is already in use
-   * by another application.
+   * **Reserved — not emitted in v3.x.** The current implementation uses only
+   * `navigator.serial.requestPort`; there is no `getPorts` API path. Scheduled
+   * for removal in the next major version.
    *
-   * **Suggested action**: Check if the port is available or being used by another application.
+   * **Suggested action**: Handle port acquisition failures with
+   * {@link SerialErrorCode.PORT_OPEN_FAILED} or
+   * {@link SerialErrorCode.OPERATION_CANCELLED} instead.
+   *
+   * @deprecated Not emitted at runtime in v3.x. Will be removed in the next major version.
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
    */
   PORT_NOT_AVAILABLE: 'PORT_NOT_AVAILABLE',
 
   /**
    * Failed to open the serial port.
    *
-   * This error occurs when the port cannot be opened, typically due to incorrect
-   * connection parameters, hardware issues, or permission problems.
+   * Emitted on `connect$` when `port.open()` rejects.
    *
    * **Suggested action**: Verify connection parameters and check hardware connections.
    */
@@ -60,8 +64,8 @@ export const SerialErrorCode = {
   /**
    * Serial port is already open.
    *
-   * This error occurs when attempting to open a port that is already connected.
-   * Only one connection can be active at a time per SerialClient instance.
+   * Emitted on `connect$` when the session is not in `'idle'` or `'error'`
+   * (non-fatal; session state is unchanged).
    *
    * **Suggested action**: Disconnect the current port before connecting a new one.
    */
@@ -70,10 +74,10 @@ export const SerialErrorCode = {
   /**
    * Serial port is not open.
    *
-   * This error occurs when attempting to read from or write to a port that hasn't
-   * been opened yet. The port must be connected before performing I/O operations.
+   * Emitted when `send$` or `disconnect$` is called in an invalid session
+   * state (for example before `connect$` completes).
    *
-   * **Suggested action**: Call {@link SerialClient.connect} before reading or writing.
+   * **Suggested action**: Call {@link SerialSession.connect$} before sending data.
    */
   PORT_NOT_OPEN: 'PORT_NOT_OPEN',
 
@@ -132,8 +136,12 @@ export const SerialErrorCode = {
   /**
    * Operation timed out before completion.
    *
-   * This error occurs when an operation waits for a condition (for example, prompt
-   * detection) and the timeout period elapses first.
+   * **Reserved — not emitted in v3.x.** No timeout / prompt detection /
+   * transaction API exists yet. Scheduled for removal in the next major version
+   * unless a future API adopts this code.
+   *
+   * @deprecated Not emitted at runtime in v3.x. Will be removed in the next major version.
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
    */
   OPERATION_TIMEOUT: 'OPERATION_TIMEOUT',
 
@@ -220,9 +228,9 @@ export const SerialErrorCode = {
   /**
    * Unknown error occurred.
    *
-   * This error code is used for errors that don't fit into any other category.
-   * The original error details may be available in the error's message or
-   * {@link SerialError.context | context.cause} property.
+   * Emitted as a fallback when dispose or disconnect encounters an error that
+   * cannot be classified more specifically. The underlying failure is on
+   * {@link SerialError.context | context.cause}.
    *
    * **Suggested action**: Check the error message and `context.cause` for more details.
    */
