@@ -530,6 +530,43 @@ session.state$.subscribe((state: SerialSessionState) => {
 
 ---
 
+## 10. Session options type responsibility audit
+
+`SerialSessionOptions` exposes W3C `SerialOptions`-derived connection fields and library-specific session feature options in a single type. As part of the TypeScript-first domain model consolidation, the public type surface and generated documentation were audited ([#441](https://github.com/gurezo/web-serial-rxjs/issues/441)).
+
+### Audit results
+
+| Check | Result |
+| --- | --- |
+| existing assignability | Existing `createSerialSession({ ... })` calls work without changes |
+| generated `.d.ts` | public `SerialConnectionOptions` duplicated the internal `SerialSessionConnectionFields` Pick |
+| TypeDoc readability | connection and feature fields appeared in one flat list; hierarchy showed an internal type name |
+| readonly input compatibility | mutable arrays retained; readonly input assignability verified by regression tests |
+| examples | `libs/examples-shared` already uses `SerialConnectionOptions['baudRate']`; example apps unchanged |
+| W3C `SerialOptions` drift detection | connection fields remain a Pick from W3C types via `SerialConnectionOptions` |
+
+### Decision
+
+Type safety was already sound, but conceptual separation improves documentation clarity. The canonical model is:
+
+```text
+SerialConnectionOptions     = W3C connection parameters for port.open
+SerialSessionFeatureOptions = library-specific session features
+SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
+```
+
+- `SerialConnectionOptions` — `baudRate`, `dataBits`, `stopBits`, `parity`, `bufferSize`, `flowControl` (passed to `port.open`)
+- `SerialSessionFeatureOptions` — `filters`, `receiveReplay`, `terminalBuffer`, `lineBuffer` (library-specific)
+- `SerialSessionOptions` — composition of the two (factory argument)
+
+See [API Reference – SerialSessionOptions](./API_REFERENCE.md#serialsessionoptions) for details.
+
+### v3.x compatibility
+
+The `createSerialSession(options?)` signature and existing options object literals remain **unchanged**. `SerialSessionFeatureOptions` is added as a new public export.
+
+---
+
 ## See also
 
 - [Migrating from v1 to v2](./MIGRATION_V2.md)
@@ -539,3 +576,4 @@ session.state$.subscribe((state: SerialSessionState) => {
 - [API Reference – portInfo$ / getPortInfo()](./API_REFERENCE.md#portinfo-observableserialportinfo--null)
 - [API Reference – isConnected$](./API_REFERENCE.md#isconnected-observableboolean)
 - [API Reference – Deprecated exports](./API_REFERENCE.md#deprecated-exports)
+- [API Reference – SerialSessionOptions](./API_REFERENCE.md#serialsessionoptions)
