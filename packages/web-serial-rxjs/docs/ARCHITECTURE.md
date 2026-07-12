@@ -112,7 +112,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | `docs/api/**`, `docs/guide/**` | No (CI-generated artifact) |
 | `docs/.gitignore` | Yes (ignores all generated content) |
 
-- Local generation: `pnpm run docs` (current TypeDoc config until #457).
+- Local generation: `pnpm run docs` (TypeDoc outputs to `docs/api/`).
 - Publishing: `.github/workflows/deploy-docs.yml` uploads `./docs` as the Pages artifact.
 - **Do not edit** files under root `docs/` except `docs/.gitignore`.
 
@@ -131,7 +131,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 
 - [x] **#455** — Move and update Japanese Guide files into `guide/ja/`
 - [x] **#456** — Move and update English Guide files into `guide/en/`
-- [ ] **#457** — Set TypeDoc `out` to `../../docs/api`; limit `projectDocuments` to English Guide only
+- [x] **#457** — Set TypeDoc `out` to `../../docs/api`; limit `projectDocuments` to English Guide only
 - [ ] **#458** — Build `docs/guide/{ja,en}/`, add site index, link Guide ↔ API Reference
 - [ ] **#151** — Deploy `docs/` artifact to Firebase without redefining internal paths
 
