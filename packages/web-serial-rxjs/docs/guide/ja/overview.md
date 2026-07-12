@@ -4,7 +4,7 @@
   <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。
+このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](../../api/modules.html) を参照してください。
 
 ## 目次
 
@@ -113,10 +113,11 @@ session.send$('hello\r\n').subscribe();
 | ドキュメント | 用途 |
 | --- | --- |
 | **[日本語 Guide 索引](./README.md)** | Getting Started の読み順と一覧。 |
+| **[English Guide 索引](../en/README.md)** | Getting Started reading order and full index. |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
 | **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
-| **[API Reference（TypeDoc）](https://gurezo.github.io/web-serial-rxjs/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
+| **[API Reference（TypeDoc）](../../api/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
 | **[v2 → v3 マイグレーション](./migration-v3.md)**（[English](../en/migration-v3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
 | **[v1 → v2 マイグレーション](./migration-v2.md)**（[English](../en/migration-v2.md)） | 削除された v1 API からの対応表。 |
 | **[Phase 5（アーカイブ）](./archive/migration-phase5.md)** | 旧 v1 ドキュメントの参照用。 |
