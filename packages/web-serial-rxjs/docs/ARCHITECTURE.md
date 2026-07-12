@@ -129,7 +129,7 @@ Files remain at their current flat paths until #455 / #456. This table is the ca
 
 ## Checklist for downstream issues
 
-- [ ] **#455** — Move and update Japanese Guide files into `guide/ja/`
+- [x] **#455** — Move and update Japanese Guide files into `guide/ja/`
 - [ ] **#456** — Move and update English Guide files into `guide/en/`
 - [ ] **#457** — Set TypeDoc `out` to `../../docs/api`; limit `projectDocuments` to English Guide only
 - [ ] **#458** — Build `docs/guide/{ja,en}/`, add site index, link Guide ↔ API Reference

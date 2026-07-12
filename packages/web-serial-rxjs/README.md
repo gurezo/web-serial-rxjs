@@ -87,7 +87,7 @@ pnpm add rxjs
 
 ## Where to go next
 
-- Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.ja.md))
+- Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md))
 - Shortest path to an open port: [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/QUICK_START.md)
 - Browse as one integrated site (TypeDoc): [web-serial-rxjs API Documentation](https://gurezo.github.io/web-serial-rxjs/)
 

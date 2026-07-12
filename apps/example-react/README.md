@@ -2,9 +2,9 @@
 
 This is a minimal React example for the v2 `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `errors$` into React state and binds **`receivedData`** to `session.terminalText$` so `\r` redraws (e.g. `ls -la`) stay aligned. Use **`lines$`** only for newline-delimited logs or parsers, not as the primary terminal view.
 
-**Using the library**: See the repository [Quick Start](../../docs/QUICK_START.md) ([日本語](../../docs/QUICK_START.ja.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/OVERVIEW.ja.md)).
+**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/QUICK_START.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
 
-**Scope**: Connect, display from `terminalText$`, send, and disconnect. Use built-in `lines$` only when you need newline-delimited parsing or logging—not for interactive terminal mirrors. For richer recipes, see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)).
+**Scope**: Connect, display from `terminalText$`, send, and disconnect. Use built-in `lines$` only when you need newline-delimited parsing or logging—not for interactive terminal mirrors. For richer recipes, see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
 
 ## API Guide
 

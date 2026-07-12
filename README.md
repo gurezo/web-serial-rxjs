@@ -81,7 +81,7 @@ pnpm add rxjs
 
 The **canonical** API map (feature list, the `SerialSession` / `SerialSessionState` tables, and a minimal example) is in the package documentation:
 
-- **[SerialSession overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** · [日本語](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)
+- **[SerialSession overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** · [日本語](packages/web-serial-rxjs/docs/guide/ja/overview.md)
 
 The [npm `README` for `@gurezo/web-serial-rxjs`](packages/web-serial-rxjs/README.md) is a short index; for a first connection, follow [Quick Start](packages/web-serial-rxjs/docs/QUICK_START.md).
 
