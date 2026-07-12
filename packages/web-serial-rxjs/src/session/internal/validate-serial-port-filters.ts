@@ -20,6 +20,9 @@ export function validateSerialPortFilters(
 
   for (let filterIndex = 0; filterIndex < filters.length; filterIndex++) {
     const filter = filters[filterIndex];
+    if (filter === undefined) {
+      continue;
+    }
     if (!filter.usbVendorId && !filter.usbProductId) {
       throw new SerialError(
         SerialErrorCode.INVALID_FILTER_OPTIONS,

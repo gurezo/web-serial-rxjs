@@ -253,6 +253,14 @@ session.errors$.subscribe((error) => {
     console.error(error.context.cause);
   }
 });
+
+try {
+  createSerialSession({ baudRate: 0 });
+} catch (error) {
+  if (error instanceof SerialError && error.is(SerialErrorCode.INVALID_CONNECTION_OPTIONS)) {
+    console.error(error.context.field, error.context.value, error.context.constraint);
+  }
+}
 ```
 
 上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
@@ -263,8 +271,11 @@ session.errors$.subscribe((error) => {
 | ------------------------ | -------------- | ------------------------------------------------------------------ |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |
 | `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` バッファが `receiveReplay` の上限を超過。古いチャンクを破棄（non-fatal） |
+| `INVALID_*` validation code | `ValidationErrorContext` | factory 時の options 検証。下表参照。`error.is(code)` で narrow |
 | `PORT_OPEN_FAILED` など cause 系 | `{ cause: unknown }` | 下表の各タイミング。`error.is(code)` で narrow してから `context.cause` を参照 |
 | その他                   | `undefined`    | 下表の各タイミング                                                 |
+
+`ValidationErrorContext` は `{ field: string; value: unknown; constraint: ValidationErrorConstraint; filterIndex?: number }` です。`message` は人間向け、`context` はプログラム向けの metadata として利用してください。
 
 ### Implemented（v3.x で emit される）
 
@@ -277,11 +288,11 @@ session.errors$.subscribe((error) => {
 | `READ_FAILED`            | 内部 read pump でエラーが発生                                      |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` が reject                      |
 | `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
-| `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる（セッション生成時）                 |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` または `receiveReplay.maxChars` が範囲外（セッション生成時） |
-| `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` または `terminalBuffer.maxChars` が範囲外（セッション生成時） |
-| `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） |
-| `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） |
+| `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる（セッション生成時）                 | `ValidationErrorContext` |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` または `receiveReplay.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` または `terminalBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
+| `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
+| `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
 | `SESSION_DISPOSED`       | `dispose$` 後に `connect$` または `send$` を呼んだ                 |
 | `UNKNOWN`                | dispose / disconnect の分類不能 fallback。`context.cause` を確認     |

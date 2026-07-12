@@ -23,11 +23,13 @@ it easier to handle errors programmatically.</p>
 <li class="tsd-parameter">
 <h5 id="browser_not_supported"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">BROWSER_NOT_SUPPORTED</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;BROWSER_NOT_SUPPORTED&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Browser does not support the Web Serial API.</p>
-<p>This error occurs when attempting to use serial port functionality in a browser
-that doesn't support the Web Serial API. Supported desktop browsers are Chrome,
-Edge, Opera, and Firefox 151+. Safari and mobile browsers are not supported.</p>
+<p>Emitted on <code>connect$</code> when <code>navigator.serial</code> is unavailable.</p>
 <p><strong>Suggested action</strong>: Inform the user to use a supported browser.</p>
-</div></li>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-see">
+<h4 class="tsd-anchor-link" id="see">See<a href="#see" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/438">Issue #438</a></p>
+</div></div></li>
 <li class="tsd-parameter">
 <h5 id="connection_lost"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">CONNECTION_LOST</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;CONNECTION_LOST&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Serial port connection was lost.</p>
@@ -95,36 +97,52 @@ to inform the user that the operation was cancelled.</p>
 <li class="tsd-parameter">
 <h5 id="operation_timeout"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">OPERATION_TIMEOUT</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;OPERATION_TIMEOUT&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Operation timed out before completion.</p>
-<p>This error occurs when an operation waits for a condition (for example, prompt
-detection) and the timeout period elapses first.</p>
-</div></li>
+<p><strong>Reserved — not emitted in v3.x.</strong> No timeout / prompt detection /
+transaction API exists yet. Scheduled for removal in the next major version
+unless a future API adopts this code.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-deprecated">
+<h4 class="tsd-anchor-link" id="deprecated">Deprecated<a href="#deprecated" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Not emitted at runtime in v3.x. Will be removed in the next major version.</p>
+</div>
+<div class="tsd-tag-see">
+<h4 class="tsd-anchor-link" id="see-1">See<a href="#see-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/438">Issue #438</a></p>
+</div></div></li>
 <li class="tsd-parameter">
 <h5 id="port_already_open"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">PORT_ALREADY_OPEN</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;PORT_ALREADY_OPEN&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Serial port is already open.</p>
-<p>This error occurs when attempting to open a port that is already connected.
-Only one connection can be active at a time per SerialClient instance.</p>
+<p>Emitted on <code>connect$</code> when the session is not in <code>'idle'</code> or <code>'error'</code>
+(non-fatal; session state is unchanged).</p>
 <p><strong>Suggested action</strong>: Disconnect the current port before connecting a new one.</p>
 </div></li>
 <li class="tsd-parameter">
 <h5 id="port_not_available"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">PORT_NOT_AVAILABLE</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;PORT_NOT_AVAILABLE&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Serial port is not available.</p>
-<p>This error occurs when a requested port cannot be accessed, such as when
-getting previously granted ports fails or when the port is already in use
-by another application.</p>
-<p><strong>Suggested action</strong>: Check if the port is available or being used by another application.</p>
-</div></li>
+<p><strong>Reserved — not emitted in v3.x.</strong> The current implementation uses only
+<code>navigator.serial.requestPort</code>; there is no <code>getPorts</code> API path. Scheduled
+for removal in the next major version.</p>
+<p><strong>Suggested action</strong>: Handle port acquisition failures with
+<a href="#port_open_failed" class="tsd-kind-property">SerialErrorCode.PORT_OPEN_FAILED</a> or
+<a href="#operation_cancelled" class="tsd-kind-property">SerialErrorCode.OPERATION_CANCELLED</a> instead.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-deprecated">
+<h4 class="tsd-anchor-link" id="deprecated-1">Deprecated<a href="#deprecated-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Not emitted at runtime in v3.x. Will be removed in the next major version.</p>
+</div>
+<div class="tsd-tag-see">
+<h4 class="tsd-anchor-link" id="see-2">See<a href="#see-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://github.com/gurezo/web-serial-rxjs/issues/438">Issue #438</a></p>
+</div></div></li>
 <li class="tsd-parameter">
 <h5 id="port_not_open"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">PORT_NOT_OPEN</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;PORT_NOT_OPEN&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Serial port is not open.</p>
-<p>This error occurs when attempting to read from or write to a port that hasn't
-been opened yet. The port must be connected before performing I/O operations.</p>
-<p><strong>Suggested action</strong>: Call SerialClient.connect before reading or writing.</p>
+<p>Emitted when <code>send$</code> or <code>disconnect$</code> is called in an invalid session
+state (for example before <code>connect$</code> completes).</p>
+<p><strong>Suggested action</strong>: Call <a href="../interfaces/index.SerialSession.html#connect" class="tsd-kind-method">SerialSession.connect$</a> before sending data.</p>
 </div></li>
 <li class="tsd-parameter">
 <h5 id="port_open_failed"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">PORT_OPEN_FAILED</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;PORT_OPEN_FAILED&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Failed to open the serial port.</p>
-<p>This error occurs when the port cannot be opened, typically due to incorrect
-connection parameters, hardware issues, or permission problems.</p>
+<p>Emitted on <code>connect$</code> when <code>port.open()</code> rejects.</p>
 <p><strong>Suggested action</strong>: Verify connection parameters and check hardware connections.</p>
 </div></li>
 <li class="tsd-parameter">
@@ -155,9 +173,9 @@ permanently tearing down a session, then create a new one if needed.</p>
 <li class="tsd-parameter">
 <h5 id="unknown"><code class="tsd-tag">Readonly</code><span class="tsd-kind-property">UNKNOWN</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;UNKNOWN&quot;</span></h5>
 <div class="tsd-comment tsd-typography"><p>Unknown error occurred.</p>
-<p>This error code is used for errors that don't fit into any other category.
-The original error details may be available in the error's message or
-<a href="../classes/index.SerialError.html#context" class="tsd-kind-property">context.cause</a> property.</p>
+<p>Emitted as a fallback when dispose or disconnect encounters an error that
+cannot be classified more specifically. The underlying failure is on
+<a href="../classes/index.SerialError.html#context" class="tsd-kind-property">context.cause</a>.</p>
 <p><strong>Suggested action</strong>: Check the error message and <code>context.cause</code> for more details.</p>
 </div></li>
 <li class="tsd-parameter">
@@ -175,7 +193,7 @@ connection loss, hardware issues, or stream errors.</p>
 </div></div><aside class="tsd-sources">
 <ul>
 <li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/errors/serial-error-code.ts#L27" class="external" target="_blank">packages/web-serial-rxjs/src/errors/serial-error-code.ts:27</a></li>
-<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/errors/serial-error-code.ts#L236" class="external" target="_blank">packages/web-serial-rxjs/src/errors/serial-error-code.ts:236</a></li></ul></aside></div>
+<li>Defined in <a href="https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/src/errors/serial-error-code.ts#L244" class="external" target="_blank">packages/web-serial-rxjs/src/errors/serial-error-code.ts:244</a></li></ul></aside></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
