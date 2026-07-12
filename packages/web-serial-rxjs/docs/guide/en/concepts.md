@@ -1,6 +1,6 @@
 # API concepts and design notes
 
-For exhaustive public API specifications, see the [English TypeDoc API Reference](https://gurezo.github.io/web-serial-rxjs/modules.html). This page is a Guide supplement (tables and design notes)—not a TypeDoc substitute.
+For exhaustive public API specifications, see the [English TypeDoc API Reference](../../api/modules.html). This page is a Guide supplement (tables and design notes)—not a TypeDoc substitute.
 
 
 The public surface consists of a single factory (`createSerialSession`), the runtime `SerialSession` interface, one options type, one state union, and two error types.

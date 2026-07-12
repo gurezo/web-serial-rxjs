@@ -1,6 +1,6 @@
 # API の概念と設計メモ
 
-公開 API の網羅的な仕様は [英語 TypeDoc API Reference](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。本ページは Guide 向けの概念補足（表・設計メモ）です。
+公開 API の網羅的な仕様は [英語 TypeDoc API Reference](../../api/modules.html) を参照してください。本ページは Guide 向けの概念補足（表・設計メモ）です。
 
 
 公開 API は、1 つのファクトリ（`createSerialSession`）、1 つのランタイムインターフェイス（`SerialSession`）、1 つの options 型、1 つの状態ユニオン、2 つのエラー型のみで構成されます。

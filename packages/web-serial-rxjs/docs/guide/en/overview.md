@@ -4,7 +4,7 @@
   <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference (TypeDoc)](https://gurezo.github.io/web-serial-rxjs/modules.html).
+This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference (TypeDoc)](../../api/modules.html).
 
 ## Table of Contents
 
@@ -113,10 +113,11 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | Doc | Use it for |
 | --- | --- |
 | **[English Guide index](./README.md)** | Getting Started reading order and full index. |
+| **[日本語 Guide 索引](../ja/README.md)** | Getting Started の読み順と一覧。 |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
 | **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
 | **[Advanced Usage](./advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
-| **[API Reference (TypeDoc)](https://gurezo.github.io/web-serial-rxjs/modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
+| **[API Reference (TypeDoc)](../../api/modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
 | **[v2 → v3 Migration Guide](./migration-v3.md)** ([日本語](../ja/migration-v3.md)) | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](./migration-v2.md)** ([日本語](../ja/migration-v2.md)) | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
 | **[Phase 5 archive (legacy v1 doc)](./archive/migration-phase5.md)** | Historical v1 context only. |

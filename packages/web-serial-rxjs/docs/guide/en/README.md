@@ -1,6 +1,6 @@
 # English Guide
 
-Hand-written Markdown Guide for using `@gurezo/web-serial-rxjs`. For exhaustive public API types, parameters, and return values, see the [English TypeDoc API Reference](https://gurezo.github.io/web-serial-rxjs/modules.html).
+Hand-written Markdown Guide for using `@gurezo/web-serial-rxjs`. For exhaustive public API types, parameters, and return values, see the [English TypeDoc API Reference](../../api/modules.html).
 
 The canonical documentation layout is defined in [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
@@ -31,7 +31,9 @@ When migrating existing code:
 ## Related links
 
 - **Monorepo [README.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** — example apps index, contributing, browser support
-- **English TypeDoc API Reference** — [gurezo.github.io/web-serial-rxjs/modules.html](https://gurezo.github.io/web-serial-rxjs/modules.html)
+- **日本語 Guide** — [日本語 Guide index](../ja/README.md)
+- **Documentation home** — [../../index.html](../../index.html)
+- **English TypeDoc API Reference** — [../../api/modules.html](../../api/modules.html)
 - **Parent issue** — [#453](https://github.com/gurezo/web-serial-rxjs/issues/453) (documentation structure)
 
 ## v3 canonical API highlights

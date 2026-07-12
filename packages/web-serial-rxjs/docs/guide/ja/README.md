@@ -1,6 +1,6 @@
 # 日本語 Guide
 
-`@gurezo/web-serial-rxjs` の利用方法を説明する手書き Markdown Guide です。公開 API の型・引数・戻り値の網羅的な仕様は [英語 TypeDoc API Reference](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。
+`@gurezo/web-serial-rxjs` の利用方法を説明する手書き Markdown Guide です。公開 API の型・引数・戻り値の網羅的な仕様は [英語 TypeDoc API Reference](../../api/modules.html) を参照してください。
 
 canonical なドキュメント構成は [ARCHITECTURE.ja.md](../../ARCHITECTURE.ja.md) を参照してください。
 
@@ -31,7 +31,9 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](../../ARCHITECTURE
 ## 関連リンク
 
 - **モノレポ [README.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** — サンプルアプリ索引、貢献、ブラウザサポート
-- **英語 TypeDoc API Reference** — [gurezo.github.io/web-serial-rxjs/modules.html](https://gurezo.github.io/web-serial-rxjs/modules.html)
+- **English Guide** — [English Guide 索引](../en/README.md)
+- **ドキュメントトップ** — [../../index.html](../../index.html)
+- **英語 TypeDoc API Reference** — [../../api/modules.html](../../api/modules.html)
 - **親 Issue** — [#453](https://github.com/gurezo/web-serial-rxjs/issues/453)（ドキュメント構成整備）
 
 ## v3 canonical API の要点

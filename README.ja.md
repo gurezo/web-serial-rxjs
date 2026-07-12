@@ -89,13 +89,17 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 ## ドキュメント
 
-ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。日本語 Guide は [guide/ja/](packages/web-serial-rxjs/docs/guide/ja/README.md)、English Guide は [guide/en/](packages/web-serial-rxjs/docs/guide/en/README.md) に配置しています。
+ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。
+
+**公開ドキュメントサイト:** [gurezo.github.io/web-serial-rxjs](https://gurezo.github.io/web-serial-rxjs/)
 
 | ドキュメント | 用途 |
 | --- | --- |
 | **この README** | モノレポのハブ：機能要約、サンプル、貢献導線。 |
-| **[日本語 Guide 索引](packages/web-serial-rxjs/docs/guide/ja/README.md)** | Getting Started の読み順と一覧。 |
-| **[English Guide 索引](packages/web-serial-rxjs/docs/guide/en/README.md)** | Getting Started reading order and full index. |
+| **[日本語 Guide（公開サイト）](https://gurezo.github.io/web-serial-rxjs/guide/ja/README.html)** | Getting Started の読み順と一覧（公開サイト）。 |
+| **[English Guide（公開サイト）](https://gurezo.github.io/web-serial-rxjs/guide/en/README.html)** | Getting Started reading order and full index on the published site. |
+| **[API Reference（公開サイト）](https://gurezo.github.io/web-serial-rxjs/api/index.html)** | 英語 TypeDoc API Reference（公開サイト）。 |
+| **[日本語 Guide 索引](packages/web-serial-rxjs/docs/guide/ja/README.md)** | Getting Started の読み順と一覧（ソース）。 |
 | **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
 | **[クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |

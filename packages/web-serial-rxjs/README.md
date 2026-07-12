@@ -89,13 +89,16 @@ pnpm add rxjs
 
 - Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md))
 - Shortest path to an open port: [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/quick-start.md)
-- Browse as one integrated site (TypeDoc): [web-serial-rxjs API Documentation](https://gurezo.github.io/web-serial-rxjs/)
+- Browse the published documentation site: [web-serial-rxjs Documentation](https://gurezo.github.io/web-serial-rxjs/)
+- Browse API Reference (TypeDoc): [web-serial-rxjs API Documentation](https://gurezo.github.io/web-serial-rxjs/api/)
 
 ## Documentation
 
 | Doc | Use it for |
 | --- | --- |
-| [TypeDoc top page](https://gurezo.github.io/web-serial-rxjs/) | Start from overview and move to guides/API in one site |
+| [Documentation home](https://gurezo.github.io/web-serial-rxjs/) | Site landing with Guide (ja/en) and API Reference |
+| [English Guide (site)](https://gurezo.github.io/web-serial-rxjs/guide/en/README.html) | Getting Started reading order on the published site |
+| [API Reference (site)](https://gurezo.github.io/web-serial-rxjs/api/index.html) | English TypeDoc API Reference |
 | [English Guide index](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/README.md) | Getting Started reading order and full index |
 | [Overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md) | Features and the `SerialSession` / `SerialSessionState` map |
 | [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/quick-start.md) | Open a port and wire subscriptions end-to-end |

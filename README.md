@@ -89,12 +89,17 @@ Choosing **`receive$`** versus **`lines$`**—terminal-style mirrors and bufferi
 
 ## Documentation
 
-Documentation is split into **Guide** (how to use; Japanese and English hand-written Markdown) and **API Reference** (English TypeDoc from TypeScript JSDoc). The canonical layout is defined in [Documentation Architecture](packages/web-serial-rxjs/docs/ARCHITECTURE.md) ([日本語](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)). English Guide lives under [guide/en/](packages/web-serial-rxjs/docs/guide/en/README.md); Japanese Guide under [guide/ja/](packages/web-serial-rxjs/docs/guide/ja/README.md).
+Documentation is split into **Guide** (how to use; Japanese and English hand-written Markdown) and **API Reference** (English TypeDoc from TypeScript JSDoc). The canonical layout is defined in [Documentation Architecture](packages/web-serial-rxjs/docs/ARCHITECTURE.md) ([日本語](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)).
+
+**Published documentation site:** [gurezo.github.io/web-serial-rxjs](https://gurezo.github.io/web-serial-rxjs/)
 
 | Doc | Use it for |
 | --- | --- |
 | **This README** | Monorepo hub: feature summary, examples, and contribution links. |
-| **[English Guide index](packages/web-serial-rxjs/docs/guide/en/README.md)** | Getting Started reading order and full index. |
+| **[English Guide (site)](https://gurezo.github.io/web-serial-rxjs/guide/en/README.html)** | Getting Started reading order and full index on the published site. |
+| **[日本語 Guide (site)](https://gurezo.github.io/web-serial-rxjs/guide/ja/README.html)** | Getting Started の読み順と一覧（公開サイト）。 |
+| **[API Reference (site)](https://gurezo.github.io/web-serial-rxjs/api/index.html)** | English TypeDoc API Reference on the published site. |
+| **[English Guide index](packages/web-serial-rxjs/docs/guide/en/README.md)** | Getting Started reading order and full index (source). |
 | **[SerialSession overview](packages/web-serial-rxjs/docs/guide/en/overview.md)** | Full `SerialSession` / `SerialSessionState` map and minimal example. |
 | **[Quick Start](packages/web-serial-rxjs/docs/guide/en/quick-start.md)** | Shortest path to a working open port and subscriptions. |
 | **[Advanced Usage](packages/web-serial-rxjs/docs/guide/en/advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
