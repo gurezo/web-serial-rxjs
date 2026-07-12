@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>API_REFERENCE | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>API_REFERENCE | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
@@ -12,7 +12,7 @@
 <div class="tsd-panel tsd-typography"><h1 id="api-reference" class="tsd-anchor-link">API Reference<a href="#api-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
 <p>The public surface consists of a single factory (<code>createSerialSession</code>), the runtime <code>SerialSession</code> interface, one options type, one state union, and two error types.</p>
 <h2 id="public-exports" class="tsd-anchor-link">Public exports<a href="#public-exports" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-2">createSerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">createTerminalBuffer</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">DEFAULT_TERMINAL_BUFFER_OPTIONS</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialError</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialErrorCode</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionState</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionReceiveReplayOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">TerminalBufferOptions</span><span class="hl-1">,</span><br/><span class="hl-1">} </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span>
+<pre><code class="typescript"><span class="hl-0">import</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-2">createSerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">createTerminalBuffer</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">DEFAULT_TERMINAL_BUFFER_OPTIONS</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialError</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialErrorCode</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">SerialSessionStatus</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSession</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionState</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionFeatureOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialConnectionOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">SerialSessionReceiveReplayOptions</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-0">type</span><span class="hl-1"> </span><span class="hl-2">TerminalBufferOptions</span><span class="hl-1">,</span><br/><span class="hl-1">} </span><span class="hl-0">from</span><span class="hl-1"> </span><span class="hl-3">&#39;@gurezo/web-serial-rxjs&#39;</span><span class="hl-1">;</span>
 </code><button type="button">Copy</button></pre>
 
 <h2 id="deprecated-exports" class="tsd-anchor-link">Deprecated exports<a href="#deprecated-exports" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -43,6 +43,13 @@
 </code><button type="button">Copy</button></pre>
 
 <h2 id="serialsessionoptions" class="tsd-anchor-link">SerialSessionOptions<a href="#serialsessionoptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>SerialSessionOptions</code> composes W3C connection parameters (<code>SerialConnectionOptions</code>) with library-specific session features (<code>SerialSessionFeatureOptions</code>). It is the factory argument for <code>createSerialSession</code>.</p>
+<pre><code class="text">SerialSessionOptions = Partial&lt;SerialConnectionOptions&gt; &amp; SerialSessionFeatureOptions
+</code><button type="button">Copy</button></pre>
+
+<p>See <a href="MIGRATION_V3.html#10-session-options-type-responsibility-audit">Migrating to v3 – §10 Session options type responsibility audit</a> for the audit rationale.</p>
+<h3 id="connection-options-" class="tsd-anchor-link">Connection options (<code>SerialConnectionOptions</code>)<a href="#connection-options-" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Derived from W3C <code>SerialOptions</code> and passed to <code>port.open</code>. All fields are optional at factory time; omitted values fall back to the defaults below.</p>
 <table>
 <thead>
 <tr>
@@ -89,6 +96,20 @@
 <td><code>'none'</code></td>
 <td>Flow control mode.</td>
 </tr>
+</tbody>
+</table>
+<h3 id="session-feature-options-" class="tsd-anchor-link">Session feature options (<code>SerialSessionFeatureOptions</code>)<a href="#session-feature-options-" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Library-specific session features. Not passed to W3C <code>port.open</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
 <tr>
 <td><code>filters</code></td>
 <td><code>SerialPortFilter[]</code> | <code>undefined</code></td>
@@ -461,6 +482,8 @@
 <li><a href="#serialsessionoptions"><span>Serial<wbr/>Session<wbr/>Options</span></a></li>
 <li>
 <ul>
+<li><a href="#connection-options-"><span>Connection options ()</span></a></li>
+<li><a href="#session-feature-options-"><span>Session feature options ()</span></a></li>
 <li><a href="#_"><span></span></a></li>
 <li><a href="#_-1"><span></span></a></li>
 <li><a href="#_-2"><span></span></a></li></ul></li>
