@@ -76,7 +76,7 @@ describe('createAnsiStripper', () => {
 
     expect(output).toContain('合計 36');
     expect(output).toContain('node_modules -> myApp/node_modules');
-    expect(output).not.toMatch(/\u001b\[/);
+    expect(output).not.toContain('\u001b[');
     expect(output).not.toContain('[0m');
     expect(output).not.toContain('[01;34m');
     expect(output).not.toContain('[?2004h');

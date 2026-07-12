@@ -3,8 +3,29 @@ const ESC = '\u001b';
 /** CSI final byte range per ECMA-48. */
 const CSI_FINAL_BYTE = /[@-~]/;
 
-/** OSC terminator: BEL or ST (ESC \). */
-const OSC_TERMINATOR = /(?:\u0007|\u001b\\)/;
+const BEL = '\u0007';
+const OSC_STRING_TERMINATOR = '\u001b\\';
+
+function findOscTerminator(
+  oscBody: string,
+): { index: number; length: number } | null {
+  let earliest: { index: number; length: number } | null = null;
+
+  const belIndex = oscBody.indexOf(BEL);
+  if (belIndex >= 0) {
+    earliest = { index: belIndex, length: 1 };
+  }
+
+  const stIndex = oscBody.indexOf(OSC_STRING_TERMINATOR);
+  if (stIndex >= 0) {
+    const candidate = { index: stIndex, length: OSC_STRING_TERMINATOR.length };
+    if (!earliest || stIndex < earliest.index) {
+      earliest = candidate;
+    }
+  }
+
+  return earliest;
+}
 
 /**
  * Stateful ANSI escape stripper for streaming text chunks.
@@ -77,9 +98,9 @@ export function createAnsiStripper(): AnsiStripper {
       // OSC: ESC ]
       if (code === 0x5d) {
         const oscBody = input.slice(next);
-        const match = OSC_TERMINATOR.exec(oscBody);
-        if (match && match.index !== undefined) {
-          i = escIndex + 1 + match.index + match[0].length;
+        const terminator = findOscTerminator(oscBody);
+        if (terminator) {
+          i = escIndex + 1 + terminator.index + terminator.length;
           continue;
         }
         pending = input.slice(escIndex);
