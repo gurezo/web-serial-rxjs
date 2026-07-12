@@ -6,12 +6,13 @@
  * A TypeScript library that wraps the Web Serial API with a minimal,
  * RxJS-based session surface.
  *
- * ## Public API (v2)
+ * ## Public API
  *
- * The v2 public API intentionally exposes a single, session-oriented surface
- * so that apps (Angular, Vue, React, Svelte, vanilla JS/TS) can drive their
- * UI entirely from `state$` + `isConnected$` + `receive$` + `terminalText$` + `lines$` + `errors$` without rebuilding any
- * state, read loops, or write queues themselves.
+ * The public API exposes a single, session-oriented surface so that apps
+ * (Angular, Vue, React, Svelte, vanilla JS/TS) can drive their UI from
+ * `state$` (canonical lifecycle discriminated union) + `errors$` (error event
+ * channel) + `receive$` + `terminalText$` + `lines$` + convenience streams
+ * such as `isConnected$` without rebuilding state, read loops, or write queues.
  *
  * - {@link createSerialSession} - factory for a {@link SerialSession}
  * - {@link createTerminalBuffer} - terminal-style display text from {@link SerialSession.receive$}
@@ -45,16 +46,28 @@
  *
  * @example
  * ```typescript
- * import { createSerialSession } from '@gurezo/web-serial-rxjs';
+ * import {
+ *   createSerialSession,
+ *   SerialSessionStatus,
+ *   SerialErrorCode,
+ * } from '@gurezo/web-serial-rxjs';
  *
  * const session = createSerialSession({ baudRate: 115200 });
  *
  * if (!session.isBrowserSupported()) {
  *   console.error('Web Serial API is not supported in this browser');
  * } else {
- *   session.state$.subscribe((state) => console.log('state:', state));
+ *   session.state$.subscribe((state) => {
+ *     if (state.status === SerialSessionStatus.Connected) {
+ *       console.log('port:', state.portInfo);
+ *     }
+ *   });
  *   session.receive$.subscribe((chunk) => console.log('rx:', chunk));
- *   session.errors$.subscribe((error) => console.error('err:', error));
+ *   session.errors$.subscribe((error) => {
+ *     if (error.is(SerialErrorCode.READ_FAILED)) {
+ *       console.error(error.context.cause);
+ *     }
+ *   });
  *
  *   session.connect$().subscribe();
  *   session.send$('hello\r\n').subscribe();

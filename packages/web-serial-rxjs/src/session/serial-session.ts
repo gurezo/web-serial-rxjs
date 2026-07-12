@@ -4,11 +4,12 @@ import type { SerialPayload } from '../types';
 import type { SerialSessionState } from './serial-session-state';
 
 /**
- * v2 public API for interacting with the Web Serial API through a
+ * Public API for interacting with the Web Serial API through a
  * minimal, session-oriented surface.
  *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
- * can drive their UI purely from `state$` + `isConnected$` + `receive$` + `terminalText$` + `lines$` + `errors$` and never
+ * can drive their UI from `state$` (canonical lifecycle state) + `errors$`
+ * (error event channel) + `receive$` + `terminalText$` + `lines$` and never
  * have to rebuild BehaviorSubjects, manage a read loop, or serialize writes
  * themselves.
  *
@@ -17,9 +18,20 @@ import type { SerialSessionState } from './serial-session-state';
  *
  * @example
  * ```typescript
+ * import { createSerialSession, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+ *
  * const session = createSerialSession({ baudRate: 115200 });
  *
- * session.state$.subscribe((state) => console.log('state:', state));
+ * session.state$.subscribe((state) => {
+ *   switch (state.status) {
+ *     case SerialSessionStatus.Connected:
+ *       console.log('connected:', state.portInfo);
+ *       break;
+ *     case SerialSessionStatus.Error:
+ *       console.error('error:', state.error);
+ *       break;
+ *   }
+ * });
  * session.receive$.subscribe((chunk) => console.log('rx:', chunk));
  * session.errors$.subscribe((error) => console.error('err:', error));
  *

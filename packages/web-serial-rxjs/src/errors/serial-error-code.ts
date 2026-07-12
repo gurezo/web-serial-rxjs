@@ -221,9 +221,10 @@ export const SerialErrorCode = {
    * Unknown error occurred.
    *
    * This error code is used for errors that don't fit into any other category.
-   * The original error details may be available in the error's message or originalError property.
+   * The original error details may be available in the error's message or
+   * {@link SerialError.context | context.cause} property.
    *
-   * **Suggested action**: Check the error message and originalError for more details.
+   * **Suggested action**: Check the error message and `context.cause` for more details.
    */
   UNKNOWN: 'UNKNOWN',
 } as const;
