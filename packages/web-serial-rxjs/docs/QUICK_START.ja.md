@@ -1,8 +1,8 @@
 # クイックスタート
 
-**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `isConnected$` / `receive$` / `lines$` / `errors$` と各メソッドの一覧は、先に [SerialSession（v2）の概要](./OVERVIEW.ja.md#serialsessionv2の全体像)を参照してください。
+**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./OVERVIEW.ja.md#serialsessionの全体像)を参照してください。
 
-標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。独自区切りや別の分割ルールが必要なときは `receive$` 上に `scan` などで組み立てます（[高度な使用方法](./ADVANCED_USAGE.ja.md#行単位のフレーミング)）。接続の真偽は **`isConnected$`** を使うか、従来どおり `state$` から `map` しても構いません。
+標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。**`isConnected$`** は boolean だけ欲しい場合の convenience stream です。
 
 ### SerialSessionStatus（早見表）
 
@@ -70,7 +70,7 @@ session.disconnect$().subscribe({
 
 ## 破棄する
 
-baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$`（または `destroy$`）を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。
+baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$` を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。（`destroy$` は `dispose$` のエイリアスです。）
 
 ```typescript
 session.dispose$().subscribe({
@@ -84,4 +84,5 @@ session.dispose$().subscribe({
 
 - 公開メソッドとストリームの一覧は [API リファレンス](./API_REFERENCE.ja.md) を参照してください。
 - チャンク単位の受信、送信の順序制御、エラー分岐の詳細、ポートフィルタなどは [高度な使用方法](./ADVANCED_USAGE.ja.md) を参照してください。
+- v2 型モデルからの移行は [v2 → v3 マイグレーション](./MIGRATION_V3.ja.md) を参照してください。
 - v1 からの移行は [v1 → v2 マイグレーション](./MIGRATION_V2.ja.md) を参照してください。

@@ -4,11 +4,11 @@
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The v2 API exposes a single `SerialSession` so applications can drive their UI entirely from `state$` + `isConnected$` + `receive$` + `lines$` + `errors$`, without rebuilding state, read loops, or send queues themselves.
+A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The public API exposes a single `SerialSession` so applications can drive their UI from `state$` (canonical lifecycle state) + `errors$` (error event channel) + `receive$` + `lines$`, without rebuilding state, read loops, or send queues themselves.
 
 ## Table of Contents
 
-- [SerialSession (v2) at a glance](#serialsession-v2-at-a-glance)
+- [SerialSession at a glance](#serialsession-at-a-glance)
 - [Features](#features)
 - [Framework Support](#framework-support)
 - [Browser Support](#browser-support)
@@ -23,11 +23,11 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 
 ## Features
 
-- **Session-oriented reactive API**: a single `SerialSession` exposes `state$`, `isConnected$`, `receive$`, `lines$`, `errors$`, plus `connect$`, `disconnect$`, and `send$`
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, plus convenience streams such as `isConnected$`, and `connect$`, `disconnect$`, and `send$`
 - **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
 - **Ordered send queue**: concurrent `send$` calls are serialised internally in call order, without the caller having to manage a writer
 - **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
-- **Explicit lifecycle**: `state$` emits `idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` so UIs can drive directly from it
+- **Explicit lifecycle**: `state$` emits a discriminated union with `status` (`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`) so UIs can narrow on `state.status` and access per-state data such as `state.portInfo`
 - **TypeScript support**: full TypeScript type definitions included
 - **Framework agnostic**: works with any JavaScript/TypeScript framework or vanilla JavaScript
 
@@ -77,11 +77,11 @@ pnpm add rxjs
 
 **Minimum required version**: RxJS ^7.8.0
 
-## SerialSession (v2) at a glance
+## SerialSession at a glance
 
-The **canonical** v2 map (feature list, the `SerialSession` / `SerialSessionState` tables, and a minimal example) is in the package documentation:
+The **canonical** API map (feature list, the `SerialSession` / `SerialSessionState` tables, and a minimal example) is in the package documentation:
 
-- **[SerialSession (v2) overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** · [日本語](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)
+- **[SerialSession overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** · [日本語](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)
 
 The [npm `README` for `@gurezo/web-serial-rxjs`](packages/web-serial-rxjs/README.md) is a short index; for a first connection, follow [Quick Start](packages/web-serial-rxjs/docs/QUICK_START.md).
 
@@ -92,10 +92,11 @@ Choosing **`receive$`** versus **`lines$`**—terminal-style mirrors and bufferi
 | Doc | Use it for |
 | --- | --- |
 | **This README** | Monorepo hub: feature summary, examples, and contribution links. |
-| **[SerialSession (v2) overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** | Full v2 `SerialSession` / `SerialSessionState` map and minimal example. |
+| **[SerialSession overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** | Full `SerialSession` / `SerialSessionState` map and minimal example. |
 | **[Quick Start](packages/web-serial-rxjs/docs/QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
 | **[Advanced Usage](packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
 | **[API Reference](packages/web-serial-rxjs/docs/API_REFERENCE.md)** | Options, `SerialSessionState`, and `SerialError` details. |
+| **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/MIGRATION_V3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
 
 ## Examples
