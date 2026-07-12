@@ -257,6 +257,8 @@ session.errors$.subscribe((error) => {
 
 上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
 
+全 19 code の runtime emission coverage は [v3 移行ガイド §8](./MIGRATION_V3.ja.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。
+
 | Code                     | `context` の形 | emit されるタイミング                                              |
 | ------------------------ | -------------- | ------------------------------------------------------------------ |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |
@@ -264,13 +266,14 @@ session.errors$.subscribe((error) => {
 | `PORT_OPEN_FAILED` など cause 系 | `{ cause: unknown }` | 下表の各タイミング。`error.is(code)` で narrow してから `context.cause` を参照 |
 | その他                   | `undefined`    | 下表の各タイミング                                                 |
 
+### Implemented（v3.x で emit される）
+
 | Code                     | emit されるタイミング                                              |
 | ------------------------ | ------------------------------------------------------------------ |
-| `BROWSER_NOT_SUPPORTED`  | 生成時／`connect$` 時に `navigator.serial` が無い                  |
-| `PORT_NOT_AVAILABLE`     | 要求ポートにアクセスできない                                       |
+| `BROWSER_NOT_SUPPORTED`  | `connect$` 時に `navigator.serial` が無い                          |
 | `PORT_OPEN_FAILED`       | `port.open()` が reject                                            |
 | `PORT_ALREADY_OPEN`      | `'idle'` / `'error'` 以外で `connect$` を呼んだ                    |
-| `PORT_NOT_OPEN`          | 許可されない状態で `send$` / `disconnect$` を呼んだ                |
+| `PORT_NOT_OPEN`          | 許可されない状態で `send$` または `disconnect$` を呼んだ           |
 | `READ_FAILED`            | 内部 read pump でエラーが発生                                      |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` が reject                      |
 | `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
@@ -280,6 +283,12 @@ session.errors$.subscribe((error) => {
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） |
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
-| `OPERATION_TIMEOUT`      | 内部操作がタイムアウト                                             |
 | `SESSION_DISPOSED`       | `dispose$` 後に `connect$` または `send$` を呼んだ                 |
-| `UNKNOWN`                | 分類不能なエラー。`context.cause` を確認                           |
+| `UNKNOWN`                | dispose / disconnect の分類不能 fallback。`context.cause` を確認     |
+
+### Reserved（v3.x では emit されない・次回 major で削除予定）
+
+| Code                     | 備考                                                               |
+| ------------------------ | ------------------------------------------------------------------ |
+| `PORT_NOT_AVAILABLE`     | **非推奨。** `getPorts` 系 API 未実装のため到達不能。ポート取得失敗は `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` を使用 |
+| `OPERATION_TIMEOUT`      | **非推奨。** timeout / transaction API 未実装のため到達不能        |

@@ -257,6 +257,8 @@ session.errors$.subscribe((error) => {
 
 The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./MIGRATION_V3.md) for the enum-to-const declaration change.
 
+Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](./MIGRATION_V3.md#8-serialerrorcode-runtime-emission-audit).
+
 | Code                     | `context` shape | When it is emitted                                                  |
 | ------------------------ | --------------- | ------------------------------------------------------------------- |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
@@ -264,13 +266,14 @@ The same union is available as a **const object** `SerialErrorCode` (e.g. `Seria
 | Cause-bearing codes (e.g. `PORT_OPEN_FAILED`) | `{ cause: unknown }` | See table below. Narrow with `error.is(code)` before reading `context.cause`. |
 | Other codes              | `undefined`     | See table below.                                                    |
 
+### Implemented (emitted in v3.x)
+
 | Code                     | When it is emitted                                                  |
 | ------------------------ | ------------------------------------------------------------------- |
-| `BROWSER_NOT_SUPPORTED`  | Session construction / `connect$` without `navigator.serial`.       |
-| `PORT_NOT_AVAILABLE`     | Requested port cannot be accessed.                                  |
+| `BROWSER_NOT_SUPPORTED`  | `connect$` without `navigator.serial`.                              |
 | `PORT_OPEN_FAILED`       | `port.open()` rejected.                                             |
 | `PORT_ALREADY_OPEN`      | `connect$` called while not in `'idle'` / `'error'`.                |
-| `PORT_NOT_OPEN`          | `send$` called while not `'connected'`.                             |
+| `PORT_NOT_OPEN`          | `send$` or `disconnect$` called in an invalid session state.        |
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
@@ -280,6 +283,12 @@ The same union is available as a **const object** `SerialErrorCode` (e.g. `Seria
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
-| `OPERATION_TIMEOUT`      | Internal operation timed out.                                       |
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$`.                       |
-| `UNKNOWN`                | Unclassified failure; see `context.cause`.                          |
+| `UNKNOWN`                | Unclassified dispose / disconnect fallback; see `context.cause`.    |
+
+### Reserved (not emitted in v3.x; scheduled for removal in next major)
+
+| Code                     | Notes                                                               |
+| ------------------------ | ------------------------------------------------------------------- |
+| `PORT_NOT_AVAILABLE`     | **Deprecated.** Unreachable without a `getPorts` API. Use `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` for port acquisition failures. |
+| `OPERATION_TIMEOUT`      | **Deprecated.** Unreachable without a timeout / transaction API.    |
