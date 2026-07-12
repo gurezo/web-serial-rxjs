@@ -1,6 +1,6 @@
 # 高度な使用方法
 
-`SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession の概要](./OVERVIEW.ja.md#serialsessionの全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。ライフサイクルとエラーは `state$` の `state.status` narrowing と `errors$` の `error.is()` を優先してください — [v3 への移行](./MIGRATION_V3.ja.md) を参照。
+`SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession の概要](./overview.md#serialsessionの全体像)と[クイックスタート](./quick-start.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。ライフサイクルとエラーは `state$` の `state.status` narrowing と `errors$` の `error.is()` を優先してください — [v3 への移行](./migration-v3.md) を参照。
 
 本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`** は `SerialSession` の組み込みとして用意されています。**`isConnected$`** は v3.x で非推奨です — `state$` narrowing を優先してください。**`sendLine`・`readUntil`・`waitForState`** などは、引き続きコア API の上に組み立てるパターンです（専用の追加 export はありません）。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
 

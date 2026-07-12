@@ -1,8 +1,32 @@
 # クイックスタート
 
-**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./OVERVIEW.ja.md#serialsessionの全体像)を参照してください。
+**最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./overview.md#serialsessionの全体像)を参照してください。
 
 標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。**`isConnected$`** は v3.x で非推奨です — `state$` から derive してください。
+
+## インストール
+
+npm または pnpm でパッケージを導入します。
+
+```bash
+npm install @gurezo/web-serial-rxjs
+# または
+pnpm add @gurezo/web-serial-rxjs
+```
+
+### ピア依存関係
+
+**RxJS** `^7.8.0` をピア依存関係として必要とします。
+
+```bash
+npm install rxjs
+# または
+pnpm add rxjs
+```
+
+モノレポ全体のブラウザサポートやサンプルアプリの索引は [リポジトリ README.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md) を参照してください。
+
+## 接続・受信・送信
 
 ### SerialSessionStatus（早見表）
 
@@ -16,7 +40,7 @@
 | `SerialSessionStatus.Error` | `'error'` | 致命的な失敗（`error` 付き）。 |
 | `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
-詳細は [API リファレンス](./API_REFERENCE.ja.md#serialsessionstate--serialsessionstatus) と [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
+詳細は [概念と設計メモ](./concepts.md#serialsessionstate--serialsessionstatus) と [v3 移行ガイド](./migration-v3.md) を参照してください。
 
 ```typescript
 import { createSerialSession } from '@gurezo/web-serial-rxjs';
@@ -42,7 +66,9 @@ session.connect$().subscribe({
 });
 ```
 
-`state$` の分岐は **`state.status`** を **`SerialSessionStatus`** の定数と比較します:
+## ライフサイクル監視（`state$`）
+
+`state$` の分岐は **`state.status`** を **`SerialSessionStatus`** の定数と比較します。connected 時は TypeScript narrowing により **`state.portInfo`** に型安全にアクセスできます。
 
 ```typescript
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
@@ -57,6 +83,28 @@ session.state$.subscribe((state) => {
 });
 ```
 
+## エラーハンドリング（`errors$`）
+
+**`errors$`** は接続・読み取り・書き込み・クローズで発生するすべての `SerialError` を流す **canonical error event channel** です。`connect$().subscribe({ error })` で受け取るエラーは `errors$` に流れるものと同一インスタンスです。
+
+- **fatal** — read pump の停止やポート teardown を伴う。`state$` が `{ status: 'error', error }` に遷移する
+- **non-fatal** — セッションは継続する（例: `WRITE_FAILED`、`LINE_BUFFER_OVERFLOW`）
+
+```typescript
+import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
+
+session.errors$.subscribe((error) => {
+  if (error.is(SerialErrorCode.READ_FAILED)) {
+    console.error('読み取り失敗:', error.context.cause);
+  }
+  if (error.is(SerialErrorCode.WRITE_FAILED)) {
+    console.warn('送信失敗（セッションは継続）:', error.context.cause);
+  }
+});
+```
+
+エラーコード一覧と `context` の形は [概念と設計メモ](./concepts.md#serialerror--serialerrorcode) を参照してください。
+
 ## 切断する
 
 ポートを閉じつつセッションを再利用可能なままにしたいときは `disconnect$` を呼びます。
@@ -67,7 +115,7 @@ session.disconnect$().subscribe({
 });
 ```
 
-## 破棄する
+## 破棄する（リソース解放）
 
 baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$` を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。
 
@@ -81,7 +129,7 @@ session.dispose$().subscribe({
 
 ## 次のステップ
 
-- 公開メソッドとストリームの一覧は [API リファレンス](./API_REFERENCE.ja.md) を参照してください。
-- チャンク単位の受信、送信の順序制御、エラー分岐の詳細、ポートフィルタなどは [高度な使用方法](./ADVANCED_USAGE.ja.md) を参照してください。
-- v2 型モデルからの移行は [v2 → v3 マイグレーション](./MIGRATION_V3.ja.md) を参照してください。
-- v1 からの移行は [v1 → v2 マイグレーション](./MIGRATION_V2.ja.md) を参照してください。
+- 公開メソッドとストリームの一覧は [概念と設計メモ](./concepts.md) を参照してください。
+- チャンク単位の受信、送信の順序制御、エラー分岐の詳細、ポートフィルタなどは [高度な使用方法](./advanced-usage.md) を参照してください。
+- v2 型モデルからの移行は [v2 → v3 マイグレーション](./migration-v3.md) を参照してください。
+- v1 からの移行は [v1 → v2 マイグレーション](./migration-v2.md) を参照してください。

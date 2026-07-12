@@ -1,4 +1,7 @@
-# API リファレンス
+# API の概念と設計メモ
+
+公開 API の網羅的な仕様は [英語 TypeDoc API Reference](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。本ページは Guide 向けの概念補足（表・設計メモ）です。
+
 
 公開 API は、1 つのファクトリ（`createSerialSession`）、1 つのランタイムインターフェイス（`SerialSession`）、1 つの options 型、1 つの状態ユニオン、2 つのエラー型のみで構成されます。
 
@@ -24,7 +27,7 @@ import {
 
 ## Deprecated exports
 
-以下は v3.x で引き続き public export から利用できますが、canonical API ではありません。次回 major version で削除予定です。詳細は [v3 への移行 – §9 `assertNever` public export 監査](./MIGRATION_V3.ja.md#9-public-export-監査) を参照してください。
+以下は v3.x で引き続き public export から利用できますが、canonical API ではありません。次回 major version で削除予定です。詳細は [v3 への移行 – §9 `assertNever` public export 監査](./migration-v3.md#9-public-export-監査) を参照してください。
 
 | Export | 状態 | 移行先 |
 | --- | --- | --- |
@@ -58,7 +61,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 SerialSessionOptions = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
 ```
 
-詳細は [v3 への移行 – §10 Session options 型責務監査](./MIGRATION_V3.ja.md#10-session-options-型責務監査) を参照してください。
+詳細は [v3 への移行 – §10 Session options 型責務監査](./migration-v3.md#10-session-options-型責務監査) を参照してください。
 
 ### Connection options（`SerialConnectionOptions`）
 
@@ -186,7 +189,7 @@ session.state$
   });
 ```
 
-v2 からの移行は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
+v2 からの移行は [v3 移行ガイド](./migration-v3.md) を参照してください。
 
 ## SerialSession
 
@@ -238,7 +241,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `destroy$(): Observable<void>`
 
-**非推奨** — `dispose$()` のエイリアスです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。詳細は [v3 移行ガイド – destroy$ の非推奨化](./MIGRATION_V3.ja.md#4-destroy-の非推奨化) を参照してください。
+**非推奨** — `dispose$()` のエイリアスです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。詳細は [v3 移行ガイド – destroy$ の非推奨化](./migration-v3.md#4-destroy-の非推奨化) を参照してください。
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -246,15 +249,15 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `isConnected$: Observable<boolean>`
 
-**非推奨** — `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing するか、`state$` から derive してください。詳細は [v3 移行ガイド – isConnected$ の非推奨化](./MIGRATION_V3.ja.md#6-isconnected-の非推奨化) を参照してください。
+**非推奨** — `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing するか、`state$` から derive してください。詳細は [v3 移行ガイド – isConnected$ の非推奨化](./migration-v3.md#6-isconnected-の非推奨化) を参照してください。
 
 ### `portInfo$: Observable<SerialPortInfo | null>`
 
-**非推奨** — アクティブポートの `SerialPort.getInfo()` スナップショットを emit する convenience stream です。ポートが開いていないときは `null` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./MIGRATION_V3.ja.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
+**非推奨** — アクティブポートの `SerialPort.getInfo()` スナップショットを emit する convenience stream です。ポートが開いていないときは `null` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./migration-v3.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
 
 ### `getPortInfo(): SerialPortInfo | null`
 
-**非推奨** — 最後の `portInfo$` 値の同期読み取りです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./MIGRATION_V3.ja.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
+**非推奨** — 最後の `portInfo$` 値の同期読み取りです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./migration-v3.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
 
 ### `errors$: Observable<SerialError>`
 
@@ -284,7 +287,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 `SerialError` は `Error` を継承し、`code: SerialErrorCode` と code 別の構造化メタデータ `context` を持ちます。`is(code)` は `code` と `context` を literal 型に narrow します。
 
-cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの canonical source です。`originalError` は後方互換のため v3.x に残っていますが **非推奨** で、次回 major version で削除予定です。詳細は [v3 移行ガイド – originalError の非推奨化](./MIGRATION_V3.ja.md#3-originalerror-の非推奨化) を参照してください。
+cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの canonical source です。`originalError` は後方互換のため v3.x に残っていますが **非推奨** で、次回 major version で削除予定です。詳細は [v3 移行ガイド – originalError の非推奨化](./migration-v3.md#3-originalerror-の非推奨化) を参照してください。
 
 ```typescript
 session.errors$.subscribe((error) => {
@@ -302,9 +305,9 @@ try {
 }
 ```
 
-上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。
+上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./migration-v3.md) を参照してください。
 
-全 19 code の runtime emission coverage は [v3 移行ガイド §8](./MIGRATION_V3.ja.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。
+全 19 code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。
 
 | Code                     | `context` の形 | emit されるタイミング                                              |
 | ------------------------ | -------------- | ------------------------------------------------------------------ |

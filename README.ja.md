@@ -81,25 +81,26 @@ pnpm add rxjs
 
 機能一覧と **`SerialSession` 早見表**、**`SerialSessionState` 表**、**最小サンプル**の正本は次のパッケージドキュメントにあります。
 
-- **[SerialSession の概要](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)**（[English](packages/web-serial-rxjs/docs/OVERVIEW.md)）
+- **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)**（[English](packages/web-serial-rxjs/docs/OVERVIEW.md)）
 
-npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md) は短い目次に留め、初回接続の手順は [クイックスタート](packages/web-serial-rxjs/docs/QUICK_START.ja.md) を参照してください。
+npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md) は短い目次に留め、初回接続の手順は [クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md) を参照してください。
 
 **`receive$`** と **`lines$`** をいつ使うか（ターミナル表示・バッファと、改行区切りログ・解析の違い）は [パッケージ README](packages/web-serial-rxjs/README.ja.md) の「`receive$` と `lines$`」にまとめています。
 
 ## ドキュメント
 
-ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。Guide は今後 `packages/web-serial-rxjs/docs/guide/{ja,en}/` へ移行します。移行完了までは下記リンクは現行パスを指します。
+ドキュメントは **Guide**（使い方。日本語・英語の手書き Markdown）と **API Reference**（英語 TypeDoc。TypeScript JSDoc から生成）に分離します。canonical な構成は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)（[English](packages/web-serial-rxjs/docs/ARCHITECTURE.md)）に定義しています。日本語 Guide は [guide/ja/](packages/web-serial-rxjs/docs/guide/ja/README.md) に配置しています。
 
 | ドキュメント | 用途 |
 | --- | --- |
 | **この README** | モノレポのハブ：機能要約、サンプル、貢献導線。 |
-| **[SerialSession の概要](packages/web-serial-rxjs/docs/OVERVIEW.ja.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
-| **[クイックスタート](packages/web-serial-rxjs/docs/QUICK_START.ja.md)** | 最短でポートを開いて購読するところまで。 |
-| **[高度な使用方法](packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
-| **[API リファレンス](packages/web-serial-rxjs/docs/API_REFERENCE.ja.md)** | オプション、`SerialSessionState`、`SerialError` の詳細。 |
-| **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/MIGRATION_V3.ja.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
-| **[v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/MIGRATION_V2.ja.md)** | 削除された v1 API からの対応表。 |
+| **[日本語 Guide 索引](packages/web-serial-rxjs/docs/guide/ja/README.md)** | Getting Started の読み順と一覧。 |
+| **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
+| **[クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md)** | 最短でポートを開いて購読するところまで。 |
+| **[高度な使用方法](packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
+| **[API の概念と設計メモ](packages/web-serial-rxjs/docs/guide/ja/concepts.md)** | オプション、`SerialSessionState`、`SerialError` の表形式補足。 |
+| **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
+| **[v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)** | 削除された v1 API からの対応表。 |
 
 ## サンプル
 
@@ -112,7 +113,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - RxJS を使用した TypeScript の例
 - **[Vue](apps/example-vue/)** - Composition API を使用した Vue 3 の例
 
-各サンプルは **connect・受信（ターミナル表示は `\r` を保持するため `receive$` で連結）・send・disconnect** の最小動作確認用です。**`lines$`** は改行区切りログや解析向けであり、対話的シェル出力のミラーには **`receive$`** を使ってください。行フレーミングや応用パターンの詳細は [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.ja.md) に集約しています。
+各サンプルは **connect・受信（ターミナル表示は `\r` を保持するため `receive$` で連結）・send・disconnect** の最小動作確認用です。**`lines$`** は改行区切りログや解析向けであり、対話的シェル出力のミラーには **`receive$`** を使ってください。行フレーミングや応用パターンの詳細は [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md) に集約しています。
 
 各例には、セットアップと使用方法の説明を含む README が含まれています。
 

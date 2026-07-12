@@ -45,7 +45,7 @@ session.send$('hi').subscribe();
 | `readableToObservable`            | 不要。`receive$` がストリームを提供します                        |
 | `buildRequestOptions`             | `createSerialSession` に `filters` を渡すだけで OK               |
 
-`SerialError` と `SerialErrorCode` は v2 では v1 と同一です。v3 では `SerialErrorCode` が const object + 型エイリアスへ変わります（[v3 移行ガイド](./MIGRATION_V3.ja.md) を参照）。ランタイムのメンバー名と値は不変です。
+`SerialError` と `SerialErrorCode` は v2 では v1 と同一です。v3 では `SerialErrorCode` が const object + 型エイリアスへ変わります（[v3 移行ガイド](./migration-v3.md) を参照）。ランタイムのメンバー名と値は不変です。
 
 ## メソッド／フィールド対応表
 
@@ -67,7 +67,7 @@ session.send$('hi').subscribe();
 
 ## `state$` の形の変更
 
-> **注記（v3）:** v3 では `state$` が再び変更され、フラットな文字列から `status` と variant ごとのフィールド（`portInfo`、`error`）を持つ discriminated union になりました。定数は `SerialSessionStatus` に改名されています。v3 を利用している、または v2 型から移行する場合は、以下のパターンではなく [v3 への移行](./MIGRATION_V3.ja.md) を参照してください。
+> **注記（v3）:** v3 では `state$` が再び変更され、フラットな文字列から `status` と variant ごとのフィールド（`portInfo`、`error`）を持つ discriminated union になりました。定数は `SerialSessionStatus` に改名されています。v3 を利用している、または v2 型から移行する場合は、以下のパターンではなく [v3 への移行](./migration-v3.md) を参照してください。
 
 v1 の `SerialState` は `{ connected: true, connecting: false, ... }` のような discriminated object でした。v2 では同じ文字列を **const オブジェクト**と型エイリアスとして提供するため、`SerialSessionState.Connected` でも `'connected'` でも分岐・比較できます。
 

@@ -1,10 +1,10 @@
 # SerialSession の概要
 
 <p align="center">
-  <img src="../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
+  <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API リファレンス](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。
+このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](https://gurezo.github.io/web-serial-rxjs/modules.html) を参照してください。
 
 ## 目次
 
@@ -16,13 +16,13 @@
 
 ## ドキュメント
 
-TypeDoc のトップページから、まず以下を参照してください。
+まず以下を参照してください。
 
-- [クイックスタート](./QUICK_START.ja.md)
-- [高度な使用方法](./ADVANCED_USAGE.ja.md)
-- [API の概念と設計メモ](./API_REFERENCE.ja.md)
-- [v2 から v3 への移行ガイド](./MIGRATION_V3.ja.md)
-- [v1 から v2 への移行ガイド](./MIGRATION_V2.ja.md)
+- [クイックスタート](./quick-start.md)
+- [高度な使用方法](./advanced-usage.md)
+- [API の概念と設計メモ](./concepts.md)
+- [v2 から v3 への移行ガイド](./migration-v3.md)
+- [v1 から v2 への移行ガイド](./migration-v2.md)
 
 ## 機能
 
@@ -77,11 +77,11 @@ TypeDoc のトップページから、まず以下を参照してください。
 | `SerialSessionStatus.Error` | `'error'` | 接続まわりの致命エラー。`error` 付き。 |
 | `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
-**`receive$` と `lines$`:** 機器から来たバイト列を**そのまま**画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./ADVANCED_USAGE.ja.md)）。
+**`receive$` と `lines$`:** 機器から来たバイト列を**そのまま**画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。
 
-**`isConnected$`（非推奨 convenience）** — 読み取り専用の `Observable<boolean>` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。boolean だけ欲しい UI 分岐では `state$` から derive するか、`state.status === SerialSessionStatus.Connected` で narrowing してください。詳細は [v3 移行ガイド](./MIGRATION_V3.ja.md#6-isconnected-の非推奨化) を参照してください。
+**`isConnected$`（非推奨 convenience）** — 読み取り専用の `Observable<boolean>` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。boolean だけ欲しい UI 分岐では `state$` から derive するか、`state.status === SerialSessionStatus.Connected` で narrowing してください。詳細は [v3 移行ガイド](./migration-v3.md#6-isconnected-の非推奨化) を参照してください。
 
-**`lines$`（行区切り）** — 組み込みの行分割。ターミナルのミラーや `\r` を保持したいときは **`receive$`** を購読します（[高度な使用方法 — 行単位のフレーミング](./ADVANCED_USAGE.ja.md)）。
+**`lines$`（行区切り）** — 組み込みの行分割。ターミナルのミラーや `\r` を保持したいときは **`receive$`** を購読します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。
 
 ### 最小サンプル
 
@@ -106,16 +106,17 @@ session.connect$().subscribe();
 session.send$('hello\r\n').subscribe();
 ```
 
-実アプリでは `connect$` / `send$` の `subscribe` で `error` も扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](./QUICK_START.ja.md) を参照してください。
+実アプリでは `connect$` / `send$` の `subscribe` で `error` も扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](./quick-start.md) を参照してください。
 
 ## ドキュメント索引
 
 | ドキュメント | 用途 |
 | --- | --- |
+| **[日本語 Guide 索引](./README.md)** | Getting Started の読み順と一覧。 |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
-| **[クイックスタート](./QUICK_START.ja.md)** | 最短でポートを開いて購読するところまで。 |
-| **[高度な使用方法](./ADVANCED_USAGE.ja.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
-| **[API リファレンス](https://gurezo.github.io/web-serial-rxjs/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細（TypeDoc）。表・図は [GitHub](./API_REFERENCE.ja.md) も参照。 |
-| **[v2 → v3 マイグレーション](./MIGRATION_V3.ja.md)**（[English](./MIGRATION_V3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
-| **[v1 → v2 マイグレーション](./MIGRATION_V2.ja.md)**（[English](./MIGRATION_V2.md)） | 削除された v1 API からの対応表。 |
-| **[Phase 5（アーカイブ）](./archive/MIGRATION_PHASE5.ja.md)** | 旧 v1 ドキュメントの参照用。 |
+| **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
+| **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
+| **[API Reference（TypeDoc）](https://gurezo.github.io/web-serial-rxjs/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
+| **[v2 → v3 マイグレーション](./migration-v3.md)**（[English](../../MIGRATION_V3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
+| **[v1 → v2 マイグレーション](./migration-v2.md)**（[English](../../MIGRATION_V2.md)） | 削除された v1 API からの対応表。 |
+| **[Phase 5（アーカイブ）](./archive/migration-phase5.md)** | 旧 v1 ドキュメントの参照用。 |
