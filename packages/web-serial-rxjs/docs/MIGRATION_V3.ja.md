@@ -393,6 +393,62 @@ session.state$.subscribe((state) => {
 
 ---
 
+## 8. `SerialErrorCode` runtime emission 監査
+
+public API contract として定義されている `SerialErrorCode` のうち、一部は v3.x の runtime implementation から emit されていませんでした。到達不能な error handling を防ぐため、全 19 code の emission coverage を監査し（[#438](https://github.com/gurezo/web-serial-rxjs/issues/438)）、結果を本セクションと [API リファレンス](./API_REFERENCE.ja.md#serialerror--serialerrorcode) に反映しました。
+
+### 分類
+
+| 分類 | 件数 | 説明 |
+| --- | --- | --- |
+| **Implemented** | 17 | v3.x で runtime から emit される（または factory 時に throw される） |
+| **Reserved** | 2 | public API に存在するが v3.x では emit されない。次回 major version で削除予定 |
+
+### Reserved code（v3.x では emit されない）
+
+| Code | 理由 | 代替 |
+| --- | --- | --- |
+| `PORT_NOT_AVAILABLE` | 現行実装は `navigator.serial.requestPort` のみ使用。`getPorts` 系 API 未実装のため emit 経路がない | ポート取得失敗は `PORT_OPEN_FAILED` または `OPERATION_CANCELLED` を参照 |
+| `OPERATION_TIMEOUT` | timeout / prompt detection / transaction API が未実装 | 該当なし（将来 API 追加時に再評価） |
+
+v3.x では `@deprecated` 注記のみ付与し、runtime 値と export は維持します。削除は次回 major version に集約します。
+
+### Implemented code 一覧
+
+| Code | emit 箇所 | fatal / non-fatal | `context` | テスト |
+| --- | --- | --- | --- | --- |
+| `BROWSER_NOT_SUPPORTED` | `connect$`（`navigator.serial` なし） | non-fatal | `undefined` | 統合 |
+| `PORT_OPEN_FAILED` | `connect$`（`port.open()` reject） | fatal | `{ cause }` | 統合 |
+| `PORT_ALREADY_OPEN` | `connect$`（`'idle'` / `'error'` 以外） | non-fatal | `undefined` | 統合 |
+| `PORT_NOT_OPEN` | `send$` / `disconnect$`（不正状態） | non-fatal | `undefined` | 統合 |
+| `READ_FAILED` | read pump エラー | fatal | `{ cause }` | 統合 |
+| `WRITE_FAILED` | `send$` 書き込み失敗 | non-fatal | `{ cause }` | 統合 |
+| `CONNECTION_LOST` | `port.close()` 失敗 / ストリーム切断 | fatal | `{ cause }` | 統合 |
+| `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `undefined` | 単体 + 統合 |
+| `OPERATION_CANCELLED` | `requestPort` ダイアログキャンセル | fatal | `{ cause }` | 統合 |
+| `LINE_BUFFER_OVERFLOW` | `lines$` tail 超過 | non-fatal | `{ maxChars }` | 統合 |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | throw | `undefined` | 単体 + 統合 |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `undefined` | 単体 |
+| `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `undefined` | 単体 |
+| `INVALID_CONNECTION_OPTIONS` | factory | throw | `undefined` | 単体 + 統合 |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` 超過 | non-fatal | `{ maxChars, bufferSize }` | 統合 |
+| `SESSION_DISPOSED` | `dispose$` 後の `connect$` / `send$` | fatal | `undefined` | 統合 |
+| `UNKNOWN` | dispose / disconnect の分類不能 fallback | fatal | `{ cause }` | 単体 |
+
+fatal / non-fatal の判定は `reportError` 経由の `ERROR_SEVERITY` に従います。factory throw の `INVALID_*` code は `reportError` を通らず、呼び出し元に直接 throw されます。
+
+### 移行チェックリスト
+
+- [ ] `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` 向けの error handling を削除する（v3.x では到達しない）。
+- [ ] ポート取得失敗は `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` で処理する。
+- [ ] 全 code の emit 条件は [API リファレンス – SerialError / SerialErrorCode](./API_REFERENCE.ja.md#serialerror--serialerrorcode) を参照する。
+
+### 後続作業
+
+validation error（`INVALID_*`）への structured context 追加は [#439](https://github.com/gurezo/web-serial-rxjs/issues/439) で実施予定です。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)
