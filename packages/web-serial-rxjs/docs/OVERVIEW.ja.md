@@ -26,7 +26,7 @@ TypeDoc のトップページから、まず以下を参照してください。
 
 ## 機能
 
-- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（error event channel）/ `receive$` / `lines$` と convenience stream の `isConnected$`、`connect$` / `disconnect$` / `dispose$` / `send$` を公開
+- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（error event channel）/ `receive$` / `lines$` と `connect$` / `disconnect$` / `dispose$` / `send$` を公開（`isConnected$` は v3.x で非推奨の convenience stream）
 - **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます
 - **順序保証された送信キュー**: 並行する `send$` 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます
 - **統一エラーチャネル**: すべての I/O エラーは `SerialError` に正規化され `errors$` に多重化されます
@@ -52,7 +52,7 @@ TypeDoc のトップページから、まず以下を参照してください。
 | `state$` | **Canonical 接続ライフサイクル** — discriminated union（`status` + 必要に応じ `portInfo` / `error`）。購読時に現在値をリプレイ。分岐は **`SerialSessionStatus`** との比較を推奨。 |
 | `SerialSessionStatus` | **状態定数** — エクスポートされる const object（例: `SerialSessionStatus.Connected` → `'connected'`）。`state$.status` と比較する。 |
 | `SerialSessionState` | **`state$` の payload 型** — discriminated union。 |
-| `isConnected$` | **接続中フラグ（convenience）** — `state$.status` が `SerialSessionStatus.Connected` のときだけ `true`。フル lifecycle UI には `state$` を優先。 |
+| `isConnected$` | **非推奨（convenience）** — `state$.status` が `SerialSessionStatus.Connected` のときだけ `true`。`state$` narrowing または derive を優先。 |
 | `receive$` | **生のデコードチャンク** — UTF-8 テキストを read pump が返すとおりに受け取る（行揃えではない。マルチバイト安全）。`\r` 等も保持。**ターミナル風の表示**や `\r` による上書き表示向け。 |
 | `terminalText$` | **ターミナル表示向けの累積テキスト** — `receive$` 由来の表示用テキスト。`\r` による上書きを折りたたみつつ通常の改行挙動は維持します。既定ではプレーンテキスト UI 向けに ANSI エスケープを除去します（生データは `receive$`）。ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持します（`SerialSessionOptions.terminalBuffer` で変更可能）。 |
 | `lines$` | **行単位の受信** — `\n` / `\r\n` / 内部の `\r` など実装に従い 1 行ずつ emit。**ログ・1 行ごとの解析**向け。`\r` をそのまま残す必要がある raw ターミナル表示には向かない。 |
@@ -79,7 +79,7 @@ TypeDoc のトップページから、まず以下を参照してください。
 
 **`receive$` と `lines$`:** 機器から来たバイト列を**そのまま**画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./ADVANCED_USAGE.ja.md)）。
 
-**`isConnected$`（convenience）** — 読み取り専用の `Observable<boolean>` です。boolean だけ欲しい UI 分岐に使います。スピナー、エラーバナー、port info には **`state$`** の `state.status` narrowing を優先してください。
+**`isConnected$`（非推奨 convenience）** — 読み取り専用の `Observable<boolean>` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。boolean だけ欲しい UI 分岐では `state$` から derive するか、`state.status === SerialSessionStatus.Connected` で narrowing してください。詳細は [v3 移行ガイド](./MIGRATION_V3.ja.md#6-isconnected-の非推奨化) を参照してください。
 
 **`lines$`（行区切り）** — 組み込みの行分割。ターミナルのミラーや `\r` を保持したいときは **`receive$`** を購読します（[高度な使用方法 — 行単位のフレーミング](./ADVANCED_USAGE.ja.md)）。
 

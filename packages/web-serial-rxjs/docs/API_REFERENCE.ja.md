@@ -139,6 +139,7 @@ interface SerialSession {
   destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
+  /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing してください。次回 major version で削除予定です。 */
   readonly isConnected$: Observable<boolean>;
   /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing し `state.portInfo` を使用してください。次回 major version で削除予定です。 */
   readonly portInfo$: Observable<SerialPortInfo | null>;
@@ -184,7 +185,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `isConnected$: Observable<boolean>`
 
-convenience stream: `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。フル lifecycle や `state.portInfo` が必要な場合は `state$` を優先してください。
+**非推奨** — `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing するか、`state$` から derive してください。詳細は [v3 移行ガイド – isConnected$ の非推奨化](./MIGRATION_V3.ja.md#6-isconnected-の非推奨化) を参照してください。
 
 ### `portInfo$: Observable<SerialPortInfo | null>`
 

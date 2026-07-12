@@ -2,7 +2,7 @@
 
 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read [SerialSession overview](./OVERVIEW.md#serialsession-at-a-glance) and [Quick Start](./QUICK_START.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the overview defers on purpose. For lifecycle and error patterns, prefer `state$` with `state.status` narrowing and `errors$` with `error.is()` — see [Migrating to v3](./MIGRATION_V3.md).
 
-This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`**, **`isConnected$`**, and the imperative methods cover common cases. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
+This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`** and the imperative methods cover common cases. **`isConnected$`** is deprecated in v3.x — prefer `state$` narrowing. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 
 ## Line Framing (built-in `lines$` vs custom framing on `receive$`)
 
@@ -39,17 +39,25 @@ Many embedded shells use `\r\n` line endings. The default `lines$` already norma
 
 **Prompts and data without a newline:** `lines$` only emits when a line ending is recognised. If the device prints a **prompt** or **partial line** with no `\n` / `\r\n` yet, use accumulation on `receive$` (see [readUntil pattern](#readuntil-pattern-readuntil--prompt-style-reads) below) instead of waiting for `lines$`.
 
-## Connected boolean (UI) (`isConnected$`)
+## Connected boolean (UI) (`state$` narrowing)
 
-For a simple "is the port open?" flag for buttons or templates, **`isConnected$`** is a convenience stream derived from `state$` with `distinctUntilChanged`. For full lifecycle UI, prefer `state$` directly (see [State-driven UI](#state-driven-ui) below):
+Even when you only need an "is the port open?" flag for buttons or templates, prefer **`state$`** as the canonical API. Narrow on `state.status === SerialSessionStatus.Connected` so TypeScript keeps connected-state type information. Derive a boolean from `state$` when your UI only needs a flag:
 
 ```typescript
-session.isConnected$.subscribe((isOpen) => {
+import { distinctUntilChanged, map } from 'rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+const isConnected$ = session.state$.pipe(
+  map((state) => state.status === SerialSessionStatus.Connected),
+  distinctUntilChanged(),
+);
+
+isConnected$.subscribe((isOpen) => {
   // enable / disable actions
 });
 ```
 
-If you need a custom rule, you can still derive from `state$` with `map`. Prefer driving full UI from `state$` when you need spinners and multiple phases (see [State-driven UI](#state-driven-ui) below).
+**`isConnected$`** is deprecated in v3.x. For full lifecycle UI, prefer driving from `state$` directly (see [State-driven UI](#state-driven-ui) below).
 
 ## Send line (`sendLine` / `sendLine$` pattern)
 

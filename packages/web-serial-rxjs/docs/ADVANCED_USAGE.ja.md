@@ -2,7 +2,7 @@
 
 `SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession の概要](./OVERVIEW.ja.md#serialsessionの全体像)と[クイックスタート](./QUICK_START.ja.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。ライフサイクルとエラーは `state$` の `state.status` narrowing と `errors$` の `error.is()` を優先してください — [v3 への移行](./MIGRATION_V3.ja.md) を参照。
 
-本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`** と **`isConnected$`** は `SerialSession` の組み込みとして用意されています。**`sendLine`・`readUntil`・`waitForState`** などは、引き続きコア API の上に組み立てるパターンです（専用の追加 export はありません）。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
+本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`** は `SerialSession` の組み込みとして用意されています。**`isConnected$`** は v3.x で非推奨です — `state$` narrowing を優先してください。**`sendLine`・`readUntil`・`waitForState`** などは、引き続きコア API の上に組み立てるパターンです（専用の追加 export はありません）。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
 
 ## 行単位のフレーミング（組み込み `lines$` と `receive$` 上のカスタム分割）
 
@@ -37,17 +37,25 @@ customLines$
 
 **プロンプトや改行なしのデータ:** `lines$` は改行が揃うまで emit しません。デバイスが **改行（`\n` / `\r\n`）なし**でプロンプトや行の途中だけを送る場合は、`lines$` を待たず **`receive$` でバッファを積み上げる**（下の「readUntil パターン」）方が向いています。
 
-## 接続中フラグ（`isConnected$`）
+## 接続中フラグ（`state$` narrowing）
 
-ボタンの有効／無効など「接続済みかどうか」だけが欲しい場合は **`isConnected$`**（`state$` から `distinctUntilChanged` 付きで派生した convenience stream）を使えます。多段階の UI では下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
+ボタンの有効／無効など「接続済みかどうか」だけが欲しい場合も、**`state$`** を canonical API として使います。`state.status === SerialSessionStatus.Connected` で narrowing すれば、TypeScript が connected state の型情報を保持します。boolean だけ必要な UI では `state$` から derive してください。
 
 ```typescript
-session.isConnected$.subscribe((isOpen) => {
+import { distinctUntilChanged, map } from 'rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+const isConnected$ = session.state$.pipe(
+  map((state) => state.status === SerialSessionStatus.Connected),
+  distinctUntilChanged(),
+);
+
+isConnected$.subscribe((isOpen) => {
   // 操作の有効化など
 });
 ```
 
-独自の判定が必要な場合は、従来どおり `state$` から `map` しても構いません。`connecting` など多段階の UI では、真偽値ではなく下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
+**`isConnected$`** は v3.x で非推奨です。多段階の UI では下記の [state$ 駆動の UI](#state-駆動の-ui) のように `state$` 全体を使う方が分かりやすいです。
 
 ## 1 行送信（`sendLine` / `sendLine$` 相当）
 

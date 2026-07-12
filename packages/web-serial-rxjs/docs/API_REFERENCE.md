@@ -139,6 +139,7 @@ interface SerialSession {
   destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
+  /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected}. Scheduled for removal in the next major version. */
   readonly isConnected$: Observable<boolean>;
   /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected} and `state.portInfo`. Scheduled for removal in the next major version. */
   readonly portInfo$: Observable<SerialPortInfo | null>;
@@ -184,7 +185,7 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 
 ### `isConnected$: Observable<boolean>`
 
-Convenience stream: `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Prefer `state$` when you need full lifecycle phases or `state.portInfo`.
+**Deprecated** — `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` or derive a boolean from `state$`. See [Migrating to v3 – isConnected$ deprecation](./MIGRATION_V3.md#6-isconnected-deprecation).
 
 ### `portInfo$: Observable<SerialPortInfo | null>`
 

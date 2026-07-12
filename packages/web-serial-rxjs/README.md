@@ -21,6 +21,10 @@ Supported desktop browsers:
 
 `SerialSession.isBrowserSupported()` returns a synchronous `boolean` for feature detection before `connect$`.
 
+## Connection state (lifecycle UI)
+
+Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. `isConnected$` remains available in v3.x but is **deprecated** — see [Migrating to v3](./docs/MIGRATION_V3.md#6-isconnected-deprecation).
+
 ## Port info (device identification)
 
 After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. `getPortInfo()` and `portInfo$` remain available in v3.x but are **deprecated**; migrate to `state$` narrowing. `getCurrentPort()` returns the underlying `SerialPort` while connected; do not call `close()` on it—use `disconnect$` for lifecycle.
