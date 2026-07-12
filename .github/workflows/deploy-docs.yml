@@ -8,6 +8,7 @@ on:
       - 'package.json'
       - 'packages/web-serial-rxjs/src/**'
       - 'packages/web-serial-rxjs/typedoc.json'
+      - 'packages/web-serial-rxjs/scripts/**'
       - 'packages/web-serial-rxjs/docs/**'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
