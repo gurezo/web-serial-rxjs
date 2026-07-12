@@ -174,7 +174,6 @@ interface SerialSession {
 
   /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing し `state.portInfo` を使用してください。次回 major version で削除予定です。 */
   getPortInfo(): SerialPortInfo | null;
-  getCurrentPort(): SerialPort | null;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -217,10 +216,6 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 ### `getPortInfo(): SerialPortInfo | null`
 
 **非推奨** — 最後の `portInfo$` 値の同期読み取りです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./MIGRATION_V3.ja.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
-
-### `getCurrentPort(): SerialPort | null`
-
-接続中は内部の `SerialPort` を、それ以外は `null` を返します。`port.close()` の直接呼び出しやストリームの差し替えは session lifecycle と競合するため避けてください。デバイス識別には `state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を優先してください。
 
 ### `errors$: Observable<SerialError>`
 

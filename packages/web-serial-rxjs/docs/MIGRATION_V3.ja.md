@@ -345,6 +345,54 @@ const isConnected = computed(
 
 ---
 
+## 7. `getCurrentPort()` の削除
+
+`SerialSession.getCurrentPort()` は raw `SerialPort` を返す escape hatch でした。利用者が `port.close()` や `writable.getWriter()` を直接呼び出すと、session が管理する lifecycle と競合し、internal runtime invariant を破壊する可能性がありました。
+
+利用状況監査（[#437](https://github.com/gurezo/web-serial-rxjs/issues/437)）の結果、本リポジトリ内のライブラリ・example コードに `getCurrentPort()` の実利用はなく、デバイス識別は `state.portInfo` で代替可能と判断し、**public API から削除**しました。
+
+### 監査結果
+
+| 区分 | 結果 |
+| --- | --- |
+| ライブラリ本番コード | `getCurrentPort()` の呼び出しなし |
+| example アプリ | テスト mock のみ |
+| デバイス識別の代替 | `state$` narrowing 後の `state.portInfo`（canonical） |
+| signals（DTR/RTS 等） | 現時点で代替 API なし（将来の feature addition として検討） |
+
+### 旧パターン（削除済み）
+
+```typescript
+const port = session.getCurrentPort();
+if (port) {
+  console.log(port.getInfo());
+}
+```
+
+### 推奨パターン（デバイス識別）
+
+```typescript
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  if (state.status === SerialSessionStatus.Connected) {
+    console.log(state.portInfo);
+  }
+});
+```
+
+### signals 等の native Web Serial operation
+
+`getSignals()` / `setSignals()` など、raw port 経由でのみ可能だった操作には現時点で `SerialSession` 上の代替 API がありません。必要になった場合は別 Issue で first-class API の追加を検討します。
+
+### 移行チェックリスト
+
+- [ ] `getCurrentPort()` の呼び出しを削除する。
+- [ ] デバイス識別は `state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を使用する。
+- [ ] signals 等の native operation に依存している場合は、代替 API の追加を Issue で提案する。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)

@@ -27,7 +27,7 @@ Prefer **`state$`** with `state.status` narrowing as the canonical API for lifec
 
 ## Port info (device identification)
 
-After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. `getPortInfo()` and `portInfo$` remain available in v3.x but are **deprecated**; migrate to `state$` narrowing. `getCurrentPort()` returns the underlying `SerialPort` while connected; do not call `close()` on it—use `disconnect$` for lifecycle.
+After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. `getPortInfo()` and `portInfo$` remain available in v3.x but are **deprecated**; migrate to `state$` narrowing. `getCurrentPort()` has been removed; see [Migrating to v3 – getCurrentPort() removal](./docs/MIGRATION_V3.md#7-getcurrentport-removal).
 
 ## Receive replay (`receive$` vs `receiveReplay$`)
 

@@ -174,7 +174,6 @@ interface SerialSession {
 
   /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected} and `state.portInfo`. Scheduled for removal in the next major version. */
   getPortInfo(): SerialPortInfo | null;
-  getCurrentPort(): SerialPort | null;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -217,10 +216,6 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 ### `getPortInfo(): SerialPortInfo | null`
 
 **Deprecated** — synchronous read of the last `portInfo$` value. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./MIGRATION_V3.md#5-portinfo--getportinfo-deprecation).
-
-### `getCurrentPort(): SerialPort | null`
-
-Returns the underlying `SerialPort` while connected, or `null` otherwise. Avoid calling `port.close()` or replacing streams yourself — that conflicts with session lifecycle. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and using `state.portInfo` for device identification.
 
 ### `errors$: Observable<SerialError>`
 
