@@ -41,7 +41,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `flowControl` | `'none' \| 'hardware'`              | `'none'`  | フロー制御                                                                   |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —         | ポート選択ダイアログに渡される `navigator.serial.requestPort` 用フィルタ     |
 | `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512, maxChars: 0 }` | 受信チャンクの接続単位 replay。`receiveReplay$` を参照。 |
-| `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576 }` | `terminalText$` のメモリ上限。`createTerminalBuffer` を参照。 |
+| `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }` | `terminalText$` のメモリ上限と ANSI 除去。`createTerminalBuffer` を参照。 |
 | `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | `lines$` の未完成行 tail のメモリ上限。下記を参照。 |
 
 `createSerialSession` 呼び出し時（factory 時）に `resolveSerialSessionOptions` が以下を検証します。不正値は `SerialError` として throw されます。
@@ -72,6 +72,7 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | ------------ | --------- | ---------- | ---- |
 | `maxLines`   | `number`  | `10000`    | 累積表示テキストに保持する完了行数の上限。 |
 | `maxChars`   | `number`  | `1048576`  | 表示テキスト全体（完了部分 + 編集中行）の文字数上限。 |
+| `stripAnsi`  | `boolean` | `true`     | `true` のとき、`\r` 折りたたみ前に ANSI エスケープシーケンスを除去します。`false` にすると `terminalText$` に生のエスケープが残ります。`receive$` は常に変更されません。 |
 
 無効な `maxLines` / `maxChars` は `createSerialSession` 時に `INVALID_TERMINAL_BUFFER_OPTIONS` で throw します。
 
@@ -187,7 +188,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `terminalText$: Observable<string>`
 
-`receive$` 由来のターミナル表示向け累積テキスト。`\r` による再描画を畳み込みつつ、通常の改行挙動は維持します。`createTerminalBuffer(receive$, options.terminalBuffer).text$` と同等です。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持し、`SerialSessionOptions.terminalBuffer` で変更できます。無制限にしたい場合は `{ maxLines: 0, maxChars: 0 }` を指定してください。
+`receive$` 由来のターミナル表示向け累積テキスト。`\r` による再描画を畳み込みつつ、通常の改行挙動は維持します。既定ではプレーンテキスト表示（`<textarea>` など）向けに ANSI エスケープを除去します。生のエスケープは `receive$` で参照できます。`createTerminalBuffer(receive$, options.terminalBuffer).text$` と同等です。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持し、`SerialSessionOptions.terminalBuffer` で変更できます。無制限にしたい場合は `{ maxLines: 0, maxChars: 0 }` を指定してください。
 
 ### `lines$: Observable<string>`
 
