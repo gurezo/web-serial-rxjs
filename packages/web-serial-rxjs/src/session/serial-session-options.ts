@@ -10,6 +10,7 @@ import {
   type ReceiveReplayBufferSize,
   type SerialPortBufferSize,
 } from '../internal/branded-numbers';
+import type { SerialConnectionOptions } from '../types';
 import type { TerminalBufferOptions } from '../terminal/create-terminal-buffer';
 import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../terminal/create-terminal-buffer';
 import { SerialError } from '../errors/serial-error';
@@ -21,44 +22,13 @@ import {
 import { validateSerialPortFilters } from './internal/validate-serial-port-filters';
 
 /**
- * W3C connection fields shared with {@link SerialOptions}.
+ * Library-specific options for {@link createSerialSession} that are not passed
+ * to W3C `port.open`.
  *
- * @internal
+ * @see {@link SerialConnectionOptions} for W3C connection parameters
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/441 | Issue #441}
  */
-type SerialSessionConnectionFields = Pick<
-  SerialOptions,
-  'baudRate' | 'dataBits' | 'stopBits' | 'parity' | 'bufferSize' | 'flowControl'
->;
-
-/**
- * Options for creating a {@link SerialSession} via {@link createSerialSession}.
- *
- * Connection parameters (`baudRate`, `dataBits`, `stopBits`, `parity`,
- * `bufferSize`, `flowControl`) are derived from the W3C {@link SerialOptions}
- * type and passed to `port.open`. All connection fields are optional here;
- * omitted values fall back to {@link DEFAULT_SERIAL_SESSION_OPTIONS}
- * (`baudRate` 9600, `dataBits` 8, `stopBits` 1, `parity` `'none'`,
- * `bufferSize` 255, `flowControl` `'none'`).
- *
- * @example
- * ```typescript
- * const session = createSerialSession({
- *   baudRate: 115200,
- *   dataBits: 8,
- *   stopBits: 1,
- *   parity: 'none',
- *   flowControl: 'none',
- *   filters: [{ usbVendorId: 0x1234, usbProductId: 0x5678 }],
- * });
- * ```
- *
- * @see {@link SerialOptions}
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/402 | Issue #402}
- */
-export interface SerialSessionOptions
-  extends Partial<SerialSessionConnectionFields> {
+export interface SerialSessionFeatureOptions {
   /**
    * Filters for port selection when requesting a port.
    *
@@ -96,6 +66,39 @@ export interface SerialSessionOptions
    */
   lineBuffer?: LineBufferOptions;
 }
+
+/**
+ * Options for creating a {@link SerialSession} via {@link createSerialSession}.
+ *
+ * Composes {@link Partial}<{@link SerialConnectionOptions}> (W3C connection
+ * parameters passed to `port.open`) with {@link SerialSessionFeatureOptions}
+ * (library-specific session features). All connection fields are optional;
+ * omitted values fall back to {@link DEFAULT_SERIAL_SESSION_OPTIONS}
+ * (`baudRate` 9600, `dataBits` 8, `stopBits` 1, `parity` `'none'`,
+ * `bufferSize` 255, `flowControl` `'none'`).
+ *
+ * @example
+ * ```typescript
+ * const session = createSerialSession({
+ *   baudRate: 115200,
+ *   dataBits: 8,
+ *   stopBits: 1,
+ *   parity: 'none',
+ *   flowControl: 'none',
+ *   filters: [{ usbVendorId: 0x1234, usbProductId: 0x5678 }],
+ * });
+ * ```
+ *
+ * @see {@link SerialConnectionOptions}
+ * @see {@link SerialSessionFeatureOptions}
+ * @see {@link SerialOptions}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/402 | Issue #402}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/441 | Issue #441}
+ */
+export interface SerialSessionOptions
+  extends Partial<SerialConnectionOptions>, SerialSessionFeatureOptions {}
 
 /**
  * Options for {@link SerialSessionOptions.receiveReplay}.
@@ -344,7 +347,7 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS = {
 
 /** Resolved W3C connection fields for {@link ResolvedSerialSessionOptions}. */
 export type ResolvedSerialSessionConnectionOptions = Required<
-  Omit<SerialSessionConnectionFields, 'baudRate' | 'bufferSize'>
+  Omit<SerialConnectionOptions, 'baudRate' | 'bufferSize'>
 > & {
   baudRate: BaudRate;
   bufferSize: SerialPortBufferSize;
@@ -357,10 +360,7 @@ export type ResolvedSerialSessionConnectionOptions = Required<
  *         when `baudRate` is out of range.
  */
 export function resolveConnectionOptions(
-  options?: Pick<
-    SerialSessionOptions,
-    'baudRate' | 'dataBits' | 'stopBits' | 'parity' | 'bufferSize' | 'flowControl'
-  >,
+  options?: Partial<SerialConnectionOptions>,
 ): ResolvedSerialSessionConnectionOptions {
   const merged = {
     baudRate: DEFAULT_SERIAL_SESSION_OPTIONS.baudRate,
