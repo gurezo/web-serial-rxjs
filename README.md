@@ -81,25 +81,26 @@ pnpm add rxjs
 
 The **canonical** API map (feature list, the `SerialSession` / `SerialSessionState` tables, and a minimal example) is in the package documentation:
 
-- **[SerialSession overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** · [日本語](packages/web-serial-rxjs/docs/guide/ja/overview.md)
+- **[SerialSession overview](packages/web-serial-rxjs/docs/guide/en/overview.md)** · [日本語](packages/web-serial-rxjs/docs/guide/ja/overview.md)
 
-The [npm `README` for `@gurezo/web-serial-rxjs`](packages/web-serial-rxjs/README.md) is a short index; for a first connection, follow [Quick Start](packages/web-serial-rxjs/docs/QUICK_START.md).
+The [npm `README` for `@gurezo/web-serial-rxjs`](packages/web-serial-rxjs/README.md) is a short index; for a first connection, follow [Quick Start](packages/web-serial-rxjs/docs/guide/en/quick-start.md).
 
 Choosing **`receive$`** versus **`lines$`**—terminal-style mirrors and buffering versus newline-delimited logs and parsing—is spelled out in [that package README](packages/web-serial-rxjs/README.md) (`receive$` vs `lines$`).
 
 ## Documentation
 
-Documentation is split into **Guide** (how to use; Japanese and English hand-written Markdown) and **API Reference** (English TypeDoc from TypeScript JSDoc). The canonical layout is defined in [Documentation Architecture](packages/web-serial-rxjs/docs/ARCHITECTURE.md) ([日本語](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)). Guide files will move to `packages/web-serial-rxjs/docs/guide/{en,ja}/` in upcoming issues; links below point to the current paths until then.
+Documentation is split into **Guide** (how to use; Japanese and English hand-written Markdown) and **API Reference** (English TypeDoc from TypeScript JSDoc). The canonical layout is defined in [Documentation Architecture](packages/web-serial-rxjs/docs/ARCHITECTURE.md) ([日本語](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md)). English Guide lives under [guide/en/](packages/web-serial-rxjs/docs/guide/en/README.md); Japanese Guide under [guide/ja/](packages/web-serial-rxjs/docs/guide/ja/README.md).
 
 | Doc | Use it for |
 | --- | --- |
 | **This README** | Monorepo hub: feature summary, examples, and contribution links. |
-| **[SerialSession overview](packages/web-serial-rxjs/docs/OVERVIEW.md)** | Full `SerialSession` / `SerialSessionState` map and minimal example. |
-| **[Quick Start](packages/web-serial-rxjs/docs/QUICK_START.md)** | Shortest path to a working open port and subscriptions. |
-| **[Advanced Usage](packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)** | Line framing, request/response-style flows, and recovery. |
-| **[API Reference](packages/web-serial-rxjs/docs/API_REFERENCE.md)** | Options, `SerialSessionState`, and `SerialError` details. |
-| **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/MIGRATION_V3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
-| **[v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/MIGRATION_V2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
+| **[English Guide index](packages/web-serial-rxjs/docs/guide/en/README.md)** | Getting Started reading order and full index. |
+| **[SerialSession overview](packages/web-serial-rxjs/docs/guide/en/overview.md)** | Full `SerialSession` / `SerialSessionState` map and minimal example. |
+| **[Quick Start](packages/web-serial-rxjs/docs/guide/en/quick-start.md)** | Shortest path to a working open port and subscriptions. |
+| **[Advanced Usage](packages/web-serial-rxjs/docs/guide/en/advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
+| **[API concepts and design notes](packages/web-serial-rxjs/docs/guide/en/concepts.md)** | Options, `SerialSessionState`, and `SerialError` details. |
+| **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
+| **[v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
 
 ## Examples
 
@@ -112,7 +113,7 @@ Examples are available for the following environments:
 - **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
 - **[Vue](apps/example-vue/)** - Vue 3 example using Composition API
 
-Each sample is a **minimal smoke test** for **connect**, **receive** (terminal-style append via **`receive$`** so `\r` redraws stay intact), **send**, and **disconnect**. Use **`lines$`** only when you want newline-delimited logging or parsing—not for mirroring interactive terminal output; deeper patterns live in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/ADVANCED_USAGE.md).
+Each sample is a **minimal smoke test** for **connect**, **receive** (terminal-style append via **`receive$`** so `\r` redraws stay intact), **send**, and **disconnect**. Use **`lines$`** only when you want newline-delimited logging or parsing—not for mirroring interactive terminal output; deeper patterns live in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/advanced-usage.md).
 
 Each example includes a README with setup and usage instructions.
 

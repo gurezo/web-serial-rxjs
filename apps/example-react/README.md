@@ -2,9 +2,9 @@
 
 This is a minimal React example for the v2 `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `errors$` into React state and binds **`receivedData`** to `session.terminalText$` so `\r` redraws (e.g. `ls -la`) stay aligned. Use **`lines$`** only for newline-delimited logs or parsers, not as the primary terminal view.
 
-**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/QUICK_START.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/OVERVIEW.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
+**Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/guide/en/quick-start.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
 
-**Scope**: Connect, display from `terminalText$`, send, and disconnect. Use built-in `lines$` only when you need newline-delimited parsing or logging—not for interactive terminal mirrors. For richer recipes, see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
+**Scope**: Connect, display from `terminalText$`, send, and disconnect. Use built-in `lines$` only when you need newline-delimited parsing or logging—not for interactive terminal mirrors. For richer recipes, see [Advanced Usage](../../packages/web-serial-rxjs/docs/guide/en/advanced-usage.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)).
 
 ## API Guide
 
@@ -82,7 +82,7 @@ The example uses `createSerialSession` directly through `useSerialSession`:
 2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`; when baud rate changes, the hook creates a new `SerialSession` with the selected baud rate and connects it.
 3. **State UI**: The hook subscribes to `session.state$` and derives `isConnected` from `state.status`. `App.tsx` branches on `state.status` with `SerialSessionStatus` for status text and uses `isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.
-5. **Receiving**: The hook subscribes to **`session.terminalText$`** and mirrors the result in `receivedData` (carriage-return safe). Use **`lines$`** for complete-line logging or simple parsers; it drops lone `\r` behavior (see [Advanced Usage](../../packages/web-serial-rxjs/docs/ADVANCED_USAGE.md)).
+5. **Receiving**: The hook subscribes to **`session.terminalText$`** and mirrors the result in `receivedData` (carriage-return safe). Use **`lines$`** for complete-line logging or simple parsers; it drops lone `\r` behavior (see [Advanced Usage](../../packages/web-serial-rxjs/docs/guide/en/advanced-usage.md)).
 6. **Errors**: All connect/read/write/close failures are multiplexed through `session.errors$` and surfaced as the hook's `errorMessage` state. No per-call try/catch wrappers are needed.
 
 ## Code Structure
