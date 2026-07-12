@@ -126,6 +126,28 @@ describe('SerialError', () => {
       }
     });
 
+    it('should narrow validation error context when is() returns true', () => {
+      const error = new SerialError(
+        SerialErrorCode.INVALID_CONNECTION_OPTIONS,
+        'Invalid baudRate: 0. Must be a safe integer > 0.',
+        undefined,
+        {
+          field: 'baudRate',
+          value: 0,
+          constraint: 'positive-safe-integer',
+        },
+      );
+
+      if (error.is(SerialErrorCode.INVALID_CONNECTION_OPTIONS)) {
+        expect(error.code).toBe(SerialErrorCode.INVALID_CONNECTION_OPTIONS);
+        expect(error.context.field).toBe('baudRate');
+        expect(error.context.value).toBe(0);
+        expect(error.context.constraint).toBe('positive-safe-integer');
+      } else {
+        expect.fail('is() should have returned true');
+      }
+    });
+
     it('should narrow error.code when is() returns true', () => {
       const error = new SerialError(
         SerialErrorCode.PORT_NOT_OPEN,
