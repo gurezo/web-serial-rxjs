@@ -72,7 +72,7 @@ session.disconnect$().subscribe({
 
 ## Dispose
 
-Call `dispose$` when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables. (`destroy$` is an alias for `dispose$`.)
+Call `dispose$` when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables.
 
 ```typescript
 session.dispose$().subscribe({

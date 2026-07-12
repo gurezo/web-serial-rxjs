@@ -70,7 +70,7 @@ session.disconnect$().subscribe({
 
 ## 破棄する
 
-baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$` を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。（`destroy$` は `dispose$` のエイリアスです。）
+baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$` を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。
 
 ```typescript
 session.dispose$().subscribe({
