@@ -59,6 +59,19 @@ isConnected$.subscribe((isOpen) => {
 
 **`isConnected$`** is deprecated in v3.x. For full lifecycle UI, prefer driving from `state$` directly (see [State-driven UI](#state-driven-ui) below).
 
+When you need connected-only fields such as `portInfo` inside an RxJS pipeline, use `isConnectedSessionState` with `filter()` — inline status comparisons do not narrow types in TypeScript:
+
+```typescript
+import { filter } from 'rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
+```
+
 ## Send line (`sendLine` / `sendLine$` pattern)
 
 Interactive shells often expect a full line terminated by CRLF. Wrap `send$` in a small helper instead of adding API to the library:

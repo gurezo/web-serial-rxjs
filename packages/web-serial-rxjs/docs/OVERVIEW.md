@@ -86,7 +86,7 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 ### Minimal example
 
 ```typescript
-import { createSerialSession, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, isConnectedSessionState } from '@gurezo/web-serial-rxjs';
 import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
@@ -98,7 +98,7 @@ if (!session.isBrowserSupported()) {
 session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
 session.state$
-  .pipe(filter((s) => s.status === SerialSessionStatus.Connected))
+  .pipe(filter(isConnectedSessionState))
   .subscribe((state) => {
     console.log(state.portInfo);
   });

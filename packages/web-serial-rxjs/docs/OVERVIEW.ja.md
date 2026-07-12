@@ -86,7 +86,7 @@ TypeDoc のトップページから、まず以下を参照してください。
 ### 最小サンプル
 
 ```typescript
-import { createSerialSession, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, isConnectedSessionState } from '@gurezo/web-serial-rxjs';
 import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
@@ -98,7 +98,7 @@ if (!session.isBrowserSupported()) {
 session.lines$.subscribe(console.log);
 session.errors$.subscribe(console.error);
 session.state$
-  .pipe(filter((s) => s.status === SerialSessionStatus.Connected))
+  .pipe(filter(isConnectedSessionState))
   .subscribe((state) => {
     console.log(state.portInfo);
   });

@@ -301,6 +301,21 @@ const isConnected$ = session.state$.pipe(
 );
 ```
 
+### RxJS `filter` で connected state を narrowing する場合
+
+pipeline 内で `portInfo` など connected 専用フィールドにアクセスするには、`filter()` と `isConnectedSessionState` を組み合わせます。inline の `filter((s) => s.status === SerialSessionStatus.Connected)` では TypeScript の narrowing は行われません。
+
+```typescript
+import { filter } from 'rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
+```
+
 ### Angular Signals で boolean を derive する場合
 
 ```typescript

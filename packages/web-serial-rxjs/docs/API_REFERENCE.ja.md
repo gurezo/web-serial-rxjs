@@ -115,13 +115,36 @@ v3 では **`SerialSessionStatus`** が lifecycle 文字列定数（例: `Serial
 比較例:
 
 ```typescript
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { filter } from 'rxjs';
+import { isConnectedSessionState, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 
 session.state$.subscribe((state) => {
   if (state.status === SerialSessionStatus.Connected) {
     console.log(state.portInfo);
   }
 });
+
+// RxJS pipeline では type predicate を使うと ConnectedSessionState が保持される
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
+```
+
+### `isConnectedSessionState(state)`
+
+`ConnectedSessionState` 用の type predicate です。RxJS の `filter()` と組み合わせて pipeline 内の discriminated union narrowing を保持します。inline の `filter((s) => s.status === SerialSessionStatus.Connected)` では TypeScript の narrowing は行われません。
+
+```typescript
+import { filter } from 'rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
 ```
 
 v2 からの移行は [v3 移行ガイド](./MIGRATION_V3.ja.md) を参照してください。

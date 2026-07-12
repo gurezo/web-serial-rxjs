@@ -301,6 +301,21 @@ const isConnected$ = session.state$.pipe(
 );
 ```
 
+### RxJS `filter` with connected-state narrowing
+
+When you need `portInfo` or other connected-only fields inside a pipeline, use `isConnectedSessionState` with `filter()`. Inline `filter((s) => s.status === SerialSessionStatus.Connected)` does not narrow types in TypeScript.
+
+```typescript
+import { filter } from 'rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+
+session.state$
+  .pipe(filter(isConnectedSessionState))
+  .subscribe((state) => {
+    console.log(state.portInfo);
+  });
+```
+
 ### Deriving a boolean with Angular Signals
 
 ```typescript
