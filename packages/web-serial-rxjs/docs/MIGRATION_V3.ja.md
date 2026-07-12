@@ -449,6 +449,87 @@ validation error（`INVALID_*`）への structured context 追加は [#439](http
 
 ---
 
+## 9. `assertNever` public export 監査
+
+`assertNever` は exhaustive switch checking 用の TypeScript utility です。package internal の exhaustiveness helper として追加されましたが（[#394](https://github.com/gurezo/web-serial-rxjs/issues/394) / PR #410）、public export としても公開されていました。Web Serial / SerialSession domain API ではないため、利用状況を監査し（[#440](https://github.com/gurezo/web-serial-rxjs/issues/440)）、結果を本セクションと [API リファレンス](./API_REFERENCE.ja.md#deprecated-exports) に反映しました。
+
+### 監査結果
+
+| 確認項目 | 結果 |
+| --- | --- |
+| package internal usage | `session-runtime.ts` のみ（`assertNeverRuntime` 経由） |
+| examples usage | `apps/` / `libs/` に利用なし |
+| documentation usage | canonical export 一覧（API_REFERENCE）に未掲載。MIGRATION ドキュメントにも未記載 |
+| 公開履歴 | Phase A（#394）で `src/internal/assert-never.ts` として追加、`index.ts` から re-export |
+
+### 判断
+
+`assertNever` は内部実装用 utility であり、canonical public API ではありません。`SerialSessionState` の exhaustive handling は `switch (state.status)` + `SerialSessionStatus`、または `isConnectedSessionState` による narrowing が推奨パターンです。
+
+v3.x では `@deprecated` 注記のみ付与し、public export は維持します。削除は次回 major version に集約します。
+
+### v2 / 旧パターン（非推奨）
+
+```typescript
+import { assertNever } from '@gurezo/web-serial-rxjs';
+
+session.state$.subscribe((state) => {
+  switch (state.status) {
+    case SerialSessionStatus.Connected:
+      console.log(state.portInfo);
+      break;
+    default:
+      assertNever(state);
+  }
+});
+```
+
+### v3 推奨パターン
+
+`switch (state.status)` で全 case を網羅するか、RxJS では `filter(isConnectedSessionState)` で narrowing してください。exhaustiveness helper が必要な場合はアプリケーション側でローカル helper を定義します。
+
+```typescript
+import {
+  SerialSessionStatus,
+  isConnectedSessionState,
+  type SerialSessionState,
+} from '@gurezo/web-serial-rxjs';
+
+function assertNever(value: never): never {
+  throw new Error(`Unexpected value: ${String(value)}`);
+}
+
+session.state$.subscribe((state: SerialSessionState) => {
+  switch (state.status) {
+    case SerialSessionStatus.Connected:
+      console.log(state.portInfo);
+      break;
+    case SerialSessionStatus.Idle:
+    case SerialSessionStatus.Connecting:
+    case SerialSessionStatus.Disconnecting:
+    case SerialSessionStatus.Unsupported:
+    case SerialSessionStatus.Error:
+    case SerialSessionStatus.Disposed:
+      break;
+    default:
+      assertNever(state);
+  }
+});
+```
+
+### 移行チェックリスト
+
+- [ ] `@gurezo/web-serial-rxjs` からの `assertNever` import を削除する。
+- [ ] exhaustive handling が必要ならローカル helper を定義する。
+- [ ] `SerialSessionState` の分岐は `switch (state.status)` + `SerialSessionStatus` を優先する。
+- [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
+
+### v3.x での互換性
+
+`assertNever` は v3.x では引き続き public export から利用可能です。次回 major version で削除予定です。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)
@@ -457,3 +538,4 @@ validation error（`INVALID_*`）への structured context 追加は [#439](http
 - [API リファレンス – dispose$ / destroy$](./API_REFERENCE.ja.md#dispose-observablevoid)
 - [API リファレンス – portInfo$ / getPortInfo()](./API_REFERENCE.ja.md#portinfo-observableserialportinfo--null)
 - [API リファレンス – isConnected$](./API_REFERENCE.ja.md#isconnected-observableboolean)
+- [API リファレンス – Deprecated exports](./API_REFERENCE.ja.md#deprecated-exports)
