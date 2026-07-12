@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>MIGRATION_V3 | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>MIGRATION_V3 | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
@@ -508,6 +508,59 @@
 <h3 id="v3x-compatibility" class="tsd-anchor-link">v3.x compatibility<a href="#v3x-compatibility" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p><code>assertNever</code> remains available from the public export in v3.x. It is scheduled for removal in the next major version.</p>
 <hr>
+<h2 id="10-session-options-type-responsibility-audit" class="tsd-anchor-link">10. Session options type responsibility audit<a href="#10-session-options-type-responsibility-audit" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>SerialSessionOptions</code> exposes W3C <code>SerialOptions</code>-derived connection fields and library-specific session feature options in a single type. As part of the TypeScript-first domain model consolidation, the public type surface and generated documentation were audited (<a href="https://github.com/gurezo/web-serial-rxjs/issues/441">#441</a>).</p>
+<h3 id="audit-results-2" class="tsd-anchor-link">Audit results<a href="#audit-results-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>existing assignability</td>
+<td>Existing <code>createSerialSession({ ... })</code> calls work without changes</td>
+</tr>
+<tr>
+<td>generated <code>.d.ts</code></td>
+<td>public <code>SerialConnectionOptions</code> duplicated the internal <code>SerialSessionConnectionFields</code> Pick</td>
+</tr>
+<tr>
+<td>TypeDoc readability</td>
+<td>connection and feature fields appeared in one flat list; hierarchy showed an internal type name</td>
+</tr>
+<tr>
+<td>readonly input compatibility</td>
+<td>mutable arrays retained; readonly input assignability verified by regression tests</td>
+</tr>
+<tr>
+<td>examples</td>
+<td><code>libs/examples-shared</code> already uses <code>SerialConnectionOptions['baudRate']</code>; example apps unchanged</td>
+</tr>
+<tr>
+<td>W3C <code>SerialOptions</code> drift detection</td>
+<td>connection fields remain a Pick from W3C types via <code>SerialConnectionOptions</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="decision-1" class="tsd-anchor-link">Decision<a href="#decision-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Type safety was already sound, but conceptual separation improves documentation clarity. The canonical model is:</p>
+<pre><code class="text">SerialConnectionOptions     = W3C connection parameters for port.open
+SerialSessionFeatureOptions = library-specific session features
+SerialSessionOptions        = Partial&lt;SerialConnectionOptions&gt; &amp; SerialSessionFeatureOptions
+</code><button type="button">Copy</button></pre>
+
+<ul>
+<li><code>SerialConnectionOptions</code> — <code>baudRate</code>, <code>dataBits</code>, <code>stopBits</code>, <code>parity</code>, <code>bufferSize</code>, <code>flowControl</code> (passed to <code>port.open</code>)</li>
+<li><code>SerialSessionFeatureOptions</code> — <code>filters</code>, <code>receiveReplay</code>, <code>terminalBuffer</code>, <code>lineBuffer</code> (library-specific)</li>
+<li><code>SerialSessionOptions</code> — composition of the two (factory argument)</li>
+</ul>
+<p>See <a href="API_REFERENCE.html#serialsessionoptions">API Reference – SerialSessionOptions</a> for details.</p>
+<h3 id="v3x-compatibility-1" class="tsd-anchor-link">v3.x compatibility<a href="#v3x-compatibility-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>The <code>createSerialSession(options?)</code> signature and existing options object literals remain <strong>unchanged</strong>. <code>SerialSessionFeatureOptions</code> is added as a new public export.</p>
+<hr>
 <h2 id="see-also" class="tsd-anchor-link">See also<a href="#see-also" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="MIGRATION_V2.html">Migrating from v1 to v2</a></li>
@@ -517,6 +570,7 @@
 <li><a href="API_REFERENCE.html#portinfo-observableserialportinfo--null">API Reference – portInfo$ / getPortInfo()</a></li>
 <li><a href="API_REFERENCE.html#isconnected-observableboolean">API Reference – isConnected$</a></li>
 <li><a href="API_REFERENCE.html#deprecated-exports">API Reference – Deprecated exports</a></li>
+<li><a href="API_REFERENCE.html#serialsessionoptions">API Reference – SerialSessionOptions</a></li>
 </ul>
 </div></div>
 <div class="col-sidebar">
@@ -607,6 +661,12 @@
 <li><a href="#recommended-pattern"><span>Recommended pattern</span></a></li>
 <li><a href="#migration-checklist-7"><span>Migration checklist</span></a></li>
 <li><a href="#v3x-compatibility"><span>v3.x compatibility</span></a></li></ul></li>
+<li><a href="#10-session-options-type-responsibility-audit"><span>10. <wbr/>Session options type responsibility audit</span></a></li>
+<li>
+<ul>
+<li><a href="#audit-results-2"><span>Audit results</span></a></li>
+<li><a href="#decision-1"><span>Decision</span></a></li>
+<li><a href="#v3x-compatibility-1"><span>v3.x compatibility</span></a></li></ul></li>
 <li><a href="#see-also"><span>See also</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>

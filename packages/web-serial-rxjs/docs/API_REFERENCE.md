@@ -15,6 +15,8 @@ import {
   type SerialSession,
   type SerialSessionState,
   type SerialSessionOptions,
+  type SerialSessionFeatureOptions,
+  type SerialConnectionOptions,
   type SerialSessionReceiveReplayOptions,
   type TerminalBufferOptions,
 } from '@gurezo/web-serial-rxjs';
@@ -50,6 +52,18 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 
 ## SerialSessionOptions
 
+`SerialSessionOptions` composes W3C connection parameters (`SerialConnectionOptions`) with library-specific session features (`SerialSessionFeatureOptions`). It is the factory argument for `createSerialSession`.
+
+```text
+SerialSessionOptions = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
+```
+
+See [Migrating to v3 – §10 Session options type responsibility audit](./MIGRATION_V3.md#10-session-options-type-responsibility-audit) for the audit rationale.
+
+### Connection options (`SerialConnectionOptions`)
+
+Derived from W3C `SerialOptions` and passed to `port.open`. All fields are optional at factory time; omitted values fall back to the defaults below.
+
 | Field         | Type                                | Default  | Description                                                       |
 | ------------- | ----------------------------------- | -------- | ----------------------------------------------------------------- |
 | `baudRate`    | `number`                            | `9600`   | Bits per second.                                                  |
@@ -58,6 +72,13 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 | `parity`      | `'none' \| 'even' \| 'odd'`         | `'none'` | Parity checking mode.                                             |
 | `bufferSize`  | `number`                            | `255`    | Read-stream buffer size in bytes.                                 |
 | `flowControl` | `'none' \| 'hardware'`              | `'none'` | Flow control mode.                                                |
+
+### Session feature options (`SerialSessionFeatureOptions`)
+
+Library-specific session features. Not passed to W3C `port.open`.
+
+| Field         | Type                                | Default  | Description                                                       |
+| ------------- | ----------------------------------- | -------- | ----------------------------------------------------------------- |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
 | `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512, maxChars: 0 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }` | Memory limits and ANSI stripping for `terminalText$`; see `createTerminalBuffer`. |

@@ -20,9 +20,10 @@
  * - {@link TerminalBufferOptions} - memory limits for terminal display text
  * - {@link LineBufferOptions} - memory limits for lines$ incomplete line tail
  * - {@link SerialSession} - the runtime interface
- * - {@link SerialSessionOptions} - connection options
+ * - {@link SerialSessionOptions} - factory options (connection + features)
  * - {@link SerialPayload} - payload accepted by {@link SerialSession.send$}
  * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
+ * - {@link SerialSessionFeatureOptions} - library-specific session feature options
  * - {@link SerialSessionStatus} - lifecycle status literals for `state$.status`
  * - {@link SerialSessionState} - discriminated union emitted by `state$`
  * - {@link isConnectedSessionState} - type predicate for connected `state$` narrowing in RxJS pipelines
@@ -99,6 +100,7 @@ export type {
   ErrorSessionState,
   DisposedSessionState,
   SerialSessionOptions,
+  SerialSessionFeatureOptions,
   SerialSessionReceiveReplayOptions,
   ResolvedSerialSessionOptions,
   SerialPayload,

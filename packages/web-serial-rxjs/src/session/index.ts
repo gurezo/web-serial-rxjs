@@ -2,6 +2,7 @@ export { createSerialSession } from './create-serial-session';
 export type { SerialSession } from './serial-session';
 export type {
   SerialSessionOptions,
+  SerialSessionFeatureOptions,
   SerialSessionReceiveReplayOptions,
   ResolvedSerialSessionOptions,
 } from './serial-session-options';

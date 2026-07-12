@@ -530,6 +530,43 @@ session.state$.subscribe((state: SerialSessionState) => {
 
 ---
 
+## 10. Session options 型責務監査
+
+`SerialSessionOptions` は W3C `SerialOptions` 由来の connection fields と、`web-serial-rxjs` 固有の session feature options を 1 つの型として公開しています。TypeScript-first の domain model 整理の一環として、public type と generated documentation の表示を監査しました（[#441](https://github.com/gurezo/web-serial-rxjs/issues/441)）。
+
+### 監査結果
+
+| 確認項目 | 結果 |
+| --- | --- |
+| existing assignability | 既存の `createSerialSession({ ... })` 呼び出しは問題なし |
+| generated `.d.ts` | public `SerialConnectionOptions` と internal `SerialSessionConnectionFields` が同一 Pick で重複 |
+| TypeDoc readability | connection / feature fields が 1 つの flat list に混在し、hierarchy が internal 型名を表示 |
+| readonly input compatibility | mutable 配列のまま維持。readonly 入力の assignability は regression test で確認 |
+| examples | `libs/examples-shared` は `SerialConnectionOptions['baudRate']` を既に利用。example apps の変更は不要 |
+| W3C `SerialOptions` drift detection | connection fields は `SerialConnectionOptions` 経由で W3C 型から Pick。分離後も維持 |
+
+### 判断
+
+型安全性に問題はありませんが、責務分離と TypeDoc 可読性の改善のため、以下の型モデルを canonical とします。
+
+```text
+SerialConnectionOptions     = port.open 用 W3C connection parameters
+SerialSessionFeatureOptions = library-specific session features
+SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
+```
+
+- `SerialConnectionOptions` — `baudRate`, `dataBits`, `stopBits`, `parity`, `bufferSize`, `flowControl`（`port.open` に渡される）
+- `SerialSessionFeatureOptions` — `filters`, `receiveReplay`, `terminalBuffer`, `lineBuffer`（library-specific）
+- `SerialSessionOptions` — 上記 2 つの composition（factory 引数）
+
+詳細は [API リファレンス – SerialSessionOptions](./API_REFERENCE.ja.md#serialsessionoptions) を参照してください。
+
+### v3.x での互換性
+
+`createSerialSession(options?)` のシグネチャと、既存の options オブジェクトリテラルは **変更不要** です。`SerialSessionFeatureOptions` は新規 public export として追加されます。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)
@@ -539,3 +576,4 @@ session.state$.subscribe((state: SerialSessionState) => {
 - [API リファレンス – portInfo$ / getPortInfo()](./API_REFERENCE.ja.md#portinfo-observableserialportinfo--null)
 - [API リファレンス – isConnected$](./API_REFERENCE.ja.md#isconnected-observableboolean)
 - [API リファレンス – Deprecated exports](./API_REFERENCE.ja.md#deprecated-exports)
+- [API リファレンス – SerialSessionOptions](./API_REFERENCE.ja.md#serialsessionoptions)

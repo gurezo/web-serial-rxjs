@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>MIGRATION_V3.ja | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>MIGRATION_V3.ja | web-serial-rxjs API Documentation</title><meta name="description" content="Documentation for web-serial-rxjs API Documentation"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="../assets/rhineai-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container"><a href="../index.html" class="title">web-serial-rxjs API Documentation</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
@@ -508,6 +508,59 @@
 <h3 id="v3x-での互換性-4" class="tsd-anchor-link">v3.x での互換性<a href="#v3x-での互換性-4" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <p><code>assertNever</code> は v3.x では引き続き public export から利用可能です。次回 major version で削除予定です。</p>
 <hr>
+<h2 id="10-session-options-型責務監査" class="tsd-anchor-link">10. Session options 型責務監査<a href="#10-session-options-型責務監査" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p><code>SerialSessionOptions</code> は W3C <code>SerialOptions</code> 由来の connection fields と、<code>web-serial-rxjs</code> 固有の session feature options を 1 つの型として公開しています。TypeScript-first の domain model 整理の一環として、public type と generated documentation の表示を監査しました（<a href="https://github.com/gurezo/web-serial-rxjs/issues/441">#441</a>）。</p>
+<h3 id="監査結果-2" class="tsd-anchor-link">監査結果<a href="#監査結果-2" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<table>
+<thead>
+<tr>
+<th>確認項目</th>
+<th>結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>existing assignability</td>
+<td>既存の <code>createSerialSession({ ... })</code> 呼び出しは問題なし</td>
+</tr>
+<tr>
+<td>generated <code>.d.ts</code></td>
+<td>public <code>SerialConnectionOptions</code> と internal <code>SerialSessionConnectionFields</code> が同一 Pick で重複</td>
+</tr>
+<tr>
+<td>TypeDoc readability</td>
+<td>connection / feature fields が 1 つの flat list に混在し、hierarchy が internal 型名を表示</td>
+</tr>
+<tr>
+<td>readonly input compatibility</td>
+<td>mutable 配列のまま維持。readonly 入力の assignability は regression test で確認</td>
+</tr>
+<tr>
+<td>examples</td>
+<td><code>libs/examples-shared</code> は <code>SerialConnectionOptions['baudRate']</code> を既に利用。example apps の変更は不要</td>
+</tr>
+<tr>
+<td>W3C <code>SerialOptions</code> drift detection</td>
+<td>connection fields は <code>SerialConnectionOptions</code> 経由で W3C 型から Pick。分離後も維持</td>
+</tr>
+</tbody>
+</table>
+<h3 id="判断-1" class="tsd-anchor-link">判断<a href="#判断-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>型安全性に問題はありませんが、責務分離と TypeDoc 可読性の改善のため、以下の型モデルを canonical とします。</p>
+<pre><code class="text">SerialConnectionOptions     = port.open 用 W3C connection parameters
+SerialSessionFeatureOptions = library-specific session features
+SerialSessionOptions        = Partial&lt;SerialConnectionOptions&gt; &amp; SerialSessionFeatureOptions
+</code><button type="button">Copy</button></pre>
+
+<ul>
+<li><code>SerialConnectionOptions</code> — <code>baudRate</code>, <code>dataBits</code>, <code>stopBits</code>, <code>parity</code>, <code>bufferSize</code>, <code>flowControl</code>（<code>port.open</code> に渡される）</li>
+<li><code>SerialSessionFeatureOptions</code> — <code>filters</code>, <code>receiveReplay</code>, <code>terminalBuffer</code>, <code>lineBuffer</code>（library-specific）</li>
+<li><code>SerialSessionOptions</code> — 上記 2 つの composition（factory 引数）</li>
+</ul>
+<p>詳細は <a href="API_REFERENCE.ja.html#serialsessionoptions">API リファレンス – SerialSessionOptions</a> を参照してください。</p>
+<h3 id="v3x-での互換性-5" class="tsd-anchor-link">v3.x での互換性<a href="#v3x-での互換性-5" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p><code>createSerialSession(options?)</code> のシグネチャと、既存の options オブジェクトリテラルは <strong>変更不要</strong> です。<code>SerialSessionFeatureOptions</code> は新規 public export として追加されます。</p>
+<hr>
 <h2 id="関連ドキュメント" class="tsd-anchor-link">関連ドキュメント<a href="#関連ドキュメント" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><a href="MIGRATION_V2.ja.html">v1 から v2 への移行</a></li>
@@ -517,6 +570,7 @@
 <li><a href="API_REFERENCE.ja.html#portinfo-observableserialportinfo--null">API リファレンス – portInfo$ / getPortInfo()</a></li>
 <li><a href="API_REFERENCE.ja.html#isconnected-observableboolean">API リファレンス – isConnected$</a></li>
 <li><a href="API_REFERENCE.ja.html#deprecated-exports">API リファレンス – Deprecated exports</a></li>
+<li><a href="API_REFERENCE.ja.html#serialsessionoptions">API リファレンス – SerialSessionOptions</a></li>
 </ul>
 </div></div>
 <div class="col-sidebar">
@@ -607,6 +661,12 @@
 <li><a href="#v3-推奨パターン-3"><span>v3 推奨パターン</span></a></li>
 <li><a href="#移行チェックリスト-7"><span>移行チェックリスト</span></a></li>
 <li><a href="#v3x-での互換性-4"><span>v3.x での互換性</span></a></li></ul></li>
+<li><a href="#10-session-options-型責務監査"><span>10. <wbr/>Session options 型責務監査</span></a></li>
+<li>
+<ul>
+<li><a href="#監査結果-2"><span>監査結果</span></a></li>
+<li><a href="#判断-1"><span>判断</span></a></li>
+<li><a href="#v3x-での互換性-5"><span>v3.x での互換性</span></a></li></ul></li>
 <li><a href="#関連ドキュメント"><span>関連ドキュメント</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html">web-serial-rxjs API Documentation</a>
