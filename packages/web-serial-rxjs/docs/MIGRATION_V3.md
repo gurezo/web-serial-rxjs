@@ -180,8 +180,44 @@ session.errors$.subscribe((error) => {
 
 ---
 
+## 4. `destroy$` deprecation
+
+`SerialSession` exposes both `dispose$()` and `destroy$()`. They are the same function — `destroy$` is a legacy alias. Lifecycle terminology (`dispose`, `disposed`, `SESSION_DISPOSED`) already uses **`dispose$`** as the canonical API.
+
+`destroy$()` remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version.
+
+### v2 / legacy pattern (deprecated)
+
+```typescript
+session.destroy$().subscribe({
+  complete: () => console.log('session destroyed'),
+});
+```
+
+### v3 recommended pattern
+
+```typescript
+session.dispose$().subscribe({
+  complete: () => console.log('session disposed'),
+});
+```
+
+### Migration checklist
+
+- [ ] Replace `session.destroy$()` with `session.dispose$()`.
+- [ ] Address TypeScript `@deprecated` warnings by migrating to `dispose$`.
+- [ ] Prefer `dispose$` in new code and documentation.
+
+### Compatibility in v3.x
+
+- `destroy$` remains available in v3.x and delegates to the same implementation as `dispose$`.
+- Runtime behavior is unchanged; only the alias is deprecated.
+
+---
+
 ## See also
 
 - [Migrating from v1 to v2](./MIGRATION_V2.md)
 - [API Reference – SerialSessionState / SerialSessionStatus](./API_REFERENCE.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./API_REFERENCE.md#serialerror--serialerrorcode)
+- [API Reference – dispose$ / destroy$](./API_REFERENCE.md#dispose-observablevoid)

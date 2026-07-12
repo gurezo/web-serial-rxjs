@@ -180,8 +180,44 @@ session.errors$.subscribe((error) => {
 
 ---
 
+## 4. `destroy$` の非推奨化
+
+`SerialSession` は `dispose$()` と `destroy$()` の両方を公開しています。これらは同一関数であり、`destroy$` は legacy エイリアスです。lifecycle terminology（`dispose`、`disposed`、`SESSION_DISPOSED`）はすでに **`dispose$`** を canonical API として使用しています。
+
+後方互換のため `destroy$()` は v3.x に残っていますが、**非推奨**です。次回 major version で削除予定です。
+
+### v2 / 旧パターン（非推奨）
+
+```typescript
+session.destroy$().subscribe({
+  complete: () => console.log('session destroyed'),
+});
+```
+
+### v3 推奨パターン
+
+```typescript
+session.dispose$().subscribe({
+  complete: () => console.log('session disposed'),
+});
+```
+
+### 移行チェックリスト
+
+- [ ] `session.destroy$()` を `session.dispose$()` に置き換える。
+- [ ] TypeScript の `@deprecated` 警告が出たら `dispose$` へ移行する。
+- [ ] 新規コードとドキュメントでは `dispose$` を使用する。
+
+### v3.x での互換性
+
+- `destroy$` は v3.x では引き続き利用可能で、`dispose$` と同じ実装に委譲します。
+- ランタイム挙動は変更されません。非推奨化されるのはエイリアスのみです。
+
+---
+
 ## 関連ドキュメント
 
 - [v1 から v2 への移行](./MIGRATION_V2.ja.md)
 - [API リファレンス – SerialSessionState / SerialSessionStatus](./API_REFERENCE.ja.md#serialsessionstate--serialsessionstatus)
 - [API リファレンス – SerialError / SerialErrorCode](./API_REFERENCE.ja.md#serialerror--serialerrorcode)
+- [API リファレンス – dispose$ / destroy$](./API_REFERENCE.ja.md#dispose-observablevoid)
