@@ -1,6 +1,6 @@
 # Svelte Example
 
-This is a minimal Svelte example for the v2 `SerialSession` API. `useSerialSession` wraps `state$` / `errors$` into stores, derives `isConnected` from `state.status`, and binds **`receivedData`** to `session.terminalText$` for `\r`-safe terminal display.
+This is a minimal Svelte example for the `SerialSession` API. `useSerialSession` wraps `state$` / `errors$` into stores, derives `isConnected` from `state.status`, and binds **`receivedData`** to `session.terminalText$` for `\r`-safe terminal display.
 
 **Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/guide/en/quick-start.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
 

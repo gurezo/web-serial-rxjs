@@ -1,6 +1,6 @@
 # React Example
 
-This is a minimal React example for the v2 `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `errors$` into React state and binds **`receivedData`** to `session.terminalText$` so `\r` redraws (e.g. `ls -la`) stay aligned. Use **`lines$`** only for newline-delimited logs or parsers, not as the primary terminal view.
+This is a minimal React example for the `SerialSession` API (Web Serial). The `useSerialSession` hook maps `state$` / `errors$` into React state and binds **`receivedData`** to `session.terminalText$` so `\r` redraws (e.g. `ls -la`) stay aligned. Use **`lines$`** only for newline-delimited logs or parsers, not as the primary terminal view.
 
 **Using the library**: See the repository [Quick Start](../../packages/web-serial-rxjs/docs/guide/en/quick-start.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/quick-start.md)) and [SerialSession overview](../../packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](../../packages/web-serial-rxjs/docs/guide/ja/overview.md)).
 
