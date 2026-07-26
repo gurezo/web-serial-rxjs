@@ -40,4 +40,4 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 
 - **`state$`** — 接続ライフサイクルの canonical source。`state.status` と `SerialSessionStatus` で分岐し、connected 時は `state.portInfo` を利用する
 - **`errors$`** — fatal / non-fatal エラーの canonical event channel。`SerialError.is(SerialErrorCode.*)` で分岐する
-- **非推奨 convenience** — `isConnected$`、`portInfo$`、`getPortInfo()` は v3.x で残存するが、新規コードでは `state$` narrowing を優先する
+- **`dispose$()`** — セッション破棄の唯一の API（購読により実行）。削除された convenience API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`）は [v3 移行ガイド – Phase 1 API 削除](./migration-v3.md#phase-1-api-削除) を参照

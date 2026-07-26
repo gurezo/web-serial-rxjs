@@ -2,7 +2,7 @@
 
 `SerialSession` intentionally exposes a small surface. Most "advanced" workflows are expressed by composing plain RxJS operators over `receive$` and `send$`. If you are new to the API, read [SerialSession overview](./overview.md#serialsession-at-a-glance) and [Quick Start](./quick-start.md) first; this page focuses on **recipes** (line framing, derived streams, and recovery) that the overview defers on purpose. For lifecycle and error patterns, prefer `state$` with `state.status` narrowing and `errors$` with `error.is()` — see [Migrating to v3](./migration-v3.md).
 
-This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`** and the imperative methods cover common cases. **`isConnected$`** is deprecated in v3.x — prefer `state$` narrowing. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
+This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228): built-in **`lines$`** and the imperative methods cover common cases. Prefer **`state$`** narrowing for connection UI. Patterns such as **`sendLine`**, **`readUntil`**, and **`waitForState`** are still things you build on the core API (no extra exports for those). For a real-world serial-console style app, see [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) (Web Serial over USB OTG); the same recipes apply when you reimplement its read/write loop with `SerialSession`.
 
 ## Line Framing (built-in `lines$` vs custom framing on `receive$`)
 
@@ -57,7 +57,7 @@ isConnected$.subscribe((isOpen) => {
 });
 ```
 
-**`isConnected$`** is deprecated in v3.x. For full lifecycle UI, prefer driving from `state$` directly (see [State-driven UI](#state-driven-ui) below).
+The local `isConnected$` above is **derived from `state$`** — it is not a `SerialSession` member. For full lifecycle UI, prefer driving from `state$` directly (see [State-driven UI](#state-driven-ui) below).
 
 When you need connected-only fields such as `portInfo` inside an RxJS pipeline, use `isConnectedSessionState` with `filter()` — inline status comparisons do not narrow types in TypeScript:
 

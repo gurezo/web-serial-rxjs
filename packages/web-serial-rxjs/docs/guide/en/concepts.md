@@ -200,22 +200,13 @@ interface SerialSession {
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
   dispose$(): Observable<void>;
-  /** @deprecated Use {@link dispose$}. Scheduled for removal in the next major version. */
-  destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
-  /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected}. Scheduled for removal in the next major version. */
-  readonly isConnected$: Observable<boolean>;
-  /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected} and `state.portInfo`. Scheduled for removal in the next major version. */
-  readonly portInfo$: Observable<SerialPortInfo | null>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
   readonly receiveReplay$: Observable<string>;
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
-
-  /** @deprecated Prefer {@link state$} narrowing with {@link SerialSessionStatus.Connected} and `state.portInfo`. Scheduled for removal in the next major version. */
-  getPortInfo(): SerialPortInfo | null;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -227,37 +218,21 @@ Synchronous feature check. Returns `true` when `navigator.serial` is available.
 
 ### `connect$(): Observable<void>`
 
-Opens a user-selected serial port and starts the internal read pump. Completes on success; errors via `errors$` and the subscriber on failure. Transitions `idle → connecting → connected`.
+Opens a user-selected serial port and starts the internal read pump. Completes on success; errors via `errors$` and the subscriber on failure. Transitions `idle → connecting → connected`. **Runs when subscribed.**
 
 ### `disconnect$(): Observable<void>`
 
-Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown.
+Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown. **Runs when subscribed.**
 
 ### `dispose$(): Observable<void>`
 
-Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`, `receiveReplay$`, `portInfo$`, `isConnected$`). Safe to call multiple times; subsequent calls complete immediately.
+Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`, `receiveReplay$`). Safe to call multiple times; subsequent calls complete immediately. **Runs when subscribed.**
 
 After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOSED`. `disconnect$` completes immediately. Create a new `SerialSession` instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).
 
-### `destroy$(): Observable<void>`
-
-**Deprecated** — alias for `dispose$()`. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. See [Migrating to v3 – destroy$ deprecation](./migration-v3.md#4-destroy-deprecation).
-
 ### `state$: Observable<SerialSessionState>`
 
-Replays the current state on subscribe. Prefer driving your UI from this stream instead of rebuilding a `BehaviorSubject`.
-
-### `isConnected$: Observable<boolean>`
-
-**Deprecated** — `true` when `state$.status` is `SerialSessionStatus.Connected`; `false` otherwise. Retained in v3.x for backward compatibility but scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` or derive a boolean from `state$`. See [Migrating to v3 – isConnected$ deprecation](./migration-v3.md#6-isconnected-deprecation).
-
-### `portInfo$: Observable<SerialPortInfo | null>`
-
-**Deprecated** — convenience stream that emits the active port's `SerialPort.getInfo()` snapshot, or `null` when no port is open. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./migration-v3.md#5-portinfo--getportinfo-deprecation).
-
-### `getPortInfo(): SerialPortInfo | null`
-
-**Deprecated** — synchronous read of the last `portInfo$` value. Retained for backward compatibility in v3.x; scheduled for removal in the next major version. Prefer narrowing `state$` with `SerialSessionStatus.Connected` and reading `state.portInfo`. See [Migrating to v3 – portInfo$ / getPortInfo() deprecation](./migration-v3.md#5-portinfo--getportinfo-deprecation).
+Replays the current state on subscribe. Prefer driving your UI from this stream instead of rebuilding a `BehaviorSubject`. When `state.status` is `SerialSessionStatus.Connected`, read **`state.portInfo`** for device identification. There is no separate `portInfo$` / `getPortInfo()` / `isConnected$` / `destroy$()` / `getCurrentPort()` on the public API — see [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals).
 
 ### `errors$: Observable<SerialError>`
 
@@ -281,7 +256,7 @@ The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lo
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`.
+Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.**
 
 ## SerialError / SerialErrorCode
 

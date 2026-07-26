@@ -200,22 +200,13 @@ interface SerialSession {
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
   dispose$(): Observable<void>;
-  /** @deprecated {@link dispose$} を使用してください。次回 major version で削除予定です。 */
-  destroy$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
-  /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing してください。次回 major version で削除予定です。 */
-  readonly isConnected$: Observable<boolean>;
-  /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing し `state.portInfo` を使用してください。次回 major version で削除予定です。 */
-  readonly portInfo$: Observable<SerialPortInfo | null>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
   readonly receiveReplay$: Observable<string>;
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
-
-  /** @deprecated {@link state$} を {@link SerialSessionStatus.Connected} で narrowing し `state.portInfo` を使用してください。次回 major version で削除予定です。 */
-  getPortInfo(): SerialPortInfo | null;
 
   send$(data: string | Uint8Array): Observable<void>;
 }
@@ -227,37 +218,21 @@ interface SerialSession {
 
 ### `connect$(): Observable<void>`
 
-ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時は subscriber と `errors$` の両方にエラーを流します。状態遷移は `idle → connecting → connected`。
+ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時は subscriber と `errors$` の両方にエラーを流します。状態遷移は `idle → connecting → connected`。**購読により実行されます。**
 
 ### `disconnect$(): Observable<void>`
 
-read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose$` を使います。
+read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose$` を使います。**購読により実行されます。**
 
 ### `dispose$(): Observable<void>`
 
-セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`、`receiveReplay$`、`portInfo$`、`isConnected$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。
+セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`、`receiveReplay$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。**購読により実行されます。**
 
 dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で失敗します。`disconnect$` は即 complete します。baud rate 変更時の session 作り替えなどでは、破棄したインスタンスを再利用せず新しい `SerialSession` を作成してください。
 
-### `destroy$(): Observable<void>`
-
-**非推奨** — `dispose$()` のエイリアスです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。詳細は [v3 移行ガイド – destroy$ の非推奨化](./migration-v3.md#4-destroy-の非推奨化) を参照してください。
-
 ### `state$: Observable<SerialSessionState>`
 
-購読時に現在値をリプレイします。`BehaviorSubject` を自前で再構築する代わりに、このストリームを UI の駆動源として使ってください。
-
-### `isConnected$: Observable<boolean>`
-
-**非推奨** — `state$.status` が `SerialSessionStatus.Connected` のとき `true`、それ以外のとき `false` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing するか、`state$` から derive してください。詳細は [v3 移行ガイド – isConnected$ の非推奨化](./migration-v3.md#6-isconnected-の非推奨化) を参照してください。
-
-### `portInfo$: Observable<SerialPortInfo | null>`
-
-**非推奨** — アクティブポートの `SerialPort.getInfo()` スナップショットを emit する convenience stream です。ポートが開いていないときは `null` です。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./migration-v3.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
-
-### `getPortInfo(): SerialPortInfo | null`
-
-**非推奨** — 最後の `portInfo$` 値の同期読み取りです。v3.x では後方互換のため残っていますが、次回 major version で削除予定です。`state$` を `SerialSessionStatus.Connected` で narrowing し `state.portInfo` を参照してください。詳細は [v3 移行ガイド – portInfo$ / getPortInfo() の非推奨化](./migration-v3.md#5-portinfo--getportinfo-の非推奨化) を参照してください。
+購読時に現在値をリプレイします。`BehaviorSubject` を自前で再構築する代わりに、このストリームを UI の駆動源として使ってください。`state.status` が `SerialSessionStatus.Connected` のときは **`state.portInfo`** でデバイス識別します。公開 API に `portInfo$` / `getPortInfo()` / `isConnected$` / `destroy$()` / `getCurrentPort()` はありません — [v3 移行ガイド – Phase 1 API 削除](./migration-v3.md#phase-1-api-削除) を参照してください。
 
 ### `errors$: Observable<SerialError>`
 
@@ -281,7 +256,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。
+ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**
 
 ## SerialError / SerialErrorCode
 
