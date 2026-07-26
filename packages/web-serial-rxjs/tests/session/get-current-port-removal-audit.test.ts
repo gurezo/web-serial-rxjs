@@ -12,13 +12,6 @@ import {
  * (Issues #437 / #474, PR #448).
  * Keep in sync with MIGRATION_V3 §7.
  */
-type AssertFalse<T extends false> = T;
-type HasGetCurrentPort = 'getCurrentPort' extends keyof SerialSession
-  ? true
-  : false;
-
-type _GetCurrentPortRemoved = AssertFalse<HasGetCurrentPort>;
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageSrcRoot = join(__dirname, '../../src');
@@ -49,6 +42,14 @@ describe('getCurrentPort removal audit (#474)', () => {
     );
     expect(publicIndexSource).not.toContain('getRuntimePort');
     expect(sessionIndexSource).not.toContain('getRuntimePort');
+  });
+
+  it('excludes getCurrentPort from keyof SerialSession at the type level', () => {
+    type HasGetCurrentPort = 'getCurrentPort' extends keyof SerialSession
+      ? true
+      : false;
+    const removed: HasGetCurrentPort = false;
+    expect(removed).toBe(false);
   });
 
   it('does not expose getCurrentPort on createSerialSession() return value', () => {
