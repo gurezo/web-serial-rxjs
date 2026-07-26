@@ -116,7 +116,7 @@
     "@angular/core": "22.0.8",
     "@angular/forms": "22.0.8",
     "@angular/platform-browser": "22.0.8",
-    "@angular/platform-browser-dynamic": "22.0.5",
+    "@angular/platform-browser-dynamic": "22.0.8",
     "@angular/router": "22.0.8",
     "rxjs": "^7.8.2",
     "vue": "3.5.40"
