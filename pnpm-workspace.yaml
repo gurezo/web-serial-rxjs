@@ -22,8 +22,10 @@ minimumReleaseAgeExclude:
   - '@schematics/*'
   - '@sveltejs/*'
   - '@swc/*'
+  - '@testing-library/*'
   - '@types/*'
   - '@typescript-eslint/*'
+  - '@vitejs/*'
   - '@vitest/*'
   - '@vue/*'
   - esbuild
@@ -33,6 +35,7 @@ minimumReleaseAgeExclude:
   - linkify-it
   - nx
   - playwright*
+  - prettier
   - react
   - react-dom
   - svelte*
