@@ -95,18 +95,6 @@ export interface SerialSession {
   dispose$(): Observable<void>;
 
   /**
-   * Alias for {@link dispose$}.
-   *
-   * @deprecated Prefer {@link dispose$}. This alias is retained for backward
-   *   compatibility and is scheduled for removal in the next major version.
-   *
-   * @returns An Observable that completes when disposal has finished.
-   *
-   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/433 | Issue #433}
-   */
-  destroy$(): Observable<void>;
-
-  /**
    * Canonical lifecycle source for the session.
    *
    * Reactive session lifecycle state as a discriminated union. Replays the
@@ -116,52 +104,6 @@ export interface SerialSession {
    * separate streams.
    */
   readonly state$: Observable<SerialSessionState>;
-
-  /**
-   * `true` when {@link state$} has `status: 'connected'`, `false` otherwise.
-   *
-   * Derived from `state$` with `distinctUntilChanged` so UIs can bind
-   * connect/disabled flags without reimplementing the comparison.
-   *
-   * @deprecated Prefer narrowing {@link state$} with
-   *   {@link SerialSessionStatus.Connected}. Retained for backward compatibility;
-   *   scheduled for removal in the next major version.
-   *
-   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/435 | Issue #435}
-   */
-  readonly isConnected$: Observable<boolean>;
-
-  /**
-   * The active port’s {@link SerialPort.getInfo} snapshot, or `null` when no
-   * port is open (including {@link SerialSessionStatus.Idle},
-   * {@link SerialSessionStatus.Error}, and {@link SerialSessionStatus.Unsupported}).
-   *
-   * Emits the current value on subscribe. Use with {@link state$} to know when
-   * the value is valid for your UI.
-   *
-   * @deprecated Prefer narrowing {@link state$} with
-   *   {@link SerialSessionStatus.Connected} and using `state.portInfo`.
-   *   Retained for backward compatibility; scheduled for removal in the next
-   *   major version.
-   *
-   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/434 | Issue #434}
-   */
-  readonly portInfo$: Observable<SerialPortInfo | null>;
-
-  /**
-   * Synchronous read of the last {@link portInfo$} value.
-   *
-   * @deprecated Prefer narrowing {@link state$} with
-   *   {@link SerialSessionStatus.Connected} and using `state.portInfo`.
-   *   Retained for backward compatibility; scheduled for removal in the next
-   *   major version.
-   *
-   * @returns The same as {@link SerialPort.getInfo} for the open port, or
-   *   `null` when not connected.
-   *
-   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/434 | Issue #434}
-   */
-  getPortInfo(): SerialPortInfo | null;
 
   /**
    * Canonical fatal / non-fatal error channel.
