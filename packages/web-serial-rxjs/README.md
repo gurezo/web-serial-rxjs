@@ -23,11 +23,11 @@ Supported desktop browsers:
 
 ## Connection state (lifecycle UI)
 
-Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. `isConnected$` remains available in v3.x but is **deprecated** — see [Migrating to v3](./docs/guide/en/migration-v3.md#6-isconnected-deprecation).
+Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. Session teardown uses **`dispose$()`** (subscribe to run it). See [Migrating to v3 – Phase 1 removals](./docs/guide/en/migration-v3.md#phase-1-api-removals).
 
 ## Port info (device identification)
 
-After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. `getPortInfo()` and `portInfo$` remain available in v3.x but are **deprecated**; migrate to `state$` narrowing. `getCurrentPort()` has been removed; see [Migrating to v3 – getCurrentPort() removal](./docs/guide/en/migration-v3.md#7-getcurrentport-removal).
+After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. Raw `SerialPort` is not exposed. Removed convenience APIs (`isConnected$`, `portInfo$`, `getPortInfo()`, `destroy$()`, `getCurrentPort()`) and their replacements are documented in [Migrating to v3](./docs/guide/en/migration-v3.md#phase-1-api-removals).
 
 ## Receive replay (`receive$` vs `receiveReplay$`)
 

@@ -40,4 +40,4 @@ When migrating existing code:
 
 - **`state$`** — canonical lifecycle source. Branch on `state.status` with `SerialSessionStatus`; use `state.portInfo` when connected
 - **`errors$`** — canonical fatal / non-fatal error event channel. Branch with `SerialError.is(SerialErrorCode.*)`
-- **Deprecated convenience** — `isConnected$`, `portInfo$`, `getPortInfo()` remain in v3.x; prefer `state$` narrowing in new code
+- **`dispose$()`** — sole session teardown API (subscribe to run it). Removed convenience APIs (`destroy$`, `isConnected$`, `portInfo$`, `getPortInfo()`, `getCurrentPort()`) are documented in [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals)

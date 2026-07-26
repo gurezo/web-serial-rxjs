@@ -54,7 +54,7 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 | `createSerialClient(opts)`              | `createSerialSession(opts)`                                             |
 | `client.connect()`                      | `session.connect$()`                                                    |
 | `client.disconnect()`                   | `session.disconnect$()`                                                 |
-| `client.connected` / `client.connected$`| `session.isConnected$` (or `session.state$` with `map`)                  |
+| `client.connected` / `client.connected$`| `session.state$` (narrow on `SerialSessionStatus.Connected`, or derive a boolean with `map`) |
 | `client.state$` (discriminated object)  | `session.state$` (`SerialSessionState` string union)                  |
 | `client.text$` / `client.lines$`        | `session.lines$` (line-delimited) or `session.receive$` (raw UTF-8 chunks) |
 | `client.bytes$`                         | Not exposed in v2. Convert with `new TextEncoder().encode(chunk)` if you need bytes, or open an issue. |
