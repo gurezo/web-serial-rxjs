@@ -37,6 +37,22 @@ session.errors$.subscribe((error) => {
 
 ---
 
+## Phase 1 API removals
+
+Phase 1 of [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) removed duplicate / escape-hatch APIs so `state$` and `dispose$()` are the only public sources for lifecycle and teardown. See [#478](https://github.com/gurezo/web-serial-rxjs/issues/478) for the documentation pass.
+
+| Removed API | Replacement |
+| --- | --- |
+| `destroy$()` | `dispose$()` |
+| `isConnected$` | `state$` with `state.status` (or derive a boolean from `state$`) |
+| `portInfo$` | `state.portInfo` when `state.status === SerialSessionStatus.Connected` |
+| `getPortInfo()` | `state.portInfo` when connected (same as above) |
+| `getCurrentPort()` | No direct replacement. Use `state.portInfo` for identification; raw `SerialPort` is not exposed |
+
+Details: [§4](#4-destroy-removal), [§5](#5-portinfo--getportinfo-removal), [§6](#6-isconnected-removal), [§7](#7-getcurrentport-removal).
+
+---
+
 ## 1. `SerialErrorCode` const object
 
 ### What changed
@@ -129,14 +145,13 @@ export type SerialSessionState =
 - [ ] Replace `import { SerialSessionState }` used as **constants** with `SerialSessionStatus`.
 - [ ] Replace `state === SerialSessionState.X` with `state.status === SerialSessionStatus.X`.
 - [ ] Replace `switch (state)` with `switch (state.status)` (or compare `state.status` in `if`).
-- [ ] Use `state.portInfo` when `state.status === SerialSessionStatus.Connected` (recommended — `portInfo$` and `getPortInfo()` are deprecated).
+- [ ] Use `state.portInfo` when `state.status === SerialSessionStatus.Connected` (`portInfo$` and `getPortInfo()` were removed — see [§5](#5-portinfo--getportinfo-removal)).
 - [ ] Use `state.error` when `state.status === 'error'` (same instance as `errors$` for fatal errors).
 
 ### Unchanged
 
-- `errors$` remains available.
-- `portInfo$` and `getPortInfo()` remain available in v3.x but are **deprecated** (see [§5](#5-portinfo--getportinfo-deprecation)).
-- `isConnected$` remains available in v3.x but is **deprecated** (see [§6](#6-isconnected-deprecation)).
+- `errors$` remains available as the independent error event channel.
+- Lifecycle convenience APIs (`portInfo$`, `getPortInfo()`, `isConnected$`, `destroy$()`) are **removed** — migrate with [§4](#4-destroy-removal)–[§6](#6-isconnected-removal).
 
 ---
 
@@ -181,13 +196,11 @@ session.errors$.subscribe((error) => {
 
 ---
 
-## 4. `destroy$` deprecation
+## 4. `destroy$()` removal
 
-`SerialSession` exposes both `dispose$()` and `destroy$()`. They are the same function — `destroy$` is a legacy alias. Lifecycle terminology (`dispose`, `disposed`, `SESSION_DISPOSED`) already uses **`dispose$`** as the canonical API.
+`destroy$()` was a legacy alias of `dispose$()`. Lifecycle terminology (`dispose`, `disposed`, `SESSION_DISPOSED`) already used **`dispose$`** as the canonical API. Phase 1 ([#473](https://github.com/gurezo/web-serial-rxjs/issues/473) / [#479](https://github.com/gurezo/web-serial-rxjs/pull/479)) **removed** `destroy$()` from the public API so session teardown has a single entry point.
 
-`destroy$()` remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version.
-
-### v2 / legacy pattern (deprecated)
+### Old pattern (removed)
 
 ```typescript
 session.destroy$().subscribe({
@@ -195,7 +208,7 @@ session.destroy$().subscribe({
 });
 ```
 
-### v3 recommended pattern
+### Recommended pattern
 
 ```typescript
 session.dispose$().subscribe({
@@ -206,23 +219,21 @@ session.dispose$().subscribe({
 ### Migration checklist
 
 - [ ] Replace `session.destroy$()` with `session.dispose$()`.
-- [ ] Address TypeScript `@deprecated` warnings by migrating to `dispose$`.
 - [ ] Prefer `dispose$` in new code and documentation.
 
-### Compatibility in v3.x
+### Why there is no alias
 
-- `destroy$` remains available in v3.x and delegates to the same implementation as `dispose$`.
-- Runtime behavior is unchanged; only the alias is deprecated.
+Keeping both names forced callers to choose between equivalent APIs and kept docs / tests dual. `dispose$()` is the only teardown method.
 
 ---
 
-## 5. `portInfo$` / `getPortInfo()` deprecation
+## 5. `portInfo$` / `getPortInfo()` removal
 
 v3.0.0 made `state$` a discriminated union. When `state.status` is `SerialSessionStatus.Connected`, **`state.portInfo`** is the canonical source for the active port's `SerialPort.getInfo()` snapshot — TypeScript narrowing guarantees it is present.
 
-`portInfo$` and `getPortInfo()` remain in v3.x for backward compatibility but are **deprecated** and scheduled for removal in the next major version. They expose `SerialPortInfo | null`, which does not encode the relationship between connection state and port information.
+`portInfo$` and `getPortInfo()` exposed `SerialPortInfo | null`, which did not encode the relationship between connection state and port information. Phase 1 **removed** both APIs ([#473](https://github.com/gurezo/web-serial-rxjs/issues/473) / [#479](https://github.com/gurezo/web-serial-rxjs/pull/479)).
 
-### v2 / legacy pattern (deprecated)
+### Old pattern (removed)
 
 ```typescript
 session.portInfo$.subscribe((portInfo) => {
@@ -234,7 +245,7 @@ session.portInfo$.subscribe((portInfo) => {
 const snapshot = session.getPortInfo();
 ```
 
-### v3 recommended pattern
+### Recommended pattern
 
 ```typescript
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
@@ -250,24 +261,21 @@ session.state$.subscribe((state) => {
 
 - [ ] Replace `portInfo$` subscriptions with `state$` and read `state.portInfo` when `state.status === SerialSessionStatus.Connected`.
 - [ ] Replace `getPortInfo()` with `state$` narrowing and `state.portInfo`.
-- [ ] Address TypeScript `@deprecated` warnings by migrating to the pattern above.
 - [ ] Prefer `state.portInfo` in new code and documentation.
 
-### Compatibility in v3.x
+### Notes
 
-- `portInfo$` and `getPortInfo()` remain available in v3.x.
-- Runtime behavior is unchanged; values stay in sync with `state.portInfo` while connected.
-- `errors$` is not deprecated — it is an independent error event channel, not a duplicate of lifecycle state.
+- `errors$` is not a duplicate of lifecycle state — it remains the independent error event channel.
 
 ---
 
-## 6. `isConnected$` deprecation
+## 6. `isConnected$` removal
 
 v3.0.0 made `state$` a discriminated union. When `state.status` is `SerialSessionStatus.Connected`, TypeScript narrowing gives type-safe access to `state.portInfo` and other state-specific fields.
 
-`isConnected$` is an `Observable<boolean>` that only projects whether the session is connected, so it loses the type information carried by the discriminated union. It remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version.
+`isConnected$` was an `Observable<boolean>` that only projected whether the session was connected, so it lost the type information carried by the discriminated union and could not distinguish `idle` / `connecting` / `disconnecting` / `error` / `disposed`. Phase 1 **removed** it ([#473](https://github.com/gurezo/web-serial-rxjs/issues/473) / [#479](https://github.com/gurezo/web-serial-rxjs/pull/479)).
 
-### v2 / legacy pattern (deprecated)
+### Old pattern (removed)
 
 ```typescript
 session.isConnected$.subscribe((isConnected) => {
@@ -277,7 +285,7 @@ session.isConnected$.subscribe((isConnected) => {
 });
 ```
 
-### v3 recommended pattern (`state$` narrowing)
+### Recommended pattern (`state$` narrowing)
 
 ```typescript
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
@@ -300,6 +308,8 @@ const isConnected$ = session.state$.pipe(
   distinctUntilChanged(),
 );
 ```
+
+The local `isConnected$` above is **application-derived** from `state$`. It is not a `SerialSession` member.
 
 ### RxJS `filter` with connected-state narrowing
 
@@ -334,20 +344,13 @@ const isConnected = computed(
 
 - [ ] Replace `isConnected$` subscriptions with `state$` and narrow on `state.status === SerialSessionStatus.Connected`.
 - [ ] When you only need a boolean for UI, derive it from `state$` with `map` or `computed`.
-- [ ] Address TypeScript `@deprecated` warnings by migrating to the patterns above.
 - [ ] Prefer `state$` narrowing in new code and documentation.
-
-### Compatibility in v3.x
-
-- `isConnected$` remains available in v3.x.
-- Runtime behavior is unchanged; values stay in sync with `state.status === SerialSessionStatus.Connected`.
-- Framework-specific convenience state should be derived from `state$` in framework adapters and examples.
 
 ---
 
 ## 7. `getCurrentPort()` removal
 
-`SerialSession.getCurrentPort()` was a raw `SerialPort` escape hatch. Calling `port.close()` or `writable.getWriter()` on the returned port could conflict with the session lifecycle and break internal runtime invariants.
+`SerialSession.getCurrentPort()` was a raw `SerialPort` escape hatch. Calling `port.close()` or `writable.getWriter()` on the returned port could conflict with the session lifecycle and break internal runtime invariants. **There is no direct replacement** — the library does not expose the managed `SerialPort` so callers cannot bypass session I/O.
 
 A usage audit ([#437](https://github.com/gurezo/web-serial-rxjs/issues/437)) found no production callers in this repository. Device identification is covered by `state.portInfo`, so **`getCurrentPort()` has been removed** from the public API ([#448](https://github.com/gurezo/web-serial-rxjs/pull/448)). Phase 1 parent issue [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) / child issue [#474](https://github.com/gurezo/web-serial-rxjs/issues/474) also track this removal as a completion criterion.
 
@@ -572,8 +575,7 @@ The `createSerialSession(options?)` signature and existing options object litera
 - [Migrating from v1 to v2](./migration-v2.md)
 - [API Reference – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
-- [API Reference – dispose$ / destroy$](./concepts.md#dispose-observablevoid)
-- [API Reference – portInfo$ / getPortInfo()](./concepts.md#portinfo-observableserialportinfo--null)
-- [API Reference – isConnected$](./concepts.md#isconnected-observableboolean)
+- [API Reference – dispose$](./concepts.md#dispose-observablevoid)
+- [API Reference – state$](./concepts.md#state-observableserialsessionstate)
 - [API Reference – Deprecated exports](./concepts.md#deprecated-exports)
 - [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions)

@@ -37,6 +37,22 @@ session.errors$.subscribe((error) => {
 
 ---
 
+## Phase 1 API 削除
+
+[#472](https://github.com/gurezo/web-serial-rxjs/issues/472) の Phase 1 では、重複・escape hatch な API を削除し、ライフサイクルと破棄の正規情報源を `state$` と `dispose$()` に統一しました。ドキュメント整備は [#478](https://github.com/gurezo/web-serial-rxjs/issues/478) です。
+
+| 削除 API | 移行先 |
+| --- | --- |
+| `destroy$()` | `dispose$()` |
+| `isConnected$` | `state$` の `state.status`（または `state$` から boolean を derive） |
+| `portInfo$` | `state.status === SerialSessionStatus.Connected` 時の `state.portInfo` |
+| `getPortInfo()` | 同上（Connected 時の `state.portInfo`） |
+| `getCurrentPort()` | 直接の代替なし。識別は `state.portInfo`。生の `SerialPort` は公開しない |
+
+詳細: [§4](#4-destroy-の削除)、[§5](#5-portinfo--getportinfo-の削除)、[§6](#6-isconnected-の削除)、[§7](#7-getcurrentport-の削除)。
+
+---
+
 ## 1. `SerialErrorCode` const object
 
 ### 変更内容
@@ -129,14 +145,13 @@ export type SerialSessionState =
 - [ ] **定数**として使っていた `SerialSessionState` を `SerialSessionStatus` に置き換える。
 - [ ] `state === SerialSessionState.X` を `state.status === SerialSessionStatus.X` に置き換える。
 - [ ] `switch (state)` を `switch (state.status)` に置き換える（または `if` で `state.status` を比較）。
-- [ ] `connected` 時は `state.portInfo` を利用する（推奨 — `portInfo$` と `getPortInfo()` は非推奨）。
+- [ ] `connected` 時は `state.portInfo` を利用する（`portInfo$` と `getPortInfo()` は削除済み — [§5](#5-portinfo--getportinfo-の削除) を参照）。
 - [ ] `error` 時は `state.error` を利用（fatal error は `errors$` と同一インスタンス）。
 
 ### 変更なし
 
-- `errors$` は引き続き利用可能です。
-- `portInfo$` と `getPortInfo()` は v3.x では引き続き利用可能ですが、**非推奨**です（[§5](#5-portinfo--getportinfo-の非推奨化) を参照）。
-- `isConnected$` は v3.x では引き続き利用可能ですが、**非推奨**です（[§6](#6-isconnected-の非推奨化) を参照）。
+- `errors$` は独立した error event channel として引き続き利用可能です。
+- ライフサイクル convenience API（`portInfo$`、`getPortInfo()`、`isConnected$`、`destroy$()`）は **削除済み** です — [§4](#4-destroy-の削除)–[§6](#6-isconnected-の削除) で移行してください。
 
 ---
 
@@ -181,13 +196,11 @@ session.errors$.subscribe((error) => {
 
 ---
 
-## 4. `destroy$` の非推奨化
+## 4. `destroy$()` の削除
 
-`SerialSession` は `dispose$()` と `destroy$()` の両方を公開しています。これらは同一関数であり、`destroy$` は legacy エイリアスです。lifecycle terminology（`dispose`、`disposed`、`SESSION_DISPOSED`）はすでに **`dispose$`** を canonical API として使用しています。
+`destroy$()` は `dispose$()` の legacy エイリアスでした。lifecycle terminology（`dispose`、`disposed`、`SESSION_DISPOSED`）はすでに **`dispose$`** を canonical API として使用していました。Phase 1（[#473](https://github.com/gurezo/web-serial-rxjs/issues/473) / [#479](https://github.com/gurezo/web-serial-rxjs/pull/479)）で公開 API から **削除**し、セッション破棄の入口を一本化しました。
 
-後方互換のため `destroy$()` は v3.x に残っていますが、**非推奨**です。次回 major version で削除予定です。
-
-### v2 / 旧パターン（非推奨）
+### 旧パターン（削除済み）
 
 ```typescript
 session.destroy$().subscribe({
@@ -195,7 +208,7 @@ session.destroy$().subscribe({
 });
 ```
 
-### v3 推奨パターン
+### 推奨パターン
 
 ```typescript
 session.dispose$().subscribe({
@@ -206,23 +219,21 @@ session.dispose$().subscribe({
 ### 移行チェックリスト
 
 - [ ] `session.destroy$()` を `session.dispose$()` に置き換える。
-- [ ] TypeScript の `@deprecated` 警告が出たら `dispose$` へ移行する。
 - [ ] 新規コードとドキュメントでは `dispose$` を使用する。
 
-### v3.x での互換性
+### エイリアスを残さない理由
 
-- `destroy$` は v3.x では引き続き利用可能で、`dispose$` と同じ実装に委譲します。
-- ランタイム挙動は変更されません。非推奨化されるのはエイリアスのみです。
+同じ処理に二つの名前があると、利用者がどちらを使うべきか判断を迫られ、ドキュメントとテストも二重になります。破棄 API は `dispose$()` のみです。
 
 ---
 
-## 5. `portInfo$` / `getPortInfo()` の非推奨化
+## 5. `portInfo$` / `getPortInfo()` の削除
 
 v3.0.0 では `state$` が discriminated union になりました。`state.status` が `SerialSessionStatus.Connected` のとき、**`state.portInfo`** がアクティブポートの `SerialPort.getInfo()` スナップショットの canonical source です。TypeScript の narrowing により、存在が型で保証されます。
 
-`portInfo$` と `getPortInfo()` は後方互換のため v3.x に残っていますが、**非推奨**で、次回 major version で削除予定です。これらは `SerialPortInfo | null` を返すため、接続状態とポート情報の関係を型で表現できません。
+`portInfo$` と `getPortInfo()` は `SerialPortInfo | null` を返すため、接続状態とポート情報の関係を型で表現できませんでした。Phase 1 で両方を **削除**しました（[#473](https://github.com/gurezo/web-serial-rxjs/issues/473) / [#479](https://github.com/gurezo/web-serial-rxjs/pull/479)）。
 
-### v2 / 旧パターン（非推奨）
+### 旧パターン（削除済み）
 
 ```typescript
 session.portInfo$.subscribe((portInfo) => {
@@ -234,7 +245,7 @@ session.portInfo$.subscribe((portInfo) => {
 const snapshot = session.getPortInfo();
 ```
 
-### v3 推奨パターン
+### 推奨パターン
 
 ```typescript
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
@@ -250,24 +261,21 @@ session.state$.subscribe((state) => {
 
 - [ ] `portInfo$` の購読を `state$` に置き換え、`state.status === SerialSessionStatus.Connected` のとき `state.portInfo` を参照する。
 - [ ] `getPortInfo()` を `state$` の narrowing と `state.portInfo` に置き換える。
-- [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
 - [ ] 新規コードとドキュメントでは `state.portInfo` を使用する。
 
-### v3.x での互換性
+### 補足
 
-- `portInfo$` と `getPortInfo()` は v3.x では引き続き利用可能です。
-- ランタイム挙動は変更されません。接続中は `state.portInfo` と値が同期します。
-- `errors$` は非推奨化の対象ではありません。lifecycle state ではなく、独立した error event channel です。
+- `errors$` は lifecycle state の重複ではありません。独立した error event channel として残ります。
 
 ---
 
-## 6. `isConnected$` の非推奨化
+## 6. `isConnected$` の削除
 
 v3.0.0 では `state$` が discriminated union になりました。`state.status` が `SerialSessionStatus.Connected` のとき、TypeScript の narrowing により接続状態と `state.portInfo` などの state-specific データへ型安全にアクセスできます。
 
-`isConnected$` は `Observable<boolean>` として接続の真偽値だけを返すため、discriminated union が持つ型情報を失います。後方互換のため v3.x に残っていますが、**非推奨**で、次回 major version で削除予定です。
+`isConnected$` は `Observable<boolean>` として接続の真偽値だけを返すため、discriminated union が持つ型情報を失い、`idle` / `connecting` / `disconnecting` / `error` / `disposed` を区別できませんでした。Phase 1 で **削除**しました（[#473](https://github.com/gurezo/web-serial-rxjs/issues/473) / [#479](https://github.com/gurezo/web-serial-rxjs/pull/479)）。
 
-### v2 / 旧パターン（非推奨）
+### 旧パターン（削除済み）
 
 ```typescript
 session.isConnected$.subscribe((isConnected) => {
@@ -277,7 +285,7 @@ session.isConnected$.subscribe((isConnected) => {
 });
 ```
 
-### v3 推奨パターン（`state$` narrowing）
+### 推奨パターン（`state$` narrowing）
 
 ```typescript
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
@@ -300,6 +308,8 @@ const isConnected$ = session.state$.pipe(
   distinctUntilChanged(),
 );
 ```
+
+上記のローカル `isConnected$` は **`state$` からアプリ側で derive したもの**であり、`SerialSession` のメンバーではありません。
 
 ### RxJS `filter` で connected state を narrowing する場合
 
@@ -334,20 +344,13 @@ const isConnected = computed(
 
 - [ ] `isConnected$` の購読を `state$` に置き換え、`state.status === SerialSessionStatus.Connected` で narrowing する。
 - [ ] boolean だけ必要な UI では `state$` から `map` / `computed` で derive する。
-- [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
 - [ ] 新規コードとドキュメントでは `state$` narrowing を使用する。
-
-### v3.x での互換性
-
-- `isConnected$` は v3.x では引き続き利用可能です。
-- ランタイム挙動は変更されません。接続中は `state.status === SerialSessionStatus.Connected` と値が同期します。
-- framework-specific convenience state は framework adapter / example 側で `state$` から derive してください。
 
 ---
 
 ## 7. `getCurrentPort()` の削除
 
-`SerialSession.getCurrentPort()` は raw `SerialPort` を返す escape hatch でした。利用者が `port.close()` や `writable.getWriter()` を直接呼び出すと、session が管理する lifecycle と競合し、internal runtime invariant を破壊する可能性がありました。
+`SerialSession.getCurrentPort()` は raw `SerialPort` を返す escape hatch でした。利用者が `port.close()` や `writable.getWriter()` を直接呼び出すと、session が管理する lifecycle と競合し、internal runtime invariant を破壊する可能性がありました。**直接の代替 API はありません** — ライブラリ管理下の `SerialPort` を公開せず、セッション I/O の迂回を防ぎます。
 
 利用状況監査（[#437](https://github.com/gurezo/web-serial-rxjs/issues/437)）の結果、本リポジトリ内のライブラリ・example コードに `getCurrentPort()` の実利用はなく、デバイス識別は `state.portInfo` で代替可能と判断し、**public API から削除**しました（[#448](https://github.com/gurezo/web-serial-rxjs/pull/448)）。Phase 1 の親 Issue [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) / 子 Issue [#474](https://github.com/gurezo/web-serial-rxjs/issues/474) でも、同じ削除方針を完了条件として追跡しています。
 
@@ -572,8 +575,7 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 - [v1 から v2 への移行](./migration-v2.md)
 - [概念と設計メモ – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [概念と設計メモ – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
-- [概念と設計メモ – dispose$ / destroy$](./concepts.md#dispose-observablevoid)
-- [概念と設計メモ – portInfo$ / getPortInfo()](./concepts.md#portinfo-observableserialportinfo--null)
-- [概念と設計メモ – isConnected$](./concepts.md#isconnected-observableboolean)
+- [概念と設計メモ – dispose$](./concepts.md#dispose-observablevoid)
+- [概念と設計メモ – state$](./concepts.md#state-observableserialsessionstate)
 - [概念と設計メモ – Deprecated exports](./concepts.md#deprecated-exports)
 - [概念と設計メモ – SerialSessionOptions](./concepts.md#serialsessionoptions)
