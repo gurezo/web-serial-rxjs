@@ -6,7 +6,8 @@
     "strict": true,
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],
