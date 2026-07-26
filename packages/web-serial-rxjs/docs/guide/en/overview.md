@@ -84,7 +84,7 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 
 **`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./advanced-usage.md#line-framing)).
 
-**Connected boolean for UI** — when you only need a flag, derive it from `state$` (see [Advanced Usage](./advanced-usage.md#connected-boolean-ui-state-narrowing)) or narrow on `state.status === SerialSessionStatus.Connected`. Removed convenience APIs are documented in [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals).
+**Connected boolean for UI** — when you only need a flag, derive it from `state$` (see [Advanced Usage](./advanced-usage.md#connected-boolean-ui-narrowing)) or narrow on `state.status === SerialSessionStatus.Connected`. Removed convenience APIs are documented in [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals).
 
 **`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./advanced-usage.md#line-framing)).
 

@@ -49,7 +49,7 @@ session.errors$.subscribe((error) => {
 | `getPortInfo()` | 同上（Connected 時の `state.portInfo`） |
 | `getCurrentPort()` | 直接の代替なし。識別は `state.portInfo`。生の `SerialPort` は公開しない |
 
-詳細: [§4](#4-destroy-の削除)、[§5](#5-portinfo--getportinfo-の削除)、[§6](#6-isconnected-の削除)、[§7](#7-getcurrentport-の削除)。
+詳細: [§4](#4-の削除)、[§5](#5-の削除)、[§6](#6-の削除)、[§7](#7-の削除)。
 
 ---
 
@@ -145,13 +145,13 @@ export type SerialSessionState =
 - [ ] **定数**として使っていた `SerialSessionState` を `SerialSessionStatus` に置き換える。
 - [ ] `state === SerialSessionState.X` を `state.status === SerialSessionStatus.X` に置き換える。
 - [ ] `switch (state)` を `switch (state.status)` に置き換える（または `if` で `state.status` を比較）。
-- [ ] `connected` 時は `state.portInfo` を利用する（`portInfo$` と `getPortInfo()` は削除済み — [§5](#5-portinfo--getportinfo-の削除) を参照）。
+- [ ] `connected` 時は `state.portInfo` を利用する（`portInfo$` と `getPortInfo()` は削除済み — [§5](#5-の削除) を参照）。
 - [ ] `error` 時は `state.error` を利用（fatal error は `errors$` と同一インスタンス）。
 
 ### 変更なし
 
 - `errors$` は独立した error event channel として引き続き利用可能です。
-- ライフサイクル convenience API（`portInfo$`、`getPortInfo()`、`isConnected$`、`destroy$()`）は **削除済み** です — [§4](#4-destroy-の削除)–[§6](#6-isconnected-の削除) で移行してください。
+- ライフサイクル convenience API（`portInfo$`、`getPortInfo()`、`isConnected$`、`destroy$()`）は **削除済み** です — [§4](#4-の削除)–[§6](#6-の削除) で移行してください。
 
 ---
 
@@ -575,7 +575,6 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 - [v1 から v2 への移行](./migration-v2.md)
 - [概念と設計メモ – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [概念と設計メモ – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
-- [概念と設計メモ – dispose$](./concepts.md#dispose-observablevoid)
-- [概念と設計メモ – state$](./concepts.md#state-observableserialsessionstate)
+- [概念と設計メモ – dispose$ / state$](./concepts.md#serialsession)
 - [概念と設計メモ – Deprecated exports](./concepts.md#deprecated-exports)
 - [概念と設計メモ – SerialSessionOptions](./concepts.md#serialsessionoptions)

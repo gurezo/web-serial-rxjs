@@ -49,7 +49,7 @@ Phase 1 of [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) removed 
 | `getPortInfo()` | `state.portInfo` when connected (same as above) |
 | `getCurrentPort()` | No direct replacement. Use `state.portInfo` for identification; raw `SerialPort` is not exposed |
 
-Details: [§4](#4-destroy-removal), [§5](#5-portinfo--getportinfo-removal), [§6](#6-isconnected-removal), [§7](#7-getcurrentport-removal).
+Details: [§4](#4-removal), [§5](#5-removal), [§6](#6-removal), [§7](#7-removal).
 
 ---
 
@@ -145,13 +145,13 @@ export type SerialSessionState =
 - [ ] Replace `import { SerialSessionState }` used as **constants** with `SerialSessionStatus`.
 - [ ] Replace `state === SerialSessionState.X` with `state.status === SerialSessionStatus.X`.
 - [ ] Replace `switch (state)` with `switch (state.status)` (or compare `state.status` in `if`).
-- [ ] Use `state.portInfo` when `state.status === SerialSessionStatus.Connected` (`portInfo$` and `getPortInfo()` were removed — see [§5](#5-portinfo--getportinfo-removal)).
+- [ ] Use `state.portInfo` when `state.status === SerialSessionStatus.Connected` (`portInfo$` and `getPortInfo()` were removed — see [§5](#5-removal)).
 - [ ] Use `state.error` when `state.status === 'error'` (same instance as `errors$` for fatal errors).
 
 ### Unchanged
 
 - `errors$` remains available as the independent error event channel.
-- Lifecycle convenience APIs (`portInfo$`, `getPortInfo()`, `isConnected$`, `destroy$()`) are **removed** — migrate with [§4](#4-destroy-removal)–[§6](#6-isconnected-removal).
+- Lifecycle convenience APIs (`portInfo$`, `getPortInfo()`, `isConnected$`, `destroy$()`) are **removed** — migrate with [§4](#4-removal)–[§6](#6-removal).
 
 ---
 
@@ -575,7 +575,6 @@ The `createSerialSession(options?)` signature and existing options object litera
 - [Migrating from v1 to v2](./migration-v2.md)
 - [API Reference – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
-- [API Reference – dispose$](./concepts.md#dispose-observablevoid)
-- [API Reference – state$](./concepts.md#state-observableserialsessionstate)
+- [API Reference – dispose$ / state$](./concepts.md#serialsession)
 - [API Reference – Deprecated exports](./concepts.md#deprecated-exports)
 - [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions)
