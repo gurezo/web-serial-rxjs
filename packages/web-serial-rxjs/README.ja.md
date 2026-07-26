@@ -23,11 +23,11 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 
 ## 接続状態（ライフサイクル UI）
 
-ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。`isConnected$` は v3.x では引き続き利用可能ですが **非推奨** です。詳細は [v3 移行ガイド](./docs/guide/ja/migration-v3.md#6-isconnected-の非推奨化) を参照してください。
+ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v3 移行ガイド – Phase 1 API 削除](./docs/guide/ja/migration-v3.md#phase-1-api-削除) を参照してください。
 
 ## 接続中のポート情報（デバイス識別）
 
-`connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。`getPortInfo()` と `portInfo$` は v3.x では引き続き利用可能ですが **非推奨** です。`state$` の narrowing へ移行してください。`getCurrentPort()` は削除されました。詳細は [v3 移行ガイド](./docs/guide/ja/migration-v3.md#7-getcurrentport-の削除) を参照してください。
+`connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`）と置換先は [v3 移行ガイド](./docs/guide/ja/migration-v3.md#phase-1-api-削除) を参照してください。
 
 ## 受信の replay（`receive$` と `receiveReplay$`）
 
