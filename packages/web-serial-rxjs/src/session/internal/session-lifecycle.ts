@@ -1,4 +1,4 @@
-import { type BehaviorSubject, Observable, type Subject } from 'rxjs';
+import { Observable, type Subject } from 'rxjs';
 import { SerialError } from '../../errors/serial-error';
 import { SerialErrorCode } from '../../errors/serial-error-code';
 import { buildRequestOptions } from './build-request-options';
@@ -34,7 +34,6 @@ export interface SessionLifecycleDeps {
   resolvedOptions: ResolvedSerialSessionOptions;
   sendQueue: SendQueue;
   receivePipeline: ReceivePipeline;
-  portInfoSubject: BehaviorSubject<SerialPortInfo | null>;
   errorsSubject: Subject<SerialError>;
   isDisposed: () => boolean;
   reportError: (
@@ -57,7 +56,6 @@ export interface SessionLifecycle {
   writeToPort: (payload: Uint8Array) => Promise<void>;
   teardownPump: (pump: ReadPump | null) => Promise<void>;
   closePortSafely: (port: SerialPort | null) => Promise<void>;
-  updatePortInfo: (port: SerialPort | null) => void;
 }
 
 /**
@@ -71,16 +69,11 @@ export function createSessionLifecycle(
     resolvedOptions,
     sendQueue,
     receivePipeline,
-    portInfoSubject,
     errorsSubject,
     isDisposed,
     reportError,
     createDisposedError,
   } = deps;
-
-  const updatePortInfo = (port: SerialPort | null): void => {
-    portInfoSubject.next(port ? port.getInfo() : null);
-  };
 
   const teardownPump = async (pump: ReadPump | null): Promise<void> => {
     receivePipeline.clearReplay();
@@ -121,7 +114,6 @@ export function createSessionLifecycle(
       const pump = getRuntimePump(snapshot);
       await teardownPump(pump);
       await closePortSafely(portToClose);
-      updatePortInfo(null);
     }
 
     receivePipeline.clearLineBuffer();
@@ -131,7 +123,6 @@ export function createSessionLifecycle(
     controller.complete();
     errorsSubject.complete();
     receivePipeline.complete();
-    portInfoSubject.complete();
   };
 
   const dispose$ = (): Observable<void> =>
@@ -299,7 +290,6 @@ export function createSessionLifecycle(
           return;
         }
         controller.transition(createConnectedRuntime(selectedPort, pump));
-        updatePortInfo(selectedPort);
         subscriber.next();
         subscriber.complete();
       };
@@ -365,7 +355,6 @@ export function createSessionLifecycle(
             try {
               await portToClose.close();
             } catch (error) {
-              updatePortInfo(null);
               const serialError = reportError(error, {
                 fallbackCode: SerialErrorCode.CONNECTION_LOST,
                 messagePrefix: 'Failed to close port',
@@ -374,7 +363,6 @@ export function createSessionLifecycle(
               return;
             }
           }
-          updatePortInfo(null);
           if (!isDisposed()) {
             controller.transition(createIdleRuntime());
           }
@@ -399,6 +387,5 @@ export function createSessionLifecycle(
     writeToPort,
     teardownPump,
     closePortSafely,
-    updatePortInfo,
   };
 }

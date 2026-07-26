@@ -1,10 +1,4 @@
-import {
-  BehaviorSubject,
-  distinctUntilChanged,
-  map,
-  Observable,
-  Subject,
-} from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
@@ -86,7 +80,6 @@ export function createSerialSession(
   const errorsSubject = new Subject<SerialError>();
   const sendQueue = createSendQueue();
   const textEncoder = new TextEncoder();
-  const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
 
   const isDisposed = (): boolean =>
     controller.status === SerialSessionStatus.Disposed;
@@ -110,7 +103,6 @@ export function createSerialSession(
     resolvedOptions,
     sendQueue,
     receivePipeline,
-    portInfoSubject,
     errorsSubject,
     isDisposed,
     reportError: (error, options) =>
@@ -123,7 +115,6 @@ export function createSerialSession(
     errorsSubject,
     sendQueue,
     isDisposed,
-    updatePortInfo: lifecycle.updatePortInfo,
     teardownPump: lifecycle.teardownPump,
     closePortSafely: lifecycle.closePortSafely,
   });
@@ -136,11 +127,6 @@ export function createSerialSession(
     receive$,
     resolvedOptions.terminalBuffer,
   ).text$;
-  const isConnected$ = controller.state$.pipe(
-    map((state) => state.status === SerialSessionStatus.Connected),
-    distinctUntilChanged(),
-  );
-  const portInfo$ = portInfoSubject.asObservable();
 
   return {
     isBrowserSupported(): boolean {
@@ -149,7 +135,6 @@ export function createSerialSession(
     connect$: lifecycle.connect$,
     disconnect$: lifecycle.disconnect$,
     dispose$: lifecycle.dispose$,
-    destroy$: lifecycle.dispose$,
     send$(data: SerialPayload): Observable<void> {
       if (isDisposed()) {
         return new Observable<void>((subscriber) => {
@@ -171,11 +156,6 @@ export function createSerialSession(
       });
     },
     state$: controller.state$,
-    isConnected$,
-    portInfo$,
-    getPortInfo(): SerialPortInfo | null {
-      return portInfoSubject.getValue();
-    },
     errors$,
     receive$,
     terminalText$,

@@ -25,7 +25,6 @@ export interface SessionErrorReporterDeps {
   errorsSubject: Subject<SerialError>;
   sendQueue: SendQueue;
   isDisposed: () => boolean;
-  updatePortInfo: (port: SerialPort | null) => void;
   teardownPump: (pump: ReadPump | null) => Promise<void>;
   closePortSafely: (port: SerialPort | null) => Promise<void>;
 }
@@ -49,7 +48,6 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
     errorsSubject,
     sendQueue,
     isDisposed,
-    updatePortInfo,
     teardownPump,
     closePortSafely,
   } = deps;
@@ -93,7 +91,6 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
       const pump = getRuntimePump(runtime);
       controller.transition(createErrorRuntime(serialError));
       sendQueue.clear();
-      updatePortInfo(null);
       void teardownPump(pump).then(() => closePortSafely(portToClose));
     }
     return serialError;
