@@ -6,7 +6,7 @@ import type {
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BehaviorSubject, distinctUntilChanged, map, of, Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 
@@ -30,16 +30,11 @@ const createMockSession = (): MockSession => {
   const receiveSubject = new Subject<string>();
   const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
-  const isConnected$ = stateSubject.pipe(
-    map((s) => s.status === SS.Connected),
-    distinctUntilChanged(),
-  );
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => true);
-  const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
 
   const session: SerialSession = {
     isBrowserSupported,
@@ -53,9 +48,6 @@ const createMockSession = (): MockSession => {
     terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable()).text$,
     receiveReplay$: receiveSubject.asObservable(),
     lines$: linesSubject.asObservable(),
-    isConnected$,
-    portInfo$: portInfoSubject.asObservable(),
-    getPortInfo: () => portInfoSubject.getValue(),
   };
 
   return {

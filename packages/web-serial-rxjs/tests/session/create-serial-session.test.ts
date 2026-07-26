@@ -138,16 +138,8 @@ describe('createSerialSession', () => {
       expect(typeof session.connect$).toBe('function');
       expect(typeof session.disconnect$).toBe('function');
       expect(typeof session.dispose$).toBe('function');
-      // destroy$ remains the same function reference as dispose$ during v3.x deprecation.
-      expect(typeof session.destroy$).toBe('function');
-      expect(session.destroy$).toBe(session.dispose$);
       expect(typeof session.send$).toBe('function');
-      expect(typeof session.getPortInfo).toBe('function');
       expect(session.state$).toBeDefined();
-      // isConnected$ remains available during v3.x deprecation.
-      expect(session.isConnected$).toBeDefined();
-      // portInfo$ and getPortInfo remain available during v3.x deprecation.
-      expect(session.portInfo$).toBeDefined();
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
       expect(session.terminalText$).toBeDefined();
@@ -249,85 +241,6 @@ describe('createSerialSession', () => {
       } else {
         throw new Error('expected error state');
       }
-    });
-  });
-
-  describe('isConnected$', () => {
-    it('replays false on subscribe when state is unsupported', async () => {
-      const session = createSerialSession();
-
-      expect(await firstValueFrom(session.isConnected$)).toBe(false);
-    });
-
-    it('replays false on subscribe when state is idle', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
-      (globalThis as any).navigator = { serial: {} };
-
-      const session = createSerialSession();
-
-      expect(await firstValueFrom(session.isConnected$)).toBe(false);
-    });
-
-    it('is true when connected and false after disconnect$ returns to idle', async () => {
-      const { stream } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession();
-      const connectedBools = lastValueFrom(
-        session.isConnected$.pipe(take(3), toArray()),
-      );
-
-      await firstValueFrom(session.connect$());
-      await firstValueFrom(session.disconnect$());
-
-      expect(await connectedBools).toEqual([false, true, false]);
-    });
-
-    it('is false when state$ is error', async () => {
-      const requestPort = vi
-        .fn()
-        .mockRejectedValue(new DOMException('user cancel', 'NotFoundError'));
-      Object.defineProperty(globalThis, 'navigator', {
-        configurable: true,
-        writable: true,
-        value: { serial: { requestPort, getPorts: vi.fn() } },
-      });
-
-      const session = createSerialSession();
-
-      await expect(firstValueFrom(session.connect$())).rejects.toBeInstanceOf(
-        SerialError,
-      );
-
-      expect(await firstValueFrom(session.isConnected$)).toBe(false);
-    });
-
-    it('keeps isConnected$ in sync with state$ while connected', async () => {
-      const { stream } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession();
-      await firstValueFrom(session.connect$());
-
-      const state = await firstValueFrom(session.state$);
-      expect(state.status).toBe(S.Connected);
-      expect(await firstValueFrom(session.isConnected$)).toBe(true);
-    });
-
-    it('clears isConnected$ together with state$ on disconnect', async () => {
-      const { stream } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession();
-      await firstValueFrom(session.connect$());
-      await firstValueFrom(session.disconnect$());
-
-      const state = await firstValueFrom(session.state$);
-      expect(state.status).toBe(S.Idle);
-      expect(await firstValueFrom(session.isConnected$)).toBe(false);
     });
   });
 
@@ -623,18 +536,8 @@ describe('createSerialSession', () => {
     });
   });
 
-  describe('portInfo$ and getPortInfo', () => {
-    it('replays null before connect', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
-      (globalThis as any).navigator = { serial: {} };
-
-      const session = createSerialSession();
-
-      expect(session.getPortInfo()).toBeNull();
-      expect(await firstValueFrom(session.portInfo$)).toBeNull();
-    });
-
-    it('keeps state.portInfo in sync with getPortInfo() while connected', async () => {
+  describe('state$.portInfo', () => {
+    it('exposes SerialPort.getInfo on connected state and drops it on disconnect', async () => {
       const { stream } = makeStream();
       const port = makeMockPort(stream);
       installNavigator(port);
@@ -642,77 +545,37 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
       await firstValueFrom(session.connect$());
 
-      const state = await firstValueFrom(session.state$);
-      expect(state.status).toBe(S.Connected);
-      if (state.status === S.Connected) {
-        expect(state.portInfo).toEqual(stubPortInfo);
-        expect(session.getPortInfo()).toEqual(state.portInfo);
+      const connected = await firstValueFrom(session.state$);
+      expect(port.getInfo).toHaveBeenCalled();
+      expect(connected).toEqual(connectedState());
+      if (connected.status === S.Connected) {
+        expect(connected.portInfo).toEqual(stubPortInfo);
       } else {
         throw new Error('expected connected state');
       }
-    });
 
-    it('clears state.portInfo and getPortInfo() together on disconnect', async () => {
-      const { stream } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession();
-      await firstValueFrom(session.connect$());
       await firstValueFrom(session.disconnect$());
 
-      const state = await firstValueFrom(session.state$);
-      expect(state.status).toBe(S.Idle);
-      expect(session.getPortInfo()).toBeNull();
-      expect(await firstValueFrom(session.portInfo$)).toBeNull();
+      const idle = await firstValueFrom(session.state$);
+      expect(idle).toEqual({ status: S.Idle });
+      expect(idle).not.toHaveProperty('portInfo');
     });
 
-    it('exposes SerialPort.getInfo after connect and clears on disconnect', async () => {
-      const { stream } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession();
-      const infoDuringConnect = firstValueFrom(
-        session.portInfo$.pipe(take(2), toArray()),
-      );
-
-      await firstValueFrom(session.connect$());
-
-      expect(port.getInfo).toHaveBeenCalled();
-      expect(session.getPortInfo()).toEqual(stubPortInfo);
-
-      const infos = await infoDuringConnect;
-      expect(infos[0]).toBeNull();
-      expect(infos[1]).toEqual(stubPortInfo);
-
-      const nullAfterDisconnect = firstValueFrom(
-        session.portInfo$.pipe(
-          filter((p): p is null => p === null),
-          take(1),
-        ),
-      );
-      await firstValueFrom(session.disconnect$());
-
-      expect(session.getPortInfo()).toBeNull();
-      expect(await nullAfterDisconnect).toBeNull();
-    });
-
-    it('clears port info when the read pump errors fatally', async () => {
+    it('drops portInfo when the read pump errors fatally', async () => {
       const { stream, controller } = makeStream();
       const port = makeMockPort(stream);
       installNavigator(port);
 
       const session = createSerialSession();
       await firstValueFrom(session.connect$());
-      expect(session.getPortInfo()).toEqual(stubPortInfo);
 
       const errorPromise = firstValueFrom(session.errors$);
       controller.error(new Error('device unplugged'));
       await errorPromise;
 
-      expect(session.getPortInfo()).toBeNull();
-      expect(await firstValueFrom(session.portInfo$)).toBeNull();
+      const state = await firstValueFrom(session.state$);
+      expect(state.status).toBe(S.Error);
+      expect(state).not.toHaveProperty('portInfo');
     });
   });
 
@@ -1550,8 +1413,7 @@ describe('createSerialSession', () => {
     });
   });
 
-  // dispose$ is canonical; destroy$ alias behavior is retained for v3.x backward compatibility.
-  describe('dispose$ and deprecated destroy$ alias', () => {
+  describe('dispose$', () => {
     it('transitions idle -> disposed and completes state$', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
       (globalThis as any).navigator = { serial: {} };
@@ -1579,13 +1441,10 @@ describe('createSerialSession', () => {
       const errors = lastValueFrom(session.errors$.pipe(toArray()));
       const receive = lastValueFrom(session.receive$.pipe(toArray()));
       const lines = lastValueFrom(session.lines$.pipe(toArray()));
-      const portInfo = lastValueFrom(session.portInfo$.pipe(toArray()));
-      const isConnected = lastValueFrom(session.isConnected$.pipe(toArray()));
 
       await firstValueFrom(session.dispose$());
 
       expect(port.close).toHaveBeenCalledTimes(1);
-      expect(session.getPortInfo()).toBeNull();
       await expect(states).resolves.toEqual([
         connectedState(),
         { status: S.Disposed },
@@ -1593,8 +1452,6 @@ describe('createSerialSession', () => {
       await expect(errors).resolves.toEqual([]);
       await expect(receive).resolves.toEqual([]);
       await expect(lines).resolves.toEqual([]);
-      await expect(portInfo).resolves.toEqual([stubPortInfo, null]);
-      await expect(isConnected).resolves.toEqual([true, false]);
     });
 
     it('cancels connect and disposes when called while connecting', async () => {
@@ -1654,13 +1511,11 @@ describe('createSerialSession', () => {
       );
     });
 
-    // destroy$ must stay idempotent via the same implementation as dispose$.
-    it('is idempotent for dispose$ and destroy$', async () => {
+    it('is idempotent', async () => {
       const session = createSerialSession();
 
       await firstValueFrom(session.dispose$());
       await expect(firstValueFrom(session.dispose$())).resolves.toBeUndefined();
-      await expect(firstValueFrom(session.destroy$())).resolves.toBeUndefined();
     });
 
     it('rejects connect$ and send$ after dispose with SESSION_DISPOSED', async () => {

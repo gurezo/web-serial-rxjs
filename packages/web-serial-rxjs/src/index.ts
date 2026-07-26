@@ -13,7 +13,7 @@
  * `state$` (canonical lifecycle discriminated union) + `errors$` (error event
  * channel) + `receive$` + `terminalText$` + `lines$` without rebuilding state,
  * read loops, or write queues. Derive convenience booleans from `state$`
- * narrowing; `isConnected$` is deprecated in v3.x.
+ * narrowing.
  *
  * - {@link createSerialSession} - factory for a {@link SerialSession}
  * - {@link createTerminalBuffer} - terminal-style display text from {@link SerialSession.receive$}
