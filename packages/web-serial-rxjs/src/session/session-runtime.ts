@@ -265,8 +265,11 @@ export function createSessionRuntimeController(
       return false;
     }
 
+    // Project before mutating: `runtimeToPublicState` reads `port.getInfo()`,
+    // so a throwing projection must not leave the runtime ahead of `state$`.
+    const publicState = runtimeToPublicState(next);
     runtime = next;
-    subject.next(runtimeToPublicState(next));
+    subject.next(publicState);
     return true;
   };
 

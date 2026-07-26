@@ -395,6 +395,29 @@ describe('session-runtime', () => {
       });
     });
 
+    describe('atomic publication', () => {
+      it('keeps runtime and state$ unchanged when the projection throws', async () => {
+        const controller = createSessionRuntimeController(createIdleRuntime());
+        const failingPort = {
+          getInfo: () => {
+            throw new Error('port revoked');
+          },
+        } as unknown as SerialPort;
+        controller.transition(createConnectingRuntime(() => undefined));
+
+        expect(() =>
+          controller.transition(
+            createConnectedRuntime(failingPort, createMockPump()),
+          ),
+        ).toThrow('port revoked');
+
+        expect(controller.status).toBe(S.Connecting);
+        await expect(firstValueFrom(controller.state$)).resolves.toEqual<
+          SerialSessionState
+        >({ status: S.Connecting });
+      });
+    });
+
     describe('runtime narrowing', () => {
       it('connected runtime always has port and pump', () => {
         const port = createMockPort();
