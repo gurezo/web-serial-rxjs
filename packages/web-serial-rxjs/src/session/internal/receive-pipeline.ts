@@ -35,7 +35,7 @@ export interface ReceivePipeline {
   receiveReplay$: Observable<string>;
   /**
    * Buffer-overflow errors produced while decoding chunks. The factory pipes
-   * these into the session's single `reportError` entry point so the receive
+   * these into the session's single error-reporting entry point so the receive
    * pipeline stays decoupled from error reporting and initialization order.
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/476 | Issue #476}
