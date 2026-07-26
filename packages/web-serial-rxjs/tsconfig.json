@@ -11,8 +11,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "useUnknownInCatchVariables": true,
     "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "ignoreDeprecations": "6.0"
+    "noUncheckedIndexedAccess": true
   },
   "files": [],
   "include": [],
