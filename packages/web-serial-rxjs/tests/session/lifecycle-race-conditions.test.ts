@@ -459,4 +459,99 @@ describe('lifecycle race conditions (#477)', () => {
       });
     });
   });
+
+  describe('reconnect and post-dispose races', () => {
+    it('allows connect$ again after a failed open', async () => {
+      const { stream: stream1 } = makeStream();
+      const failingPort = makeMockPort(stream1);
+      failingPort.open.mockRejectedValueOnce(new Error('open failed'));
+
+      const { stream: stream2 } = makeStream();
+      const okPort = makeMockPort(stream2);
+
+      const requestPort = vi
+        .fn()
+        .mockResolvedValueOnce(failingPort)
+        .mockResolvedValueOnce(okPort);
+      installNavigatorWithRequestPort(requestPort);
+
+      const session = createSerialSession();
+      const errors = firstValueFrom(session.errors$);
+
+      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+        code: SerialErrorCode.PORT_OPEN_FAILED,
+      });
+      expect((await errors).code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+      expect(await firstValueFrom(session.state$)).toEqual(
+        expect.objectContaining({ status: S.Error }),
+      );
+
+      await expect(firstValueFrom(session.connect$())).resolves.toBeUndefined();
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+      expect(okPort.close).not.toHaveBeenCalled();
+    });
+
+    it('reports CONNECTION_LOST when readable is missing after open before pump starts', async () => {
+      const { stream } = makeStream();
+      // After open succeeds, readable becomes unavailable so pump.start() fails
+      // before the session transitions to connected.
+      const port: MockPort = {
+        readable: stream,
+        writable: null,
+        open: vi.fn().mockImplementation(async () => {
+          port.readable = null;
+        }),
+        close: vi.fn().mockResolvedValue(undefined),
+        getInfo: vi.fn().mockReturnValue(stubPortInfo),
+      };
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const errors = firstValueFrom(session.errors$);
+      const connectSettled = firstValueFrom(session.connect$()).then(
+        () => 'next' as const,
+        () => 'error' as const,
+      );
+
+      const emitted = await errors;
+      expect(emitted.code).toBe(SerialErrorCode.CONNECTION_LOST);
+
+      // Expected current behavior (#477):
+      // - pump.start() reports CONNECTION_LOST while runtime is still Connecting,
+      //   so fatal teardown has no port reference and does not call close().
+      // - connect$ still attempts connected transition (ignored: error -> connected)
+      //   and completes its subscriber with next.
+      // - final state$ remains Error (not Connected).
+      expect(await connectSettled).toBe('next');
+      expect(await firstValueFrom(session.state$)).toEqual(
+        expect.objectContaining({ status: S.Error }),
+      );
+      expect(port.close).not.toHaveBeenCalled();
+    });
+
+    it('rejects connect$ and send$ after dispose$ completes with SESSION_DISPOSED', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const states = lastValueFrom(session.state$.pipe(toArray()));
+      await expect(firstValueFrom(session.dispose$())).resolves.toBeUndefined();
+      await expect(states).resolves.toEqual([
+        connectedState(),
+        { status: S.Disposed },
+      ]);
+
+      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+        code: SerialErrorCode.SESSION_DISPOSED,
+      });
+      await expect(firstValueFrom(session.send$('x'))).rejects.toMatchObject({
+        code: SerialErrorCode.SESSION_DISPOSED,
+      });
+      // dispose must not start new port work afterward
+      expect(port.close).toHaveBeenCalledTimes(1);
+    });
+  });
 });
