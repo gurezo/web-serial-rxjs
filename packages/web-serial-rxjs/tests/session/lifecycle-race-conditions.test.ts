@@ -294,4 +294,169 @@ describe('lifecycle race conditions (#477)', () => {
       });
     });
   });
+
+  describe('send$ / read-pump races', () => {
+    it('disconnect$ while send$ write is in flight reaches idle without unhandled rejection', async () => {
+      const { stream } = makeStream();
+      const writeGate = createDeferred<void>();
+      const { stream: writable, writes } = makeRecordingWritable(async () => {
+        await writeGate.promise;
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => {
+        unhandled.push(reason);
+      };
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        const sendSettled = firstValueFrom(session.send$('payload')).then(
+          () => ({ kind: 'next' as const }),
+          (error: unknown) => ({ kind: 'error' as const, error }),
+        );
+        await flushMicrotasks();
+        expect(writes).toHaveLength(1);
+
+        await expect(
+          firstValueFrom(session.disconnect$()),
+        ).resolves.toBeUndefined();
+        expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+        expect(port.close).toHaveBeenCalledTimes(1);
+
+        writeGate.resolve();
+        await flushMicrotasks();
+        // Expected: in-flight write is not aborted by disconnect$; it settles
+        // when the writer finishes. New sends after disconnect fail.
+        const sendResult = await sendSettled;
+        expect(sendResult.kind === 'next' || sendResult.kind === 'error').toBe(
+          true,
+        );
+        expect(unhandled).toEqual([]);
+        await expect(firstValueFrom(session.send$('again'))).rejects.toMatchObject({
+          code: SerialErrorCode.PORT_NOT_OPEN,
+        });
+      } finally {
+        process.off('unhandledRejection', onUnhandled);
+      }
+    });
+
+    it('dispose$ while send$ write is in flight reaches disposed and rejects later send$', async () => {
+      const { stream } = makeStream();
+      const writeGate = createDeferred<void>();
+      const { stream: writable, writes } = makeRecordingWritable(async () => {
+        await writeGate.promise;
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const states = lastValueFrom(session.state$.pipe(toArray()));
+      const sendSettled = firstValueFrom(session.send$('payload')).then(
+        () => ({ kind: 'next' as const }),
+        (error: unknown) => ({ kind: 'error' as const, error }),
+      );
+      await flushMicrotasks();
+      expect(writes).toHaveLength(1);
+
+      await expect(firstValueFrom(session.dispose$())).resolves.toBeUndefined();
+      writeGate.resolve();
+      await flushMicrotasks();
+
+      await expect(states).resolves.toEqual([
+        connectedState(),
+        { status: S.Disposed },
+      ]);
+      expect(port.close).toHaveBeenCalledTimes(1);
+      const sendResult = await sendSettled;
+      expect(sendResult.kind === 'next' || sendResult.kind === 'error').toBe(
+        true,
+      );
+      await expect(firstValueFrom(session.send$('again'))).rejects.toMatchObject({
+        code: SerialErrorCode.SESSION_DISPOSED,
+      });
+    });
+
+    it('writer lock is released when disconnect$ runs after writer is acquired mid-write', async () => {
+      const { stream } = makeStream();
+      const writeGate = createDeferred<void>();
+      let writeStarted!: () => void;
+      const writeStartedPromise = new Promise<void>((resolve) => {
+        writeStarted = resolve;
+      });
+      const { stream: writable } = makeRecordingWritable(async () => {
+        writeStarted();
+        await writeGate.promise;
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const sendSettled = firstValueFrom(session.send$('x')).then(
+        () => undefined,
+        () => undefined,
+      );
+      await writeStartedPromise;
+
+      await firstValueFrom(session.disconnect$());
+      writeGate.resolve();
+      await sendSettled;
+      await flushMicrotasks();
+
+      // WritableStreamDefaultWriter.releaseLock must have run so a second
+      // connect can obtain a writer again.
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+      const { stream: stream2 } = makeStream();
+      const { stream: writable2, writes: writes2 } = makeRecordingWritable();
+      const port2 = makeMockPort(stream2, undefined, writable2);
+      (
+        navigator.serial.requestPort as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(port2);
+
+      await firstValueFrom(session.connect$());
+      await firstValueFrom(session.send$('y'));
+      expect(writes2.map((buf) => new TextDecoder().decode(buf))).toEqual(['y']);
+    });
+
+    it('dispose$ during read-pump fatal error handling reaches disposed', async () => {
+      const { stream, controller } = makeStream();
+      const closeGate = createDeferred<void>();
+      const close = vi.fn().mockReturnValue(closeGate.promise);
+      const port = makeMockPort(stream, close);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const states = lastValueFrom(session.state$.pipe(toArray()));
+      const errors = firstValueFrom(session.errors$);
+
+      controller.error(new Error('device unplugged'));
+      const emitted = await errors;
+      expect(emitted.code).toBe(SerialErrorCode.READ_FAILED);
+
+      // Race: dispose while fatal pump error teardown still awaits close().
+      const disposeDone = firstValueFrom(session.dispose$());
+      closeGate.resolve();
+      await expect(disposeDone).resolves.toBeUndefined();
+
+      await expect(states).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ status: S.Error }),
+          { status: S.Disposed },
+        ]),
+      );
+      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+        code: SerialErrorCode.SESSION_DISPOSED,
+      });
+    });
+  });
 });
