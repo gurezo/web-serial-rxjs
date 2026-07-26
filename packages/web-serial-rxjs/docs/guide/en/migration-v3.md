@@ -349,7 +349,7 @@ const isConnected = computed(
 
 `SerialSession.getCurrentPort()` was a raw `SerialPort` escape hatch. Calling `port.close()` or `writable.getWriter()` on the returned port could conflict with the session lifecycle and break internal runtime invariants.
 
-A usage audit ([#437](https://github.com/gurezo/web-serial-rxjs/issues/437)) found no production callers in this repository. Device identification is covered by `state.portInfo`, so **`getCurrentPort()` has been removed** from the public API.
+A usage audit ([#437](https://github.com/gurezo/web-serial-rxjs/issues/437)) found no production callers in this repository. Device identification is covered by `state.portInfo`, so **`getCurrentPort()` has been removed** from the public API ([#448](https://github.com/gurezo/web-serial-rxjs/pull/448)). Phase 1 parent issue [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) / child issue [#474](https://github.com/gurezo/web-serial-rxjs/issues/474) also track this removal as a completion criterion.
 
 ### Audit results
 
