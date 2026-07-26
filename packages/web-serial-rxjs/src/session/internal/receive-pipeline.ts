@@ -12,7 +12,6 @@ import {
   createReceiveReplayBuffer,
   type ReceiveReplayBuffer,
 } from './receive-replay-buffer';
-import type { NormalizeSerialErrorOptions } from '../normalize-serial-error';
 import type { ResolvedSerialSessionOptions } from '../serial-session-options';
 
 /**
@@ -22,10 +21,6 @@ import type { ResolvedSerialSessionOptions } from '../serial-session-options';
  */
 export interface ReceivePipelineDeps {
   resolvedOptions: ResolvedSerialSessionOptions;
-  reportError: (
-    error: unknown,
-    options: NormalizeSerialErrorOptions,
-  ) => SerialError;
 }
 
 /**
@@ -38,6 +33,14 @@ export interface ReceivePipeline {
   receive$: Observable<string>;
   lines$: Observable<string>;
   receiveReplay$: Observable<string>;
+  /**
+   * Buffer-overflow errors produced while decoding chunks. The factory pipes
+   * these into the session's single error-reporting entry point so the receive
+   * pipeline stays decoupled from error reporting and initialization order.
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/476 | Issue #476}
+   */
+  bufferErrors$: Observable<SerialError>;
   clearReplay: () => void;
   startLiveReceiveReplay: () => void;
   clearLineBuffer: () => void;
@@ -51,14 +54,16 @@ export interface ReceivePipeline {
 export function createReceivePipeline(
   deps: ReceivePipelineDeps,
 ): ReceivePipeline {
-  const { resolvedOptions, reportError } = deps;
+  const { resolvedOptions } = deps;
 
   const receiveSubject = new Subject<string>();
   const linesSubject = new Subject<string>();
+  const bufferErrorsSubject = new Subject<SerialError>();
   const lineBuffer: LineBuffer = createLineBuffer(resolvedOptions.lineBuffer);
 
   const receive$ = receiveSubject.asObservable();
   const lines$ = linesSubject.asObservable();
+  const bufferErrors$ = bufferErrorsSubject.asObservable();
 
   const receiveReplayStream$ = resolvedOptions.receiveReplay.enabled
     ? new BehaviorSubject<Observable<string>>(receive$)
@@ -104,7 +109,7 @@ export function createReceivePipeline(
     if (activeReceiveReplay) {
       const { overflowed } = activeReceiveReplay.next(text);
       if (overflowed) {
-        reportError(
+        bufferErrorsSubject.next(
           new SerialError(
             SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
             'Receive replay buffer exceeded configured limits; oldest chunks were discarded',
@@ -114,22 +119,18 @@ export function createReceivePipeline(
               bufferSize: resolvedOptions.receiveReplay.bufferSize,
             },
           ),
-          {
-            fallbackCode: SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
-          },
         );
       }
     }
     const { lines, overflowed } = lineBuffer.feed(text);
     if (overflowed) {
-      reportError(
+      bufferErrorsSubject.next(
         new SerialError(
           SerialErrorCode.LINE_BUFFER_OVERFLOW,
           'Line buffer exceeded maxChars; leading data was discarded',
           undefined,
           { maxChars: resolvedOptions.lineBuffer.maxChars },
         ),
-        { fallbackCode: SerialErrorCode.LINE_BUFFER_OVERFLOW },
       );
     }
     for (const line of lines) {
@@ -140,6 +141,7 @@ export function createReceivePipeline(
   const complete = (): void => {
     receiveSubject.complete();
     linesSubject.complete();
+    bufferErrorsSubject.complete();
     receiveReplayStream$?.complete();
   };
 
@@ -147,6 +149,7 @@ export function createReceivePipeline(
     receive$,
     lines$,
     receiveReplay$,
+    bufferErrors$,
     clearReplay,
     startLiveReceiveReplay,
     clearLineBuffer,

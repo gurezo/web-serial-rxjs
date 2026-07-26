@@ -36,6 +36,8 @@ export interface SessionLifecycleDeps {
   receivePipeline: ReceivePipeline;
   errorsSubject: Subject<SerialError>;
   isDisposed: () => boolean;
+  teardownPump: (pump: ReadPump | null) => Promise<void>;
+  closePortSafely: (port: SerialPort | null) => Promise<void>;
   reportError: (
     error: unknown,
     options: NormalizeSerialErrorOptions,
@@ -54,8 +56,6 @@ export interface SessionLifecycle {
   disconnect$: () => Observable<void>;
   dispose$: () => Observable<void>;
   writeToPort: (payload: Uint8Array) => Promise<void>;
-  teardownPump: (pump: ReadPump | null) => Promise<void>;
-  closePortSafely: (port: SerialPort | null) => Promise<void>;
 }
 
 /**
@@ -71,30 +71,11 @@ export function createSessionLifecycle(
     receivePipeline,
     errorsSubject,
     isDisposed,
+    teardownPump,
+    closePortSafely,
     reportError,
     createDisposedError,
   } = deps;
-
-  const teardownPump = async (pump: ReadPump | null): Promise<void> => {
-    receivePipeline.clearReplay();
-    receivePipeline.clearLineBuffer();
-    if (pump) {
-      await pump.stop();
-    }
-  };
-
-  const closePortSafely = async (port: SerialPort | null): Promise<void> => {
-    if (!port) {
-      return;
-    }
-    try {
-      await port.close();
-    } catch {
-      // The read pump may already have errored the stream, which makes
-      // close() reject. We ignore it here because disconnect$ has a
-      // dedicated error path for close failures initiated by the user.
-    }
-  };
 
   const teardownFromSnapshot = async (
     snapshot: SessionRuntime,
@@ -385,7 +366,5 @@ export function createSessionLifecycle(
     disconnect$,
     dispose$,
     writeToPort,
-    teardownPump,
-    closePortSafely,
   };
 }

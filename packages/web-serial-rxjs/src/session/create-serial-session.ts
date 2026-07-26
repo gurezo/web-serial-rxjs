@@ -4,10 +4,10 @@ import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
 import type { SerialPayload } from '../types';
 import { hasWebSerialSupport } from './internal/has-web-serial-support';
+import { createPortTeardown } from './internal/port-teardown';
 import { createReceivePipeline } from './internal/receive-pipeline';
 import { createSessionErrorReporter } from './internal/session-error-reporter';
 import { createSessionLifecycle } from './internal/session-lifecycle';
-import { normalizeSerialError } from './normalize-serial-error';
 import { createSendQueue } from './send-queue';
 import type { SerialSession } from './serial-session';
 import {
@@ -84,19 +84,26 @@ export function createSerialSession(
   const isDisposed = (): boolean =>
     controller.status === SerialSessionStatus.Disposed;
 
-  const errorReporterRef: {
-    reportError?: (
-      error: unknown,
-      options: Parameters<typeof normalizeSerialError>[1],
-    ) => SerialError;
-    createDisposedError?: () => SerialError;
-  } = {};
+  const receivePipeline = createReceivePipeline({ resolvedOptions });
 
-  const receivePipeline = createReceivePipeline({
-    resolvedOptions,
-    reportError: (error, options) =>
-      errorReporterRef.reportError!(error, options),
+  const { teardownPump, closePortSafely } = createPortTeardown({
+    receivePipeline,
   });
+
+  const { reportError, createDisposedError } = createSessionErrorReporter({
+    controller,
+    errorsSubject,
+    sendQueue,
+    isDisposed,
+    teardownPump,
+    closePortSafely,
+  });
+
+  // Route receive-side buffer overflows through the single reportError entry
+  // point. The subscription completes when the pipeline completes on dispose.
+  receivePipeline.bufferErrors$.subscribe((error) =>
+    reportError(error, { fallbackCode: error.code }),
+  );
 
   const lifecycle = createSessionLifecycle({
     controller,
@@ -105,21 +112,11 @@ export function createSerialSession(
     receivePipeline,
     errorsSubject,
     isDisposed,
-    reportError: (error, options) =>
-      errorReporterRef.reportError!(error, options),
-    createDisposedError: () => errorReporterRef.createDisposedError!(),
+    teardownPump,
+    closePortSafely,
+    reportError,
+    createDisposedError,
   });
-
-  const { reportError, createDisposedError } = createSessionErrorReporter({
-    controller,
-    errorsSubject,
-    sendQueue,
-    isDisposed,
-    teardownPump: lifecycle.teardownPump,
-    closePortSafely: lifecycle.closePortSafely,
-  });
-  errorReporterRef.reportError = reportError;
-  errorReporterRef.createDisposedError = createDisposedError;
 
   const { receive$, lines$, receiveReplay$ } = receivePipeline;
   const errors$ = errorsSubject.asObservable();
