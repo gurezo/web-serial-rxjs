@@ -20,7 +20,6 @@ interface MockCore {
   stateSubject: BehaviorSubject<SerialSessionState>;
   receiveSubject: Subject<string>;
   errorsSubject: Subject<SerialError>;
-  isConnectedSubject: BehaviorSubject<boolean>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
@@ -32,7 +31,6 @@ const createMockCore = (supported = true): MockCore => {
   const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
-  const isConnectedSubject = new BehaviorSubject(false);
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
@@ -50,7 +48,8 @@ const createMockCore = (supported = true): MockCore => {
     receive$: receiveSubject.asObservable(),
     terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable())
       .text$,
-    isConnected$: isConnectedSubject.asObservable(),
+    receiveReplay$: receiveSubject.asObservable(),
+    lines$: receiveSubject.asObservable(),
   };
 
   return {
@@ -58,7 +57,6 @@ const createMockCore = (supported = true): MockCore => {
     stateSubject,
     receiveSubject,
     errorsSubject,
-    isConnectedSubject,
     connect$,
     disconnect$,
     dispose$,

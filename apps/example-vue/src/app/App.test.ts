@@ -5,7 +5,7 @@ import type {
 } from '@gurezo/web-serial-rxjs';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { mount } from '@vue/test-utils';
-import { BehaviorSubject, distinctUntilChanged, map, of, Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - Vue SFC file, types are defined in vue-shims.d.ts
 import App from './App.vue';
@@ -30,10 +30,6 @@ const createMockSession = (): MockSession => {
   const receiveSubject = new Subject<string>();
   const linesSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
-  const isConnected$ = stateSubject.pipe(
-    map((s) => s.status === SS.Connected),
-    distinctUntilChanged(),
-  );
   const connect$ = vi.fn(() => {
     stateSubject.next({ status: SS.Connecting });
     stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
@@ -47,7 +43,6 @@ const createMockSession = (): MockSession => {
   const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
   const isBrowserSupported = vi.fn(() => true);
-  const portInfoSubject = new BehaviorSubject<SerialPortInfo | null>(null);
 
   const session: SerialSession = {
     isBrowserSupported,
@@ -61,9 +56,6 @@ const createMockSession = (): MockSession => {
     terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable()).text$,
     receiveReplay$: receiveSubject.asObservable(),
     lines$: linesSubject.asObservable(),
-    isConnected$,
-    portInfo$: portInfoSubject.asObservable(),
-    getPortInfo: () => portInfoSubject.getValue(),
   };
 
   return {

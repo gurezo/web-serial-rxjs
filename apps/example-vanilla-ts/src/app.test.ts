@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
+import { BehaviorSubject, Subject, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { App } from './app.js';
@@ -13,17 +13,12 @@ interface MockSession {
   receive$: Subject<string>;
   terminalText$: Subject<string>;
   errors$: Subject<{ message: string }>;
-  isConnected$: ReturnType<typeof map>;
 }
 
 const createMockSession = (): MockSession => {
   const state$ = new BehaviorSubject<{ status: string }>({ status: 'idle' });
   const receive$ = new Subject<string>();
   const errors$ = new Subject<{ message: string }>();
-  const isConnected$ = state$.pipe(
-    map((s) => s.status === 'connected'),
-    distinctUntilChanged(),
-  );
   return {
     isBrowserSupported: vi.fn(() => true),
     connect$: vi.fn(() => of(undefined)),
@@ -34,7 +29,6 @@ const createMockSession = (): MockSession => {
     receive$,
     terminalText$: receive$,
     errors$,
-    isConnected$,
   };
 };
 
