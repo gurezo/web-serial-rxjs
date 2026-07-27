@@ -42,10 +42,10 @@ describe('session options type audit (#441)', () => {
 
   it('accepts feature-only options at runtime', () => {
     const options: SerialSessionFeatureOptions = {
-      receiveReplay: { enabled: true, bufferSize: 64 },
+      lineBuffer: { maxChars: 2048 },
     };
     expect(() => createSerialSession(options)).not.toThrow();
-    expect(resolveSerialSessionOptions(options).receiveReplay.enabled).toBe(true);
+    expect(resolveSerialSessionOptions(options).lineBuffer.maxChars).toBe(2048);
   });
 
   it('accepts combined connection and feature options at runtime', () => {

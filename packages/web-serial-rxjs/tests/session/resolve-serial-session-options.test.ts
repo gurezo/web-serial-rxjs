@@ -77,40 +77,6 @@ describe('resolveSerialSessionOptions', () => {
     });
   });
 
-  it('merges receiveReplay options', () => {
-    expect(
-      resolveSerialSessionOptions({
-        receiveReplay: { enabled: true, bufferSize: 2, maxChars: 100 },
-      }),
-    ).toEqual({
-      ...DEFAULT_SERIAL_SESSION_OPTIONS,
-      receiveReplay: {
-        enabled: true,
-        bufferSize: 2,
-        maxChars: 100,
-      },
-    });
-  });
-
-  it('rejects invalid receiveReplay options', () => {
-    expect(() =>
-      resolveSerialSessionOptions({ receiveReplay: { bufferSize: 0 } }),
-    ).toThrow(SerialError);
-    try {
-      resolveSerialSessionOptions({ receiveReplay: { bufferSize: 0 } });
-    } catch (error) {
-      expect(error).toBeInstanceOf(SerialError);
-      expect((error as SerialError).code).toBe(
-        SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
-      );
-      expect((error as SerialError).context).toEqual({
-        field: 'receiveReplay.bufferSize',
-        value: 0,
-        constraint: 'receive-replay-buffer-size-range',
-      });
-    }
-  });
-
   it.each([
     ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: -1 } }, -1],
     ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: 1.5 } }, 1.5],
@@ -222,7 +188,6 @@ describe('resolveSerialSessionOptions', () => {
     const partialConnectionOptions: SerialSessionOptions = { baudRate: 115200 };
     const mixedOptions: SerialSessionOptions = {
       baudRate: 9600,
-      receiveReplay: { enabled: true },
       terminalBuffer: { maxLines: 50 },
       lineBuffer: { maxChars: 1024 },
       filters: [{ usbVendorId: 0x1234 }],
@@ -238,10 +203,6 @@ describe('resolveSerialSessionOptions', () => {
     expect(resolveSerialSessionOptions(mixedOptions)).toEqual({
       ...DEFAULT_SERIAL_SESSION_OPTIONS,
       baudRate: 9600,
-      receiveReplay: {
-        ...DEFAULT_SERIAL_SESSION_OPTIONS.receiveReplay,
-        enabled: true,
-      },
       terminalBuffer: {
         ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
         maxLines: 50,

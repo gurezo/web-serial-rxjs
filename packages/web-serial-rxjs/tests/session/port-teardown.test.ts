@@ -5,11 +5,8 @@ import type { ReceivePipeline } from '../../src/session/internal/receive-pipelin
 
 function createReceivePipelineStub(
   calls: string[],
-): Pick<ReceivePipeline, 'clearReplay' | 'clearLineBuffer'> {
+): Pick<ReceivePipeline, 'clearLineBuffer'> {
   return {
-    clearReplay: vi.fn(() => {
-      calls.push('clearReplay');
-    }),
     clearLineBuffer: vi.fn(() => {
       calls.push('clearLineBuffer');
     }),
@@ -32,7 +29,7 @@ function createPumpStub(calls: string[], stopError?: unknown): ReadPump {
 }
 
 describe('createPortTeardown (#476)', () => {
-  it('clears the receive buffers before stopping the pump', async () => {
+  it('clears the line buffer before stopping the pump', async () => {
     const calls: string[] = [];
     const receivePipeline = createReceivePipelineStub(calls);
     const { teardownPump } = createPortTeardown({
@@ -42,10 +39,10 @@ describe('createPortTeardown (#476)', () => {
 
     await teardownPump(pump);
 
-    expect(calls).toEqual(['clearReplay', 'clearLineBuffer', 'stop']);
+    expect(calls).toEqual(['clearLineBuffer', 'stop']);
   });
 
-  it('still clears the receive buffers when no pump is active', async () => {
+  it('still clears the line buffer when no pump is active', async () => {
     const calls: string[] = [];
     const receivePipeline = createReceivePipelineStub(calls);
     const { teardownPump } = createPortTeardown({
@@ -54,7 +51,7 @@ describe('createPortTeardown (#476)', () => {
 
     await teardownPump(null);
 
-    expect(calls).toEqual(['clearReplay', 'clearLineBuffer']);
+    expect(calls).toEqual(['clearLineBuffer']);
   });
 
   it('resolves when the port closes successfully', async () => {

@@ -20,7 +20,6 @@ import {
   type SerialSessionOptions,
   type SerialSessionFeatureOptions,
   type SerialConnectionOptions,
-  type SerialSessionReceiveReplayOptions,
   type TerminalBufferOptions,
 } from '@gurezo/web-serial-rxjs';
 ```
@@ -83,7 +82,6 @@ W3C `SerialOptions` から派生し、`port.open` に渡されます。factory �
 | フィールド    | 型                                  | 既定値    | 説明                                                                         |
 | ------------- | ----------------------------------- | --------- | ---------------------------------------------------------------------------- |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —         | ポート選択ダイアログに渡される `navigator.serial.requestPort` 用フィルタ     |
-| `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512, maxChars: 0 }` | 受信チャンクの接続単位 replay。`receiveReplay$` を参照。 |
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }` | `terminalText$` のメモリ上限と ANSI 除去。`createTerminalBuffer` を参照。 |
 | `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | `lines$` の未完成行 tail のメモリ上限。下記を参照。 |
 
@@ -93,19 +91,8 @@ W3C `SerialOptions` から派生し、`port.open` に渡されます。factory �
 | --- | --- | --- |
 | `baudRate` | safe integer かつ `> 0` | `INVALID_CONNECTION_OPTIONS` |
 | `filters` | USB vendor/product ID の範囲 | `INVALID_FILTER_OPTIONS` |
-| `receiveReplay` | `bufferSize` / `maxChars` の範囲 | `INVALID_RECEIVE_REPLAY_OPTIONS` |
 | `terminalBuffer` | `maxLines` / `maxChars` が safe integer かつ `>= 0` | `INVALID_TERMINAL_BUFFER_OPTIONS` |
 | `lineBuffer` | `maxChars` が safe integer かつ `>= 0` | `INVALID_LINE_BUFFER_OPTIONS` |
-
-### `SerialSessionReceiveReplayOptions`
-
-| フィールド   | 型        | 既定値   | 説明 |
-| ------------ | --------- | -------- | ---- |
-| `enabled`    | `boolean` | `false`  | `true` のとき、現在の接続について `receiveReplay$` が直近 N **チャンク**をリプレイする。`false` のとき `receiveReplay$` は `receive$` と同じ hot ストリーム。 |
-| `bufferSize` | `number`  | `512`    | 接続中に保持するテキストチャンク数の上限（1〜65536）。文字数・バイト数ではない。 |
-| `maxChars`   | `number`  | `0`      | 保持チャンク全体の文字数上限。超過時は**古い**チャンクから破棄し、non-fatal の `RECEIVE_REPLAY_BUFFER_OVERFLOW` を `errors$` に emit する。`0` で制限なし。 |
-
-無効な `bufferSize` / `maxChars` は `createSerialSession` 時に `INVALID_RECEIVE_REPLAY_OPTIONS` で throw します。
 
 ### `TerminalBufferOptions`
 
@@ -204,7 +191,6 @@ interface SerialSession {
   readonly state$: Observable<SerialSessionState>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
-  readonly receiveReplay$: Observable<string>;
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
 
@@ -226,7 +212,7 @@ read pump を停止してポートを閉じます。すでに idle の場合も�
 
 ### `dispose$(): Observable<void>`
 
-セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`、`receiveReplay$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。**購読により実行されます。**
+セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。**購読により実行されます。**
 
 dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で失敗します。`disconnect$` は即 complete します。baud rate 変更時の session 作り替えなどでは、破棄したインスタンスを再利用せず新しい `SerialSession` を作成してください。
 
@@ -241,10 +227,6 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 ### `receive$: Observable<string>`
 
 内部の read pump が push する UTF-8 デコード済みテキスト（**行揃いではない**生チャンク列）。**subscription-lazy ではありません**：pump は `connect$` によって起動され、チャンクは multicast されます。遅れて購読した consumer は新しいデータのみを受け取ります。`\r` を含む制御文字もそのまま保持されます。**ターミナル風の表示**や **`\r` による上書き行**が必要なときは `receive$` を使います。**改行区切りのログ**や **1 行ずつの解析**には `lines$` を使います。
-
-### `receiveReplay$: Observable<string>`
-
-`receive$` と同じデータ経路ですが、`SerialSessionOptions.receiveReplay.enabled` が `true` のとき、**現在の接続**について直近 *N* 件のデコード**チャンク**を、新規購読者にリプレイします。`enabled` が `false`（既定）のときは `receive$` と同じ Observable 参照です。ポート切断時にリプレイバッファはリセットされます。任意の `maxChars` で保持チャンク全体の文字数上限を指定でき、超過時は古いチャンクから破棄します。`lines$` の行分割はリプレイしません。
 
 ### `terminalText$: Observable<string>`
 
@@ -282,12 +264,11 @@ try {
 
 上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./migration-v3.md) を参照してください。
 
-全 19 code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。
+全 17 code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。
 
 | Code                     | `context` の形 | emit されるタイミング                                              |
 | ------------------------ | -------------- | ------------------------------------------------------------------ |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` の未完成 tail が `lineBuffer.maxChars` を超過。先頭データを破棄（non-fatal） |
-| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` バッファが `receiveReplay` の上限を超過。古いチャンクを破棄（non-fatal） |
 | `INVALID_*` validation code | `ValidationErrorContext` | factory 時の options 検証。下表参照。`error.is(code)` で narrow |
 | `PORT_OPEN_FAILED` など cause 系 | `{ cause: unknown }` | 下表の各タイミング。`error.is(code)` で narrow してから `context.cause` を参照 |
 | その他                   | `undefined`    | 下表の各タイミング                                                 |
@@ -306,7 +287,6 @@ try {
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` が reject                      |
 | `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
 | `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる（セッション生成時）                 | `ValidationErrorContext` |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` または `receiveReplay.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` または `terminalBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） | `ValidationErrorContext` |

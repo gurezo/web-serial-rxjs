@@ -13,7 +13,6 @@ describe('ERROR_SEVERITY', () => {
     [SerialErrorCode.OPERATION_CANCELLED, 'fatal'],
     [SerialErrorCode.UNKNOWN, 'fatal'],
     [SerialErrorCode.LINE_BUFFER_OVERFLOW, 'non-fatal'],
-    [SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW, 'non-fatal'],
     [SerialErrorCode.BROWSER_NOT_SUPPORTED, 'non-fatal'],
     [SerialErrorCode.PORT_ALREADY_OPEN, 'non-fatal'],
     [SerialErrorCode.PORT_NOT_OPEN, 'non-fatal'],

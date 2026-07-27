@@ -16,11 +16,9 @@ const IMPLEMENTED_CODES = [
   SerialErrorCode.INVALID_FILTER_OPTIONS,
   SerialErrorCode.OPERATION_CANCELLED,
   SerialErrorCode.LINE_BUFFER_OVERFLOW,
-  SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
   SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
   SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
   SerialErrorCode.INVALID_CONNECTION_OPTIONS,
-  SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW,
   SerialErrorCode.SESSION_DISPOSED,
   SerialErrorCode.UNKNOWN,
 ] as const;
@@ -31,8 +29,8 @@ const RESERVED_CODES = [
 ] as const;
 
 describe('SerialErrorCode emission audit (#438)', () => {
-  it('defines exactly 19 codes', () => {
-    expect(Object.values(SerialErrorCode)).toHaveLength(19);
+  it('defines exactly 17 codes', () => {
+    expect(Object.values(SerialErrorCode)).toHaveLength(17);
   });
 
   it('classifies every code as implemented or reserved', () => {
@@ -40,7 +38,7 @@ describe('SerialErrorCode emission audit (#438)', () => {
       ...IMPLEMENTED_CODES,
       ...RESERVED_CODES,
     ]);
-    expect(classified.size).toBe(19);
+    expect(classified.size).toBe(17);
     for (const code of Object.values(SerialErrorCode)) {
       expect(classified.has(code)).toBe(true);
     }

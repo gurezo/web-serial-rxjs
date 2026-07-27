@@ -238,9 +238,6 @@ export function createSessionLifecycle(
         }
 
         receivePipeline.clearLineBuffer();
-        if (resolvedOptions.receiveReplay.enabled) {
-          receivePipeline.startLiveReceiveReplay();
-        }
         const pump = createReadPump(selectedPort, {
           onChunk: receivePipeline.handleChunk,
           onError: (pumpError) =>

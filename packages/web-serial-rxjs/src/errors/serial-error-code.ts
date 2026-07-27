@@ -158,17 +158,6 @@ export const SerialErrorCode = {
   LINE_BUFFER_OVERFLOW: 'LINE_BUFFER_OVERFLOW',
 
   /**
-   * Invalid receive replay options provided.
-   *
-   * This error occurs when {@link SerialSessionOptions.receiveReplay} values are
-   * out of range, such as a non-integer `bufferSize` or `maxChars`.
-   *
-   * **Suggested action**: Verify `receiveReplay` options match the documented
-   * ranges and value types.
-   */
-  INVALID_RECEIVE_REPLAY_OPTIONS: 'INVALID_RECEIVE_REPLAY_OPTIONS',
-
-  /**
    * Invalid terminal buffer options provided.
    *
    * This error occurs when {@link SerialSessionOptions.terminalBuffer} values are
@@ -200,18 +189,6 @@ export const SerialErrorCode = {
    * ranges and value types.
    */
   INVALID_CONNECTION_OPTIONS: 'INVALID_CONNECTION_OPTIONS',
-
-  /**
-   * Receive replay buffer exceeded its configured character limit.
-   *
-   * This error occurs when buffered chunks on {@link SerialSession.receiveReplay$}
-   * exceed {@link SerialSessionOptions.receiveReplay} `maxChars`. Oldest chunks
-   * are discarded to bound memory; the session remains connected.
-   *
-   * **Suggested action**: Increase `receiveReplay.maxChars`, reduce chunk size at
-   * the source, or subscribe earlier to avoid relying on a large replay buffer.
-   */
-  RECEIVE_REPLAY_BUFFER_OVERFLOW: 'RECEIVE_REPLAY_BUFFER_OVERFLOW',
 
   /**
    * Session has been disposed and can no longer be used.

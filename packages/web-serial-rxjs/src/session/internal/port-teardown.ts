@@ -33,7 +33,6 @@ export function createPortTeardown(deps: PortTeardownDeps): PortTeardown {
   const { receivePipeline } = deps;
 
   const teardownPump = async (pump: ReadPump | null): Promise<void> => {
-    receivePipeline.clearReplay();
     receivePipeline.clearLineBuffer();
     if (pump) {
       await pump.stop();

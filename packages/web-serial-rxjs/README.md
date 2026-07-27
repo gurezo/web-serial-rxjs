@@ -29,10 +29,6 @@ Prefer **`state$`** with `state.status` narrowing as the canonical API for lifec
 
 After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. Raw `SerialPort` is not exposed. Removed convenience APIs (`isConnected$`, `portInfo$`, `getPortInfo()`, `destroy$()`, `getCurrentPort()`) and their replacements are documented in [Migrating to v3](./docs/guide/en/migration-v3.md#phase-1-api-removals).
 
-## Receive replay (`receive$` vs `receiveReplay$`)
-
-`receive$` is **non-replay**: late subscribers only see chunks emitted after they subscribe. To retain the last *N* decoded text **chunks** per open connection (same bytes as `receive$`, e.g. for boot logs), pass `receiveReplay: { enabled: true, bufferSize: 512 }` to `createSerialSession` and subscribe to `receiveReplay$`. `bufferSize` must be a positive safe integer up to 65536. Optional `maxChars` bounds total buffered characters by discarding oldest chunks (non-fatal `RECEIVE_REPLAY_BUFFER_OVERFLOW` on `errors$`). Larger `bufferSize` or chunk sizes use more memory. When receive replay is **off** (default), `receiveReplay$` is the same hot stream as `receive$`. This option does not add replay to `lines$`—only raw decoder chunks on `receiveReplay$`.
-
 ## `receive$` vs `lines$`
 
 Pick the stream that matches your use case. Using **`lines$`** for a terminal mirror drops `\r` and redraw behaviour, which breaks shells and tools that rely on carriage-return updates ([overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md)).

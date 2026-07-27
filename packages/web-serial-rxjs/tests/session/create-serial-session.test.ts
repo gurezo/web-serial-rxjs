@@ -143,7 +143,6 @@ describe('createSerialSession', () => {
       expect(session.errors$).toBeDefined();
       expect(session.receive$).toBeDefined();
       expect(session.terminalText$).toBeDefined();
-      expect(session.receiveReplay$).toBeDefined();
       expect(session.lines$).toBeDefined();
     });
 
@@ -672,107 +671,7 @@ describe('createSerialSession', () => {
     });
   });
 
-  describe('receiveReplay$', () => {
-    it('is the same observable as receive$ when receive replay is disabled', () => {
-      const session = createSerialSession();
-
-      expect(session.receiveReplay$).toBe(session.receive$);
-    });
-
-    it('replays recent chunks to late subscribers when enabled', async () => {
-      const { stream, controller } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession({
-        receiveReplay: { enabled: true, bufferSize: 2 },
-      });
-      await firstValueFrom(session.connect$());
-
-      controller.enqueue(new TextEncoder().encode('a'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('b'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('c'));
-      await flushMicrotasks();
-
-      const replayed = await firstValueFrom(
-        session.receiveReplay$.pipe(take(2), toArray()),
-      );
-      expect(replayed).toEqual(['b', 'c']);
-    });
-
-    it('does not change receive$ late-subscriber behavior when replay is enabled', async () => {
-      const { stream, controller } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession({
-        receiveReplay: { enabled: true, bufferSize: 512 },
-      });
-      await firstValueFrom(session.connect$());
-
-      controller.enqueue(new TextEncoder().encode('early'));
-      await flushMicrotasks();
-
-      const late = firstValueFrom(session.receive$.pipe(take(1)));
-      controller.enqueue(new TextEncoder().encode('late'));
-      await flushMicrotasks();
-
-      await expect(late).resolves.toBe('late');
-    });
-
-    it('resets replay after disconnect and uses a new buffer on the next connect', async () => {
-      const { stream, controller } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession({
-        receiveReplay: { enabled: true, bufferSize: 5 },
-      });
-      await firstValueFrom(session.connect$());
-      controller.enqueue(new TextEncoder().encode('old'));
-      await flushMicrotasks();
-      await firstValueFrom(session.disconnect$());
-
-      const { stream: stream2, controller: c2 } = makeStream();
-      const port2 = makeMockPort(stream2);
-      installNavigator(port2);
-      await firstValueFrom(session.connect$());
-
-      const firstFromReplay = firstValueFrom(
-        session.receiveReplay$.pipe(take(1)),
-      );
-      c2.enqueue(new TextEncoder().encode('new'));
-      await flushMicrotasks();
-
-      await expect(firstFromReplay).resolves.toBe('new');
-    });
-
-    it('throws INVALID_RECEIVE_REPLAY_OPTIONS for invalid bufferSize', () => {
-      expect(() =>
-        createSerialSession({
-          receiveReplay: { enabled: true, bufferSize: -1 },
-        }),
-      ).toThrow(SerialError);
-
-      try {
-        createSerialSession({
-          receiveReplay: { enabled: true, bufferSize: 0 },
-        });
-      } catch (error) {
-        expect(error).toBeInstanceOf(SerialError);
-        expect((error as SerialError).code).toBe(
-          SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
-        );
-        expect((error as SerialError).context).toEqual({
-          field: 'receiveReplay.bufferSize',
-          value: 0,
-          constraint: 'receive-replay-buffer-size-range',
-        });
-      }
-    });
-
+  describe('factory option validation', () => {
     it('throws INVALID_CONNECTION_OPTIONS for invalid baudRate at factory time', () => {
       expect(() => createSerialSession({ baudRate: -1 })).toThrow(SerialError);
       try {
@@ -806,74 +705,6 @@ describe('createSerialSession', () => {
           filterIndex: 0,
         });
       }
-    });
-
-    it('applies receiveReplay.maxChars from SerialSessionOptions', async () => {
-      const { stream, controller } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession({
-        receiveReplay: { enabled: true, bufferSize: 10, maxChars: 4 },
-      });
-      await firstValueFrom(session.connect$());
-
-      controller.enqueue(new TextEncoder().encode('ab'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('cd'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('ef'));
-      await flushMicrotasks();
-
-      const replayed = await firstValueFrom(
-        session.receiveReplay$.pipe(take(2), toArray()),
-      );
-      expect(replayed).toEqual(['cd', 'ef']);
-    });
-
-    it('emits RECEIVE_REPLAY_BUFFER_OVERFLOW on errors$ when receive replay overflows', async () => {
-      const { stream, controller } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession({
-        receiveReplay: { enabled: true, bufferSize: 10, maxChars: 4 },
-      });
-      const errorPromise = firstValueFrom(session.errors$);
-
-      await firstValueFrom(session.connect$());
-      controller.enqueue(new TextEncoder().encode('ab'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('cd'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('ef'));
-      await flushMicrotasks();
-
-      const error = await errorPromise;
-      expect(error.code).toBe(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW);
-      expect(error.context).toEqual({ maxChars: 4, bufferSize: 10 });
-    });
-
-    it('does not mutate state$ when receive replay overflows (non-fatal)', async () => {
-      const { stream, controller } = makeStream();
-      const port = makeMockPort(stream);
-      installNavigator(port);
-
-      const session = createSerialSession({
-        receiveReplay: { enabled: true, bufferSize: 2, maxChars: 0 },
-      });
-      const errorPromise = firstValueFrom(session.errors$);
-
-      await firstValueFrom(session.connect$());
-      controller.enqueue(new TextEncoder().encode('a'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('b'));
-      await flushMicrotasks();
-      controller.enqueue(new TextEncoder().encode('c'));
-      await flushMicrotasks();
-
-      await errorPromise;
-      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
     });
   });
 

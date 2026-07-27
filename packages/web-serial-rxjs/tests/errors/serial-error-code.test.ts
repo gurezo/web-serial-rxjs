@@ -17,9 +17,6 @@ describe('SerialErrorCode', () => {
     expect(SerialErrorCode.OPERATION_CANCELLED).toBe('OPERATION_CANCELLED');
     expect(SerialErrorCode.OPERATION_TIMEOUT).toBe('OPERATION_TIMEOUT');
     expect(SerialErrorCode.LINE_BUFFER_OVERFLOW).toBe('LINE_BUFFER_OVERFLOW');
-    expect(SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS).toBe(
-      'INVALID_RECEIVE_REPLAY_OPTIONS',
-    );
     expect(SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS).toBe(
       'INVALID_TERMINAL_BUFFER_OPTIONS',
     );
@@ -29,16 +26,13 @@ describe('SerialErrorCode', () => {
     expect(SerialErrorCode.INVALID_CONNECTION_OPTIONS).toBe(
       'INVALID_CONNECTION_OPTIONS',
     );
-    expect(SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW).toBe(
-      'RECEIVE_REPLAY_BUFFER_OVERFLOW',
-    );
     expect(SerialErrorCode.SESSION_DISPOSED).toBe('SESSION_DISPOSED');
     expect(SerialErrorCode.UNKNOWN).toBe('UNKNOWN');
   });
 
   it('should be a const object with string values', () => {
     const codes = Object.values(SerialErrorCode);
-    expect(codes.length).toBe(19);
+    expect(codes.length).toBe(17);
     codes.forEach((code) => {
       expect(typeof code).toBe('string');
       expect(code.length).toBeGreaterThan(0);

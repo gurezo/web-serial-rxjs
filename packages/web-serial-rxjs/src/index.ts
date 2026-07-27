@@ -88,7 +88,7 @@
 
 export { assertNever } from './internal/assert-never';
 
-export { createSerialSession, SerialSessionStatus, isConnectedSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions, MAX_RECEIVE_REPLAY_BUFFER_SIZE, MAX_RECEIVE_REPLAY_MAX_CHARS } from './session';
+export { createSerialSession, SerialSessionStatus, isConnectedSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions } from './session';
 export type {
   SerialSession,
   SerialSessionState,
@@ -101,7 +101,6 @@ export type {
   DisposedSessionState,
   SerialSessionOptions,
   SerialSessionFeatureOptions,
-  SerialSessionReceiveReplayOptions,
   ResolvedSerialSessionOptions,
   SerialPayload,
   SerialConnectionOptions,

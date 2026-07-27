@@ -48,7 +48,6 @@ const createMockCore = (supported = true): MockCore => {
     receive$: receiveSubject.asObservable(),
     terminalText$: webSerialRxjs.createTerminalBuffer(receiveSubject.asObservable())
       .text$,
-    receiveReplay$: receiveSubject.asObservable(),
     lines$: receiveSubject.asObservable(),
   };
 
