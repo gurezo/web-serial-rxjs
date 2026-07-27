@@ -20,7 +20,6 @@ import {
   type SerialSessionOptions,
   type SerialSessionFeatureOptions,
   type SerialConnectionOptions,
-  type SerialSessionReceiveReplayOptions,
   type TerminalBufferOptions,
 } from '@gurezo/web-serial-rxjs';
 ```
@@ -83,7 +82,6 @@ Library-specific session features. Not passed to W3C `port.open`.
 | Field         | Type                                | Default  | Description                                                       |
 | ------------- | ----------------------------------- | -------- | ----------------------------------------------------------------- |
 | `filters`     | `SerialPortFilter[]` \| `undefined` | —        | Forwarded to `navigator.serial.requestPort` when selecting a port.|
-| `receiveReplay` | `SerialSessionReceiveReplayOptions` | `{ enabled: false, bufferSize: 512, maxChars: 0 }` | Optional per-connection replay of decoded receive chunks; see `receiveReplay$`. |
 | `terminalBuffer` | `TerminalBufferOptions` | `{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }` | Memory limits and ANSI stripping for `terminalText$`; see `createTerminalBuffer`. |
 | `lineBuffer` | `LineBufferOptions` | `{ maxChars: 1048576 }` | Memory limit for the incomplete line tail used by `lines$`; see below. |
 
@@ -93,19 +91,8 @@ At `createSerialSession` time (factory), `resolveSerialSessionOptions` validates
 | --- | --- | --- |
 | `baudRate` | safe integer and `> 0` | `INVALID_CONNECTION_OPTIONS` |
 | `filters` | USB vendor/product ID ranges | `INVALID_FILTER_OPTIONS` |
-| `receiveReplay` | `bufferSize` / `maxChars` ranges | `INVALID_RECEIVE_REPLAY_OPTIONS` |
 | `terminalBuffer` | `maxLines` / `maxChars` are safe integers and `>= 0` | `INVALID_TERMINAL_BUFFER_OPTIONS` |
 | `lineBuffer` | `maxChars` is a safe integer and `>= 0` | `INVALID_LINE_BUFFER_OPTIONS` |
-
-### `SerialSessionReceiveReplayOptions`
-
-| Field         | Type      | Default | Description |
-| ------------- | --------- | ------- | ----------- |
-| `enabled`     | `boolean` | `false` | When `true`, `receiveReplay$` buffers the last N **chunks** (decoder emissions) for the current connection. When `false`, `receiveReplay$` is the same hot stream as `receive$`. |
-| `bufferSize`  | `number`  | `512`   | Max number of text chunks to retain in the replay buffer for the active connection (1–65536). Not a character or byte count. |
-| `maxChars`    | `number`  | `0`     | Max total characters across retained replay chunks. When exceeded, **oldest** chunks are discarded and `RECEIVE_REPLAY_BUFFER_OVERFLOW` is emitted on `errors$` (non-fatal). `0` disables the limit. |
-
-Invalid `bufferSize` or `maxChars` values cause `createSerialSession` to throw `SerialError` with `INVALID_RECEIVE_REPLAY_OPTIONS`.
 
 ### `TerminalBufferOptions`
 
@@ -204,7 +191,6 @@ interface SerialSession {
   readonly state$: Observable<SerialSessionState>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
-  readonly receiveReplay$: Observable<string>;
   readonly terminalText$: Observable<string>;
   readonly lines$: Observable<string>;
 
@@ -226,7 +212,7 @@ Stops the read pump and closes the port. Safe to call when already idle or while
 
 ### `dispose$(): Observable<void>`
 
-Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`, `receiveReplay$`). Safe to call multiple times; subsequent calls complete immediately. **Runs when subscribed.**
+Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`). Safe to call multiple times; subsequent calls complete immediately. **Runs when subscribed.**
 
 After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOSED`. `disconnect$` completes immediately. Create a new `SerialSession` instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).
 
@@ -241,10 +227,6 @@ Primary error channel. Every connect / read / write / close failure is normalise
 ### `receive$: Observable<string>`
 
 UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Carriage returns and other control characters are preserved. Use **`receive$`** for terminal-like mirrors and any output that depends on `\r` (for example interactive shells or progress lines). Use **`lines$`** for newline-framed logs and line-by-line parsing.
-
-### `receiveReplay$: Observable<string>`
-
-Same data path as `receive$`, but when `SerialSessionOptions.receiveReplay.enabled` is `true` it **replays** the last *N* **chunks** (decoder emissions) for the current connection to new subscribers. When `enabled` is `false` (default), this is the same observable instance as `receive$`. The replay buffer is reset when the port disconnects. Optional `maxChars` bounds total buffered characters by discarding oldest chunks. Does not change `lines$` (line framing is not replayed here).
 
 ### `terminalText$: Observable<string>`
 
@@ -282,12 +264,11 @@ try {
 
 The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./migration-v3.md) for the enum-to-const declaration change.
 
-Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit).
+Runtime emission coverage for all 17 codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit).
 
 | Code                     | `context` shape | When it is emitted                                                  |
 | ------------------------ | --------------- | ------------------------------------------------------------------- |
 | `LINE_BUFFER_OVERFLOW`   | `{ maxChars: number }` | `lines$` incomplete tail exceeded `lineBuffer.maxChars`; leading data discarded (non-fatal). |
-| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `{ maxChars: number; bufferSize: number }` | `receiveReplay$` buffer exceeded `receiveReplay` limits; oldest chunks discarded (non-fatal). |
 | `INVALID_*` validation codes | `ValidationErrorContext` | Factory-time options validation; see below. Narrow with `error.is(code)`. |
 | Cause-bearing codes (e.g. `PORT_OPEN_FAILED`) | `{ cause: unknown }` | See table below. Narrow with `error.is(code)` before reading `context.cause`. |
 | Other codes              | `undefined`     | See table below.                                                    |
@@ -306,7 +287,6 @@ Runtime emission coverage for all 19 codes is audited in [Migrating to v3 §8](.
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
 | `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
 | `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry (at session creation).         | `ValidationErrorContext` |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | `receiveReplay.bufferSize` or `receiveReplay.maxChars` was out of range at session creation. | `ValidationErrorContext` |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` or `terminalBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. | `ValidationErrorContext` |

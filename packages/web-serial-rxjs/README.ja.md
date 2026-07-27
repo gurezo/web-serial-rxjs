@@ -29,10 +29,6 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 
 `connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`）と置換先は [v3 移行ガイド](./docs/guide/ja/migration-v3.md#phase-1-api-削除) を参照してください。
 
-## 受信の replay（`receive$` と `receiveReplay$`）
-
-`receive$` は **non-replay** のままです。購読後に届くチャンクだけが見えます。接続ごとに直近 *N* 件のデコード済みテキスト**チャンク**（read pump の 1 回の `onChunk` あたり 1 件。文字数ではありません）を遅延購読者にも渡したい場合は、`createSerialSession` に `receiveReplay: { enabled: true, bufferSize: 512 }` を指定し、`receiveReplay$` を購読します。`bufferSize` は 1〜65536 の正の safe integer である必要があります。任意の `maxChars` で保持チャンク全体の文字数上限を指定でき、超過時は古いチャンクから破棄し non-fatal の `RECEIVE_REPLAY_BUFFER_OVERFLOW` を `errors$` に emit します。`bufferSize` やチャンクサイズを大きくするとメモリ負荷が増えます。receive replay が **無効**（既定）のとき、`receiveReplay$` は `receive$` と同じ hot ストリームです。`lines$` の行分割に replay は付きません。生チャンクの `receiveReplay$` のみが対象です。
-
 ## `receive$` と `lines$`
 
 購読するストリームはユースケースに合わせて選んでください。**`lines$`** をターミナル表示に使うと `\r` が失われ再描画できず、シェル出力（例: `ls -la` の整形）が崩れます。詳細は [概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md) を参照してください。
