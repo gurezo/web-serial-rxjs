@@ -2,12 +2,10 @@ import {
   brandBaudRate,
   brandMaxChars,
   brandMaxLines,
-  brandReceiveReplayBufferSize,
   brandSerialPortBufferSize,
   type BaudRate,
   type MaxChars,
   type MaxLines,
-  type ReceiveReplayBufferSize,
   type SerialPortBufferSize,
 } from '../internal/branded-numbers';
 import type { SerialConnectionOptions } from '../types';
@@ -37,15 +35,6 @@ export interface SerialSessionFeatureOptions {
    * `usbProductId`.
    */
   filters?: SerialPortFilter[];
-
-  /**
-   * Optional receive replay: retain recent decoded text **chunks** so late
-   * subscribers to {@link SerialSession.receiveReplay$} can read buffered
-   * data while a connection is active. Does not change {@link SerialSession.receive$}.
-   *
-   * @default `{ enabled: false, bufferSize: 512 }` (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
-   */
-  receiveReplay?: SerialSessionReceiveReplayOptions;
 
   /**
    * Limits for {@link SerialSession.terminalText$} display memory. Oldest
@@ -99,115 +88,6 @@ export interface SerialSessionFeatureOptions {
  */
 export interface SerialSessionOptions
   extends Partial<SerialConnectionOptions>, SerialSessionFeatureOptions {}
-
-/**
- * Options for {@link SerialSessionOptions.receiveReplay}.
- *
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/265 | Issue #265}
- * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/372 | Issue #372}
- */
-export interface SerialSessionReceiveReplayOptions {
-  /**
-   * When `true`, the session uses a replay buffer for {@link SerialSession.receiveReplay$}
-   * for each open connection. When `false` (default), `receiveReplay$` is
-   * the same hot stream as {@link SerialSession.receive$} (no chunk replay).
-   */
-  enabled?: boolean;
-
-  /**
-   * Retains the last **N** decoded text chunks (one emission per `onChunk`
-   * from the read pump) in the replay buffer. Not the character count. Higher
-   * `bufferSize` uses more memory.
-   *
-   * @default 512
-   */
-  bufferSize?: number;
-
-  /**
-   * Maximum total characters retained across buffered replay chunks for the
-   * active connection. When exceeded, oldest chunks are discarded. `0` means
-   * unlimited (only `bufferSize` applies).
-   *
-   * @default 0
-   */
-  maxChars?: number;
-}
-
-/** Maximum allowed {@link SerialSessionReceiveReplayOptions.bufferSize}. */
-export const MAX_RECEIVE_REPLAY_BUFFER_SIZE = 65_536;
-
-/** Maximum allowed {@link SerialSessionReceiveReplayOptions.maxChars}. */
-export const MAX_RECEIVE_REPLAY_MAX_CHARS = 1_048_576;
-
-const DEFAULT_RECEIVE_REPLAY: Required<SerialSessionReceiveReplayOptions> = {
-  enabled: false,
-  bufferSize: 512,
-  maxChars: 0,
-};
-
-/**
- * Merge and validate {@link SerialSessionReceiveReplayOptions}.
- *
- * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS}
- *         when `bufferSize` or `maxChars` are out of range.
- */
-/** Resolved receive replay options with validated branded numeric fields. */
-export type ResolvedSerialSessionReceiveReplayOptions = {
-  enabled: boolean;
-  bufferSize: ReceiveReplayBufferSize;
-  maxChars: MaxChars;
-};
-
-export function resolveReceiveReplayOptions(
-  options?: SerialSessionReceiveReplayOptions,
-): ResolvedSerialSessionReceiveReplayOptions {
-  const merged: Required<SerialSessionReceiveReplayOptions> = {
-    ...DEFAULT_RECEIVE_REPLAY,
-    ...options,
-  };
-
-  const { bufferSize, maxChars } = merged;
-
-  if (
-    !Number.isSafeInteger(bufferSize) ||
-    bufferSize < 1 ||
-    bufferSize > MAX_RECEIVE_REPLAY_BUFFER_SIZE
-  ) {
-    throw new SerialError(
-      SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
-      `Invalid receiveReplay.bufferSize: ${bufferSize}. Must be a safe integer between 1 and ${MAX_RECEIVE_REPLAY_BUFFER_SIZE}.`,
-      undefined,
-      {
-        field: 'receiveReplay.bufferSize',
-        value: bufferSize,
-        constraint: 'receive-replay-buffer-size-range',
-      },
-    );
-  }
-
-  if (
-    !Number.isSafeInteger(maxChars) ||
-    maxChars < 0 ||
-    maxChars > MAX_RECEIVE_REPLAY_MAX_CHARS
-  ) {
-    throw new SerialError(
-      SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS,
-      `Invalid receiveReplay.maxChars: ${maxChars}. Must be a safe integer between 0 and ${MAX_RECEIVE_REPLAY_MAX_CHARS}.`,
-      undefined,
-      {
-        field: 'receiveReplay.maxChars',
-        value: maxChars,
-        constraint: 'receive-replay-max-chars-range',
-      },
-    );
-  }
-
-  return {
-    enabled: merged.enabled,
-    bufferSize: brandReceiveReplayBufferSize(bufferSize),
-    maxChars: brandMaxChars(maxChars),
-  };
-}
 
 /**
  * Merge and validate {@link TerminalBufferOptions}.
@@ -313,7 +193,6 @@ export type ResolvedSerialSessionOptions = Required<
   Omit<
     SerialSessionOptions,
     | 'filters'
-    | 'receiveReplay'
     | 'terminalBuffer'
     | 'lineBuffer'
     | 'baudRate'
@@ -323,7 +202,6 @@ export type ResolvedSerialSessionOptions = Required<
   baudRate: BaudRate;
   bufferSize: SerialPortBufferSize;
   filters?: SerialPortFilter[];
-  receiveReplay: ResolvedSerialSessionReceiveReplayOptions;
   terminalBuffer: ResolvedTerminalBufferOptions;
   lineBuffer: ResolvedLineBufferOptions;
 };
@@ -340,7 +218,6 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS = {
   parity: 'none',
   bufferSize: brandSerialPortBufferSize(255),
   flowControl: 'none',
-  receiveReplay: resolveReceiveReplayOptions(),
   terminalBuffer: resolveTerminalBufferOptions(),
   lineBuffer: resolveLineBufferOptions(),
 } satisfies ResolvedSerialSessionOptions;
@@ -407,7 +284,6 @@ export function resolveConnectionOptions(
  * @throws {@link SerialError} when option values are out of range:
  *         {@link SerialErrorCode.INVALID_CONNECTION_OPTIONS},
  *         {@link SerialErrorCode.INVALID_FILTER_OPTIONS},
- *         {@link SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS},
  *         {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}, or
  *         {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}.
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/403 | Issue #403}
@@ -421,7 +297,6 @@ export function resolveSerialSessionOptions(
   return {
     ...connection,
     ...(filters !== undefined ? { filters } : {}),
-    receiveReplay: resolveReceiveReplayOptions(options?.receiveReplay),
     terminalBuffer: resolveTerminalBufferOptions(options?.terminalBuffer),
     lineBuffer: resolveLineBufferOptions(options?.lineBuffer),
   };

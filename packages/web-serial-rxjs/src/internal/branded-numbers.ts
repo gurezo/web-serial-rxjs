@@ -8,12 +8,6 @@ export type SerialPortBufferSize = number & {
   readonly [serialPortBufferSizeBrand]: true;
 };
 
-declare const receiveReplayBufferSizeBrand: unique symbol;
-/** Validated receive replay chunk count limit. */
-export type ReceiveReplayBufferSize = number & {
-  readonly [receiveReplayBufferSizeBrand]: true;
-};
-
 declare const maxCharsBrand: unique symbol;
 /** Validated character limit for buffers (`0` means unlimited). */
 export type MaxChars = number & { readonly [maxCharsBrand]: true };
@@ -30,13 +24,6 @@ export function brandBaudRate(value: number): BaudRate {
 /** @internal Brand a validated serial port buffer size. */
 export function brandSerialPortBufferSize(value: number): SerialPortBufferSize {
   return value as SerialPortBufferSize;
-}
-
-/** @internal Brand a validated receive replay buffer size. */
-export function brandReceiveReplayBufferSize(
-  value: number,
-): ReceiveReplayBufferSize {
-  return value as ReceiveReplayBufferSize;
 }
 
 /** @internal Brand a validated max character limit. */

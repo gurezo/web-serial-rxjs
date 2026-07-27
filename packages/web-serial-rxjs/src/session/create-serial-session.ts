@@ -118,7 +118,7 @@ export function createSerialSession(
     createDisposedError,
   });
 
-  const { receive$, lines$, receiveReplay$ } = receivePipeline;
+  const { receive$, lines$ } = receivePipeline;
   const errors$ = errorsSubject.asObservable();
   const terminalText$ = createTerminalBuffer(
     receive$,
@@ -156,7 +156,6 @@ export function createSerialSession(
     errors$,
     receive$,
     terminalText$,
-    receiveReplay$,
     lines$,
   } satisfies SerialSession;
 }

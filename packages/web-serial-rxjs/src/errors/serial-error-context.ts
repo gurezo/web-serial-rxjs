@@ -14,8 +14,6 @@ export type ValidationErrorConstraint =
   | 'at-least-one-usb-id'
   | 'usb-id-0-65535'
   | 'positive-safe-integer'
-  | 'receive-replay-buffer-size-range'
-  | 'receive-replay-max-chars-range'
   | 'non-negative-safe-integer';
 
 /**
@@ -51,14 +49,9 @@ export interface SerialErrorContextMap {
   [SerialErrorCode.LINE_BUFFER_OVERFLOW]: {
     readonly maxChars: number;
   };
-  [SerialErrorCode.INVALID_RECEIVE_REPLAY_OPTIONS]: ValidationErrorContext;
   [SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS]: ValidationErrorContext;
   [SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS]: ValidationErrorContext;
   [SerialErrorCode.INVALID_CONNECTION_OPTIONS]: ValidationErrorContext;
-  [SerialErrorCode.RECEIVE_REPLAY_BUFFER_OVERFLOW]: {
-    readonly maxChars: number;
-    readonly bufferSize: number;
-  };
   [SerialErrorCode.SESSION_DISPOSED]: undefined;
   [SerialErrorCode.UNKNOWN]: SerialErrorCauseContext;
 }
