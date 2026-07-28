@@ -11,13 +11,19 @@ import {
 } from '../../src/index';
 
 /**
- * Regression guard for the session options type responsibility audit (Issue #441).
- * Keep in sync with MIGRATION_V3 §10 and API_REFERENCE.
+ * Regression guard for the session options type responsibility audit
+ * (Issues #441 / #488). Keep in sync with concepts.md and migration guides.
  */
 const CANONICAL_OPTIONS_TYPE_EXPORTS = [
   'SerialConnectionOptions',
   'SerialSessionFeatureOptions',
   'SerialSessionOptions',
+] as const;
+
+const CANONICAL_FEATURE_OPTION_KEYS = [
+  'filters',
+  'terminalBuffer',
+  'lineBuffer',
 ] as const;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,11 +32,38 @@ const publicIndexSource = readFileSync(
   join(__dirname, '../../src/index.ts'),
   'utf8',
 );
+const featureOptionsSource = readFileSync(
+  join(__dirname, '../../src/session/serial-session-options.ts'),
+  'utf8',
+);
+const packageSrcRoot = join(__dirname, '../../src');
 
-describe('session options type audit (#441)', () => {
+describe('session options type audit (#441 / #488)', () => {
   it('exports connection and feature option types from the public barrel', () => {
     for (const name of CANONICAL_OPTIONS_TYPE_EXPORTS) {
       expect(publicIndexSource).toContain(name);
+    }
+  });
+
+  it('keeps SerialSessionFeatureOptions keys aligned with session responsibilities', () => {
+    for (const key of CANONICAL_FEATURE_OPTION_KEYS) {
+      expect(featureOptionsSource).toContain(`${key}?:`);
+    }
+    expect(featureOptionsSource).not.toContain('receiveReplay');
+  });
+
+  it('does not leave receiveReplay in package source', () => {
+    const sources = [
+      'index.ts',
+      'session/serial-session-options.ts',
+      'session/serial-session.ts',
+      'session/create-serial-session.ts',
+    ].map((relativePath) =>
+      readFileSync(join(packageSrcRoot, relativePath), 'utf8'),
+    );
+
+    for (const source of sources) {
+      expect(source).not.toMatch(/receiveReplay/);
     }
   });
 
@@ -65,5 +98,9 @@ describe('session options type audit (#441)', () => {
     } as const satisfies Partial<SerialSessionOptions>;
 
     expect(() => createSerialSession(options)).not.toThrow();
+  });
+
+  it('accepts baudRate-only minimal session creation', () => {
+    expect(() => createSerialSession({ baudRate: 115200 })).not.toThrow();
   });
 });

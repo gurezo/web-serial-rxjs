@@ -202,4 +202,10 @@ describe('createTerminalBuffer', () => {
     receive$.next('prompt\u001b[?2004h');
     expect(last).toContain('[?2004h');
   });
+
+  it('issue #488: rejects invalid terminal buffer limits at creation', () => {
+    const receive$ = new Subject<string>();
+    expect(() => createTerminalBuffer(receive$, { maxLines: -1 })).toThrow();
+    expect(() => createTerminalBuffer(receive$, { maxChars: Infinity })).toThrow();
+  });
 });

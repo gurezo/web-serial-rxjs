@@ -55,6 +55,17 @@ describe('resolveSerialSessionOptions', () => {
     expect(resolveSerialSessionOptions().terminalBuffer.stripAnsi).toBe(true);
   });
 
+  it('merges terminalBuffer.stripAnsi false', () => {
+    expect(
+      resolveSerialSessionOptions({
+        terminalBuffer: { stripAnsi: false },
+      }).terminalBuffer,
+    ).toEqual({
+      ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
+      stripAnsi: false,
+    });
+  });
+
   it('merges nested lineBuffer options', () => {
     expect(
       resolveSerialSessionOptions({
@@ -81,9 +92,19 @@ describe('resolveSerialSessionOptions', () => {
     ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: -1 } }, -1],
     ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: 1.5 } }, 1.5],
     ['terminalBuffer.maxLines', { terminalBuffer: { maxLines: NaN } }, NaN],
+    [
+      'terminalBuffer.maxLines',
+      { terminalBuffer: { maxLines: Infinity } },
+      Infinity,
+    ],
     ['terminalBuffer.maxChars', { terminalBuffer: { maxChars: -1 } }, -1],
     ['terminalBuffer.maxChars', { terminalBuffer: { maxChars: 1.5 } }, 1.5],
     ['terminalBuffer.maxChars', { terminalBuffer: { maxChars: NaN } }, NaN],
+    [
+      'terminalBuffer.maxChars',
+      { terminalBuffer: { maxChars: Infinity } },
+      Infinity,
+    ],
   ])('rejects invalid %s', (field, options, value) => {
     expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
     try {
@@ -113,6 +134,7 @@ describe('resolveSerialSessionOptions', () => {
     ['lineBuffer.maxChars', { lineBuffer: { maxChars: -1 } }, -1],
     ['lineBuffer.maxChars', { lineBuffer: { maxChars: 1.5 } }, 1.5],
     ['lineBuffer.maxChars', { lineBuffer: { maxChars: NaN } }, NaN],
+    ['lineBuffer.maxChars', { lineBuffer: { maxChars: Infinity } }, Infinity],
   ])('rejects invalid %s', (field, options, value) => {
     expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
     try {
@@ -160,6 +182,12 @@ describe('resolveSerialSessionOptions', () => {
     ['baudRate', { baudRate: -1 }, -1],
     ['baudRate', { baudRate: 1.5 }, 1.5],
     ['baudRate', { baudRate: NaN }, NaN],
+    ['baudRate', { baudRate: Infinity }, Infinity],
+    ['bufferSize', { bufferSize: 0 }, 0],
+    ['bufferSize', { bufferSize: -1 }, -1],
+    ['bufferSize', { bufferSize: 1.5 }, 1.5],
+    ['bufferSize', { bufferSize: NaN }, NaN],
+    ['bufferSize', { bufferSize: Infinity }, Infinity],
   ])('rejects invalid %s', (field, options, value) => {
     expect(() => resolveSerialSessionOptions(options)).toThrow(SerialError);
     try {
@@ -180,6 +208,21 @@ describe('resolveSerialSessionOptions', () => {
   it('accepts valid baudRate values', () => {
     expect(resolveSerialSessionOptions({ baudRate: 115200 }).baudRate).toBe(
       115200,
+    );
+  });
+
+  it('accepts valid bufferSize values', () => {
+    expect(resolveSerialSessionOptions({ bufferSize: 512 }).bufferSize).toBe(
+      512,
+    );
+  });
+
+  it('does not treat connection zero as unlimited', () => {
+    expect(() => resolveSerialSessionOptions({ baudRate: 0 })).toThrow(
+      SerialError,
+    );
+    expect(() => resolveSerialSessionOptions({ bufferSize: 0 })).toThrow(
+      SerialError,
     );
   });
 

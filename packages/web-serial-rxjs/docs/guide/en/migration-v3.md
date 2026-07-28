@@ -559,10 +559,10 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 ```
 
 - `SerialConnectionOptions` — `baudRate`, `dataBits`, `stopBits`, `parity`, `bufferSize`, `flowControl` (passed to `port.open`)
-- `SerialSessionFeatureOptions` — `filters`, `receiveReplay`, `terminalBuffer`, `lineBuffer` (library-specific)
+- `SerialSessionFeatureOptions` — `filters`, `terminalBuffer`, `lineBuffer` (library-specific; `receiveReplay` was removed in v4 Phase 2)
 - `SerialSessionOptions` — composition of the two (factory argument)
 
-See [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions) for details.
+See [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions) for details. Boundary semantics (`0` = unlimited for buffer limits only; connection fields require `> 0`) are documented there ([#488](https://github.com/gurezo/web-serial-rxjs/issues/488)).
 
 ### v3.x compatibility
 

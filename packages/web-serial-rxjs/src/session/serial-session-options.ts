@@ -1,30 +1,50 @@
 import {
   brandBaudRate,
-  brandMaxChars,
-  brandMaxLines,
   brandSerialPortBufferSize,
   type BaudRate,
-  type MaxChars,
-  type MaxLines,
   type SerialPortBufferSize,
 } from '../internal/branded-numbers';
 import type { SerialConnectionOptions } from '../types';
-import type { TerminalBufferOptions } from '../terminal/create-terminal-buffer';
-import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../terminal/create-terminal-buffer';
+import {
+  resolveTerminalBufferOptions,
+  type ResolvedTerminalBufferOptions,
+  type TerminalBufferOptions,
+} from '../terminal/create-terminal-buffer';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import {
-  DEFAULT_LINE_BUFFER_OPTIONS,
+  resolveLineBufferOptions,
   type LineBufferOptions,
+  type ResolvedLineBufferOptions,
 } from './internal/line-buffer';
 import { validateSerialPortFilters } from './internal/validate-serial-port-filters';
+
+export type {
+  ResolvedLineBufferOptions,
+  ResolvedTerminalBufferOptions,
+};
 
 /**
  * Library-specific options for {@link createSerialSession} that are not passed
  * to W3C `port.open`.
  *
+ * Responsibility split (Issue #488):
+ *
+ * - {@link SerialSessionFeatureOptions.filters} — port selection only
+ *   (`navigator.serial.requestPort`)
+ * - {@link SerialSessionFeatureOptions.lineBuffer} — incomplete-line tail for
+ *   {@link SerialSession.lines$}
+ * - {@link SerialSessionFeatureOptions.terminalBuffer} — display memory for
+ *   {@link SerialSession.terminalText$}
+ *
+ * Connection parameters (`baudRate`, `dataBits`, …) live on
+ * {@link SerialConnectionOptions} and are composed into
+ * {@link SerialSessionOptions}. Minimal callers typically only set
+ * `baudRate`; other fields keep safe defaults.
+ *
  * @see {@link SerialConnectionOptions} for W3C connection parameters
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/441 | Issue #441}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/488 | Issue #488}
  */
 export interface SerialSessionFeatureOptions {
   /**
@@ -32,15 +52,21 @@ export interface SerialSessionFeatureOptions {
    *
    * When specified, the port selection dialog will only show devices
    * matching these filters. Each filter can specify `usbVendorId` and/or
-   * `usbProductId`.
+   * `usbProductId`. Not passed to `port.open`.
    */
   filters?: SerialPortFilter[];
 
   /**
    * Limits for {@link SerialSession.terminalText$} display memory. Oldest
    * completed lines and leading characters are dropped when exceeded.
+   * Character counts use UTF-16 string length (JavaScript `.length`).
    *
-   * @default `{ maxLines: 10000, maxChars: 1048576 }` (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
+   * Pass `0` for `maxLines` or `maxChars` to disable that limit (unlimited).
+   * Negative values, non-integers, `NaN`, and `Infinity` are rejected at
+   * factory time.
+   *
+   * @default `{ maxLines: 10000, maxChars: 1048576, stripAnsi: true }`
+   *   (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/370 | Issue #370}
    */
   terminalBuffer?: TerminalBufferOptions;
@@ -48,7 +74,11 @@ export interface SerialSessionFeatureOptions {
   /**
    * Limits for the incomplete line tail held by {@link SerialSession.lines$}
    * framing. When exceeded, leading characters are discarded and a non-fatal
-   * {@link SerialErrorCode.LINE_BUFFER_OVERFLOW} is emitted on {@link SerialSession.errors$}.
+   * {@link SerialErrorCode.LINE_BUFFER_OVERFLOW} is emitted on
+   * {@link SerialSession.errors$}. Character counts use UTF-16 string length.
+   *
+   * Pass `0` for `maxChars` to disable the limit (unlimited). Negative values,
+   * non-integers, `NaN`, and `Infinity` are rejected at factory time.
    *
    * @default `{ maxChars: 1048576 }` (see {@link DEFAULT_SERIAL_SESSION_OPTIONS})
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/371 | Issue #371}
@@ -61,10 +91,17 @@ export interface SerialSessionFeatureOptions {
  *
  * Composes {@link Partial}<{@link SerialConnectionOptions}> (W3C connection
  * parameters passed to `port.open`) with {@link SerialSessionFeatureOptions}
- * (library-specific session features). All connection fields are optional;
- * omitted values fall back to {@link DEFAULT_SERIAL_SESSION_OPTIONS}
- * (`baudRate` 9600, `dataBits` 8, `stopBits` 1, `parity` `'none'`,
- * `bufferSize` 255, `flowControl` `'none'`).
+ * (library-specific session features). All fields are optional; omitted values
+ * fall back to {@link DEFAULT_SERIAL_SESSION_OPTIONS}.
+ *
+ * Minimal usage typically only needs `baudRate`:
+ *
+ * @example
+ * ```typescript
+ * const session = createSerialSession({ baudRate: 115200 });
+ * ```
+ *
+ * Full example:
  *
  * @example
  * ```typescript
@@ -78,6 +115,12 @@ export interface SerialSessionFeatureOptions {
  * });
  * ```
  *
+ * Boundary semantics for numeric limits:
+ *
+ * - `undefined` — apply the default from {@link DEFAULT_SERIAL_SESSION_OPTIONS}
+ * - `baudRate` / `bufferSize` — must be safe integers `> 0` (rejected otherwise)
+ * - `terminalBuffer` / `lineBuffer` limits — safe integers `>= 0`; `0` means unlimited
+ *
  * @see {@link SerialConnectionOptions}
  * @see {@link SerialSessionFeatureOptions}
  * @see {@link SerialOptions}
@@ -85,104 +128,10 @@ export interface SerialSessionFeatureOptions {
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/402 | Issue #402}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/441 | Issue #441}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/488 | Issue #488}
  */
 export interface SerialSessionOptions
   extends Partial<SerialConnectionOptions>, SerialSessionFeatureOptions {}
-
-/**
- * Merge and validate {@link TerminalBufferOptions}.
- *
- * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}
- *         when `maxLines` or `maxChars` are out of range.
- */
-/** Resolved terminal buffer options with validated branded numeric fields. */
-export type ResolvedTerminalBufferOptions = {
-  maxLines: MaxLines;
-  maxChars: MaxChars;
-  stripAnsi: boolean;
-};
-
-export function resolveTerminalBufferOptions(
-  options?: TerminalBufferOptions,
-): ResolvedTerminalBufferOptions {
-  const merged: Required<TerminalBufferOptions> = {
-    ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
-    ...options,
-  };
-
-  const { maxLines, maxChars } = merged;
-
-  if (!Number.isSafeInteger(maxLines) || maxLines < 0) {
-    throw new SerialError(
-      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
-      `Invalid terminalBuffer.maxLines: ${maxLines}. Must be a safe integer >= 0.`,
-      undefined,
-      {
-        field: 'terminalBuffer.maxLines',
-        value: maxLines,
-        constraint: 'non-negative-safe-integer',
-      },
-    );
-  }
-
-  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
-    throw new SerialError(
-      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
-      `Invalid terminalBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
-      undefined,
-      {
-        field: 'terminalBuffer.maxChars',
-        value: maxChars,
-        constraint: 'non-negative-safe-integer',
-      },
-    );
-  }
-
-  return {
-    maxLines: brandMaxLines(maxLines),
-    maxChars: brandMaxChars(maxChars),
-    stripAnsi: merged.stripAnsi,
-  };
-}
-
-/**
- * Merge and validate {@link LineBufferOptions}.
- *
- * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}
- *         when `maxChars` is out of range.
- */
-/** Resolved line buffer options with validated branded numeric fields. */
-export type ResolvedLineBufferOptions = {
-  maxChars: MaxChars;
-};
-
-export function resolveLineBufferOptions(
-  options?: LineBufferOptions,
-): ResolvedLineBufferOptions {
-  const merged: Required<LineBufferOptions> = {
-    ...DEFAULT_LINE_BUFFER_OPTIONS,
-    ...options,
-  };
-
-  const { maxChars } = merged;
-
-  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
-    throw new SerialError(
-      SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
-      `Invalid lineBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
-      undefined,
-      {
-        field: 'lineBuffer.maxChars',
-        value: maxChars,
-        constraint: 'non-negative-safe-integer',
-      },
-    );
-  }
-
-  return {
-    maxChars: brandMaxChars(maxChars),
-  };
-}
 
 /**
  * Fully resolved session options after merging {@link SerialSessionOptions}
@@ -209,6 +158,10 @@ export type ResolvedSerialSessionOptions = Required<
 /**
  * Default values applied to omitted {@link SerialSessionOptions} fields.
  *
+ * Nested buffer defaults are owned by {@link resolveTerminalBufferOptions} and
+ * {@link resolveLineBufferOptions}; this object is the single session-level
+ * snapshot used by {@link resolveSerialSessionOptions}.
+ *
  * @internal
  */
 export const DEFAULT_SERIAL_SESSION_OPTIONS = {
@@ -234,7 +187,7 @@ export type ResolvedSerialSessionConnectionOptions = Required<
  * Merge and validate W3C connection fields from {@link SerialSessionOptions}.
  *
  * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_CONNECTION_OPTIONS}
- *         when `baudRate` is out of range.
+ *         when `baudRate` or `bufferSize` are out of range.
  */
 export function resolveConnectionOptions(
   options?: Partial<SerialConnectionOptions>,
@@ -249,7 +202,10 @@ export function resolveConnectionOptions(
     ...options,
   };
 
-  const { baudRate, bufferSize } = merged;
+  const baudRate =
+    merged.baudRate ?? DEFAULT_SERIAL_SESSION_OPTIONS.baudRate;
+  const bufferSize =
+    merged.bufferSize ?? DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize;
 
   if (!Number.isSafeInteger(baudRate) || baudRate <= 0) {
     throw new SerialError(
@@ -264,6 +220,19 @@ export function resolveConnectionOptions(
     );
   }
 
+  if (!Number.isSafeInteger(bufferSize) || bufferSize <= 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_CONNECTION_OPTIONS,
+      `Invalid bufferSize: ${bufferSize}. Must be a safe integer > 0.`,
+      undefined,
+      {
+        field: 'bufferSize',
+        value: bufferSize,
+        constraint: 'positive-safe-integer',
+      },
+    );
+  }
+
   return {
     dataBits: merged.dataBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.dataBits,
     stopBits: merged.stopBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.stopBits,
@@ -271,9 +240,7 @@ export function resolveConnectionOptions(
     flowControl:
       merged.flowControl ?? DEFAULT_SERIAL_SESSION_OPTIONS.flowControl,
     baudRate: brandBaudRate(baudRate),
-    bufferSize: brandSerialPortBufferSize(
-      bufferSize ?? DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize,
-    ),
+    bufferSize: brandSerialPortBufferSize(bufferSize),
   };
 }
 
@@ -281,12 +248,18 @@ export function resolveConnectionOptions(
  * Merge and validate {@link SerialSessionOptions} into a fully resolved
  * options object for internal session use.
  *
+ * Defaults and validation for nested buffers live next to their option types
+ * ({@link resolveTerminalBufferOptions}, {@link resolveLineBufferOptions}).
+ * This function is the single entry point that assembles connection + feature
+ * options for a session.
+ *
  * @throws {@link SerialError} when option values are out of range:
  *         {@link SerialErrorCode.INVALID_CONNECTION_OPTIONS},
  *         {@link SerialErrorCode.INVALID_FILTER_OPTIONS},
  *         {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}, or
  *         {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}.
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/403 | Issue #403}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/488 | Issue #488}
  */
 export function resolveSerialSessionOptions(
   options?: SerialSessionOptions,

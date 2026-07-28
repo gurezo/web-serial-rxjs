@@ -61,7 +61,14 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 SerialSessionOptions = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
 ```
 
+最小構成では通常 `baudRate` だけで十分です。他のフィールドは安全な既定値が適用されます。
+
+```typescript
+const session = createSerialSession({ baudRate: 115200 });
+```
+
 詳細は [v3 への移行 – §10 Session options 型責務監査](./migration-v3.md#10-session-options-型責務監査) を参照してください。
+Phase 2 のオプション責務整理は [Issue #488](https://github.com/gurezo/web-serial-rxjs/issues/488) も参照してください。
 
 ### Connection options（`SerialConnectionOptions`）
 
@@ -69,11 +76,11 @@ W3C `SerialOptions` から派生し、`port.open` に渡されます。factory �
 
 | フィールド    | 型                                  | 既定値    | 説明                                                                         |
 | ------------- | ----------------------------------- | --------- | ---------------------------------------------------------------------------- |
-| `baudRate`    | `number`                            | `9600`    | ボーレート（bps）                                                            |
+| `baudRate`    | `number`                            | `9600`    | ボーレート（bps）。safe integer かつ `> 0`                                   |
 | `dataBits`    | `7 \| 8`                            | `8`       | データビット                                                                 |
 | `stopBits`    | `1 \| 2`                            | `1`       | ストップビット                                                               |
 | `parity`      | `'none' \| 'even' \| 'odd'`         | `'none'`  | パリティ                                                                     |
-| `bufferSize`  | `number`                            | `255`     | リードストリームのバッファサイズ（バイト）                                   |
+| `bufferSize`  | `number`                            | `255`     | リードストリームのバッファサイズ（バイト）。safe integer かつ `> 0`          |
 | `flowControl` | `'none' \| 'hardware'`              | `'none'`  | フロー制御                                                                   |
 
 ### Session feature options（`SerialSessionFeatureOptions`）
@@ -91,13 +98,24 @@ W3C `SerialOptions` から派生し、`port.open` に渡されます。factory �
 | 対象 | 検証内容 | エラーコード |
 | --- | --- | --- |
 | `baudRate` | safe integer かつ `> 0` | `INVALID_CONNECTION_OPTIONS` |
+| `bufferSize` | safe integer かつ `> 0` | `INVALID_CONNECTION_OPTIONS` |
 | `filters` | USB vendor/product ID の範囲 | `INVALID_FILTER_OPTIONS` |
 | `terminalBuffer` | `maxLines` / `maxChars` が safe integer かつ `>= 0` | `INVALID_TERMINAL_BUFFER_OPTIONS` |
 | `lineBuffer` | `maxChars` が safe integer かつ `>= 0` | `INVALID_LINE_BUFFER_OPTIONS` |
 
+#### 数値境界値の意味
+
+| 値 | 接続（`baudRate` / `bufferSize`） | バッファ上限（`terminalBuffer` / `lineBuffer`） |
+| --- | --- | --- |
+| `undefined` | 既定値を適用 | ネスト側の既定値を適用 |
+| `0` | **拒否** | **無制限**（その制限を無効化） |
+| 負数 / 非整数 / `NaN` / `Infinity` | 拒否 | 拒否 |
+
+接続フィールドで `0` を無制限と解釈しないでください。
+
 ### `TerminalBufferOptions`
 
-`createTerminalBuffer` と `SerialSessionOptions.terminalBuffer` で使います。上限を超えたときは、**古い**完了行や先頭の文字から破棄し、長時間のターミナル表示でメモリが際限なく増えないようにします。`0` を指定するとその制限を無効化します。
+`createTerminalBuffer` と `SerialSessionOptions.terminalBuffer` で使います。上限を超えたときは、**古い**完了行や先頭の文字から破棄し、長時間のターミナル表示でメモリが際限なく増えないようにします。`0` を指定するとその制限を無効化します。文字数は UTF-16 の文字列長（JavaScript の `.length`）です。
 
 | フィールド   | 型        | 既定値     | 説明 |
 | ------------ | --------- | ---------- | ---- |
@@ -105,11 +123,11 @@ W3C `SerialOptions` から派生し、`port.open` に渡されます。factory �
 | `maxChars`   | `number`  | `1048576`  | 表示テキスト全体（完了部分 + 編集中行）の文字数上限。 |
 | `stripAnsi`  | `boolean` | `true`     | `true` のとき、`\r` 折りたたみ前に ANSI エスケープシーケンスを除去します。`false` にすると `terminalText$` に生のエスケープが残ります。`receive$` は常に変更されません。 |
 
-無効な `maxLines` / `maxChars` は `createSerialSession` 時に `INVALID_TERMINAL_BUFFER_OPTIONS` で throw します。
+無効な `maxLines` / `maxChars` は `createSerialSession` および単独の `createTerminalBuffer` 時に `INVALID_TERMINAL_BUFFER_OPTIONS` で throw します。
 
 ### `LineBufferOptions`
 
-`SerialSessionOptions.lineBuffer` で `lines$` の**未完成行 tail**（改行未到達の保持データ）の上限を指定します。`maxChars` を超えたときは tail の**先頭**文字から破棄し、non-fatal の `SerialErrorCode.LINE_BUFFER_OVERFLOW` を `errors$` に emit します（セッションは切断されません）。完了した行は trim 前にそのまま emit されます。`0` で制限を無効化します。
+`SerialSessionOptions.lineBuffer` で `lines$` の**未完成行 tail**（改行未到達の保持データ）の上限を指定します。`maxChars` を超えたときは tail の**先頭**文字から破棄し、non-fatal の `SerialErrorCode.LINE_BUFFER_OVERFLOW` を `errors$` に emit します（セッションは切断されません）。完了した行は trim 前にそのまま emit されます。`0` で制限を無効化します。文字数は UTF-16 の文字列長です。
 
 | フィールド   | 型        | 既定値     | 説明 |
 | ------------ | --------- | ---------- | ---- |
@@ -119,7 +137,7 @@ W3C `SerialOptions` から派生し、`port.open` に渡されます。factory �
 
 ## createTerminalBuffer(receive$, options?)
 
-デコード済みチャンクの `Observable<string>`（通常は `SerialSession.receive$`）から、ターミナル向けの累積テキストストリームを構築します。`\r` による再描画を畳み込みつつ、通常の改行挙動は維持します。既定値は `DEFAULT_TERMINAL_BUFFER_OPTIONS` と同じです。
+デコード済みチャンクの `Observable<string>`（通常は `SerialSession.receive$`）から、ターミナル向けの累積テキストストリームを構築します。`\r` による再描画を畳み込みつつ、通常の改行挙動は維持します。既定値は `DEFAULT_TERMINAL_BUFFER_OPTIONS` と同じです。無効な `maxLines` / `maxChars` はセッション生成時と同じ `INVALID_TERMINAL_BUFFER_OPTIONS` を throw します。
 
 ```typescript
 function createTerminalBuffer(

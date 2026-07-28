@@ -61,7 +61,14 @@ function createSerialSession(options?: SerialSessionOptions): SerialSession;
 SerialSessionOptions = Partial<SerialConnectionOptions> & SerialSessionFeatureOptions
 ```
 
+Minimal callers typically only set `baudRate`; other fields keep safe defaults.
+
+```typescript
+const session = createSerialSession({ baudRate: 115200 });
+```
+
 See [Migrating to v3 – §10 Session options type responsibility audit](./migration-v3.md#10-session-options-type-responsibility-audit) for the audit rationale.
+See also [Issue #488](https://github.com/gurezo/web-serial-rxjs/issues/488) for the Phase 2 options responsibility cleanup.
 
 ### Connection options (`SerialConnectionOptions`)
 
@@ -69,11 +76,11 @@ Derived from W3C `SerialOptions` and passed to `port.open`. All fields are optio
 
 | Field         | Type                                | Default  | Description                                                       |
 | ------------- | ----------------------------------- | -------- | ----------------------------------------------------------------- |
-| `baudRate`    | `number`                            | `9600`   | Bits per second.                                                  |
+| `baudRate`    | `number`                            | `9600`   | Bits per second. Must be a safe integer `> 0`.                    |
 | `dataBits`    | `7 \| 8`                            | `8`      | Data bits per frame.                                              |
 | `stopBits`    | `1 \| 2`                            | `1`      | Stop bits per frame.                                              |
 | `parity`      | `'none' \| 'even' \| 'odd'`         | `'none'` | Parity checking mode.                                             |
-| `bufferSize`  | `number`                            | `255`    | Read-stream buffer size in bytes.                                 |
+| `bufferSize`  | `number`                            | `255`    | Read-stream buffer size in bytes. Must be a safe integer `> 0`.   |
 | `flowControl` | `'none' \| 'hardware'`              | `'none'` | Flow control mode.                                                |
 
 ### Session feature options (`SerialSessionFeatureOptions`)
@@ -91,13 +98,24 @@ At `createSerialSession` time (factory), `resolveSerialSessionOptions` validates
 | Target | Validation | Error code |
 | --- | --- | --- |
 | `baudRate` | safe integer and `> 0` | `INVALID_CONNECTION_OPTIONS` |
+| `bufferSize` | safe integer and `> 0` | `INVALID_CONNECTION_OPTIONS` |
 | `filters` | USB vendor/product ID ranges | `INVALID_FILTER_OPTIONS` |
 | `terminalBuffer` | `maxLines` / `maxChars` are safe integers and `>= 0` | `INVALID_TERMINAL_BUFFER_OPTIONS` |
 | `lineBuffer` | `maxChars` is a safe integer and `>= 0` | `INVALID_LINE_BUFFER_OPTIONS` |
 
+#### Numeric boundary semantics
+
+| Value | Connection (`baudRate` / `bufferSize`) | Buffer limits (`terminalBuffer` / `lineBuffer`) |
+| --- | --- | --- |
+| `undefined` | Apply default | Apply nested default |
+| `0` | **Rejected** | **Unlimited** (disable that limit) |
+| negative / non-integer / `NaN` / `Infinity` | Rejected | Rejected |
+
+Do not mix meanings: `0` is never “unlimited” for connection fields.
+
 ### `TerminalBufferOptions`
 
-Used by `createTerminalBuffer` and `SerialSessionOptions.terminalBuffer`. When a limit is exceeded, the **oldest** completed lines or leading characters are dropped so long-running terminal views do not grow without bound. Pass `0` for either field to disable that constraint.
+Used by `createTerminalBuffer` and `SerialSessionOptions.terminalBuffer`. When a limit is exceeded, the **oldest** completed lines or leading characters are dropped so long-running terminal views do not grow without bound. Pass `0` for either field to disable that constraint. Character counts use UTF-16 string length (JavaScript `.length`).
 
 | Field      | Type     | Default    | Description |
 | ---------- | -------- | ---------- | ----------- |
@@ -105,11 +123,11 @@ Used by `createTerminalBuffer` and `SerialSessionOptions.terminalBuffer`. When a
 | `maxChars` | `number` | `1048576`  | Max total characters in the display text (`completed` + current line). |
 | `stripAnsi` | `boolean` | `true` | When `true`, removes ANSI escape sequences before folding `\r` redraws. Set `false` to preserve raw escape codes in `terminalText$`. `receive$` is always unchanged. |
 
-Invalid `maxLines` or `maxChars` values cause `createSerialSession` to throw `SerialError` with `INVALID_TERMINAL_BUFFER_OPTIONS`.
+Invalid `maxLines` or `maxChars` values cause `createSerialSession` and standalone `createTerminalBuffer` to throw `SerialError` with `INVALID_TERMINAL_BUFFER_OPTIONS`.
 
 ### `LineBufferOptions`
 
-Used by `SerialSessionOptions.lineBuffer` for the **incomplete line tail** held while framing `lines$`. When `maxChars` is exceeded, **leading** characters of the tail are discarded and a non-fatal `SerialError` with `SerialErrorCode.LINE_BUFFER_OVERFLOW` is emitted on `errors$`. Completed lines are emitted in full before the tail is trimmed. Pass `0` to disable the limit.
+Used by `SerialSessionOptions.lineBuffer` for the **incomplete line tail** held while framing `lines$`. When `maxChars` is exceeded, **leading** characters of the tail are discarded and a non-fatal `SerialError` with `SerialErrorCode.LINE_BUFFER_OVERFLOW` is emitted on `errors$`. Completed lines are emitted in full before the tail is trimmed. Pass `0` to disable the limit. Character counts use UTF-16 string length.
 
 | Field      | Type     | Default    | Description |
 | ---------- | -------- | ---------- | ----------- |
@@ -119,7 +137,7 @@ Invalid `maxChars` values cause `createSerialSession` to throw `SerialError` wit
 
 ## createTerminalBuffer(receive$, options?)
 
-Builds a terminal-oriented cumulative text stream from any `Observable<string>` of decoded chunks (typically `SerialSession.receive$`). Folds `\r` redraws while preserving normal newline behavior. Defaults match `DEFAULT_TERMINAL_BUFFER_OPTIONS`.
+Builds a terminal-oriented cumulative text stream from any `Observable<string>` of decoded chunks (typically `SerialSession.receive$`). Folds `\r` redraws while preserving normal newline behavior. Defaults match `DEFAULT_TERMINAL_BUFFER_OPTIONS`. Invalid `maxLines` / `maxChars` throw the same `INVALID_TERMINAL_BUFFER_OPTIONS` error as session factory validation.
 
 ```typescript
 function createTerminalBuffer(

@@ -3,7 +3,7 @@ declare const baudRateBrand: unique symbol;
 export type BaudRate = number & { readonly [baudRateBrand]: true };
 
 declare const serialPortBufferSizeBrand: unique symbol;
-/** Validated W3C {@link SerialOptions} `bufferSize`. */
+/** Validated W3C {@link SerialOptions} `bufferSize` (safe integer > 0). */
 export type SerialPortBufferSize = number & {
   readonly [serialPortBufferSizeBrand]: true;
 };
