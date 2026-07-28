@@ -24,10 +24,9 @@ interface MockCore {
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  isBrowserSupported: ReturnType<typeof vi.fn>;
 }
 
-const createMockCore = (supported = true): MockCore => {
+const createMockCore = (): MockCore => {
   const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
@@ -35,10 +34,8 @@ const createMockCore = (supported = true): MockCore => {
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
-  const isBrowserSupported = vi.fn(() => supported);
 
   const session: SerialSession = {
-    isBrowserSupported,
     connect$,
     disconnect$,
     dispose$,
@@ -60,12 +57,10 @@ const createMockCore = (supported = true): MockCore => {
     disconnect$,
     dispose$,
     send$,
-    isBrowserSupported,
   };
 };
 
 let mockCores: MockCore[] = [];
-let nextSupported = true;
 
 vi.mock('@gurezo/web-serial-rxjs', async () => {
   const actual =
@@ -75,7 +70,7 @@ vi.mock('@gurezo/web-serial-rxjs', async () => {
   return {
     ...actual,
     createSerialSession: vi.fn(() => {
-      const mock = createMockCore(nextSupported);
+      const mock = createMockCore();
       mockCores.push(mock);
       return mock.session;
     }),
@@ -91,7 +86,6 @@ const latestMock = (): MockCore => {
 describe('createSerialSessionController', () => {
   beforeEach(() => {
     mockCores = [];
-    nextSupported = true;
   });
 
   afterEach(() => {
@@ -103,12 +97,6 @@ describe('createSerialSessionController', () => {
     expect(
       vi.mocked(webSerialRxjs.createSerialSession),
     ).toHaveBeenCalledWith({ baudRate: 9600 });
-  });
-
-  it('isBrowserSupported は session の結果を返す', () => {
-    nextSupported = false;
-    const controller = createSerialSessionController();
-    expect(controller.isBrowserSupported()).toBe(false);
   });
 
   it('state$ / terminalText$ / errors$ を配信する', () => {
