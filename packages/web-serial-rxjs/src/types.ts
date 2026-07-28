@@ -13,7 +13,12 @@ export type SerialPayload = string | Uint8Array;
  * {@link SerialSessionOptions.filters}, which apply only to
  * `navigator.serial.requestPort`.
  *
+ * At session factory time, `baudRate` and `bufferSize` must be safe integers
+ * `> 0` (or omitted to use defaults). `0`, negatives, non-integers, `NaN`, and
+ * `Infinity` are rejected.
+ *
  * @see {@link SerialOptions}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/488 | Issue #488}
  */
 export type SerialConnectionOptions = Pick<
   SerialOptions,

@@ -1,4 +1,6 @@
 import { type Observable, map, scan, shareReplay } from 'rxjs';
+import { SerialError } from '../errors/serial-error';
+import { SerialErrorCode } from '../errors/serial-error-code';
 import {
   brandMaxChars,
   brandMaxLines,
@@ -136,10 +138,16 @@ export interface TerminalBuffer {
   readonly text$: Observable<string>;
 }
 
-/** Options for {@link createTerminalBuffer} memory limits. `0` means unlimited. */
+/**
+ * Options for {@link createTerminalBuffer} memory limits.
+ *
+ * Character counts use UTF-16 string length (JavaScript `.length`).
+ * Pass `0` for `maxLines` or `maxChars` to disable that limit (unlimited).
+ */
 export interface TerminalBufferOptions {
   /**
    * Maximum number of completed lines to retain in the display buffer.
+   * `0` means unlimited. Must be a safe integer `>= 0` when validated.
    *
    * @default 10000
    */
@@ -148,6 +156,7 @@ export interface TerminalBufferOptions {
   /**
    * Maximum total characters in the cumulative display text
    * (`completed` + `currentLine`). Oldest content is dropped first.
+   * `0` means unlimited. Must be a safe integer `>= 0` when validated.
    *
    * @default 1048576
    */
@@ -172,14 +181,62 @@ export const DEFAULT_TERMINAL_BUFFER_OPTIONS: Required<TerminalBufferOptions> =
     stripAnsi: true,
   };
 
-function resolveTerminalBufferLimits(
+/** Resolved terminal buffer options with validated branded numeric fields. */
+export type ResolvedTerminalBufferOptions = {
+  maxLines: MaxLines;
+  maxChars: MaxChars;
+  stripAnsi: boolean;
+};
+
+/**
+ * Merge and validate {@link TerminalBufferOptions}.
+ *
+ * This is the single normalization path for terminal buffer defaults and
+ * boundary checks (session factory and standalone {@link createTerminalBuffer}).
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS}
+ *         when `maxLines` or `maxChars` are out of range.
+ */
+export function resolveTerminalBufferOptions(
   options?: TerminalBufferOptions,
-): TerminalBufferLimits {
-  const maxLines = options?.maxLines ?? DEFAULT_TERMINAL_BUFFER_OPTIONS.maxLines;
-  const maxChars = options?.maxChars ?? DEFAULT_TERMINAL_BUFFER_OPTIONS.maxChars;
+): ResolvedTerminalBufferOptions {
+  const merged: Required<TerminalBufferOptions> = {
+    ...DEFAULT_TERMINAL_BUFFER_OPTIONS,
+    ...options,
+  };
+
+  const { maxLines, maxChars } = merged;
+
+  if (!Number.isSafeInteger(maxLines) || maxLines < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      `Invalid terminalBuffer.maxLines: ${maxLines}. Must be a safe integer >= 0.`,
+      undefined,
+      {
+        field: 'terminalBuffer.maxLines',
+        value: maxLines,
+        constraint: 'non-negative-safe-integer',
+      },
+    );
+  }
+
+  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
+      `Invalid terminalBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+      undefined,
+      {
+        field: 'terminalBuffer.maxChars',
+        value: maxChars,
+        constraint: 'non-negative-safe-integer',
+      },
+    );
+  }
+
   return {
     maxLines: brandMaxLines(maxLines),
     maxChars: brandMaxChars(maxChars),
+    stripAnsi: merged.stripAnsi,
   };
 }
 
@@ -204,10 +261,12 @@ export function createTerminalBuffer(
   receive$: Observable<string>,
   options?: TerminalBufferOptions,
 ): TerminalBuffer {
-  const limits = resolveTerminalBufferLimits(options);
-  const stripAnsi =
-    options?.stripAnsi ?? DEFAULT_TERMINAL_BUFFER_OPTIONS.stripAnsi;
-  const ansiStripper = stripAnsi ? createAnsiStripper() : null;
+  const resolved = resolveTerminalBufferOptions(options);
+  const limits: TerminalBufferLimits = {
+    maxLines: resolved.maxLines,
+    maxChars: resolved.maxChars,
+  };
+  const ansiStripper = resolved.stripAnsi ? createAnsiStripper() : null;
 
   const text$ = receive$.pipe(
     scan((state, chunk: string) => {

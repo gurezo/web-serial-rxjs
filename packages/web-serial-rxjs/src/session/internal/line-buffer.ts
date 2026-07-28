@@ -1,9 +1,13 @@
 import { createNewlineTokenizer } from '../../internal/newline-tokenizer';
 import type { MaxChars } from '../../internal/branded-numbers';
 import { brandMaxChars } from '../../internal/branded-numbers';
+import { SerialError } from '../../errors/serial-error';
+import { SerialErrorCode } from '../../errors/serial-error-code';
 
 /**
  * Options for {@link createLineBuffer}.
+ *
+ * Character counts use UTF-16 string length (JavaScript `.length`).
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/371 | Issue #371}
  */
@@ -11,6 +15,7 @@ export interface LineBufferOptions {
   /**
    * Maximum characters retained in the incomplete line tail (no line terminator yet).
    * When exceeded, leading characters are discarded. `0` means unlimited.
+   * Must be a safe integer `>= 0` when validated.
    *
    * @default 1048576
    */
@@ -21,6 +26,48 @@ export interface LineBufferOptions {
 export const DEFAULT_LINE_BUFFER_OPTIONS: Required<LineBufferOptions> = {
   maxChars: 1_048_576,
 };
+
+/** Resolved line buffer options with validated branded numeric fields. */
+export type ResolvedLineBufferOptions = {
+  maxChars: MaxChars;
+};
+
+/**
+ * Merge and validate {@link LineBufferOptions}.
+ *
+ * This is the single normalization path for line buffer defaults and boundary
+ * checks used by {@link resolveSerialSessionOptions}.
+ *
+ * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS}
+ *         when `maxChars` is out of range.
+ */
+export function resolveLineBufferOptions(
+  options?: LineBufferOptions,
+): ResolvedLineBufferOptions {
+  const merged: Required<LineBufferOptions> = {
+    ...DEFAULT_LINE_BUFFER_OPTIONS,
+    ...options,
+  };
+
+  const { maxChars } = merged;
+
+  if (!Number.isSafeInteger(maxChars) || maxChars < 0) {
+    throw new SerialError(
+      SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
+      `Invalid lineBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
+      undefined,
+      {
+        field: 'lineBuffer.maxChars',
+        value: maxChars,
+        constraint: 'non-negative-safe-integer',
+      },
+    );
+  }
+
+  return {
+    maxChars: brandMaxChars(maxChars),
+  };
+}
 
 /** Result of {@link createLineBuffer.feed}. */
 export interface LineBufferFeedResult {
@@ -56,11 +103,7 @@ export interface LineBufferLimits {
 export function createLineBuffer(
   options?: LineBufferOptions | LineBufferLimits,
 ): LineBuffer {
-  const limits: LineBufferLimits = {
-    maxChars: brandMaxChars(
-      options?.maxChars ?? DEFAULT_LINE_BUFFER_OPTIONS.maxChars,
-    ),
-  };
+  const limits: LineBufferLimits = resolveLineBufferOptions(options);
 
   const tokenizer = createNewlineTokenizer('line');
 

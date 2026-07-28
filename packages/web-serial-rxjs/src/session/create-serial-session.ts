@@ -55,9 +55,12 @@ import {
  *   do not mutate `state$` because a real connection loss will be
  *   observed by the read pump on the next tick anyway.
  *
- * @param options - Session options. Only `filters` is consulted by
- *   `connect$` today (forwarded to `navigator.serial.requestPort`); the
- *   remaining fields are passed to `port.open` using defaults when omitted.
+ * @param options - Session options. W3C connection fields (`baudRate`,
+ *   `dataBits`, …) are passed to `port.open`. `filters` is forwarded to
+ *   `navigator.serial.requestPort`. `lineBuffer` / `terminalBuffer` configure
+ *   {@link SerialSession.lines$} and {@link SerialSession.terminalText$}.
+ *   Omitted fields use {@link resolveSerialSessionOptions} defaults; minimal
+ *   callers typically only set `baudRate`.
  * @returns A {@link SerialSession} instance.
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
