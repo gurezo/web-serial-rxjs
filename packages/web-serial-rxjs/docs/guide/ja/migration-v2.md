@@ -146,7 +146,7 @@ async function query(
 
 `SerialSessionOptions` は `SerialClientOptions` と同じフィールド（`baudRate` / `dataBits` / `stopBits` / `parity` / `bufferSize` / `flowControl` / `filters`）を持ち、デフォルト値（`9600` / `8` / `1` / `'none'` / `255` / `'none'`）も同一です。
 
-`createSerialSession` factory 時に `resolveSerialSessionOptions` が `filters`・`baudRate`・`receiveReplay`・`terminalBuffer`・`lineBuffer` を検証します。不正な値は `SerialError` として throw されます（例: `SerialErrorCode.INVALID_FILTER_OPTIONS`）。
+`createSerialSession` factory 時に `resolveSerialSessionOptions` が `filters`・`baudRate`・`bufferSize`・`terminalBuffer`・`lineBuffer` を検証します。不正な値は `SerialError` として throw されます（例: `SerialErrorCode.INVALID_FILTER_OPTIONS`）。
 
 ## フレームワーク別の例
 
