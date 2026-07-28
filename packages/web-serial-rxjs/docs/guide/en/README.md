@@ -13,6 +13,7 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 
 When migrating existing code:
 
+- **[v3 → v4 Migration](./migration-v4.md)** — Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup)
 - **[v2 → v3 Migration](./migration-v3.md)** — `state$` discriminated union, `SerialSessionStatus`, `context.cause`
 - **[v1 → v2 Migration](./migration-v2.md)** — mapping for removed v1 APIs
 
@@ -24,6 +25,7 @@ When migrating existing code:
 | **[Quick Start](./quick-start.md)** | Basic flow from installation through disconnect |
 | **[Advanced Usage](./advanced-usage.md)** | Application patterns and RxJS recipes |
 | **[API concepts and design notes](./concepts.md)** | Options, error codes, and type tables |
+| **[v3 → v4 Migration](./migration-v4.md)** | Unified Phase 1+2 public API cleanup |
 | **[v2 → v3 Migration](./migration-v3.md)** | Steps to adopt v3 canonical API |
 | **[v1 → v2 Migration](./migration-v2.md)** | Replacements for removed v1 APIs |
 | **[Phase 5 (archive)](./archive/migration-phase5.md)** | Legacy v1 documentation reference |
@@ -36,8 +38,10 @@ When migrating existing code:
 - **English TypeDoc API Reference** — [modules.html](modules.html)
 - **Parent issue** — [#453](https://github.com/gurezo/web-serial-rxjs/issues/453) (documentation structure)
 
-## v3 canonical API highlights
+## Canonical API highlights
 
 - **`state$`** — canonical lifecycle source. Branch on `state.status` with `SerialSessionStatus`; use `state.portInfo` when connected
 - **`errors$`** — canonical fatal / non-fatal error event channel. Branch with `SerialError.is(SerialErrorCode.*)`
-- **`dispose$()`** — sole session teardown API (subscribe to run it). Removed convenience APIs (`destroy$`, `isConnected$`, `portInfo$`, `getPortInfo()`, `getCurrentPort()`) are documented in [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals)
+- **`dispose$()`** — sole session teardown API (subscribe to run it)
+- **`isWebSerialSupported()`** — top-level sync feature detection (not a session method)
+- Phase 1+2 removals (`destroy$`, `isConnected$`, `portInfo$`, `getPortInfo()`, `getCurrentPort()`, `receiveReplay$`, `isBrowserSupported()`) are documented in [Migrating to v4](./migration-v4.md)

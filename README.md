@@ -104,6 +104,7 @@ Documentation is split into **Guide** (how to use; Japanese and English hand-wri
 | **[Quick Start](packages/web-serial-rxjs/docs/guide/en/quick-start.md)** | Shortest path to a working open port and subscriptions. |
 | **[Advanced Usage](packages/web-serial-rxjs/docs/guide/en/advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
 | **[API concepts and design notes](packages/web-serial-rxjs/docs/guide/en/concepts.md)** | Options, `SerialSessionState`, and `SerialError` details. |
+| **[v3 → v4 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v4.md)** | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |
 | **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
 
