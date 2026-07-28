@@ -202,7 +202,10 @@ export function resolveConnectionOptions(
     ...options,
   };
 
-  const { baudRate, bufferSize } = merged;
+  const baudRate =
+    merged.baudRate ?? DEFAULT_SERIAL_SESSION_OPTIONS.baudRate;
+  const bufferSize =
+    merged.bufferSize ?? DEFAULT_SERIAL_SESSION_OPTIONS.bufferSize;
 
   if (!Number.isSafeInteger(baudRate) || baudRate <= 0) {
     throw new SerialError(
@@ -231,10 +234,11 @@ export function resolveConnectionOptions(
   }
 
   return {
-    dataBits: merged.dataBits,
-    stopBits: merged.stopBits,
-    parity: merged.parity,
-    flowControl: merged.flowControl,
+    dataBits: merged.dataBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.dataBits,
+    stopBits: merged.stopBits ?? DEFAULT_SERIAL_SESSION_OPTIONS.stopBits,
+    parity: merged.parity ?? DEFAULT_SERIAL_SESSION_OPTIONS.parity,
+    flowControl:
+      merged.flowControl ?? DEFAULT_SERIAL_SESSION_OPTIONS.flowControl,
     baudRate: brandBaudRate(baudRate),
     bufferSize: brandSerialPortBufferSize(bufferSize),
   };
