@@ -45,7 +45,7 @@
  *
  * **Safari** does not currently support the Web Serial API.
  *
- * Use {@link SerialSession.isBrowserSupported} for a synchronous feature
+ * Use {@link isWebSerialSupported} for a synchronous feature
  * check before calling {@link SerialSession.connect$}.
  *
  * @example
@@ -53,6 +53,7 @@
  * import { filter } from 'rxjs';
  * import {
  *   createSerialSession,
+ *   isWebSerialSupported,
  *   isConnectedSessionState,
  *   SerialSessionStatus,
  *   SerialErrorCode,
@@ -60,7 +61,7 @@
  *
  * const session = createSerialSession({ baudRate: 115200 });
  *
- * if (!session.isBrowserSupported()) {
+ * if (!isWebSerialSupported()) {
  *   console.error('Web Serial API is not supported in this browser');
  * } else {
  *   session.state$.subscribe((state) => {
@@ -88,7 +89,7 @@
 
 export { assertNever } from './internal/assert-never';
 
-export { createSerialSession, SerialSessionStatus, isConnectedSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions } from './session';
+export { createSerialSession, isWebSerialSupported, SerialSessionStatus, isConnectedSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions } from './session';
 export type {
   SerialSession,
   SerialSessionState,

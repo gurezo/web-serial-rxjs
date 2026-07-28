@@ -10,6 +10,7 @@ The public surface consists of a single factory (`createSerialSession`), the run
 ```typescript
 import {
   createSerialSession,
+  isWebSerialSupported,
   createTerminalBuffer,
   DEFAULT_TERMINAL_BUFFER_OPTIONS,
   SerialError,
@@ -182,8 +183,6 @@ See [Migrating to v3](./migration-v3.md) for the v2 string migration.
 
 ```typescript
 interface SerialSession {
-  isBrowserSupported(): boolean;
-
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
   dispose$(): Observable<void>;
@@ -198,7 +197,7 @@ interface SerialSession {
 }
 ```
 
-### `isBrowserSupported(): boolean`
+### `isWebSerialSupported(): boolean`
 
 Synchronous feature check. Returns `true` when `navigator.serial` is available.
 

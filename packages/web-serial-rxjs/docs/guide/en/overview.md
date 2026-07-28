@@ -66,7 +66,7 @@ This library is framework-agnostic and can be used with:
 | `disconnect$()` | **Close** the port and stop the pump. The session stays reusable (`idle`). |
 | `dispose$()` | **Permanently tear down** the session: close any active connection, complete all observables, and prevent reuse. |
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
-| `isBrowserSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
+| `isWebSerialSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
 
 ### SerialSessionStatus (quick reference)
 
@@ -91,12 +91,16 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 ### Minimal example
 
 ```typescript
-import { createSerialSession, isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+import {
+  createSerialSession,
+  isConnectedSessionState,
+  isWebSerialSupported,
+} from '@gurezo/web-serial-rxjs';
 import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
-if (!session.isBrowserSupported()) {
+if (!isWebSerialSupported()) {
   throw new Error('Web Serial is not available in this browser');
 }
 

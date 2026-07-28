@@ -4,7 +4,6 @@ import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { App } from './app.js';
 
 interface MockSession {
-  isBrowserSupported: ReturnType<typeof vi.fn>;
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
@@ -20,7 +19,6 @@ const createMockSession = (): MockSession => {
   const receive$ = new Subject<string>();
   const errors$ = new Subject<{ message: string }>();
   return {
-    isBrowserSupported: vi.fn(() => true),
     connect$: vi.fn(() => of(undefined)),
     disconnect$: vi.fn(() => of(undefined)),
     dispose$: vi.fn(() => of(undefined)),
@@ -40,6 +38,7 @@ vi.mock('@gurezo/web-serial-rxjs', async () => {
   );
   return {
     ...actual,
+    isWebSerialSupported: vi.fn(() => true),
     createSerialSession: vi.fn(() => {
       const mock = createMockSession();
       mockSessions.push(mock);
@@ -93,7 +92,7 @@ describe('App', () => {
     });
   });
 
-  it('should render browser support status based on session.isBrowserSupported', () => {
+  it('should render browser support status based on isWebSerialSupported', () => {
     app = new App();
     const el = document.getElementById('browser-support-status');
     expect(el?.textContent).toContain('Web Serial API');

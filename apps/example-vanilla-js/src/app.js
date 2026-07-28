@@ -1,4 +1,4 @@
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { isWebSerialSupported, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { createSerialSessionController } from '@gurezo/examples-shared';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -36,7 +36,7 @@ export class App {
     const receiveOutput = $('receive-output');
     this.controller = createSerialSessionController({ initialBaudRate: 9600 });
 
-    const supported = this.controller.isBrowserSupported();
+    const supported = isWebSerialSupported();
     setStatus(
       $('browser-support-status'),
       supported ? 'success' : 'error',

@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
+  isWebSerialSupported,
   SerialSessionStatus,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
@@ -24,7 +25,7 @@ export class App {
 
   private readonly serialService = inject(SerialClientService);
 
-  readonly browserSupported = this.serialService.isBrowserSupported();
+  readonly browserSupported = isWebSerialSupported();
   readonly state = toSignal(this.serialService.state$, {
     initialValue: {
       status: SerialSessionStatus.Idle,

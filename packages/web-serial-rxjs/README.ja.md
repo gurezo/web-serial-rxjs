@@ -19,7 +19,7 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 
 **Safari** は現時点で Web Serial API をサポートしていません。
 
-`connect$` の前の feature detection には `SerialSession.isBrowserSupported()`（同期的に `boolean`）を使います。
+`connect$` の前の feature detection には `isWebSerialSupported()`（同期的に `boolean`）を使います。
 
 ## 接続状態（ライフサイクル UI）
 

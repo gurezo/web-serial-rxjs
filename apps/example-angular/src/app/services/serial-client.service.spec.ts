@@ -21,7 +21,6 @@ interface MockCore {
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  isBrowserSupported: ReturnType<typeof vi.fn>;
 }
 
 const createMockCore = (): MockCore => {
@@ -34,10 +33,8 @@ const createMockCore = (): MockCore => {
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
-  const isBrowserSupported = vi.fn(() => true);
 
   const session: webSerialRxjs.SerialSession = {
-    isBrowserSupported,
     connect$,
     disconnect$,
     dispose$,
@@ -58,7 +55,6 @@ const createMockCore = (): MockCore => {
     disconnect$,
     dispose$,
     send$,
-    isBrowserSupported,
   };
 };
 
@@ -105,11 +101,6 @@ describe('SerialClientService', () => {
       vi.mocked(webSerialRxjs.createSerialSession),
     ).toHaveBeenCalledTimes(1);
     expect(service).toBeTruthy();
-  });
-
-  it('should expose browser support via the session', () => {
-    expect(service.isBrowserSupported()).toBe(true);
-    expect(latestMock().isBrowserSupported).toHaveBeenCalled();
   });
 
   it('should emit the initial idle state on state$', async () => {

@@ -1,14 +1,11 @@
 /**
- * Internal feature detection for the Web Serial API.
+ * Synchronous feature detection for the Web Serial API.
  *
- * This helper is intentionally kept package-private: the v2 public API
- * exposes browser support only through {@link SerialSession.isBrowserSupported}.
+ * This helper is SSR-safe: it returns `false` when `navigator` is not available.
  *
  * @returns `true` when `navigator.serial` is available.
- *
- * @internal
  */
-export function hasWebSerialSupport(): boolean {
+export function isWebSerialSupported(): boolean {
   return (
     typeof navigator !== 'undefined' &&
     'serial' in navigator &&

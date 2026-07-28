@@ -28,7 +28,6 @@ export interface SerialSessionController {
   readonly terminalText$: Observable<string>;
   readonly errors$: Observable<SerialError>;
   readonly receive$: Observable<string>;
-  isBrowserSupported(): boolean;
   connect$(baudRate?: SerialConnectionOptions['baudRate']): Observable<void>;
   disconnect$(): Observable<void>;
   send$(data: SerialPayload): Observable<void>;
@@ -109,7 +108,6 @@ export function createSerialSessionController(
     terminalText$,
     errors$,
     receive$,
-    isBrowserSupported: () => currentSession.isBrowserSupported(),
     connect$,
     disconnect$,
     send$,

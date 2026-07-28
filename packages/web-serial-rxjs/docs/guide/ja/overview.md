@@ -60,7 +60,7 @@
 | `disconnect$()` | ポートを閉じ、pump を停止。セッションは `idle` に戻り再利用可能。 |
 | `dispose$()` | セッションを**永久破棄**。接続を閉じ、すべての Observable を complete し、再利用不可にする。 |
 | `send$(string \| Uint8Array)` | 送信を **FIFO** で直列化（並行 `send$` も呼び出し順）。 |
-| `isBrowserSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
+| `isWebSerialSupported()` | `connect$` の前に使う、Web Serial 利用可否の同期的な `boolean`。 |
 
 ### SerialSessionStatus（早見表）
 
@@ -85,12 +85,16 @@
 ### 最小サンプル
 
 ```typescript
-import { createSerialSession, isConnectedSessionState } from '@gurezo/web-serial-rxjs';
+import {
+  createSerialSession,
+  isConnectedSessionState,
+  isWebSerialSupported,
+} from '@gurezo/web-serial-rxjs';
 import { filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
-if (!session.isBrowserSupported()) {
+if (!isWebSerialSupported()) {
   throw new Error('このブラウザでは Web Serial を利用できません');
 }
 

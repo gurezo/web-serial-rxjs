@@ -1,4 +1,5 @@
 import {
+  isWebSerialSupported,
   SerialSessionStatus,
   type SerialSessionStatus as SerialSessionStatusType,
 } from '@gurezo/web-serial-rxjs';
@@ -46,7 +47,7 @@ export class App {
     const sendBtn = $<HTMLButtonElement>('send-btn');
     const receiveOutput = $<HTMLTextAreaElement>('receive-output');
 
-    const supported = this.controller.isBrowserSupported();
+    const supported = isWebSerialSupported();
     setStatus(
       $<HTMLElement>('browser-support-status'),
       supported ? 'success' : 'error',
