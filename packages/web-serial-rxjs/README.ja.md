@@ -23,11 +23,11 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 
 ## 接続状態（ライフサイクル UI）
 
-ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v3 移行ガイド – Phase 1 API 削除](./docs/guide/ja/migration-v3.md#phase-1-api-削除) を参照してください。
+ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v4 への移行](./docs/guide/ja/migration-v4.md) を参照してください。
 
 ## 接続中のポート情報（デバイス識別）
 
-`connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`）と置換先は [v3 移行ガイド](./docs/guide/ja/migration-v3.md#phase-1-api-削除) を参照してください。
+`connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）と置換先は [v4 への移行](./docs/guide/ja/migration-v4.md) を参照してください。
 
 ## `receive$` と `lines$`
 
@@ -96,6 +96,7 @@ pnpm add rxjs
 | [クイックスタート](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/quick-start.md) | ポートを開いて購読までを最短で |
 | [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md) | 行フレーミング、擬似リクエスト/レス、リカバリ |
 | [API の概念と設計メモ](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md) | オプション、`SerialError`、型の表形式補足 |
+| [v3 → v4 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理） |
 | [v2 → v3 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v3.md) | `state$` discriminated union、`SerialSessionStatus`、`context.cause` |
 | [v1 → v2 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v2.md) | 廃止された v1 API の置き換え |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ構成、**`apps/` のサンプル**、貢献、MCP、プロジェクトアイコン |

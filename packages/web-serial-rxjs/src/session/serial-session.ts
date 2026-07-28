@@ -18,7 +18,15 @@ import type { SerialSessionState } from './serial-session-state';
  *
  * @example
  * ```typescript
- * import { createSerialSession, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+ * import {
+ *   createSerialSession,
+ *   isWebSerialSupported,
+ *   SerialSessionStatus,
+ * } from '@gurezo/web-serial-rxjs';
+ *
+ * if (!isWebSerialSupported()) {
+ *   // fallback UI
+ * }
  *
  * const session = createSerialSession({ baudRate: 115200 });
  *

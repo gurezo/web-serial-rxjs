@@ -13,6 +13,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 
 既存コードから移行する場合:
 
+- **[v3 → v4 マイグレーション](./migration-v4.md)** — Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）
 - **[v2 → v3 マイグレーション](./migration-v3.md)** — `state$` discriminated union、`SerialSessionStatus`、`context.cause`
 - **[v1 → v2 マイグレーション](./migration-v2.md)** — 削除された v1 API の対応表
 
@@ -24,6 +25,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[クイックスタート](./quick-start.md)** | インストールから切断までの基本フロー |
 | **[高度な使用方法](./advanced-usage.md)** | 応用パターンと RxJS レシピ |
 | **[API の概念と設計メモ](./concepts.md)** | オプション・エラーコード・型の表形式補足 |
+| **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |
 | **[v1 → v2 マイグレーション](./migration-v2.md)** | v1 廃止 API の置き換え |
 | **[Phase 5（アーカイブ）](./archive/migration-phase5.md)** | 旧 v1 ドキュメントの参照用 |
@@ -36,8 +38,10 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 - **英語 TypeDoc API Reference** — [../../api/modules.html](../../api/modules.html)
 - **親 Issue** — [#453](https://github.com/gurezo/web-serial-rxjs/issues/453)（ドキュメント構成整備）
 
-## v3 canonical API の要点
+## Canonical API の要点
 
 - **`state$`** — 接続ライフサイクルの canonical source。`state.status` と `SerialSessionStatus` で分岐し、connected 時は `state.portInfo` を利用する
 - **`errors$`** — fatal / non-fatal エラーの canonical event channel。`SerialError.is(SerialErrorCode.*)` で分岐する
-- **`dispose$()`** — セッション破棄の唯一の API（購読により実行）。削除された convenience API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`）は [v3 移行ガイド – Phase 1 API 削除](./migration-v3.md#phase-1-api-削除) を参照
+- **`dispose$()`** — セッション破棄の唯一の API（購読により実行）
+- **`isWebSerialSupported()`** — トップレベルの同期 feature detection（セッションメソッドではない）
+- Phase 1+2 で削除された API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）は [v4 への移行](./migration-v4.md) を参照

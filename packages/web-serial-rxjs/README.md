@@ -23,11 +23,11 @@ Supported desktop browsers:
 
 ## Connection state (lifecycle UI)
 
-Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. Session teardown uses **`dispose$()`** (subscribe to run it). See [Migrating to v3 – Phase 1 removals](./docs/guide/en/migration-v3.md#phase-1-api-removals).
+Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. Session teardown uses **`dispose$()`** (subscribe to run it). See [Migrating to v4](./docs/guide/en/migration-v4.md).
 
 ## Port info (device identification)
 
-After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. Raw `SerialPort` is not exposed. Removed convenience APIs (`isConnected$`, `portInfo$`, `getPortInfo()`, `destroy$()`, `getCurrentPort()`) and their replacements are documented in [Migrating to v3](./docs/guide/en/migration-v3.md#phase-1-api-removals).
+After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. Raw `SerialPort` is not exposed. Removed convenience APIs (`isConnected$`, `portInfo$`, `getPortInfo()`, `destroy$()`, `getCurrentPort()`, `receiveReplay$`, `isBrowserSupported()`) and their replacements are documented in [Migrating to v4](./docs/guide/en/migration-v4.md).
 
 ## `receive$` vs `lines$`
 
@@ -100,6 +100,7 @@ pnpm add rxjs
 | [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/quick-start.md) | Open a port and wire subscriptions end-to-end |
 | [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/advanced-usage.md) | Line framing, request/response-style flows, recovery |
 | [API concepts and design notes](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/concepts.md) | `SerialSessionOptions`, `SerialError`, and formal details |
+| [v3 → v4 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v4.md) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup) |
 | [v2 → v3 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v3.md) | `state$` discriminated union, `SerialSessionStatus`, `context.cause` |
 | [v1 → v2 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v2.md) | Replacing the removed v1 `SerialClient` / `ShellClient` API |
 | [Repository README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md) | Monorepo layout, **examples** under `apps/`, contributing, MCP, and project icon |

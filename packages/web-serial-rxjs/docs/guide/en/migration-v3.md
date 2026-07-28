@@ -404,8 +404,9 @@ Some members of the public `SerialErrorCode` contract were not emitted by the v3
 
 | Category | Count | Description |
 | --- | --- | --- |
-| **Implemented** | 17 | Emitted at runtime in v3.x (or thrown at factory time) |
-| **Reserved** | 2 | Present in the public API but not emitted in v3.x; scheduled for removal in the next major version |
+| **Implemented** | 15 | Emitted at runtime in v3.x / v4 (or thrown at factory time) |
+| **Reserved** | 2 | Present in the public API but not emitted; scheduled for removal in the next major version |
+| **Removed in v4 Phase 2** | 2 | Receive-replay codes deleted with `receiveReplay$` / `receiveReplay` |
 
 ### Reserved codes (not emitted in v3.x)
 
@@ -430,13 +431,20 @@ v3.x adds `@deprecated` annotations only; runtime values and exports are unchang
 | `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `ValidationErrorContext` | unit + integration |
 | `OPERATION_CANCELLED` | `requestPort` dialog cancelled | fatal | `{ cause }` | integration |
 | `LINE_BUFFER_OVERFLOW` | `lines$` tail overflow | non-fatal | `{ maxChars }` | integration |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | throw | `ValidationErrorContext` | unit + integration |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
 | `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
 | `INVALID_CONNECTION_OPTIONS` | factory | throw | `ValidationErrorContext` | unit + integration |
-| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` overflow | non-fatal | `{ maxChars, bufferSize }` | integration |
 | `SESSION_DISPOSED` | `connect$` / `send$` after `dispose$` | fatal | `undefined` | integration |
 | `UNKNOWN` | unclassified dispose / disconnect fallback | fatal | `{ cause }` | unit |
+
+### Removed in v4 Phase 2
+
+| Code | Former emit location | Notes |
+| --- | --- | --- |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | Removed with `options.receiveReplay` |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` overflow | Removed with `receiveReplay$` |
+
+See [Migrating to v4 – Phase 2](./migration-v4.md#phase-2-api-removals).
 
 Fatal vs non-fatal follows `ERROR_SEVERITY` inside `reportError`. Factory-thrown `INVALID_*` codes bypass `reportError` and throw directly to the caller.
 
@@ -559,19 +567,20 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 ```
 
 - `SerialConnectionOptions` — `baudRate`, `dataBits`, `stopBits`, `parity`, `bufferSize`, `flowControl` (passed to `port.open`)
-- `SerialSessionFeatureOptions` — `filters`, `terminalBuffer`, `lineBuffer` (library-specific; `receiveReplay` was removed in v4 Phase 2)
+- `SerialSessionFeatureOptions` — `filters`, `terminalBuffer`, `lineBuffer` (library-specific; `receiveReplay` was removed in v4 Phase 2 — see [Migrating to v4](./migration-v4.md))
 - `SerialSessionOptions` — composition of the two (factory argument)
 
 See [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions) for details. Boundary semantics (`0` = unlimited for buffer limits only; connection fields require `> 0`) are documented there ([#488](https://github.com/gurezo/web-serial-rxjs/issues/488)).
 
 ### v3.x compatibility
 
-The `createSerialSession(options?)` signature and existing options object literals remain **unchanged**. `SerialSessionFeatureOptions` is added as a new public export.
+The `createSerialSession(options?)` signature and existing options object literals remain **unchanged** for connection / buffer fields. `SerialSessionFeatureOptions` is added as a new public export. `receiveReplay` is removed in v4 — migrate via [Migrating to v4](./migration-v4.md).
 
 ---
 
 ## See also
 
+- [Migrating to v4](./migration-v4.md)
 - [Migrating from v1 to v2](./migration-v2.md)
 - [API Reference – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
