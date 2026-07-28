@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -102,23 +102,41 @@ const CANONICAL_TYPE_EXPORTS = [
   'ValidationErrorContext',
 ] as const;
 
-function parseExportedTypeNames(source: string): string[] {
+function parseExportedNamesFromBlocks(
+  source: string,
+  kind: 'value' | 'type',
+): string[] {
   const names: string[] = [];
-  const typeExportBlocks =
-    source.matchAll(/export\s+type\s*\{([^}]+)\}/gs);
-  for (const match of typeExportBlocks) {
+  const pattern =
+    kind === 'type'
+      ? /export\s+type\s*\{([^}]+)\}/gs
+      : /export\s*\{([^}]+)\}/gs;
+  for (const match of source.matchAll(pattern)) {
     const block = match[1] ?? '';
     for (const part of block.split(',')) {
       const trimmed = part.trim();
       if (!trimmed) continue;
-      // Support `Foo as Bar` / trailing comments are unlikely; take the local name.
       const localName = trimmed.split(/\s+as\s+/)[0]?.trim();
       if (localName && /^[A-Za-z_][A-Za-z0-9_]*$/.test(localName)) {
         names.push(localName);
       }
     }
   }
-  return names.sort();
+  return [...new Set(names)].sort();
+}
+
+function parseExportedTypeNames(source: string): string[] {
+  return parseExportedNamesFromBlocks(source, 'type');
+}
+
+function parseExportedValueNames(source: string): string[] {
+  return parseExportedNamesFromBlocks(source, 'value');
+}
+
+function listDeclarationFiles(distRoot: string): readonly string[] {
+  return readdirSync(distRoot, { recursive: true, encoding: 'utf8' })
+    .filter((entry) => entry.endsWith('.d.ts'))
+    .sort();
 }
 
 describe('v4 public API boundary audit (#489) — export allowlist', () => {
@@ -233,5 +251,59 @@ describe('v4 public API boundary audit (#489) — removed APIs', () => {
     expect('isBrowserSupported' in publicApi).toBe(false);
     expect(publicIndexSource).not.toMatch(/\bisBrowserSupported\b/);
     expect('isWebSerialSupported' in publicApi).toBe(true);
+  });
+});
+
+describe('v4 public API boundary audit (#489) — package exports and declarations', () => {
+  it('restricts package.json exports to the root entry and package.json', () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(packageRoot, 'package.json'), 'utf8'),
+    ) as { exports?: Record<string, unknown> };
+
+    expect(Object.keys(packageJson.exports ?? {}).sort()).toEqual([
+      '.',
+      './package.json',
+    ]);
+  });
+
+  it('keeps dist/index.d.ts runtime exports aligned with the allowlist', () => {
+    const dtsPath = join(packageRoot, 'dist/index.d.ts');
+    expect(
+      existsSync(dtsPath),
+      'dist/index.d.ts is missing; run `pnpm exec nx build web-serial-rxjs` (CI builds before test)',
+    ).toBe(true);
+
+    const dtsSource = readFileSync(dtsPath, 'utf8');
+    const actual = parseExportedValueNames(dtsSource);
+    const expected = [...CANONICAL_RUNTIME_EXPORTS].sort();
+    expect(actual).toEqual(expected);
+  });
+
+  it('keeps dist/index.d.ts type exports aligned with the allowlist', () => {
+    const dtsPath = join(packageRoot, 'dist/index.d.ts');
+    expect(existsSync(dtsPath)).toBe(true);
+
+    const dtsSource = readFileSync(dtsPath, 'utf8');
+    const actual = parseExportedTypeNames(dtsSource);
+    const expected = [...CANONICAL_TYPE_EXPORTS].sort();
+    expect(actual).toEqual(expected);
+  });
+
+  it('does not reintroduce removed APIs in declaration build output', () => {
+    const distRoot = join(packageRoot, 'dist');
+    expect(
+      existsSync(distRoot),
+      'dist/ is missing; run `pnpm exec nx build web-serial-rxjs` (CI builds before test)',
+    ).toBe(true);
+
+    for (const relativePath of listDeclarationFiles(distRoot)) {
+      const source = readFileSync(join(distRoot, relativePath), 'utf8');
+      for (const name of REMOVED_SESSION_APIS) {
+        expect(source, `${relativePath} / ${name}`).not.toContain(name);
+      }
+      expect(source, `${relativePath} / receiveReplay`).not.toMatch(
+        /receiveReplay/,
+      );
+    }
   });
 });
