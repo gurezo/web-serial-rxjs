@@ -1,4 +1,5 @@
 export { createSerialSession } from './create-serial-session';
+export { isWebSerialSupported } from './internal/has-web-serial-support';
 export type { SerialSession } from './serial-session';
 export type {
   SerialSessionOptions,

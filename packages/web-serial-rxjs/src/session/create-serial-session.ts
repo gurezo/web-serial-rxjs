@@ -3,7 +3,7 @@ import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
 import type { SerialPayload } from '../types';
-import { hasWebSerialSupport } from './internal/has-web-serial-support';
+import { isWebSerialSupported } from './internal/has-web-serial-support';
 import { createPortTeardown } from './internal/port-teardown';
 import { createReceivePipeline } from './internal/receive-pipeline';
 import { createSessionErrorReporter } from './internal/session-error-reporter';
@@ -32,7 +32,6 @@ import {
  *
  * Key behaviors:
  *
- * - `isBrowserSupported()` returns whether `navigator.serial` is available.
  * - `state$` replays the current lifecycle state driven by the internal
  *   {@link SessionRuntime} controller.
  * - `connect$()` opens a user-selected port, starts the internal read pump,
@@ -75,7 +74,7 @@ export function createSerialSession(
   const resolvedOptions = resolveSerialSessionOptions(options);
 
   const controller = createSessionRuntimeController(
-    createInitialRuntime(hasWebSerialSupport()),
+    createInitialRuntime(isWebSerialSupported()),
   );
   const errorsSubject = new Subject<SerialError>();
   const sendQueue = createSendQueue();
@@ -126,9 +125,6 @@ export function createSerialSession(
   ).text$;
 
   return {
-    isBrowserSupported(): boolean {
-      return hasWebSerialSupport();
-    },
     connect$: lifecycle.connect$,
     disconnect$: lifecycle.disconnect$,
     dispose$: lifecycle.dispose$,

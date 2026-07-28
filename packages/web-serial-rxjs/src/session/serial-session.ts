@@ -45,15 +45,6 @@ import type { SerialSessionState } from './serial-session-state';
  */
 export interface SerialSession {
   /**
-   * Synchronous feature detection for the Web Serial API.
-   *
-   * Never throws; intended for UI branching before calling `connect$`.
-   *
-   * @returns `true` when `navigator.serial` is available.
-   */
-  isBrowserSupported(): boolean;
-
-  /**
    * Open a serial port and start the internal read pump.
    *
    * Returns an Observable that completes when the port is fully opened and

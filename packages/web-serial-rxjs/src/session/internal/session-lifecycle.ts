@@ -2,7 +2,7 @@ import { Observable, type Subject } from 'rxjs';
 import { SerialError } from '../../errors/serial-error';
 import { SerialErrorCode } from '../../errors/serial-error-code';
 import { buildRequestOptions } from './build-request-options';
-import { hasWebSerialSupport } from './has-web-serial-support';
+import { isWebSerialSupported } from './has-web-serial-support';
 import type { ReceivePipeline } from './receive-pipeline';
 import {
   normalizeSerialError,
@@ -167,7 +167,7 @@ export function createSessionLifecycle(
         return;
       }
 
-      if (!hasWebSerialSupport()) {
+      if (!isWebSerialSupported()) {
         const error = reportError(
           new SerialError(
             SerialErrorCode.BROWSER_NOT_SUPPORTED,
