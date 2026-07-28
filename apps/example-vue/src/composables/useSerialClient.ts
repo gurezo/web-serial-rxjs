@@ -1,4 +1,5 @@
 import {
+  isWebSerialSupported,
   SerialSessionStatus,
   type SerialError,
   type SerialSessionState,
@@ -25,7 +26,7 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     initialBaudRate,
   });
 
-  const browserSupported = ref(controller.isBrowserSupported());
+  const browserSupported = ref(isWebSerialSupported());
   const state = ref<SerialSessionState>({ status: SerialSessionStatus.Idle });
   const isConnected = ref(false);
   const receivedData = ref('');

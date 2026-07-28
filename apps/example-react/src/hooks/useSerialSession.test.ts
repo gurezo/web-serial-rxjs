@@ -26,10 +26,9 @@ interface MockCore {
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  isBrowserSupported: ReturnType<typeof vi.fn>;
 }
 
-const createMockCore = (supported = true): MockCore => {
+const createMockCore = (): MockCore => {
   const stateSubject = new BehaviorSubject<SerialSessionState>({ status: SS.Idle });
   const receiveSubject = new Subject<string>();
   const errorsSubject = new Subject<SerialError>();
@@ -37,10 +36,8 @@ const createMockCore = (supported = true): MockCore => {
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
-  const isBrowserSupported = vi.fn(() => supported);
 
   const session: SerialSession = {
-    isBrowserSupported,
     connect$,
     disconnect$,
     dispose$,
@@ -61,7 +58,6 @@ const createMockCore = (supported = true): MockCore => {
     disconnect$,
     dispose$,
     send$,
-    isBrowserSupported,
   };
 };
 
@@ -75,8 +71,9 @@ vi.mock('@gurezo/web-serial-rxjs', async () => {
     );
   return {
     ...actual,
+    isWebSerialSupported: vi.fn(() => nextSupported),
     createSerialSession: vi.fn(() => {
-      const mock = createMockCore(nextSupported);
+      const mock = createMockCore();
       mockCores.push(mock);
       return mock.session;
     }),
@@ -115,7 +112,7 @@ describe('useSerialSession', () => {
     ).toHaveBeenCalledWith({ baudRate: 9600 });
   });
 
-  it('browserSupported は session.isBrowserSupported() の結果を反映する', () => {
+  it('browserSupported は isWebSerialSupported() の結果を反映する', () => {
     nextSupported = false;
     const { result } = renderHook(() => useSerialSession());
     expect(result.current.browserSupported).toBe(false);

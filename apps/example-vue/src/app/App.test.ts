@@ -22,7 +22,6 @@ interface MockSession {
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
-  isBrowserSupported: ReturnType<typeof vi.fn>;
 }
 
 const createMockSession = (): MockSession => {
@@ -42,10 +41,8 @@ const createMockSession = (): MockSession => {
   });
   const dispose$ = vi.fn(() => of(undefined));
   const send$ = vi.fn(() => of(undefined));
-  const isBrowserSupported = vi.fn(() => true);
 
   const session: SerialSession = {
-    isBrowserSupported,
     connect$,
     disconnect$,
     dispose$,
@@ -67,7 +64,6 @@ const createMockSession = (): MockSession => {
     disconnect$,
     dispose$,
     send$,
-    isBrowserSupported,
   };
 };
 
@@ -80,6 +76,7 @@ vi.mock('@gurezo/web-serial-rxjs', async () => {
     );
   return {
     ...actual,
+    isWebSerialSupported: vi.fn(() => true),
     createSerialSession: vi.fn(() => {
       const mock = createMockSession();
       mockSessions.push(mock);

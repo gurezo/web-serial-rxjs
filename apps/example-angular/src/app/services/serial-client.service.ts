@@ -24,10 +24,6 @@ export class SerialClientService implements OnDestroy {
     this.controller.dispose();
   }
 
-  isBrowserSupported(): boolean {
-    return this.controller.isBrowserSupported();
-  }
-
   connect$(baudRate?: number): Observable<void> {
     return this.controller.connect$(baudRate);
   }
