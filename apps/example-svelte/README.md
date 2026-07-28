@@ -26,7 +26,7 @@ This is a minimal Svelte example for the `SerialSession` API. `useSerialSession`
 
 ## Features
 
-- Browser support detection (`session.isBrowserSupported()`)
+- Browser support detection (`isWebSerialSupported()`)
 - Reactive session lifecycle driven by `state$` (`idle | connecting | connected | disconnecting | unsupported | error`)
 - Configuration option (baud rate)
 - Send data to the serial port through the library-owned FIFO send queue
@@ -78,7 +78,7 @@ pnpm exec nx lint example-svelte
 
 The example uses `createSerialSession` directly through `useSerialSession`:
 
-1. **Browser support check**: `useSerialSession` calls `session.isBrowserSupported()` once at creation time and exposes the result as the `browserSupported` store.
+1. **Browser support check**: `useSerialSession` calls `isWebSerialSupported()` once at creation time and exposes the result as the `browserSupported` store.
 2. **Connection**: Clicking "接続" invokes `connect$(baudRate)`; when baud rate changes, the helper creates a new `SerialSession` with the selected baud rate and connects it.
 3. **State UI**: The helper subscribes to `session.state$` and derives `$isConnected` from `state.status`. `App.svelte` branches on `state.status` with `SerialSessionStatus` for status and uses `$isConnected` for button enablement.
 4. **Sending**: Calling `send$(data)` enqueues the payload through the library's internal FIFO send queue, preserving call order regardless of how many concurrent subscribers run.

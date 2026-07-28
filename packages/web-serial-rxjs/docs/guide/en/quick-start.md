@@ -43,11 +43,11 @@ For monorepo-wide browser support and example app index, see the [repository REA
 Details: [API concepts and design notes](./concepts.md#serialsessionstate--serialsessionstatus) and [Migrating to v3](./migration-v3.md).
 
 ```typescript
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, isWebSerialSupported } from '@gurezo/web-serial-rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
-if (!session.isBrowserSupported()) {
+if (!isWebSerialSupported()) {
   console.error('Web Serial API is not supported in this browser');
 }
 

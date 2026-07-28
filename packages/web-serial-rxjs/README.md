@@ -19,7 +19,7 @@ Supported desktop browsers:
 
 **Safari** does not currently support the Web Serial API.
 
-`SerialSession.isBrowserSupported()` returns a synchronous `boolean` for feature detection before `connect$`.
+`isWebSerialSupported()` returns a synchronous `boolean` for feature detection before `connect$`.
 
 ## Connection state (lifecycle UI)
 

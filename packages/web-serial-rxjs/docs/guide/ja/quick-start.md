@@ -43,11 +43,11 @@ pnpm add rxjs
 詳細は [概念と設計メモ](./concepts.md#serialsessionstate--serialsessionstatus) と [v3 移行ガイド](./migration-v3.md) を参照してください。
 
 ```typescript
-import { createSerialSession } from '@gurezo/web-serial-rxjs';
+import { createSerialSession, isWebSerialSupported } from '@gurezo/web-serial-rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
-if (!session.isBrowserSupported()) {
+if (!isWebSerialSupported()) {
   console.error('このブラウザは Web Serial API をサポートしていません');
 }
 

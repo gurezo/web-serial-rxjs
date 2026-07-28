@@ -10,6 +10,7 @@
 ```typescript
 import {
   createSerialSession,
+  isWebSerialSupported,
   createTerminalBuffer,
   DEFAULT_TERMINAL_BUFFER_OPTIONS,
   SerialError,
@@ -182,8 +183,6 @@ v2 からの移行は [v3 移行ガイド](./migration-v3.md) を参照してく
 
 ```typescript
 interface SerialSession {
-  isBrowserSupported(): boolean;
-
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
   dispose$(): Observable<void>;
@@ -198,7 +197,7 @@ interface SerialSession {
 }
 ```
 
-### `isBrowserSupported(): boolean`
+### `isWebSerialSupported(): boolean`
 
 同期的な feature detection。`navigator.serial` が存在すれば `true` を返します。
 
