@@ -124,7 +124,7 @@ session.state$.subscribe((state) => {
 });
 ```
 
-`session.isBrowserSupported()` is removed. See also [API concepts – `isWebSerialSupported`](./concepts.md#iswebserialsupported-boolean).
+`session.isBrowserSupported()` is removed. See also [API concepts – SerialSession / `isWebSerialSupported`](./concepts.md#serialsession).
 
 ### Session options layout
 

@@ -124,7 +124,7 @@ session.state$.subscribe((state) => {
 });
 ```
 
-`session.isBrowserSupported()` は削除されています。関連: [API concepts – `isWebSerialSupported`](./concepts.md#iswebserialsupported-boolean)。
+`session.isBrowserSupported()` は削除されています。関連: [API concepts – SerialSession / `isWebSerialSupported`](./concepts.md#serialsession)。
 
 ### セッションオプションの整理
 
