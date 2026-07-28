@@ -217,7 +217,7 @@ interface SerialSession {
 
 ### `isWebSerialSupported(): boolean`
 
-同期的な feature detection。`navigator.serial` が存在すれば `true` を返します。
+同期的な feature detection。`navigator.serial` が存在すれば `true` を返します。セッション生成**前**に使ってください。生成後の unsupported UI は `state$` の `SerialSessionStatus.Unsupported` を推奨します。詳細は [v4 への移行 – ブラウザー対応判定](./migration-v4.md#ブラウザー対応判定) を参照してください。
 
 ### `connect$(): Observable<void>`
 
@@ -235,7 +235,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `state$: Observable<SerialSessionState>`
 
-購読時に現在値をリプレイします。`BehaviorSubject` を自前で再構築する代わりに、このストリームを UI の駆動源として使ってください。`state.status` が `SerialSessionStatus.Connected` のときは **`state.portInfo`** でデバイス識別します。公開 API に `portInfo$` / `getPortInfo()` / `isConnected$` / `destroy$()` / `getCurrentPort()` はありません — [v3 移行ガイド – Phase 1 API 削除](./migration-v3.md#phase-1-api-削除) を参照してください。
+購読時に現在値をリプレイします。`BehaviorSubject` を自前で再構築する代わりに、このストリームを UI の駆動源として使ってください。`state.status` が `SerialSessionStatus.Connected` のときは **`state.portInfo`** でデバイス識別します。公開 API に `portInfo$` / `getPortInfo()` / `isConnected$` / `destroy$()` / `getCurrentPort()` / `receiveReplay$` / `isBrowserSupported()` はありません — [v4 への移行](./migration-v4.md) を参照してください。
 
 ### `errors$: Observable<SerialError>`
 
@@ -281,7 +281,7 @@ try {
 
 上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./migration-v3.md) を参照してください。
 
-全 17 code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。
+実装済み code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。receive-replay 関連 code は [v4 への移行 – Phase 2](./migration-v4.md#phase-2-api-削除) で削除されました。
 
 | Code                     | `context` の形 | emit されるタイミング                                              |
 | ------------------------ | -------------- | ------------------------------------------------------------------ |

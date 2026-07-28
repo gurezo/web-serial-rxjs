@@ -217,7 +217,7 @@ interface SerialSession {
 
 ### `isWebSerialSupported(): boolean`
 
-Synchronous feature check. Returns `true` when `navigator.serial` is available.
+Synchronous feature check. Returns `true` when `navigator.serial` is available. Prefer this **before** creating a session. After the session exists, drive unsupported UI from `state$` with `SerialSessionStatus.Unsupported`. See [Migrating to v4 – browser support](./migration-v4.md#browser-support-detection).
 
 ### `connect$(): Observable<void>`
 
@@ -235,7 +235,7 @@ After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOS
 
 ### `state$: Observable<SerialSessionState>`
 
-Replays the current state on subscribe. Prefer driving your UI from this stream instead of rebuilding a `BehaviorSubject`. When `state.status` is `SerialSessionStatus.Connected`, read **`state.portInfo`** for device identification. There is no separate `portInfo$` / `getPortInfo()` / `isConnected$` / `destroy$()` / `getCurrentPort()` on the public API — see [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals).
+Replays the current state on subscribe. Prefer driving your UI from this stream instead of rebuilding a `BehaviorSubject`. When `state.status` is `SerialSessionStatus.Connected`, read **`state.portInfo`** for device identification. There is no separate `portInfo$` / `getPortInfo()` / `isConnected$` / `destroy$()` / `getCurrentPort()` / `receiveReplay$` / `isBrowserSupported()` on the public API — see [Migrating to v4](./migration-v4.md).
 
 ### `errors$: Observable<SerialError>`
 
@@ -281,7 +281,7 @@ try {
 
 The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./migration-v3.md) for the enum-to-const declaration change.
 
-Runtime emission coverage for all 17 codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit).
+Runtime emission coverage for the implemented codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit). Receive-replay codes were removed in [Migrating to v4 – Phase 2](./migration-v4.md#phase-2-api-removals).
 
 | Code                     | `context` shape | When it is emitted                                                  |
 | ------------------------ | --------------- | ------------------------------------------------------------------- |

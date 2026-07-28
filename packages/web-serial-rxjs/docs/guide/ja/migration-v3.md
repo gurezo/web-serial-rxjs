@@ -404,8 +404,9 @@ public API contract として定義されている `SerialErrorCode` のうち�
 
 | 分類 | 件数 | 説明 |
 | --- | --- | --- |
-| **Implemented** | 17 | v3.x で runtime から emit される（または factory 時に throw される） |
-| **Reserved** | 2 | public API に存在するが v3.x では emit されない。次回 major version で削除予定 |
+| **Implemented** | 15 | v3.x / v4 で runtime から emit される（または factory 時に throw される） |
+| **Reserved** | 2 | public API に存在するが emit されない。次回 major version で削除予定 |
+| **v4 Phase 2 で削除** | 2 | `receiveReplay$` / `receiveReplay` と共に削除された receive-replay コード |
 
 ### Reserved code（v3.x では emit されない）
 
@@ -430,13 +431,20 @@ v3.x では `@deprecated` 注記のみ付与し、runtime 値と export は維�
 | `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `ValidationErrorContext` | 単体 + 統合 |
 | `OPERATION_CANCELLED` | `requestPort` ダイアログキャンセル | fatal | `{ cause }` | 統合 |
 | `LINE_BUFFER_OVERFLOW` | `lines$` tail 超過 | non-fatal | `{ maxChars }` | 統合 |
-| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 + 統合 |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 |
 | `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 |
 | `INVALID_CONNECTION_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 + 統合 |
-| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` 超過 | non-fatal | `{ maxChars, bufferSize }` | 統合 |
 | `SESSION_DISPOSED` | `dispose$` 後の `connect$` / `send$` | fatal | `undefined` | 統合 |
 | `UNKNOWN` | dispose / disconnect の分類不能 fallback | fatal | `{ cause }` | 単体 |
+
+### v4 Phase 2 で削除
+
+| Code | 旧 emit 箇所 | 備考 |
+| --- | --- | --- |
+| `INVALID_RECEIVE_REPLAY_OPTIONS` | factory | `options.receiveReplay` と共に削除 |
+| `RECEIVE_REPLAY_BUFFER_OVERFLOW` | `receiveReplay$` 超過 | `receiveReplay$` と共に削除 |
+
+詳細は [v4 への移行 – Phase 2](./migration-v4.md#phase-2-api-削除) を参照してください。
 
 fatal / non-fatal の判定は `reportError` 経由の `ERROR_SEVERITY` に従います。factory throw の `INVALID_*` code は `reportError` を通らず、呼び出し元に直接 throw されます。
 
@@ -559,19 +567,20 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 ```
 
 - `SerialConnectionOptions` — `baudRate`, `dataBits`, `stopBits`, `parity`, `bufferSize`, `flowControl`（`port.open` に渡される）
-- `SerialSessionFeatureOptions` — `filters`, `terminalBuffer`, `lineBuffer`（library-specific。`receiveReplay` は v4 Phase 2 で削除）
+- `SerialSessionFeatureOptions` — `filters`, `terminalBuffer`, `lineBuffer`（library-specific。`receiveReplay` は v4 Phase 2 で削除 — [v4 への移行](./migration-v4.md) を参照）
 - `SerialSessionOptions` — 上記 2 つの composition（factory 引数）
 
 詳細は [概念と設計メモ – SerialSessionOptions](./concepts.md#serialsessionoptions) を参照してください。境界値の意味（バッファ上限のみ `0` = 無制限、接続フィールドは `> 0` 必須）も同ページに記載しています（[#488](https://github.com/gurezo/web-serial-rxjs/issues/488)）。
 
 ### v3.x での互換性
 
-`createSerialSession(options?)` のシグネチャと、既存の options オブジェクトリテラルは **変更不要** です。`SerialSessionFeatureOptions` は新規 public export として追加されます。
+`createSerialSession(options?)` のシグネチャと、接続・バッファ系の既存 options オブジェクトリテラルは **変更不要** です。`SerialSessionFeatureOptions` は新規 public export として追加されます。`receiveReplay` は v4 で削除されるため、[v4 への移行](./migration-v4.md) に従ってください。
 
 ---
 
 ## 関連ドキュメント
 
+- [v4 への移行](./migration-v4.md)
 - [v1 から v2 への移行](./migration-v2.md)
 - [概念と設計メモ – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [概念と設計メモ – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)

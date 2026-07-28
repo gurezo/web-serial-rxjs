@@ -4,6 +4,8 @@ v2 replaces the multi-surface `SerialClient` / `ShellClient` / browser-util API 
 
 This guide maps every removed symbol to its v2 replacement.
 
+> **Note (v4):** In v2/v3, browser support lived on `session.isBrowserSupported()`. **v4 moves it back to a top-level** `isWebSerialSupported()` (and `state$` with `Unsupported` for post-creation UI). See [Migrating to v4](./migration-v4.md). The v2 mappings below remain historically accurate for a v1 → v2 upgrade.
+
 ## TL;DR
 
 ```typescript
@@ -24,6 +26,10 @@ if (!session.isBrowserSupported()) return;
 session.connect$().subscribe();
 session.receive$.subscribe(console.log);
 session.send$('hi').subscribe();
+
+// v4 (current): use the top-level helper instead of the session method
+// import { createSerialSession, isWebSerialSupported } from '@gurezo/web-serial-rxjs';
+// if (!isWebSerialSupported()) return;
 ```
 
 ## Removed public exports

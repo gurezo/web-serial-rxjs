@@ -4,6 +4,8 @@ v2 では、v1 の `SerialClient` / `ShellClient` / ブラウザユーティリ�
 
 本ガイドでは削除された API と v2 での置換先をすべて対応付けます。
 
+> **注（v4）:** v2/v3 ではブラウザ対応判定は `session.isBrowserSupported()` にありました。**v4 ではトップレベルの** `isWebSerialSupported()`（および生成後 UI 向けの `state$` の `Unsupported`）に戻しています。詳細は [v4 への移行](./migration-v4.md) を参照してください。以下の v2 対応表は、v1 → v2 移行時点の歴史的な対応としてそのまま残しています。
+
 ## 一言まとめ
 
 ```typescript
@@ -24,6 +26,10 @@ if (!session.isBrowserSupported()) return;
 session.connect$().subscribe();
 session.receive$.subscribe(console.log);
 session.send$('hi').subscribe();
+
+// v4（現行）: セッションメソッドではなくトップレベルヘルパーを使う
+// import { createSerialSession, isWebSerialSupported } from '@gurezo/web-serial-rxjs';
+// if (!isWebSerialSupported()) return;
 ```
 
 ## 削除された公開 export
