@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SerialError } from '../../src/errors/serial-error';
 import { SerialErrorCode } from '../../src/errors/serial-error-code';
 import { createSerialSession } from '../../src/session/create-serial-session';
+import { isWebSerialSupported } from '../../src/session';
 import type { SerialSession } from '../../src/session/serial-session';
 import {
   SerialSessionStatus,
@@ -134,7 +135,6 @@ describe('createSerialSession', () => {
     it('returns an object that satisfies the SerialSession contract', () => {
       const session: SerialSession = createSerialSession();
 
-      expect(typeof session.isBrowserSupported).toBe('function');
       expect(typeof session.connect$).toBe('function');
       expect(typeof session.disconnect$).toBe('function');
       expect(typeof session.dispose$).toBe('function');
@@ -153,28 +153,22 @@ describe('createSerialSession', () => {
     });
   });
 
-  describe('isBrowserSupported', () => {
+  describe('isWebSerialSupported', () => {
     it('returns true when navigator.serial is present', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
       (globalThis as any).navigator = { serial: {} };
 
-      const session = createSerialSession();
-
-      expect(session.isBrowserSupported()).toBe(true);
+      expect(isWebSerialSupported()).toBe(true);
     });
 
     it('returns false when navigator.serial is missing', () => {
       installUnsupportedNavigator();
 
-      const session = createSerialSession();
-
-      expect(session.isBrowserSupported()).toBe(false);
+      expect(isWebSerialSupported()).toBe(false);
     });
 
     it('returns false when navigator is undefined', () => {
-      const session = createSerialSession();
-
-      expect(session.isBrowserSupported()).toBe(false);
+      expect(isWebSerialSupported()).toBe(false);
     });
   });
 
