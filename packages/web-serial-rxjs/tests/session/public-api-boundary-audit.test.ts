@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -13,7 +13,11 @@ import {
  *
  * Keep the allowlists in sync with:
  * - `src/index.ts` (public barrel / TypeDoc entry)
+ * - `scripts/public-api-allowlist.mjs` (post-build dist checks via verify-dist)
  * - package README / concepts docs when the surface changes intentionally
+ *
+ * Declaration / dist audits live in `scripts/verify-dist.mjs` so unit tests do
+ * not require a prior build (release runs test before build for fail-fast).
  */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -127,16 +131,6 @@ function parseExportedNamesFromBlocks(
 
 function parseExportedTypeNames(source: string): string[] {
   return parseExportedNamesFromBlocks(source, 'type');
-}
-
-function parseExportedValueNames(source: string): string[] {
-  return parseExportedNamesFromBlocks(source, 'value');
-}
-
-function listDeclarationFiles(distRoot: string): readonly string[] {
-  return readdirSync(distRoot, { recursive: true, encoding: 'utf8' })
-    .filter((entry) => entry.endsWith('.d.ts'))
-    .sort();
 }
 
 describe('v4 public API boundary audit (#489) — export allowlist', () => {
@@ -254,7 +248,7 @@ describe('v4 public API boundary audit (#489) — removed APIs', () => {
   });
 });
 
-describe('v4 public API boundary audit (#489) — package exports and declarations', () => {
+describe('v4 public API boundary audit (#489) — package exports', () => {
   it('restricts package.json exports to the root entry and package.json', () => {
     const packageJson = JSON.parse(
       readFileSync(join(packageRoot, 'package.json'), 'utf8'),
@@ -264,46 +258,5 @@ describe('v4 public API boundary audit (#489) — package exports and declaratio
       '.',
       './package.json',
     ]);
-  });
-
-  it('keeps dist/index.d.ts runtime exports aligned with the allowlist', () => {
-    const dtsPath = join(packageRoot, 'dist/index.d.ts');
-    expect(
-      existsSync(dtsPath),
-      'dist/index.d.ts is missing; run `pnpm exec nx build web-serial-rxjs` (CI builds before test)',
-    ).toBe(true);
-
-    const dtsSource = readFileSync(dtsPath, 'utf8');
-    const actual = parseExportedValueNames(dtsSource);
-    const expected = [...CANONICAL_RUNTIME_EXPORTS].sort();
-    expect(actual).toEqual(expected);
-  });
-
-  it('keeps dist/index.d.ts type exports aligned with the allowlist', () => {
-    const dtsPath = join(packageRoot, 'dist/index.d.ts');
-    expect(existsSync(dtsPath)).toBe(true);
-
-    const dtsSource = readFileSync(dtsPath, 'utf8');
-    const actual = parseExportedTypeNames(dtsSource);
-    const expected = [...CANONICAL_TYPE_EXPORTS].sort();
-    expect(actual).toEqual(expected);
-  });
-
-  it('does not reintroduce removed APIs in declaration build output', () => {
-    const distRoot = join(packageRoot, 'dist');
-    expect(
-      existsSync(distRoot),
-      'dist/ is missing; run `pnpm exec nx build web-serial-rxjs` (CI builds before test)',
-    ).toBe(true);
-
-    for (const relativePath of listDeclarationFiles(distRoot)) {
-      const source = readFileSync(join(distRoot, relativePath), 'utf8');
-      for (const name of REMOVED_SESSION_APIS) {
-        expect(source, `${relativePath} / ${name}`).not.toContain(name);
-      }
-      expect(source, `${relativePath} / receiveReplay`).not.toMatch(
-        /receiveReplay/,
-      );
-    }
   });
 });
