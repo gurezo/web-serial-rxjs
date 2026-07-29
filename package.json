@@ -12,8 +12,9 @@
     "docs:generate": "typedoc --options packages/web-serial-rxjs/typedoc.json && node packages/web-serial-rxjs/scripts/fix-typedoc-links.mjs",
     "docs:patch-assets": "node packages/web-serial-rxjs/scripts/patch-docs-assets.mjs",
     "docs:gitignore": "node -e \"require('fs').writeFileSync('docs/.gitignore','# Generated documentation output — do not commit.\\n# Source lives under packages/web-serial-rxjs/docs/guide/\\n# See packages/web-serial-rxjs/docs/ARCHITECTURE.md\\n*\\n!.gitignore\\n')\"",
+    "docs:nojekyll": "node -e \"require('fs').mkdirSync('docs',{recursive:true});require('fs').writeFileSync('docs/.nojekyll','')\"",
     "docs:clean": "node -e \"const fs=require('fs'),p=require('path'),d='docs';fs.mkdirSync(d,{recursive:true});for(const e of fs.readdirSync(d))e!=='.gitignore'&&fs.rmSync(p.join(d,e),{recursive:true,force:true});\"",
-    "docs": "pnpm run docs:clean && pnpm run docs:generate && pnpm run docs:guide && pnpm run docs:patch-assets && pnpm run docs:index && pnpm run docs:check-links && pnpm run docs:gitignore",
+    "docs": "pnpm run docs:clean && pnpm run docs:generate && pnpm run docs:guide && pnpm run docs:patch-assets && pnpm run docs:index && pnpm run docs:check-links && pnpm run docs:nojekyll && pnpm run docs:gitignore",
     "publish:test": "pnpm publish --dry-run --no-git-checks --filter @gurezo/web-serial-rxjs",
     "publish": "pnpm publish --filter @gurezo/web-serial-rxjs"
   },
@@ -106,6 +107,7 @@
       "docs:generate",
       "docs:patch-assets",
       "docs:clean",
+      "docs:nojekyll",
       "publish",
       "publish:test"
     ]
