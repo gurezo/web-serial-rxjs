@@ -117,6 +117,18 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 - Publishing: `.github/workflows/deploy-docs.yml` uploads `./docs` as the Pages artifact.
 - **Do not edit** files under root `docs/` except `docs/.gitignore`.
 
+## GitHub Pages hosting (until #151)
+
+Until Firebase Hosting (#151) replaces github.io, the live site is served only via GitHub Actions:
+
+| Setting | Required value |
+| --- | --- |
+| Repo → Settings → Pages → Source | **GitHub Actions** (`build_type=workflow`) |
+| Deploy workflow | [`.github/workflows/deploy-docs.yml`](../../../.github/workflows/deploy-docs.yml) |
+| Public URL | `https://gurezo.github.io/web-serial-rxjs/` |
+
+Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is not tracked in git (`docs/.gitignore`), so that source publishes an empty tree and the site returns 404 (#500).
+
 ## Issue boundaries
 
 | Issue | Responsibility |

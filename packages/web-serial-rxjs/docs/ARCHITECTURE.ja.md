@@ -117,6 +117,18 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 - 公開: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
+## GitHub Pages 配信（#151 完了まで）
+
+Firebase Hosting（#151）で github.io を置き換えるまでは、公開サイトは GitHub Actions 経由でのみ配信する。
+
+| 設定 | 必須値 |
+| --- | --- |
+| Repo → Settings → Pages → Source | **GitHub Actions**（`build_type=workflow`） |
+| デプロイ workflow | [`.github/workflows/deploy-docs.yml`](../../../.github/workflows/deploy-docs.yml) |
+| 公開 URL | `https://gurezo.github.io/web-serial-rxjs/` |
+
+**Deploy from a branch**（`main` + `/docs`）は使わない。生成 HTML は git 管理外（`docs/.gitignore`）のため、その設定だと空のツリーが公開されサイトが 404 になる（#500）。
+
 ## Issue 間の責務境界
 
 | Issue | 責務 |

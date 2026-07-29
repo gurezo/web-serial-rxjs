@@ -572,7 +572,9 @@ nx graph
 
 - Guide の Markdown は `packages/web-serial-rxjs/docs/guide/` 配下を編集してください。
 - ルート `docs/` 配下は `docs/.gitignore` を除き**編集しない**でください。
-- TypeDoc 出力の確認は `pnpm run docs` でローカル生成できます。
+- `docs/` 配下の生成 HTML は**コミットしない**でください（CI が artifact をビルドします）。
+- ローカル確認は `pnpm run docs` でフル生成してください（Guide HTML、TypeDoc、サイト index、内部リンク検証）。
+- GitHub Pages の Source は **GitHub Actions** にしてください（Deploy from a branch / `main` + `/docs` は不可）。詳細は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md#github-pages-配信151-完了まで) を参照。
 
 ## ヘルプの取得
 
