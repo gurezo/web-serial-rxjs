@@ -3,7 +3,6 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
-  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -28,6 +27,34 @@ const TYPEDOC_DOC_PATTERN = /^(en|ja)_.+\.html$/;
 function docsRootPrefix(guideRelPath) {
   const depth = guideRelPath.split('/').length - 1;
   return '../'.repeat(depth);
+}
+
+/** Relative href from docs/api/documents/*.html to the canonical guide page. */
+function guideRedirectHref(guideRelPath) {
+  return `../../${guideRelPath}`;
+}
+
+function buildDocumentRedirectHtml({ locale, guideRelPath }) {
+  const href = guideRedirectHref(guideRelPath);
+  const lang = locale === 'ja' ? 'ja' : 'en';
+  const message =
+    locale === 'ja'
+      ? 'ガイドページへ移動しています…'
+      : 'Redirecting to the guide page…';
+
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=${href}">
+  <link rel="canonical" href="${href}">
+  <title>Redirecting…</title>
+</head>
+<body>
+  <p><a href="${href}">${message}</a></p>
+</body>
+</html>
+`;
 }
 
 function rewriteGuideHtml(html, { locale, pagePath, guideRelPath }) {
@@ -114,11 +141,18 @@ for (const filename of documentFiles) {
   });
 
   writeFileSync(destPath, rewritten, 'utf8');
+
+  writeFileSync(
+    sourcePath,
+    buildDocumentRedirectHtml({
+      locale: mapping.locale,
+      guideRelPath: mapping.guideRelPath,
+    }),
+    'utf8',
+  );
+
   relocated += 1;
 }
 
-for (const filename of documentFiles) {
-  rmSync(join(apiDocumentsRoot, filename), { force: true });
-}
-
 console.log(`Relocated ${relocated} TypeDoc guide pages to docs/guide/.`);
+console.log(`Wrote ${relocated} redirects under docs/api/documents/.`);

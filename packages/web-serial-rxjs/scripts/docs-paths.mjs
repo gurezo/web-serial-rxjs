@@ -35,29 +35,30 @@ export function guideApiDataBase(guideRelPath) {
   return apiAssetPrefixFromDocsPath(guideRelPath);
 }
 
+/** Guide page paths relative to guide/{locale}/ (archive uses slash). */
+const GUIDE_PAGE_PATHS = [
+  'README.html',
+  'overview.html',
+  'quick-start.html',
+  'advanced-usage.html',
+  'concepts.html',
+  'migration-v2.html',
+  'migration-v3.html',
+  'migration-v4.html',
+  'archive/migration-phase5.html',
+];
+
 export function buildDocumentUrlMap() {
   const map = new Map();
-  const entries = [
-    ['en_README.html', 'guide/en/README.html'],
-    ['en_overview.html', 'guide/en/overview.html'],
-    ['en_quick-start.html', 'guide/en/quick-start.html'],
-    ['en_advanced-usage.html', 'guide/en/advanced-usage.html'],
-    ['en_concepts.html', 'guide/en/concepts.html'],
-    ['en_migration-v2.html', 'guide/en/migration-v2.html'],
-    ['en_migration-v3.html', 'guide/en/migration-v3.html'],
-    ['en_archive_migration-phase5.html', 'guide/en/archive/migration-phase5.html'],
-    ['ja_README.html', 'guide/ja/README.html'],
-    ['ja_overview.html', 'guide/ja/overview.html'],
-    ['ja_quick-start.html', 'guide/ja/quick-start.html'],
-    ['ja_advanced-usage.html', 'guide/ja/advanced-usage.html'],
-    ['ja_concepts.html', 'guide/ja/concepts.html'],
-    ['ja_migration-v2.html', 'guide/ja/migration-v2.html'],
-    ['ja_migration-v3.html', 'guide/ja/migration-v3.html'],
-    ['ja_archive_migration-phase5.html', 'guide/ja/archive/migration-phase5.html'],
-  ];
+  const locales = ['en', 'ja'];
 
-  for (const [typedocName, guidePath] of entries) {
-    map.set(`documents/${typedocName}`, `../${guidePath}`);
+  for (const locale of locales) {
+    for (const pagePath of GUIDE_PAGE_PATHS) {
+      const typedocSlug = pagePath.replace(/\.html$/, '').replaceAll('/', '_');
+      const typedocName = `${locale}_${typedocSlug}.html`;
+      const guidePath = `guide/${locale}/${pagePath}`;
+      map.set(`documents/${typedocName}`, `../${guidePath}`);
+    }
   }
 
   return map;
