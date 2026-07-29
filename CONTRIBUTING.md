@@ -569,7 +569,9 @@ Hand-written Guide source and generated API Reference output are separated. See 
 
 - Edit Guide Markdown under `packages/web-serial-rxjs/docs/guide/`.
 - Do **not** edit files under root `docs/` except `docs/.gitignore`.
+- Do **not** commit generated HTML under `docs/` (CI builds the artifact).
 - Regenerate locally with `pnpm run docs` when validating the full documentation artifact (Guide HTML, TypeDoc, site index, and internal link check).
+- GitHub Pages Source must be **GitHub Actions** (not Deploy from a branch / `main` + `/docs`). See [Documentation Architecture](packages/web-serial-rxjs/docs/ARCHITECTURE.md#github-pages-hosting-until-151).
 
 ## Getting Help
 
