@@ -8,9 +8,10 @@ const __dirname = dirname(__filename);
 const docsRoot = join(__dirname, '../../../docs');
 const examplesRoot = join(docsRoot, 'examples');
 
-/** Pending portal example builds (#354–#359); allowlisted from docs/examples/ only. */
+/** Pending portal example builds (#355–#359); allowlisted from docs/examples/ only. */
+const PENDING_EXAMPLE_SLUGS = EXAMPLE_SLUGS.filter((slug) => slug !== 'angular');
 const PENDING_EXAMPLE_HREFS = new Set(
-  EXAMPLE_SLUGS.flatMap((slug) => [slug, `${slug}/`]),
+  PENDING_EXAMPLE_SLUGS.flatMap((slug) => [slug, `${slug}/`]),
 );
 
 function collectHtmlFiles(dir) {
