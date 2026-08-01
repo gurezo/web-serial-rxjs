@@ -25,6 +25,9 @@
         },
         "production": {
           "mode": "production"
+        },
+        "portal": {
+          "mode": "portal"
         }
       }
     },
