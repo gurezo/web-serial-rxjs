@@ -95,16 +95,17 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 
 ## URL path 規則
 
-| 論理パス | GitHub Pages（現行） | Firebase（#151 想定） |
-| --- | --- | --- |
-| サイトルート | `https://gurezo.github.io/web-serial-rxjs/` | `https://gurezo.net/web-serial-rxjs/` |
-| 日本語 Guide | `/guide/ja/` | `/web-serial-rxjs/guide/ja/` |
-| English Guide | `/guide/en/` | `/web-serial-rxjs/guide/en/` |
-| API Reference | `/api/` | `/web-serial-rxjs/api/` |
-| Examples index | `/examples/` | `/web-serial-rxjs/examples/` |
+| 論理パス | 公開 URL（canonical） |
+| --- | --- |
+| サイトルート | `https://gurezo.net/web-serial-rxjs/` |
+| 日本語 Guide | `https://gurezo.net/web-serial-rxjs/guide/ja/` |
+| English Guide | `https://gurezo.net/web-serial-rxjs/guide/en/` |
+| API Reference | `https://gurezo.net/web-serial-rxjs/api/` |
+| Examples index | `https://gurezo.net/web-serial-rxjs/examples/` |
 
-- 生成 HTML 内は相対リンクを優先し、Hosting の `base` path は #151 / #458 で扱う。
-- `packages/web-serial-rxjs/package.json` の `homepage` は統合ドキュメントサイトルートを指す。
+- 生成 HTML 内は相対リンクを優先し、`/web-serial-rxjs/` の Hosting base path を移植可能に保つ。
+- `packages/web-serial-rxjs/package.json` の `homepage` は統合ドキュメントサイトルート（`https://gurezo.net/web-serial-rxjs/`）を指す。
+- 旧 GitHub Pages URL `https://gurezo.github.io/web-serial-rxjs/` は廃止（#361）。
 
 ## 生成物の Git 管理方針
 
@@ -116,7 +117,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | `dist/portal/web-serial-rxjs/**` | しない（portal fragment。ルート `dist/` gitignore で除外） |
 
 - ローカル生成: `pnpm run docs`（Guide HTML、TypeDoc API Reference、サイト index、examples index、内部リンク検証、portal fragment パッケージ）
-- 公開（GitHub Pages、#361 まで）: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
+- 公開: `.github/workflows/portal-static-artifact.yml` が portal fragment を upload し、`gurezo/portal` が Firebase Hosting の `https://gurezo.net/web-serial-rxjs/` へ deploy する
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
 ## Portal fragment（#352 / #353 / #354 / #355 / #356 / #357 / #358 / #359）
@@ -126,7 +127,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | 項目 | 値 |
 | --- | --- |
 | Fragment 出力先 | `dist/portal/web-serial-rxjs/` |
-| 公開 URL（想定） | `https://gurezo.net/web-serial-rxjs/` |
+| 公開 URL | `https://gurezo.net/web-serial-rxjs/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
 `docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` / `docs:example-react` / `docs:example-svelte` / `docs:example-vanilla-js` / `docs:example-vanilla-ts` / `docs:example-vue` が framework example を `docs/examples/<slug>/` へビルドしてからパッケージするため、fragment には次が含まれる:
@@ -157,7 +158,7 @@ dist/portal/web-serial-rxjs/
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - 本リポジトリは**静的 fragment の生成のみ**を行う。Firebase Hosting への最終 deploy は `gurezo/portal` の責務。
-- docs ページの相対リンクは GitHub project Pages と同じ `/web-serial-rxjs/` のパス深さに既に整合しているため、HTML 内の絶対 `base` 書き換えは不要。
+- docs ページの相対リンクは `gurezo.net` 上の `/web-serial-rxjs/` パス深さに既に整合しているため、HTML 内の絶対 `base` 書き換えは不要。
 - Angular example は `baseHref` `/web-serial-rxjs/examples/angular/` を使う（`nx build example-angular --configuration=portal`）。
 - React example は Vite `base` `/web-serial-rxjs/examples/react/` を使う（`nx build example-react --configuration=portal`）。
 - Svelte example は Vite `base` `/web-serial-rxjs/examples/svelte/` を使う（`nx build example-svelte --configuration=portal`）。
@@ -195,17 +196,14 @@ web-serial-rxjs-static/
 
 `gurezo/portal` は artifact をダウンロードし、`web-serial-rxjs/` を `firebase-public/web-serial-rxjs/` へ配置する。ビルド失敗時は upload ステップに到達しないため、失敗時に artifact は公開されない。
 
-## GitHub Pages 配信（#151 / #361 完了まで）
+## 公開 Hosting（#151 / #361）
 
-Firebase Hosting（#151）で github.io を置き換えるまでは、公開サイトは GitHub Actions 経由でのみ配信する。
-
-| 設定 | 必須値 |
+| 項目 | 値 |
 | --- | --- |
-| Repo → Settings → Pages → Source | **GitHub Actions**（`build_type=workflow`） |
-| デプロイ workflow | [`.github/workflows/deploy-docs.yml`](../../../.github/workflows/deploy-docs.yml) |
-| 公開 URL | `https://gurezo.github.io/web-serial-rxjs/` |
-
-**Deploy from a branch**（`main` + `/docs`）は使わない。生成 HTML は git 管理外（`docs/.gitignore`）のため、その設定だと空のツリーが公開されサイトが 404 になる（#500）。
+| canonical 公開 URL | `https://gurezo.net/web-serial-rxjs/` |
+| Hosting | `gurezo/portal` 経由の Firebase Hosting |
+| 本リポジトリ | 静的 artifact の生成と upload のみ（`portal-static-artifact.yml`） |
+| GitHub Pages | 廃止（#361）。本ドキュメントサイト向けに Pages deploy を再有効化しない |
 
 ## Issue 間の責務境界
 
@@ -243,6 +241,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [x] **#358** — Vanilla TS example を `dist/portal/web-serial-rxjs/examples/vanilla-ts/` に出力
 - [x] **#359** — Vue example を `dist/portal/web-serial-rxjs/examples/vue/` に出力
 - [x] **#360** — GitHub Actions で `web-serial-rxjs-static` artifact を upload
+- [x] **#361** — 公式 URL を `gurezo.net` に更新し、GitHub Pages deploy workflow を削除
 - [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
@@ -257,8 +256,8 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [Portal Vanilla TS example #358](https://github.com/gurezo/web-serial-rxjs/issues/358)
 - [Portal Vue example #359](https://github.com/gurezo/web-serial-rxjs/issues/359)
 - [Portal static artifact CI #360](https://github.com/gurezo/web-serial-rxjs/issues/360)
+- [URL 更新と GitHub Pages 停止 #361](https://github.com/gurezo/web-serial-rxjs/issues/361)
 - [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc 設定](../typedoc.json)
-- [デプロイ workflow](../../../.github/workflows/deploy-docs.yml)
 - [Portal static artifact workflow](../../../.github/workflows/portal-static-artifact.yml)
 - [English version](./ARCHITECTURE.md)

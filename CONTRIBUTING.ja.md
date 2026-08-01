@@ -574,7 +574,7 @@ nx graph
 - ルート `docs/` 配下は `docs/.gitignore` を除き**編集しない**でください。
 - `docs/` 配下の生成 HTML は**コミットしない**でください（CI が artifact をビルドします）。
 - ローカル確認は `pnpm run docs` でフル生成してください（Guide HTML、TypeDoc、サイト index、内部リンク検証）。
-- GitHub Pages の Source は **GitHub Actions** にしてください（Deploy from a branch / `main` + `/docs` は不可）。詳細は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md#github-pages-配信151-完了まで) を参照。
+- 公開ドキュメントは `https://gurezo.net/web-serial-rxjs/` で、`gurezo/portal` 経由で配信されます（本リポジトリは [portal-static-artifact.yml](.github/workflows/portal-static-artifact.yml) で静的 artifact を upload）。詳細は [ドキュメント構成](packages/web-serial-rxjs/docs/ARCHITECTURE.ja.md#公開-hosting151--361) を参照。
 
 ## ヘルプの取得
 
