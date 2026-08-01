@@ -8,8 +8,9 @@ const __dirname = dirname(__filename);
 const docsRoot = join(__dirname, '../../../docs');
 const examplesRoot = join(docsRoot, 'examples');
 
-/** Pending portal example builds (#355–#359); allowlisted from docs/examples/ only. */
-const PENDING_EXAMPLE_SLUGS = EXAMPLE_SLUGS.filter((slug) => slug !== 'angular');
+/** Pending portal example builds (#356–#359); allowlisted from docs/examples/ only. */
+const BUILT_EXAMPLE_SLUGS = new Set(['angular', 'react']);
+const PENDING_EXAMPLE_SLUGS = EXAMPLE_SLUGS.filter((slug) => !BUILT_EXAMPLE_SLUGS.has(slug));
 const PENDING_EXAMPLE_HREFS = new Set(
   PENDING_EXAMPLE_SLUGS.flatMap((slug) => [slug, `${slug}/`]),
 );
