@@ -45,7 +45,9 @@ function isExternalHref(href) {
     href.startsWith('https://') ||
     href.startsWith('mailto:') ||
     href.startsWith('tel:') ||
-    href.startsWith('javascript:')
+    href.startsWith('javascript:') ||
+    // Portal / site-root paths (e.g. Angular <base href="/web-serial-rxjs/...">)
+    href.startsWith('/')
   );
 }
 
