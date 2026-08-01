@@ -62,6 +62,22 @@ The application will be available at `http://localhost:4220`.
 pnpm exec nx build example-svelte
 ```
 
+### Portal static artifact (#356)
+
+Build with portal Vite `base` and copy into `docs/examples/svelte/` (picked up by `docs:portal`):
+
+```bash
+pnpm run docs:example-svelte
+```
+
+Equivalent Nx command:
+
+```bash
+pnpm exec nx build example-svelte --configuration=portal
+```
+
+Published path: `/web-serial-rxjs/examples/svelte/` (`https://gurezo.net/web-serial-rxjs/examples/svelte/`).
+
 ### Test
 
 ```bash
