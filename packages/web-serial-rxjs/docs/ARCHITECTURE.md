@@ -119,7 +119,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 - Publishing (GitHub Pages, until #361): `.github/workflows/deploy-docs.yml` uploads `./docs` as the Pages artifact.
 - **Do not edit** files under root `docs/` except `docs/.gitignore`.
 
-## Portal fragment (#352 / #353 / #354 / #355)
+## Portal fragment (#352 / #353 / #354 / #355 / #356 / #357)
 
 `pnpm run docs` ends with `docs:portal`, which copies the generated `docs/` tree (excluding `docs/.gitignore`) to:
 
@@ -129,7 +129,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | Target public URL | `https://gurezo.net/web-serial-rxjs/` |
 | Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
-`docs:examples-index` writes `docs/examples/index.html`, and `docs:example-angular` / `docs:example-react` / `docs:example-svelte` build framework examples into `docs/examples/<slug>/` before packaging, so the fragment includes:
+`docs:examples-index` writes `docs/examples/index.html`, and `docs:example-angular` / `docs:example-react` / `docs:example-svelte` / `docs:example-vanilla-js` build framework examples into `docs/examples/<slug>/` before packaging, so the fragment includes:
 
 ```text
 dist/portal/web-serial-rxjs/
@@ -139,8 +139,9 @@ dist/portal/web-serial-rxjs/
     ├── index.html          # #353
     ├── angular/            # #354
     ├── react/              # #355
-    └── svelte/             # #356
-        # vanilla-js/ … vue/    # #357–#359
+    ├── svelte/             # #356
+    └── vanilla-js/         # #357
+        # vanilla-ts/ vue/  # #358–#359
 ```
 
 | Item | Value |
@@ -149,6 +150,7 @@ dist/portal/web-serial-rxjs/
 | Angular example URL | `https://gurezo.net/web-serial-rxjs/examples/angular/` |
 | React example URL | `https://gurezo.net/web-serial-rxjs/examples/react/` |
 | Svelte example URL | `https://gurezo.net/web-serial-rxjs/examples/svelte/` |
+| Vanilla JS example URL | `https://gurezo.net/web-serial-rxjs/examples/vanilla-js/` |
 | Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - This repository **only** builds the static fragment. Final Firebase Hosting deploy is owned by `gurezo/portal`.
@@ -156,8 +158,9 @@ dist/portal/web-serial-rxjs/
 - The Angular example uses `baseHref` `/web-serial-rxjs/examples/angular/` (`nx build example-angular --configuration=portal`).
 - The React example uses Vite `base` `/web-serial-rxjs/examples/react/` (`nx build example-react --configuration=portal`).
 - The Svelte example uses Vite `base` `/web-serial-rxjs/examples/svelte/` (`nx build example-svelte --configuration=portal`).
+- The Vanilla JS example uses Vite `base` `/web-serial-rxjs/examples/vanilla-js/` (`nx build example-vanilla-js --configuration=portal`).
 - SPA fallback / clean-URL rewrites (if any) are portal Hosting configuration, not this repo. Docs are multi-page static HTML (`*.html` files).
-- Remaining framework example apps under `examples/<slug>/` are built in #357–#359; the index links to those paths ahead of those builds.
+- Remaining framework example apps under `examples/<slug>/` are built in #358–#359; the index links to those paths ahead of those builds.
 
 ## GitHub Pages hosting (until #151 / #361)
 

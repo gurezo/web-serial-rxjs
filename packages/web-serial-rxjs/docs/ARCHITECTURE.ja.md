@@ -119,7 +119,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 - 公開（GitHub Pages、#361 まで）: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
-## Portal fragment（#352 / #353 / #354 / #355）
+## Portal fragment（#352 / #353 / #354 / #355 / #356 / #357）
 
 `pnpm run docs` の末尾で `docs:portal` が走り、生成済み `docs/` ツリー（`docs/.gitignore` を除く）を次へコピーする:
 
@@ -129,7 +129,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | 公開 URL（想定） | `https://gurezo.net/web-serial-rxjs/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
-`docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` / `docs:example-react` / `docs:example-svelte` が framework example を `docs/examples/<slug>/` へビルドしてからパッケージするため、fragment には次が含まれる:
+`docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` / `docs:example-react` / `docs:example-svelte` / `docs:example-vanilla-js` が framework example を `docs/examples/<slug>/` へビルドしてからパッケージするため、fragment には次が含まれる:
 
 ```text
 dist/portal/web-serial-rxjs/
@@ -139,8 +139,9 @@ dist/portal/web-serial-rxjs/
     ├── index.html          # #353
     ├── angular/            # #354
     ├── react/              # #355
-    └── svelte/             # #356
-        # vanilla-js/ … vue/    # #357–#359
+    ├── svelte/             # #356
+    └── vanilla-js/         # #357
+        # vanilla-ts/ vue/  # #358–#359
 ```
 
 | 項目 | 値 |
@@ -149,6 +150,7 @@ dist/portal/web-serial-rxjs/
 | Angular example URL | `https://gurezo.net/web-serial-rxjs/examples/angular/` |
 | React example URL | `https://gurezo.net/web-serial-rxjs/examples/react/` |
 | Svelte example URL | `https://gurezo.net/web-serial-rxjs/examples/svelte/` |
+| Vanilla JS example URL | `https://gurezo.net/web-serial-rxjs/examples/vanilla-js/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - 本リポジトリは**静的 fragment の生成のみ**を行う。Firebase Hosting への最終 deploy は `gurezo/portal` の責務。
@@ -156,8 +158,9 @@ dist/portal/web-serial-rxjs/
 - Angular example は `baseHref` `/web-serial-rxjs/examples/angular/` を使う（`nx build example-angular --configuration=portal`）。
 - React example は Vite `base` `/web-serial-rxjs/examples/react/` を使う（`nx build example-react --configuration=portal`）。
 - Svelte example は Vite `base` `/web-serial-rxjs/examples/svelte/` を使う（`nx build example-svelte --configuration=portal`）。
+- Vanilla JS example は Vite `base` `/web-serial-rxjs/examples/vanilla-js/` を使う（`nx build example-vanilla-js --configuration=portal`）。
 - SPA fallback / clean URL rewrite（必要な場合）は portal 側 Hosting 設定の確認事項。docs はマルチページ静的 HTML（`*.html`）である。
-- 残りの framework example（`examples/<slug>/`）は #357–#359 で build する。index はその配置先へ先行してリンクする。
+- 残りの framework example（`examples/<slug>/`）は #358–#359 で build する。index はその配置先へ先行してリンクする。
 
 ## GitHub Pages 配信（#151 / #361 完了まで）
 
