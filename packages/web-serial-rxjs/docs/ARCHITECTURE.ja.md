@@ -112,12 +112,27 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | `packages/web-serial-rxjs/docs/guide/**` | する（手書き source） |
 | `docs/index.html`、`docs/media/**`、`docs/api/**`、`docs/guide/**` | しない（CI 生成 artifact） |
 | `docs/.gitignore` | する（生成物を除外） |
+| `dist/portal/web-serial-rxjs/**` | しない（portal fragment。ルート `dist/` gitignore で除外） |
 
-- ローカル生成: `pnpm run docs`（Guide HTML、TypeDoc API Reference、サイト index、内部リンク検証）
-- 公開: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
+- ローカル生成: `pnpm run docs`（Guide HTML、TypeDoc API Reference、サイト index、内部リンク検証、portal fragment パッケージ）
+- 公開（GitHub Pages、#361 まで）: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
-## GitHub Pages 配信（#151 完了まで）
+## Portal fragment（#352）
+
+`pnpm run docs` の末尾で `docs:portal` が走り、生成済み `docs/` ツリー（`docs/.gitignore` を除く）を次へコピーする:
+
+| 項目 | 値 |
+| --- | --- |
+| Fragment 出力先 | `dist/portal/web-serial-rxjs/` |
+| 公開 URL（想定） | `https://gurezo.net/web-serial-rxjs/` |
+| portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
+
+- 本リポジトリは**静的 fragment の生成のみ**を行う。Firebase Hosting への最終 deploy は `gurezo/portal` の責務。
+- 相対リンクは GitHub project Pages と同じ `/web-serial-rxjs/` のパス深さに既に整合しているため、HTML 内の絶対 `base` 書き換えは不要。
+- SPA fallback / clean URL rewrite（必要な場合）は portal 側 Hosting 設定の確認事項。docs はマルチページ静的 HTML（`*.html`）である。
+
+## GitHub Pages 配信（#151 / #361 完了まで）
 
 Firebase Hosting（#151）で github.io を置き換えるまでは、公開サイトは GitHub Actions 経由でのみ配信する。
 
@@ -138,7 +153,10 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 | **#456** | 日本語 Guide に対応する English Guide の整備 |
 | **#457** | 英語のみの TypeDoc API Reference（`typedoc.json` → `docs/api/`） |
 | **#458** | Guide と API Reference のビルド統合、相互導線、サイト index |
-| **#151** | Firebase Hosting への配信（artifact の*レイアウト*は本 Issue、*Hosting 設定*は #151） |
+| **#352** | docs を `dist/portal/web-serial-rxjs/` の portal fragment としてパッケージ |
+| **#151** | Firebase Hosting 移行の親（レイアウトは本リポ、最終 deploy は portal） |
+| **#360** | docs + examples の静的 artifact 集約 workflow |
+| **#361** | URL 更新と GitHub Pages 停止 |
 
 ## 後続 Issue 向けチェックリスト
 
@@ -146,11 +164,14 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [x] **#456** — English Guide を `guide/en/` へ移行・更新
 - [x] **#457** — TypeDoc `out` を `../../docs/api` に変更。`projectDocuments` は英語 Guide のみ
 - [x] **#458** — `docs/guide/{ja,en}/` をビルドし、Guide ↔ API Reference の導線を追加
-- [ ] **#151** — `docs/` artifact を Firebase へデプロイ（内部パスは再定義しない）
+- [x] **#352** — portal docs fragment を `dist/portal/web-serial-rxjs/` に出力
+- [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
 
 - [親 Issue #453](https://github.com/gurezo/web-serial-rxjs/issues/453)
+- [Portal docs fragment #352](https://github.com/gurezo/web-serial-rxjs/issues/352)
+- [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc 設定](../typedoc.json)
 - [デプロイ workflow](../../../.github/workflows/deploy-docs.yml)
 - [English version](./ARCHITECTURE.md)
