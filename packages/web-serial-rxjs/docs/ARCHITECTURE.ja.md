@@ -119,7 +119,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 - 公開（GitHub Pages、#361 まで）: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
-## Portal fragment（#352 / #353 / #354）
+## Portal fragment（#352 / #353 / #354 / #355）
 
 `pnpm run docs` の末尾で `docs:portal` が走り、生成済み `docs/` ツリー（`docs/.gitignore` を除く）を次へコピーする:
 
@@ -129,7 +129,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | 公開 URL（想定） | `https://gurezo.net/web-serial-rxjs/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
-`docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` が Angular example を `docs/examples/angular/` へビルドしてからパッケージするため、fragment には次が含まれる:
+`docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` / `docs:example-react` が framework example を `docs/examples/<slug>/` へビルドしてからパッケージするため、fragment には次が含まれる:
 
 ```text
 dist/portal/web-serial-rxjs/
@@ -137,21 +137,24 @@ dist/portal/web-serial-rxjs/
 ├── api/ guide/ media/
 └── examples/
     ├── index.html          # #353
-    └── angular/            # #354
-        # react/ … vue/     # #355–#359
+    ├── angular/            # #354
+    └── react/              # #355
+        # svelte/ … vue/    # #356–#359
 ```
 
 | 項目 | 値 |
 | --- | --- |
 | Examples index URL | `https://gurezo.net/web-serial-rxjs/examples/` |
 | Angular example URL | `https://gurezo.net/web-serial-rxjs/examples/angular/` |
+| React example URL | `https://gurezo.net/web-serial-rxjs/examples/react/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - 本リポジトリは**静的 fragment の生成のみ**を行う。Firebase Hosting への最終 deploy は `gurezo/portal` の責務。
 - docs ページの相対リンクは GitHub project Pages と同じ `/web-serial-rxjs/` のパス深さに既に整合しているため、HTML 内の絶対 `base` 書き換えは不要。
 - Angular example は `baseHref` `/web-serial-rxjs/examples/angular/` を使う（`nx build example-angular --configuration=portal`）。
+- React example は Vite `base` `/web-serial-rxjs/examples/react/` を使う（`nx build example-react --configuration=portal`）。
 - SPA fallback / clean URL rewrite（必要な場合）は portal 側 Hosting 設定の確認事項。docs はマルチページ静的 HTML（`*.html`）である。
-- 残りの framework example（`examples/<slug>/`）は #355–#359 で build する。index はその配置先へ先行してリンクする。
+- 残りの framework example（`examples/<slug>/`）は #356–#359 で build する。index はその配置先へ先行してリンクする。
 
 ## GitHub Pages 配信（#151 / #361 完了まで）
 
@@ -177,6 +180,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 | **#352** | docs を `dist/portal/web-serial-rxjs/` の portal fragment としてパッケージ |
 | **#353** | examples index を `dist/portal/web-serial-rxjs/examples/` に出力 |
 | **#354** | Angular example を `dist/portal/web-serial-rxjs/examples/angular/` に出力 |
+| **#355** | React example を `dist/portal/web-serial-rxjs/examples/react/` に出力 |
 | **#151** | Firebase Hosting 移行の親（レイアウトは本リポ、最終 deploy は portal） |
 | **#360** | docs + examples の静的 artifact 集約 workflow |
 | **#361** | URL 更新と GitHub Pages 停止 |
@@ -190,6 +194,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [x] **#352** — portal docs fragment を `dist/portal/web-serial-rxjs/` に出力
 - [x] **#353** — examples index を `dist/portal/web-serial-rxjs/examples/` に出力
 - [x] **#354** — Angular example を `dist/portal/web-serial-rxjs/examples/angular/` に出力
+- [x] **#355** — React example を `dist/portal/web-serial-rxjs/examples/react/` に出力
 - [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
@@ -198,6 +203,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [Portal docs fragment #352](https://github.com/gurezo/web-serial-rxjs/issues/352)
 - [Portal examples index #353](https://github.com/gurezo/web-serial-rxjs/issues/353)
 - [Portal Angular example #354](https://github.com/gurezo/web-serial-rxjs/issues/354)
+- [Portal React example #355](https://github.com/gurezo/web-serial-rxjs/issues/355)
 - [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc 設定](../typedoc.json)
 - [デプロイ workflow](../../../.github/workflows/deploy-docs.yml)

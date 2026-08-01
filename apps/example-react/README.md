@@ -62,6 +62,22 @@ The application will be available at `http://localhost:4210`.
 pnpm exec nx build example-react
 ```
 
+### Portal static artifact (#355)
+
+Build with portal Vite `base` and copy into `docs/examples/react/` (picked up by `docs:portal`):
+
+```bash
+pnpm run docs:example-react
+```
+
+Equivalent Nx command:
+
+```bash
+pnpm exec nx build example-react --configuration=portal
+```
+
+Published path: `/web-serial-rxjs/examples/react/` (`https://gurezo.net/web-serial-rxjs/examples/react/`).
+
 ### Test
 
 ```bash
