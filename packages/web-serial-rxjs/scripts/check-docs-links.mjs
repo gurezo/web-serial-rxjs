@@ -1,10 +1,17 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { EXAMPLE_SLUGS } from './examples-portal.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const docsRoot = join(__dirname, '../../../docs');
+const examplesRoot = join(docsRoot, 'examples');
+
+/** Pending portal example builds (#354–#359); allowlisted from docs/examples/ only. */
+const PENDING_EXAMPLE_HREFS = new Set(
+  EXAMPLE_SLUGS.flatMap((slug) => [slug, `${slug}/`]),
+);
 
 function collectHtmlFiles(dir) {
   const files = [];
@@ -41,6 +48,19 @@ function isExternalHref(href) {
   );
 }
 
+function isUnderExamples(htmlFile) {
+  const rel = relative(examplesRoot, htmlFile);
+  return rel !== '' && !rel.startsWith(`..`);
+}
+
+function isPendingExampleHref(htmlFile, href) {
+  if (!isUnderExamples(htmlFile)) {
+    return false;
+  }
+  const [pathPart] = href.split('#');
+  return PENDING_EXAMPLE_HREFS.has(pathPart);
+}
+
 const htmlFiles = collectHtmlFiles(docsRoot);
 const broken = [];
 
@@ -50,6 +70,10 @@ for (const htmlFile of htmlFiles) {
 
   for (const href of extractHrefs(html)) {
     if (!href || href.startsWith('#') || isExternalHref(href)) {
+      continue;
+    }
+
+    if (isPendingExampleHref(htmlFile, href)) {
       continue;
     }
 
