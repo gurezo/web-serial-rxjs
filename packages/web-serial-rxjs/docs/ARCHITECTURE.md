@@ -129,7 +129,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | Target public URL | `https://gurezo.net/web-serial-rxjs/` |
 | Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
-`docs:examples-index` writes `docs/examples/index.html`, and `docs:example-angular` / `docs:example-react` build framework examples into `docs/examples/<slug>/` before packaging, so the fragment includes:
+`docs:examples-index` writes `docs/examples/index.html`, and `docs:example-angular` / `docs:example-react` / `docs:example-svelte` build framework examples into `docs/examples/<slug>/` before packaging, so the fragment includes:
 
 ```text
 dist/portal/web-serial-rxjs/
@@ -138,8 +138,9 @@ dist/portal/web-serial-rxjs/
 └── examples/
     ├── index.html          # #353
     ├── angular/            # #354
-    └── react/              # #355
-        # svelte/ … vue/    # #356–#359
+    ├── react/              # #355
+    └── svelte/             # #356
+        # vanilla-js/ … vue/    # #357–#359
 ```
 
 | Item | Value |
@@ -147,14 +148,16 @@ dist/portal/web-serial-rxjs/
 | Examples index URL | `https://gurezo.net/web-serial-rxjs/examples/` |
 | Angular example URL | `https://gurezo.net/web-serial-rxjs/examples/angular/` |
 | React example URL | `https://gurezo.net/web-serial-rxjs/examples/react/` |
+| Svelte example URL | `https://gurezo.net/web-serial-rxjs/examples/svelte/` |
 | Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - This repository **only** builds the static fragment. Final Firebase Hosting deploy is owned by `gurezo/portal`.
 - Relative links already match the `/web-serial-rxjs/` path depth used by GitHub project Pages; no absolute `base` rewrite is required in HTML for docs pages.
 - The Angular example uses `baseHref` `/web-serial-rxjs/examples/angular/` (`nx build example-angular --configuration=portal`).
 - The React example uses Vite `base` `/web-serial-rxjs/examples/react/` (`nx build example-react --configuration=portal`).
+- The Svelte example uses Vite `base` `/web-serial-rxjs/examples/svelte/` (`nx build example-svelte --configuration=portal`).
 - SPA fallback / clean-URL rewrites (if any) are portal Hosting configuration, not this repo. Docs are multi-page static HTML (`*.html` files).
-- Remaining framework example apps under `examples/<slug>/` are built in #356–#359; the index links to those paths ahead of those builds.
+- Remaining framework example apps under `examples/<slug>/` are built in #357–#359; the index links to those paths ahead of those builds.
 
 ## GitHub Pages hosting (until #151 / #361)
 
@@ -181,6 +184,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 | **#353** | Examples index under `dist/portal/web-serial-rxjs/examples/` |
 | **#354** | Angular example under `dist/portal/web-serial-rxjs/examples/angular/` |
 | **#355** | React example under `dist/portal/web-serial-rxjs/examples/react/` |
+| **#356** | Svelte example under `dist/portal/web-serial-rxjs/examples/svelte/` |
 | **#151** | Firebase Hosting migration parent (layout here; final deploy via portal) |
 | **#360** | Aggregate static artifact workflow (docs + examples) |
 | **#361** | URL updates and GitHub Pages shutdown |
@@ -195,6 +199,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [x] **#353** — Emit examples index at `dist/portal/web-serial-rxjs/examples/`
 - [x] **#354** — Emit Angular example at `dist/portal/web-serial-rxjs/examples/angular/`
 - [x] **#355** — Emit React example at `dist/portal/web-serial-rxjs/examples/react/`
+- [x] **#356** — Emit Svelte example at `dist/portal/web-serial-rxjs/examples/svelte/`
 - [ ] **#151** — Publish via `gurezo/portal` without redefining internal paths
 
 ## References
@@ -204,6 +209,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [Portal examples index #353](https://github.com/gurezo/web-serial-rxjs/issues/353)
 - [Portal Angular example #354](https://github.com/gurezo/web-serial-rxjs/issues/354)
 - [Portal React example #355](https://github.com/gurezo/web-serial-rxjs/issues/355)
+- [Portal Svelte example #356](https://github.com/gurezo/web-serial-rxjs/issues/356)
 - [Firebase migration parent #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc configuration](../typedoc.json)
 - [Deploy workflow](../../../.github/workflows/deploy-docs.yml)
