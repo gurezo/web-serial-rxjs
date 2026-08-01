@@ -119,7 +119,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 - 公開（GitHub Pages、#361 まで）: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
-## Portal fragment（#352 / #353 / #354 / #355 / #356 / #357）
+## Portal fragment（#352 / #353 / #354 / #355 / #356 / #357 / #358）
 
 `pnpm run docs` の末尾で `docs:portal` が走り、生成済み `docs/` ツリー（`docs/.gitignore` を除く）を次へコピーする:
 
@@ -129,7 +129,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | 公開 URL（想定） | `https://gurezo.net/web-serial-rxjs/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
-`docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` / `docs:example-react` / `docs:example-svelte` / `docs:example-vanilla-js` が framework example を `docs/examples/<slug>/` へビルドしてからパッケージするため、fragment には次が含まれる:
+`docs:examples-index` が `docs/examples/index.html` を書き出し、`docs:example-angular` / `docs:example-react` / `docs:example-svelte` / `docs:example-vanilla-js` / `docs:example-vanilla-ts` が framework example を `docs/examples/<slug>/` へビルドしてからパッケージするため、fragment には次が含まれる:
 
 ```text
 dist/portal/web-serial-rxjs/
@@ -140,8 +140,9 @@ dist/portal/web-serial-rxjs/
     ├── angular/            # #354
     ├── react/              # #355
     ├── svelte/             # #356
-    └── vanilla-js/         # #357
-        # vanilla-ts/ vue/  # #358–#359
+    ├── vanilla-js/         # #357
+    └── vanilla-ts/         # #358
+        # vue/              # #359
 ```
 
 | 項目 | 値 |
@@ -151,6 +152,7 @@ dist/portal/web-serial-rxjs/
 | React example URL | `https://gurezo.net/web-serial-rxjs/examples/react/` |
 | Svelte example URL | `https://gurezo.net/web-serial-rxjs/examples/svelte/` |
 | Vanilla JS example URL | `https://gurezo.net/web-serial-rxjs/examples/vanilla-js/` |
+| Vanilla TS example URL | `https://gurezo.net/web-serial-rxjs/examples/vanilla-ts/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - 本リポジトリは**静的 fragment の生成のみ**を行う。Firebase Hosting への最終 deploy は `gurezo/portal` の責務。
@@ -159,8 +161,9 @@ dist/portal/web-serial-rxjs/
 - React example は Vite `base` `/web-serial-rxjs/examples/react/` を使う（`nx build example-react --configuration=portal`）。
 - Svelte example は Vite `base` `/web-serial-rxjs/examples/svelte/` を使う（`nx build example-svelte --configuration=portal`）。
 - Vanilla JS example は Vite `base` `/web-serial-rxjs/examples/vanilla-js/` を使う（`nx build example-vanilla-js --configuration=portal`）。
+- Vanilla TS example は Vite `base` `/web-serial-rxjs/examples/vanilla-ts/` を使う（`nx build example-vanilla-ts --configuration=portal`）。
 - SPA fallback / clean URL rewrite（必要な場合）は portal 側 Hosting 設定の確認事項。docs はマルチページ静的 HTML（`*.html`）である。
-- 残りの framework example（`examples/<slug>/`）は #358–#359 で build する。index はその配置先へ先行してリンクする。
+- 残りの framework example（`examples/<slug>/`）は #359 で build する。index はその配置先へ先行してリンクする。
 
 ## GitHub Pages 配信（#151 / #361 完了まで）
 
@@ -188,6 +191,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 | **#354** | Angular example を `dist/portal/web-serial-rxjs/examples/angular/` に出力 |
 | **#355** | React example を `dist/portal/web-serial-rxjs/examples/react/` に出力 |
 | **#356** | Svelte example を `dist/portal/web-serial-rxjs/examples/svelte/` に出力 |
+| **#358** | Vanilla TS example を `dist/portal/web-serial-rxjs/examples/vanilla-ts/` に出力 |
 | **#151** | Firebase Hosting 移行の親（レイアウトは本リポ、最終 deploy は portal） |
 | **#360** | docs + examples の静的 artifact 集約 workflow |
 | **#361** | URL 更新と GitHub Pages 停止 |
@@ -203,6 +207,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [x] **#354** — Angular example を `dist/portal/web-serial-rxjs/examples/angular/` に出力
 - [x] **#355** — React example を `dist/portal/web-serial-rxjs/examples/react/` に出力
 - [x] **#356** — Svelte example を `dist/portal/web-serial-rxjs/examples/svelte/` に出力
+- [x] **#358** — Vanilla TS example を `dist/portal/web-serial-rxjs/examples/vanilla-ts/` に出力
 - [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
@@ -213,6 +218,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [Portal Angular example #354](https://github.com/gurezo/web-serial-rxjs/issues/354)
 - [Portal React example #355](https://github.com/gurezo/web-serial-rxjs/issues/355)
 - [Portal Svelte example #356](https://github.com/gurezo/web-serial-rxjs/issues/356)
+- [Portal Vanilla TS example #358](https://github.com/gurezo/web-serial-rxjs/issues/358)
 - [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc 設定](../typedoc.json)
 - [デプロイ workflow](../../../.github/workflows/deploy-docs.yml)
