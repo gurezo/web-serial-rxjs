@@ -95,16 +95,17 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 
 ## URL path rules
 
-| Logical path | GitHub Pages (current) | Firebase (#151 planned) |
-| --- | --- | --- |
-| Site root | `https://gurezo.github.io/web-serial-rxjs/` | `https://gurezo.net/web-serial-rxjs/` |
-| Japanese Guide | `/guide/ja/` | `/web-serial-rxjs/guide/ja/` |
-| English Guide | `/guide/en/` | `/web-serial-rxjs/guide/en/` |
-| API Reference | `/api/` | `/web-serial-rxjs/api/` |
-| Examples index | `/examples/` | `/web-serial-rxjs/examples/` |
+| Logical path | Public URL (canonical) |
+| --- | --- |
+| Site root | `https://gurezo.net/web-serial-rxjs/` |
+| Japanese Guide | `https://gurezo.net/web-serial-rxjs/guide/ja/` |
+| English Guide | `https://gurezo.net/web-serial-rxjs/guide/en/` |
+| API Reference | `https://gurezo.net/web-serial-rxjs/api/` |
+| Examples index | `https://gurezo.net/web-serial-rxjs/examples/` |
 
-- Prefer relative links within generated HTML so hosting `base` path changes are handled in #151 / #458.
-- `packages/web-serial-rxjs/package.json` `homepage` points to the unified documentation site root.
+- Prefer relative links within generated HTML so the `/web-serial-rxjs/` hosting base path stays portable.
+- `packages/web-serial-rxjs/package.json` `homepage` points to the unified documentation site root (`https://gurezo.net/web-serial-rxjs/`).
+- Former GitHub Pages URL `https://gurezo.github.io/web-serial-rxjs/` is retired (#361).
 
 ## Generated files policy
 
@@ -116,7 +117,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | `dist/portal/web-serial-rxjs/**` | No (portal fragment; covered by root `dist/` gitignore) |
 
 - Local generation: `pnpm run docs` (Guide HTML, TypeDoc API Reference, site index, examples index, internal link check, and portal fragment packaging).
-- Publishing (GitHub Pages, until #361): `.github/workflows/deploy-docs.yml` uploads `./docs` as the Pages artifact.
+- Publishing: `.github/workflows/portal-static-artifact.yml` uploads the portal fragment; `gurezo/portal` deploys to Firebase Hosting at `https://gurezo.net/web-serial-rxjs/`.
 - **Do not edit** files under root `docs/` except `docs/.gitignore`.
 
 ## Portal fragment (#352 / #353 / #354 / #355 / #356 / #357 / #358 / #359)
@@ -157,7 +158,7 @@ dist/portal/web-serial-rxjs/
 | Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
 
 - This repository **only** builds the static fragment. Final Firebase Hosting deploy is owned by `gurezo/portal`.
-- Relative links already match the `/web-serial-rxjs/` path depth used by GitHub project Pages; no absolute `base` rewrite is required in HTML for docs pages.
+- Relative links already match the `/web-serial-rxjs/` path depth on `gurezo.net`; no absolute `base` rewrite is required in HTML for docs pages.
 - The Angular example uses `baseHref` `/web-serial-rxjs/examples/angular/` (`nx build example-angular --configuration=portal`).
 - The React example uses Vite `base` `/web-serial-rxjs/examples/react/` (`nx build example-react --configuration=portal`).
 - The Svelte example uses Vite `base` `/web-serial-rxjs/examples/svelte/` (`nx build example-svelte --configuration=portal`).
@@ -195,17 +196,14 @@ web-serial-rxjs-static/
 
 `gurezo/portal` downloads the artifact and places `web-serial-rxjs/` under `firebase-public/web-serial-rxjs/`. Build failure skips the upload step, so no artifact is published on failure.
 
-## GitHub Pages hosting (until #151 / #361)
+## Public hosting (#151 / #361)
 
-Until Firebase Hosting (#151) replaces github.io, the live site is served only via GitHub Actions:
-
-| Setting | Required value |
+| Item | Value |
 | --- | --- |
-| Repo → Settings → Pages → Source | **GitHub Actions** (`build_type=workflow`) |
-| Deploy workflow | [`.github/workflows/deploy-docs.yml`](../../../.github/workflows/deploy-docs.yml) |
-| Public URL | `https://gurezo.github.io/web-serial-rxjs/` |
-
-Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is not tracked in git (`docs/.gitignore`), so that source publishes an empty tree and the site returns 404 (#500).
+| Canonical public URL | `https://gurezo.net/web-serial-rxjs/` |
+| Hosting | Firebase Hosting via `gurezo/portal` |
+| This repo | Builds and uploads static artifact only (`portal-static-artifact.yml`) |
+| GitHub Pages | Retired (#361). Do not re-enable Pages deploy for this documentation site. |
 
 ## Issue boundaries
 
@@ -243,6 +241,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [x] **#358** — Emit Vanilla TS example at `dist/portal/web-serial-rxjs/examples/vanilla-ts/`
 - [x] **#359** — Emit Vue example at `dist/portal/web-serial-rxjs/examples/vue/`
 - [x] **#360** — Upload `web-serial-rxjs-static` artifact via GitHub Actions
+- [x] **#361** — Point official URLs at `gurezo.net`; remove GitHub Pages deploy workflow
 - [ ] **#151** — Publish via `gurezo/portal` without redefining internal paths
 
 ## References
@@ -257,8 +256,8 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [Portal Vanilla TS example #358](https://github.com/gurezo/web-serial-rxjs/issues/358)
 - [Portal Vue example #359](https://github.com/gurezo/web-serial-rxjs/issues/359)
 - [Portal static artifact CI #360](https://github.com/gurezo/web-serial-rxjs/issues/360)
+- [URL updates and GitHub Pages shutdown #361](https://github.com/gurezo/web-serial-rxjs/issues/361)
 - [Firebase migration parent #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc configuration](../typedoc.json)
-- [Deploy workflow](../../../.github/workflows/deploy-docs.yml)
 - [Portal static artifact workflow](../../../.github/workflows/portal-static-artifact.yml)
 - [日本語版](./ARCHITECTURE.ja.md)
