@@ -101,6 +101,7 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | Japanese Guide | `/guide/ja/` | `/web-serial-rxjs/guide/ja/` |
 | English Guide | `/guide/en/` | `/web-serial-rxjs/guide/en/` |
 | API Reference | `/api/` | `/web-serial-rxjs/api/` |
+| Examples index | `/examples/` | `/web-serial-rxjs/examples/` |
 
 - Prefer relative links within generated HTML so hosting `base` path changes are handled in #151 / #458.
 - `packages/web-serial-rxjs/package.json` `homepage` points to the unified documentation site root.
@@ -110,15 +111,15 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | Path | Git tracking |
 | --- | --- |
 | `packages/web-serial-rxjs/docs/guide/**` | Yes (hand-written source) |
-| `docs/index.html`, `docs/media/**`, `docs/api/**`, `docs/guide/**` | No (CI-generated artifact) |
+| `docs/index.html`, `docs/examples/**`, `docs/media/**`, `docs/api/**`, `docs/guide/**` | No (CI-generated artifact) |
 | `docs/.gitignore` | Yes (ignores all generated content) |
 | `dist/portal/web-serial-rxjs/**` | No (portal fragment; covered by root `dist/` gitignore) |
 
-- Local generation: `pnpm run docs` (Guide HTML, TypeDoc API Reference, site index, internal link check, and portal fragment packaging).
+- Local generation: `pnpm run docs` (Guide HTML, TypeDoc API Reference, site index, examples index, internal link check, and portal fragment packaging).
 - Publishing (GitHub Pages, until #361): `.github/workflows/deploy-docs.yml` uploads `./docs` as the Pages artifact.
 - **Do not edit** files under root `docs/` except `docs/.gitignore`.
 
-## Portal fragment (#352)
+## Portal fragment (#352 / #353)
 
 `pnpm run docs` ends with `docs:portal`, which copies the generated `docs/` tree (excluding `docs/.gitignore`) to:
 
@@ -128,9 +129,26 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | Target public URL | `https://gurezo.net/web-serial-rxjs/` |
 | Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
+`docs:examples-index` writes `docs/examples/index.html` before packaging, so the fragment includes:
+
+```text
+dist/portal/web-serial-rxjs/
+├── index.html
+├── api/ guide/ media/
+└── examples/
+    └── index.html          # #353
+        # angular/ … vue/   # #354–#359
+```
+
+| Item | Value |
+| --- | --- |
+| Examples index URL | `https://gurezo.net/web-serial-rxjs/examples/` |
+| Portal import path | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
+
 - This repository **only** builds the static fragment. Final Firebase Hosting deploy is owned by `gurezo/portal`.
 - Relative links already match the `/web-serial-rxjs/` path depth used by GitHub project Pages; no absolute `base` rewrite is required in HTML.
 - SPA fallback / clean-URL rewrites (if any) are portal Hosting configuration, not this repo. Docs are multi-page static HTML (`*.html` files).
+- Framework example apps under `examples/<slug>/` are built in #354–#359; the index links to those paths ahead of those builds.
 
 ## GitHub Pages hosting (until #151 / #361)
 
@@ -154,6 +172,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 | **#457** | TypeDoc as English-only API Reference (`typedoc.json` → `docs/api/`) |
 | **#458** | Integrate Guide + API Reference build, cross-links, site landing |
 | **#352** | Package docs as portal fragment under `dist/portal/web-serial-rxjs/` |
+| **#353** | Examples index under `dist/portal/web-serial-rxjs/examples/` |
 | **#151** | Firebase Hosting migration parent (layout here; final deploy via portal) |
 | **#360** | Aggregate static artifact workflow (docs + examples) |
 | **#361** | URL updates and GitHub Pages shutdown |
@@ -165,12 +184,14 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [x] **#457** — Set TypeDoc `out` to `../../docs/api`; limit `projectDocuments` to English Guide only
 - [x] **#458** — Build `docs/guide/{ja,en}/`, add site index, link Guide ↔ API Reference
 - [x] **#352** — Emit portal docs fragment at `dist/portal/web-serial-rxjs/`
+- [x] **#353** — Emit examples index at `dist/portal/web-serial-rxjs/examples/`
 - [ ] **#151** — Publish via `gurezo/portal` without redefining internal paths
 
 ## References
 
 - [Parent issue #453](https://github.com/gurezo/web-serial-rxjs/issues/453)
 - [Portal docs fragment #352](https://github.com/gurezo/web-serial-rxjs/issues/352)
+- [Portal examples index #353](https://github.com/gurezo/web-serial-rxjs/issues/353)
 - [Firebase migration parent #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc configuration](../typedoc.json)
 - [Deploy workflow](../../../.github/workflows/deploy-docs.yml)
