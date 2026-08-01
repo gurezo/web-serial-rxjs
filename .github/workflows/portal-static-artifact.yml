@@ -1,0 +1,68 @@
+name: Portal Static Artifact
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'apps/example-*/**'
+      - 'packages/web-serial-rxjs/src/**'
+      - 'packages/web-serial-rxjs/typedoc.json'
+      - 'packages/web-serial-rxjs/scripts/**'
+      - 'packages/web-serial-rxjs/docs/**'
+      - '.github/workflows/portal-static-artifact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        id: pnpm-cache
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs and examples portal fragment
+        run: pnpm run docs
+
+      - name: Stage portal static tree
+        run: |
+          mkdir -p web-serial-rxjs-static
+          cp -a dist/portal/web-serial-rxjs web-serial-rxjs-static/
+
+      - name: Upload portal static artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-serial-rxjs-static
+          path: web-serial-rxjs-static
+          if-no-files-found: error
