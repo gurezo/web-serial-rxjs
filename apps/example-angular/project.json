@@ -42,6 +42,22 @@
           ],
           "outputHashing": "all"
         },
+        "portal": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all",
+          "baseHref": "/web-serial-rxjs/examples/angular/"
+        },
         "development": {
           "optimization": false,
           "extractLicenses": false,
