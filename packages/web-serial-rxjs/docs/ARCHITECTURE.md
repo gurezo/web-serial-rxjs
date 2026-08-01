@@ -191,6 +191,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 
 - [Parent issue #453](https://github.com/gurezo/web-serial-rxjs/issues/453)
 - [Portal docs fragment #352](https://github.com/gurezo/web-serial-rxjs/issues/352)
+- [Portal examples index #353](https://github.com/gurezo/web-serial-rxjs/issues/353)
 - [Firebase migration parent #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc configuration](../typedoc.json)
 - [Deploy workflow](../../../.github/workflows/deploy-docs.yml)

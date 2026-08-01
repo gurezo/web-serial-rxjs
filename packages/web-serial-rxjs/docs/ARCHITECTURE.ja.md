@@ -191,6 +191,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 
 - [親 Issue #453](https://github.com/gurezo/web-serial-rxjs/issues/453)
 - [Portal docs fragment #352](https://github.com/gurezo/web-serial-rxjs/issues/352)
+- [Portal examples index #353](https://github.com/gurezo/web-serial-rxjs/issues/353)
 - [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc 設定](../typedoc.json)
 - [デプロイ workflow](../../../.github/workflows/deploy-docs.yml)
