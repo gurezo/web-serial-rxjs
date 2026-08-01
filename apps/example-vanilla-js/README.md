@@ -67,6 +67,22 @@ Build the application for production:
 pnpm exec nx build example-vanilla-js
 ```
 
+### Portal static artifact (#357)
+
+Build with portal Vite `base` and copy into `docs/examples/vanilla-js/` (picked up by `docs:portal`):
+
+```bash
+pnpm run docs:example-vanilla-js
+```
+
+Equivalent Nx command:
+
+```bash
+pnpm exec nx build example-vanilla-js --configuration=portal
+```
+
+Published path: `/web-serial-rxjs/examples/vanilla-js/` (`https://gurezo.net/web-serial-rxjs/examples/vanilla-js/`).
+
 ### Test
 
 Run tests:
