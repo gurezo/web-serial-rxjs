@@ -46,6 +46,11 @@ const mainContent = `<div class="col-content">
 <p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Exported classes, interfaces, types, methods, and API contracts from TypeScript JSDoc.</p>
 <a href="${assetBase}index.html"><strong>Open API Reference</strong></a>
 </section>
+<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
+<h2 style="margin:0 0 0.5rem;font-size:1.15rem;">Examples</h2>
+<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Interactive Angular, React, Svelte, Vue, and Vanilla JS/TS examples using SerialSession.</p>
+<a href="examples/"><strong>Open Examples</strong></a>
+</section>
 </div>
 </div>
 </div>`;
