@@ -9,9 +9,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const workspaceRoot = resolve(__dirname, '../../../');
 
-export default defineConfig(() => ({
+export default defineConfig(({ mode }) => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/example-svelte',
+  base: mode === 'portal' ? '/web-serial-rxjs/examples/svelte/' : '/',
   plugins: [svelte(), nxViteTsPaths()],
   server: {
     port: 4220,
