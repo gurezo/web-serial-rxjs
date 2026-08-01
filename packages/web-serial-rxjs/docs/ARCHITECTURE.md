@@ -166,6 +166,35 @@ dist/portal/web-serial-rxjs/
 - The Vue example uses Vite `base` `/web-serial-rxjs/examples/vue/` (`nx build example-vue --configuration=portal`).
 - SPA fallback / clean-URL rewrites (if any) are portal Hosting configuration, not this repo. Docs are multi-page static HTML (`*.html` files).
 
+### Portal static artifact CI (#360)
+
+GitHub Actions workflow [`.github/workflows/portal-static-artifact.yml`](../../../.github/workflows/portal-static-artifact.yml) runs `pnpm run docs`, stages the fragment for portal import, and uploads a downloadable artifact. It does **not** deploy to Firebase Hosting.
+
+| Item | Value |
+| --- | --- |
+| Workflow | [`.github/workflows/portal-static-artifact.yml`](../../../.github/workflows/portal-static-artifact.yml) |
+| Artifact name | `web-serial-rxjs-static` |
+| Staged layout | `web-serial-rxjs-static/web-serial-rxjs/` (copied from `dist/portal/web-serial-rxjs/`) |
+| Triggers | `push` to `main` (path-filtered) and `workflow_dispatch` |
+| Deploy | None in this repository (owned by `gurezo/portal`) |
+
+```text
+web-serial-rxjs-static/
+└── web-serial-rxjs/
+    ├── index.html
+    ├── api/ guide/ media/
+    └── examples/
+        ├── index.html
+        ├── angular/
+        ├── react/
+        ├── svelte/
+        ├── vanilla-js/
+        ├── vanilla-ts/
+        └── vue/
+```
+
+`gurezo/portal` downloads the artifact and places `web-serial-rxjs/` under `firebase-public/web-serial-rxjs/`. Build failure skips the upload step, so no artifact is published on failure.
+
 ## GitHub Pages hosting (until #151 / #361)
 
 Until Firebase Hosting (#151) replaces github.io, the live site is served only via GitHub Actions:
@@ -192,6 +221,7 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 | **#354** | Angular example under `dist/portal/web-serial-rxjs/examples/angular/` |
 | **#355** | React example under `dist/portal/web-serial-rxjs/examples/react/` |
 | **#356** | Svelte example under `dist/portal/web-serial-rxjs/examples/svelte/` |
+| **#357** | Vanilla JS example under `dist/portal/web-serial-rxjs/examples/vanilla-js/` |
 | **#358** | Vanilla TS example under `dist/portal/web-serial-rxjs/examples/vanilla-ts/` |
 | **#359** | Vue example under `dist/portal/web-serial-rxjs/examples/vue/` |
 | **#151** | Firebase Hosting migration parent (layout here; final deploy via portal) |
@@ -209,8 +239,10 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [x] **#354** — Emit Angular example at `dist/portal/web-serial-rxjs/examples/angular/`
 - [x] **#355** — Emit React example at `dist/portal/web-serial-rxjs/examples/react/`
 - [x] **#356** — Emit Svelte example at `dist/portal/web-serial-rxjs/examples/svelte/`
+- [x] **#357** — Emit Vanilla JS example at `dist/portal/web-serial-rxjs/examples/vanilla-js/`
 - [x] **#358** — Emit Vanilla TS example at `dist/portal/web-serial-rxjs/examples/vanilla-ts/`
 - [x] **#359** — Emit Vue example at `dist/portal/web-serial-rxjs/examples/vue/`
+- [x] **#360** — Upload `web-serial-rxjs-static` artifact via GitHub Actions
 - [ ] **#151** — Publish via `gurezo/portal` without redefining internal paths
 
 ## References
@@ -221,9 +253,12 @@ Do **not** use **Deploy from a branch** with `main` + `/docs`. Generated HTML is
 - [Portal Angular example #354](https://github.com/gurezo/web-serial-rxjs/issues/354)
 - [Portal React example #355](https://github.com/gurezo/web-serial-rxjs/issues/355)
 - [Portal Svelte example #356](https://github.com/gurezo/web-serial-rxjs/issues/356)
+- [Portal Vanilla JS example #357](https://github.com/gurezo/web-serial-rxjs/issues/357)
 - [Portal Vanilla TS example #358](https://github.com/gurezo/web-serial-rxjs/issues/358)
 - [Portal Vue example #359](https://github.com/gurezo/web-serial-rxjs/issues/359)
+- [Portal static artifact CI #360](https://github.com/gurezo/web-serial-rxjs/issues/360)
 - [Firebase migration parent #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc configuration](../typedoc.json)
 - [Deploy workflow](../../../.github/workflows/deploy-docs.yml)
+- [Portal static artifact workflow](../../../.github/workflows/portal-static-artifact.yml)
 - [日本語版](./ARCHITECTURE.ja.md)

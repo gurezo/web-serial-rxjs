@@ -166,6 +166,35 @@ dist/portal/web-serial-rxjs/
 - Vue example は Vite `base` `/web-serial-rxjs/examples/vue/` を使う（`nx build example-vue --configuration=portal`）。
 - SPA fallback / clean URL rewrite（必要な場合）は portal 側 Hosting 設定の確認事項。docs はマルチページ静的 HTML（`*.html`）である。
 
+### Portal static artifact CI（#360）
+
+GitHub Actions workflow [`.github/workflows/portal-static-artifact.yml`](../../../.github/workflows/portal-static-artifact.yml) が `pnpm run docs` を実行し、portal 取り込み用に staging したうえでダウンロード可能な artifact を upload する。Firebase Hosting への deploy は**行わない**。
+
+| 項目 | 値 |
+| --- | --- |
+| Workflow | [`.github/workflows/portal-static-artifact.yml`](../../../.github/workflows/portal-static-artifact.yml) |
+| Artifact 名 | `web-serial-rxjs-static` |
+| Staging レイアウト | `web-serial-rxjs-static/web-serial-rxjs/`（`dist/portal/web-serial-rxjs/` からコピー） |
+| トリガー | `main` への `push`（path filter あり）および `workflow_dispatch` |
+| Deploy | 本リポジトリでは行わない（`gurezo/portal` の責務） |
+
+```text
+web-serial-rxjs-static/
+└── web-serial-rxjs/
+    ├── index.html
+    ├── api/ guide/ media/
+    └── examples/
+        ├── index.html
+        ├── angular/
+        ├── react/
+        ├── svelte/
+        ├── vanilla-js/
+        ├── vanilla-ts/
+        └── vue/
+```
+
+`gurezo/portal` は artifact をダウンロードし、`web-serial-rxjs/` を `firebase-public/web-serial-rxjs/` へ配置する。ビルド失敗時は upload ステップに到達しないため、失敗時に artifact は公開されない。
+
 ## GitHub Pages 配信（#151 / #361 完了まで）
 
 Firebase Hosting（#151）で github.io を置き換えるまでは、公開サイトは GitHub Actions 経由でのみ配信する。
@@ -192,6 +221,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 | **#354** | Angular example を `dist/portal/web-serial-rxjs/examples/angular/` に出力 |
 | **#355** | React example を `dist/portal/web-serial-rxjs/examples/react/` に出力 |
 | **#356** | Svelte example を `dist/portal/web-serial-rxjs/examples/svelte/` に出力 |
+| **#357** | Vanilla JS example を `dist/portal/web-serial-rxjs/examples/vanilla-js/` に出力 |
 | **#358** | Vanilla TS example を `dist/portal/web-serial-rxjs/examples/vanilla-ts/` に出力 |
 | **#359** | Vue example を `dist/portal/web-serial-rxjs/examples/vue/` に出力 |
 | **#151** | Firebase Hosting 移行の親（レイアウトは本リポ、最終 deploy は portal） |
@@ -209,8 +239,10 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [x] **#354** — Angular example を `dist/portal/web-serial-rxjs/examples/angular/` に出力
 - [x] **#355** — React example を `dist/portal/web-serial-rxjs/examples/react/` に出力
 - [x] **#356** — Svelte example を `dist/portal/web-serial-rxjs/examples/svelte/` に出力
+- [x] **#357** — Vanilla JS example を `dist/portal/web-serial-rxjs/examples/vanilla-js/` に出力
 - [x] **#358** — Vanilla TS example を `dist/portal/web-serial-rxjs/examples/vanilla-ts/` に出力
 - [x] **#359** — Vue example を `dist/portal/web-serial-rxjs/examples/vue/` に出力
+- [x] **#360** — GitHub Actions で `web-serial-rxjs-static` artifact を upload
 - [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
@@ -221,9 +253,12 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [Portal Angular example #354](https://github.com/gurezo/web-serial-rxjs/issues/354)
 - [Portal React example #355](https://github.com/gurezo/web-serial-rxjs/issues/355)
 - [Portal Svelte example #356](https://github.com/gurezo/web-serial-rxjs/issues/356)
+- [Portal Vanilla JS example #357](https://github.com/gurezo/web-serial-rxjs/issues/357)
 - [Portal Vanilla TS example #358](https://github.com/gurezo/web-serial-rxjs/issues/358)
 - [Portal Vue example #359](https://github.com/gurezo/web-serial-rxjs/issues/359)
+- [Portal static artifact CI #360](https://github.com/gurezo/web-serial-rxjs/issues/360)
 - [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
 - [TypeDoc 設定](../typedoc.json)
 - [デプロイ workflow](../../../.github/workflows/deploy-docs.yml)
+- [Portal static artifact workflow](../../../.github/workflows/portal-static-artifact.yml)
 - [English version](./ARCHITECTURE.md)
