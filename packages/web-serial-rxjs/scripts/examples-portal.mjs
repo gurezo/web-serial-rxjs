@@ -1,6 +1,6 @@
 /**
  * Framework example slugs published under /web-serial-rxjs/examples/<slug>/.
- * Builds land in #354–#359; the index page (#353) links to these paths.
+ * Builds land in #354–#359 (angular done in #354); the index page (#353) links to these paths.
  */
 export const EXAMPLE_ENTRIES = [
   { slug: 'angular', label: 'Angular', description: 'Angular example app using SerialSession.' },
