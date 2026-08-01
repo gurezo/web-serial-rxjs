@@ -101,6 +101,7 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | 日本語 Guide | `/guide/ja/` | `/web-serial-rxjs/guide/ja/` |
 | English Guide | `/guide/en/` | `/web-serial-rxjs/guide/en/` |
 | API Reference | `/api/` | `/web-serial-rxjs/api/` |
+| Examples index | `/examples/` | `/web-serial-rxjs/examples/` |
 
 - 生成 HTML 内は相対リンクを優先し、Hosting の `base` path は #151 / #458 で扱う。
 - `packages/web-serial-rxjs/package.json` の `homepage` は統合ドキュメントサイトルートを指す。
@@ -110,15 +111,15 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | パス | Git 管理 |
 | --- | --- |
 | `packages/web-serial-rxjs/docs/guide/**` | する（手書き source） |
-| `docs/index.html`、`docs/media/**`、`docs/api/**`、`docs/guide/**` | しない（CI 生成 artifact） |
+| `docs/index.html`、`docs/examples/**`、`docs/media/**`、`docs/api/**`、`docs/guide/**` | しない（CI 生成 artifact） |
 | `docs/.gitignore` | する（生成物を除外） |
 | `dist/portal/web-serial-rxjs/**` | しない（portal fragment。ルート `dist/` gitignore で除外） |
 
-- ローカル生成: `pnpm run docs`（Guide HTML、TypeDoc API Reference、サイト index、内部リンク検証、portal fragment パッケージ）
+- ローカル生成: `pnpm run docs`（Guide HTML、TypeDoc API Reference、サイト index、examples index、内部リンク検証、portal fragment パッケージ）
 - 公開（GitHub Pages、#361 まで）: `.github/workflows/deploy-docs.yml` が `./docs` を Pages artifact としてアップロード
 - ルート `docs/` 配下は**編集しない**（`docs/.gitignore` を除く）
 
-## Portal fragment（#352）
+## Portal fragment（#352 / #353）
 
 `pnpm run docs` の末尾で `docs:portal` が走り、生成済み `docs/` ツリー（`docs/.gitignore` を除く）を次へコピーする:
 
@@ -128,9 +129,26 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | 公開 URL（想定） | `https://gurezo.net/web-serial-rxjs/` |
 | portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/` |
 
+`docs:examples-index` がパッケージ前に `docs/examples/index.html` を書き出すため、fragment には次が含まれる:
+
+```text
+dist/portal/web-serial-rxjs/
+├── index.html
+├── api/ guide/ media/
+└── examples/
+    └── index.html          # #353
+        # angular/ … vue/   # #354–#359
+```
+
+| 項目 | 値 |
+| --- | --- |
+| Examples index URL | `https://gurezo.net/web-serial-rxjs/examples/` |
+| portal 取り込み先 | `gurezo/portal` → `firebase-public/web-serial-rxjs/examples/` |
+
 - 本リポジトリは**静的 fragment の生成のみ**を行う。Firebase Hosting への最終 deploy は `gurezo/portal` の責務。
 - 相対リンクは GitHub project Pages と同じ `/web-serial-rxjs/` のパス深さに既に整合しているため、HTML 内の絶対 `base` 書き換えは不要。
 - SPA fallback / clean URL rewrite（必要な場合）は portal 側 Hosting 設定の確認事項。docs はマルチページ静的 HTML（`*.html`）である。
+- `examples/<slug>/` 配下の各 framework example は #354–#359 で build する。index はその配置先へ先行してリンクする。
 
 ## GitHub Pages 配信（#151 / #361 完了まで）
 
@@ -154,6 +172,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 | **#457** | 英語のみの TypeDoc API Reference（`typedoc.json` → `docs/api/`） |
 | **#458** | Guide と API Reference のビルド統合、相互導線、サイト index |
 | **#352** | docs を `dist/portal/web-serial-rxjs/` の portal fragment としてパッケージ |
+| **#353** | examples index を `dist/portal/web-serial-rxjs/examples/` に出力 |
 | **#151** | Firebase Hosting 移行の親（レイアウトは本リポ、最終 deploy は portal） |
 | **#360** | docs + examples の静的 artifact 集約 workflow |
 | **#361** | URL 更新と GitHub Pages 停止 |
@@ -165,6 +184,7 @@ Firebase Hosting（#151）で github.io を置き換えるまでは、公開サ�
 - [x] **#457** — TypeDoc `out` を `../../docs/api` に変更。`projectDocuments` は英語 Guide のみ
 - [x] **#458** — `docs/guide/{ja,en}/` をビルドし、Guide ↔ API Reference の導線を追加
 - [x] **#352** — portal docs fragment を `dist/portal/web-serial-rxjs/` に出力
+- [x] **#353** — examples index を `dist/portal/web-serial-rxjs/examples/` に出力
 - [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
