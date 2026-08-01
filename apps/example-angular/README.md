@@ -69,6 +69,22 @@ Build the application for production:
 pnpm exec nx build example-angular
 ```
 
+### Portal static artifact (#354)
+
+Build with portal `baseHref` and copy into `docs/examples/angular/` (picked up by `docs:portal`):
+
+```bash
+pnpm run docs:example-angular
+```
+
+Equivalent Nx command:
+
+```bash
+pnpm exec nx build example-angular --configuration=portal
+```
+
+Published path: `/web-serial-rxjs/examples/angular/` (`https://gurezo.net/web-serial-rxjs/examples/angular/`).
+
 ### Test
 
 Run tests:
