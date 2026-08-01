@@ -69,6 +69,22 @@ Build the application for production:
 pnpm exec nx build example-vue
 ```
 
+### Portal static artifact (#359)
+
+Build with portal Vite `base` and copy into `docs/examples/vue/` (picked up by `docs:portal`):
+
+```bash
+pnpm run docs:example-vue
+```
+
+Equivalent Nx command:
+
+```bash
+pnpm exec nx build example-vue --configuration=portal
+```
+
+Published path: `/web-serial-rxjs/examples/vue/` (`https://gurezo.net/web-serial-rxjs/examples/vue/`).
+
 ### Test
 
 Run tests:
