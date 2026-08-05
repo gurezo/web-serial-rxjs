@@ -1,22 +1,13 @@
 import {
   createSerialSessionController,
+  formatExampleSerialError,
   getExampleNavLinks,
+  getExampleRequirementsCopy,
+  getExampleSupportStatus,
 } from '@gurezo/examples-shared';
-import { isWebSerialSupported, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
-
-const UNSUPPORTED_MSG =
-  'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。';
-const STATUS = {
-  idle: ['info', 'シリアルポートから切断しました。'],
-  connecting: ['info', '接続中です...'],
-  connected: ['success', 'シリアルポートに接続しました。'],
-  disconnecting: ['info', '切断中です...'],
-  unsupported: ['error', UNSUPPORTED_MSG],
-  error: ['error', 'エラーが発生しました。errors$ を確認してください。'],
-  disposed: ['info', 'セッションは破棄されました。'],
-};
 
 const $ = (id) => {
   const el = document.getElementById(id);
@@ -75,9 +66,32 @@ const mountExampleNav = (slug) => {
   header.appendChild(nav);
 };
 
+const mountRequirements = () => {
+  const requirements = getExampleRequirementsCopy();
+  const supportStatus = getExampleSupportStatus();
+
+  $('requirements-title').textContent = requirements.title;
+  const list = $('requirements-list');
+  list.replaceChildren();
+  for (const item of requirements.items) {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li);
+  }
+
+  setStatus(
+    $('browser-support-status'),
+    supportStatus.statusType,
+    supportStatus.statusMessage,
+  );
+
+  return supportStatus;
+};
+
 export class App {
   constructor() {
     mountExampleNav('vanilla-js');
+    const supportStatus = mountRequirements();
 
     const connectBtn = $('connect-btn');
     const disconnectBtn = $('disconnect-btn');
@@ -88,19 +102,22 @@ export class App {
     const receiveOutput = $('receive-output');
     this.controller = createSerialSessionController({ initialBaudRate: 9600 });
 
-    const supported = isWebSerialSupported();
-    setStatus(
-      $('browser-support-status'),
-      supported ? 'success' : 'error',
-      supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
-    );
+    const STATUS = {
+      idle: ['info', 'シリアルポートから切断しました。'],
+      connecting: ['info', '接続中です...'],
+      connected: ['success', 'シリアルポートに接続しました。'],
+      disconnecting: ['info', '切断中です...'],
+      unsupported: ['error', supportStatus.statusMessage],
+      error: ['error', 'エラーが発生しました。errors$ を確認してください。'],
+      disposed: ['info', 'セッションは破棄されました。'],
+    };
 
     this.controller.state$.subscribe((state) => {
       const connected = state.status === SerialSessionStatus.Connected;
       const busy =
         state.status === SerialSessionStatus.Connecting ||
         state.status === SerialSessionStatus.Disconnecting;
-      connectBtn.disabled = !supported || connected || busy;
+      connectBtn.disabled = !supportStatus.canConnect || connected || busy;
       baudRateSelect.disabled = connected || busy;
       disconnectBtn.disabled = !connected;
       sendInput.disabled = sendBtn.disabled = !connected;
@@ -113,7 +130,12 @@ export class App {
     });
 
     this.controller.errors$.subscribe((error) => {
-      setStatus(status, 'error', `エラー: ${error.message}`);
+      const display = formatExampleSerialError(error);
+      setStatus(
+        status,
+        display.type,
+        display.type === 'info' ? display.message : `エラー: ${display.message}`,
+      );
       console.error('Serial port error:', error);
     });
 
