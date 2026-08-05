@@ -53,6 +53,7 @@ const mountExampleNav = (slug) => {
   for (const link of [
     links.viewSource,
     links.documentation,
+    links.troubleshooting,
     links.backToExamples,
     links.reportIssue,
   ]) {
