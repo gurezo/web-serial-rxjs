@@ -145,6 +145,14 @@
         </li>
         <li>
           <a
+            href={navLinks.troubleshooting.href}
+            target="_blank"
+            rel={externalLinkRel}
+            >{navLinks.troubleshooting.label}</a
+          >
+        </li>
+        <li>
+          <a
             href={navLinks.backToExamples.href}
             target="_blank"
             rel={externalLinkRel}
