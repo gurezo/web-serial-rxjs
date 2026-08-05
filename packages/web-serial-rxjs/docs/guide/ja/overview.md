@@ -21,6 +21,7 @@
 - [クイックスタート](./quick-start.md)
 - [高度な使用方法](./advanced-usage.md)
 - [API の概念と設計メモ](./concepts.md)
+- [トラブルシューティング](./troubleshooting.md)
 - [v2 から v3 への移行ガイド](./migration-v3.md)
 - [v1 から v2 への移行ガイド](./migration-v2.md)
 

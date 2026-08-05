@@ -21,6 +21,7 @@ Start here:
 - [Quick Start](./quick-start.md)
 - [Advanced Usage](./advanced-usage.md)
 - [API concepts and design notes](./concepts.md)
+- [Troubleshooting](./troubleshooting.md)
 - [v2 to v3 Migration Guide](./migration-v3.md)
 - [v1 to v2 Migration Guide](./migration-v2.md)
 
