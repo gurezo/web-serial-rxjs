@@ -29,3 +29,11 @@ export {
   type ExampleSerialErrorDetail,
   type ExampleSessionStatusDisplay,
 } from './example-session-display';
+export {
+  appendExampleLineEnding,
+  DEFAULT_EXAMPLE_LINE_ENDING,
+  EXAMPLE_LINE_ENDING_OPTIONS,
+  getExampleLineEndingSuffix,
+  type ExampleLineEnding,
+  type ExampleLineEndingOption,
+} from './example-line-ending';
