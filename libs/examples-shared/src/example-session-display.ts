@@ -1,5 +1,6 @@
 import {
   SerialSessionStatus,
+  type ConnectedSessionState,
   type SerialError,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
@@ -74,10 +75,10 @@ function formatUsbId(value: number | undefined): string {
 }
 
 /**
- * Formats USB Vendor / Product IDs from {@link SerialPortInfo}.
+ * Formats USB Vendor / Product IDs from connected session `portInfo`.
  */
 export function formatExamplePortInfo(
-  portInfo: SerialPortInfo,
+  portInfo: ConnectedSessionState['portInfo'],
 ): ExamplePortInfoDisplay {
   const vendorId = formatUsbId(portInfo.usbVendorId);
   const productId = formatUsbId(portInfo.usbProductId);
