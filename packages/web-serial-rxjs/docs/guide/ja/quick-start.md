@@ -9,6 +9,8 @@
 - ページは **HTTPS** または **localhost**（[セキュアコンテキスト](https://developer.mozilla.org/ja/docs/Web/Security/Secure_Contexts)）で配信してください。localhost 以外の平文 `http://` では Web Serial は使えません。
 - **`connect$()`** は **ユーザー操作**（ボタンクリックなど）から呼び出してください。そうでないとブラウザはポート選択ダイアログを開きません。
 
+それでも失敗する場合（非対応ブラウザ、subscribe 漏れ、改行不一致、再接続など）は [トラブルシューティング](./troubleshooting.md) を参照してください。
+
 ## インストール
 
 npm または pnpm でパッケージを導入します。
@@ -136,5 +138,6 @@ session.dispose$().subscribe({
 
 - 公開メソッドとストリームの一覧は [概念と設計メモ](./concepts.md) を参照してください。
 - チャンク単位の受信、送信の順序制御、エラー分岐の詳細、ポートフィルタなどは [高度な使用方法](./advanced-usage.md) を参照してください。
+- 接続や送受信の問題は [トラブルシューティング](./troubleshooting.md) を参照してください。
 - v2 型モデルからの移行は [v2 → v3 マイグレーション](./migration-v3.md) を参照してください。
 - v1 からの移行は [v1 → v2 マイグレーション](./migration-v2.md) を参照してください。

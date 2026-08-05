@@ -9,6 +9,8 @@ Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`**
 - Serve the page over **HTTPS** or **localhost** (a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts)). Web Serial is unavailable on plain `http://` hosts other than localhost.
 - Call **`connect$()`** from a **user gesture** (for example a button click). The browser will not show the port picker otherwise.
 
+If something still fails (unsupported browser, missing subscribe, line endings, reconnect), see [Troubleshooting](./troubleshooting.md).
+
 ## Installation
 
 Install the package with npm or pnpm.
@@ -136,5 +138,6 @@ After disposal, create a new `createSerialSession()` instance instead of reusing
 
 - See [API concepts and design notes](./concepts.md) for the full list of streams and methods.
 - Chunk-mode reception, ordered sends, detailed error handling, port filters, and more recipes are in [Advanced Usage](./advanced-usage.md).
+- Connection and receive/send problems: [Troubleshooting](./troubleshooting.md).
 - Migrating from v2 typings is covered in [Migrating to v3](./migration-v3.md).
 - Migrating from v1 is covered in [Migration v1 → v2](./migration-v2.md).

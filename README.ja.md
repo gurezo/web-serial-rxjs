@@ -103,6 +103,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 | **[SerialSession の概要](packages/web-serial-rxjs/docs/guide/ja/overview.md)** | 公開面・`SerialSessionState` 早見、最小サンプル。 |
 | **[クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
+| **[トラブルシューティング](packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md)** | Web Serial / セッションのよくある問題と自己解決手順。 |
 | **[API の概念と設計メモ](packages/web-serial-rxjs/docs/guide/ja/concepts.md)** | オプション、`SerialSessionState`、`SerialError` の表形式補足。 |
 | **[v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)** | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |
 | **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |

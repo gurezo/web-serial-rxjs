@@ -85,6 +85,7 @@ pnpm add rxjs
 
 - Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md))
 - Shortest path to an open port: [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/quick-start.md)
+- Common problems and self-help: [Troubleshooting](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/troubleshooting.md)
 - Browse the published documentation site: [web-serial-rxjs Documentation](https://gurezo.net/web-serial-rxjs/)
 - Browse API Reference (TypeDoc): [web-serial-rxjs API Documentation](https://gurezo.net/web-serial-rxjs/api/)
 
@@ -99,6 +100,7 @@ pnpm add rxjs
 | [Overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md) | Features and the `SerialSession` / `SerialSessionState` map |
 | [Quick Start](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/quick-start.md) | Open a port and wire subscriptions end-to-end |
 | [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/advanced-usage.md) | Line framing, request/response-style flows, recovery |
+| [Troubleshooting](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/troubleshooting.md) | Common Web Serial / session problems and self-help checks |
 | [API concepts and design notes](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/concepts.md) | `SerialSessionOptions`, `SerialError`, and formal details |
 | [v3 → v4 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v4.md) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup) |
 | [v2 → v3 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v3.md) | `state$` discriminated union, `SerialSessionStatus`, `context.cause` |

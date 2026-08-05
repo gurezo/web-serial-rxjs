@@ -6,6 +6,12 @@ contact_links:
   - name: 💬 質問 / Q&A (Discussions)
     url: https://github.com/gurezo/web-serial-rxjs/discussions
     about: バグ報告・機能要望以外（質問、使い方相談）は Discussions へお願いします
+  - name: 🔧 Troubleshooting (English)
+    url: https://gurezo.net/web-serial-rxjs/guide/en/troubleshooting.html
+    about: Check common Web Serial / session problems before opening an issue
+  - name: 🔧 トラブルシューティング（日本語）
+    url: https://gurezo.net/web-serial-rxjs/guide/ja/troubleshooting.html
+    about: Issue 作成前に、よくある接続・送受信の問題を確認してください
   - name: 📖 README / Docs
     url: https://github.com/gurezo/web-serial-rxjs#readme
     about: Please check the README first (使い方、前提条件、ブラウザ対応を確認してください)

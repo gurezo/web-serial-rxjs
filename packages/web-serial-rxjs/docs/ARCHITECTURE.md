@@ -29,6 +29,7 @@ Documentation
 | Error handling | `errors$` for fatal and non-fatal errors |
 | Read / write | Sending and receiving data |
 | Advanced usage | Line framing, request/response-style flows, recovery |
+| Troubleshooting | Common Web Serial / session problems and self-help checks |
 | Migration | Links to v2 → v3 and v1 → v2 migration guides |
 | Concepts | Supplemental tables and diagrams (formerly `API_REFERENCE.md`) |
 

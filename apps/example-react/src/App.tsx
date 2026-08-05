@@ -113,6 +113,11 @@ export function App() {
               </a>
             </li>
             <li>
+              <a href={navLinks.troubleshooting.href} {...externalLinkProps}>
+                {navLinks.troubleshooting.label}
+              </a>
+            </li>
+            <li>
               <a href={navLinks.backToExamples.href} {...externalLinkProps}>
                 {navLinks.backToExamples.label}
               </a>

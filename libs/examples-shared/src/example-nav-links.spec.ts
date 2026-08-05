@@ -22,6 +22,10 @@ describe('getExampleNavLinks', () => {
         label: 'Documentation',
         href: `${DOCS_ROOT}/`,
       });
+      expect(links.troubleshooting).toEqual({
+        label: 'Troubleshooting',
+        href: `${DOCS_ROOT}/guide/ja/troubleshooting.html`,
+      });
       expect(links.backToExamples).toEqual({
         label: 'Back to Examples',
         href: `${DOCS_ROOT}/examples/`,

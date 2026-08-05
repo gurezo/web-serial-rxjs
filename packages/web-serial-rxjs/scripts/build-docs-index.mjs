@@ -79,6 +79,11 @@ session.lines$.subscribe((line) => console.log(line));
 <p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Exported classes, interfaces, types, methods, and API contracts from TypeScript JSDoc.</p>
 <a href="${assetBase}index.html"><strong>Open API Reference</strong></a>
 </section>
+<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
+<h2 style="margin:0 0 0.5rem;font-size:1.15rem;">Troubleshooting</h2>
+<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Port picker, secure context, subscribe pitfalls, line endings, reconnect, and SerialError checks.</p>
+<p style="margin:0;"><a href="guide/en/troubleshooting.html"><strong>English Troubleshooting</strong></a> · <a href="guide/ja/troubleshooting.html"><strong>日本語トラブルシューティング</strong></a></p>
+</section>
 </div>
 
 <h2 style="margin-top:2.5rem;">Guides</h2>

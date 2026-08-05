@@ -124,3 +124,5 @@ body:
           required: true
         - label: I checked the README Quick Start
           required: false
+        - label: I checked the Troubleshooting guide (https://gurezo.net/web-serial-rxjs/guide/en/troubleshooting.html)
+          required: false
