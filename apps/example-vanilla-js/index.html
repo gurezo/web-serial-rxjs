@@ -34,6 +34,66 @@
             </button>
           </div>
           <div id="connection-status" class="status-message"></div>
+          <h3 class="subsection-title">セッション状態</h3>
+          <dl class="session-state-list">
+            <div>
+              <dt>status</dt>
+              <dd id="session-status" data-testid="session-status"></dd>
+            </div>
+            <div>
+              <dt>進行中</dt>
+              <dd
+                id="session-in-progress"
+                data-testid="session-in-progress"
+              ></dd>
+            </div>
+            <div id="session-port-info-row" hidden>
+              <dt>ポート情報</dt>
+              <dd id="session-port-info" data-testid="session-port-info"></dd>
+            </div>
+          </dl>
+          <h3 class="subsection-title">最新エラー</h3>
+          <dl id="session-error-panel" class="session-state-list" hidden>
+            <div>
+              <dt>message</dt>
+              <dd
+                id="session-error-message"
+                data-testid="session-error-message"
+              ></dd>
+            </div>
+            <div>
+              <dt>code</dt>
+              <dd
+                id="session-error-code"
+                data-testid="session-error-code"
+              ></dd>
+            </div>
+            <div id="session-error-context-row" hidden>
+              <dt>context</dt>
+              <dd
+                id="session-error-context"
+                data-testid="session-error-context"
+              ></dd>
+            </div>
+          </dl>
+          <p
+            id="session-error-empty"
+            class="session-empty"
+            data-testid="session-error-empty"
+          >
+            エラーはありません。
+          </p>
+          <div class="button-group">
+            <button
+              type="button"
+              id="clear-error-btn"
+              class="btn btn-outline"
+              data-testid="clear-error"
+              hidden
+            >
+              エラークリア
+            </button>
+          </div>
         </section>
 
         <!-- Configuration Section -->
