@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { getExampleNavLinks } from '@gurezo/examples-shared';
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { computed, ref } from 'vue';
 import { useSerialClient } from '../composables/useSerialClient';
 
 type StatusType = 'info' | 'success' | 'error';
+
+const navLinks = getExampleNavLinks('vue');
+const externalLinkRel = 'noopener noreferrer';
 
 const baudRate = ref(9600);
 const sendInput = ref('');
@@ -98,6 +102,76 @@ const handleKeyDown = (e: KeyboardEvent) => {
       <p class="subtitle">
         Vue Composition API を使用した Web Serial API のサンプル
       </p>
+      <nav class="example-nav" aria-label="Example links">
+        <ul class="example-nav-primary">
+          <li>
+            <a
+              :href="navLinks.viewSource.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.viewSource.label }}</a
+            >
+          </li>
+          <li>
+            <a
+              :href="navLinks.documentation.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.documentation.label }}</a
+            >
+          </li>
+          <li>
+            <a
+              :href="navLinks.backToExamples.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.backToExamples.label }}</a
+            >
+          </li>
+          <li>
+            <a
+              :href="navLinks.reportIssue.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.reportIssue.label }}</a
+            >
+          </li>
+        </ul>
+        <ul class="example-nav-source">
+          <li>
+            <a
+              :href="navLinks.sourceParts.entry.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.sourceParts.entry.label }}</a
+            >
+          </li>
+          <li>
+            <a
+              :href="navLinks.sourceParts.serviceHookStore.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.sourceParts.serviceHookStore.label }}</a
+            >
+          </li>
+          <li>
+            <a
+              :href="navLinks.sourceParts.ui.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.sourceParts.ui.label }}</a
+            >
+          </li>
+          <li>
+            <a
+              :href="navLinks.sourceParts.readme.href"
+              target="_blank"
+              :rel="externalLinkRel"
+              >{{ navLinks.sourceParts.readme.label }}</a
+            >
+          </li>
+        </ul>
+      </nav>
     </header>
 
     <main>
