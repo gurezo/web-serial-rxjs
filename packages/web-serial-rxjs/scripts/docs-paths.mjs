@@ -42,6 +42,7 @@ const GUIDE_PAGE_PATHS = [
   'quick-start.html',
   'advanced-usage.html',
   'concepts.html',
+  'troubleshooting.html',
   'migration-v2.html',
   'migration-v3.html',
   'migration-v4.html',
