@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common Web Serial and `@gurezo/web-serial-rxjs` problems, with check steps and fixes. Start with [Quick Start](./quick-start.md) requirements if you have not connected yet. For error code tables, see [API concepts and design notes](./concepts.md#serialerror--serialerrorcode).
+Common Web Serial and `@gurezo/web-serial-rxjs` problems, with check steps and fixes. Start with [Quick Start](./quick-start.md) requirements if you have not connected yet. For error code tables, see [API concepts and design notes](./concepts.md#serialerror-serialerrorcode).
 
 ## Port picker does not open / device missing
 
@@ -64,11 +64,11 @@ session.connect$().subscribe({
 
 **Check:**
 
-1. Many shells expect `\r\n` on send. Prefer `session.send$(`${line}\r\n`)` or a small `sendLine` helper — see [Advanced Usage – Send line](./advanced-usage.md#send-line-sendline--sendline-pattern).
+1. Many shells expect `\r\n` on send. Prefer `session.send$(`${line}\r\n`)` or a small `sendLine` helper — see [Advanced Usage – Send line](./advanced-usage.md#send-line-pattern).
 2. Prefer **`lines$`** for newline-delimited logs/parsers. Prefer **`receive$`** (or `terminalText$`) for terminal-style `\r` redraw.
 3. Interactive Examples expose a line-ending control; match it to your device.
 
-**Fix:** Align send endings with the device, and pick `lines$` vs `receive$` for the consumer. Recipes: [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-lines-vs-custom-framing-on-receive).
+**Fix:** Align send endings with the device, and pick `lines$` vs `receive$` for the consumer. Recipes: [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-vs-custom-framing-on-).
 
 ## Port already in use (conflict)
 
@@ -114,7 +114,7 @@ session.errors$.subscribe((error) => {
 
 Also handle `error` on `connect$().subscribe({ error })` and `send$().subscribe({ error })` — the same `SerialError` is multiplexed on `errors$`.
 
-**Fix:** Branch on codes; full tables live in [SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode).
+**Fix:** Branch on codes; full tables live in [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode).
 
 ## What to include when reporting
 

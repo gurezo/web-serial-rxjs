@@ -1,6 +1,6 @@
 # トラブルシューティング
 
-Web Serial および `@gurezo/web-serial-rxjs` でよくある問題の確認手順と対処です。まだ接続できていない場合は先に [クイックスタート](./quick-start.md) の利用条件を確認してください。エラーコード一覧は [概念と設計メモ](./concepts.md#serialerror--serialerrorcode) を参照してください。
+Web Serial および `@gurezo/web-serial-rxjs` でよくある問題の確認手順と対処です。まだ接続できていない場合は先に [クイックスタート](./quick-start.md) の利用条件を確認してください。エラーコード一覧は [概念と設計メモ](./concepts.md#serialerror-serialerrorcode) を参照してください。
 
 ## ポート選択ダイアログが開かない / デバイスが表示されない
 
@@ -114,7 +114,7 @@ session.errors$.subscribe((error) => {
 
 `connect$().subscribe({ error })` や `send$().subscribe({ error })` の `error` も扱い、同じ `SerialError` が `errors$` に多重配信されます。
 
-**対処:** コードで分岐する。一覧は [SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)。
+**対処:** コードで分岐する。一覧は [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode)。
 
 ## 報告時に必要な情報
 
