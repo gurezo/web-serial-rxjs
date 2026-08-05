@@ -93,6 +93,23 @@ main {
   padding-bottom: 8px;
 }
 
+.subsection-title {
+  font-size: 1.1rem;
+  margin: 20px 0 12px;
+  color: #2c3e50;
+}
+
+.requirements-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.requirements-list li + li {
+  margin-top: 0.5rem;
+}
+
 .form-group {
   margin-bottom: 16px;
 }

@@ -97,6 +97,10 @@ describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSessions = [];
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    });
   });
 
   afterEach(() => {
@@ -111,10 +115,12 @@ describe('App', () => {
     );
   });
 
-  it('should display browser support status', () => {
+  it('should display requirements and browser support status', () => {
     const wrapper = mount(App);
+    expect(wrapper.text()).toContain('利用条件');
+    expect(wrapper.text()).toContain('HTTPS');
     expect(wrapper.text()).toContain(
-      'ブラウザは Web Serial API をサポートしています。',
+      'ブラウザは Web Serial API をサポートしており、セキュアコンテキストで実行中です。',
     );
   });
 
@@ -196,7 +202,12 @@ describe('App', () => {
     const wrapper = mount(App);
     const mock = latestMock();
 
-    mock.errorsSubject.next({ message: 'write failed' } as SerialError);
+    mock.errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'write failed',
+      ),
+    );
     await wrapper.vm.$nextTick();
 
     expect(wrapper.text()).toContain('エラー: write failed');
