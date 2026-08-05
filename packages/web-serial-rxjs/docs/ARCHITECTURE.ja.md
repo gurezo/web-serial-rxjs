@@ -197,14 +197,47 @@ web-serial-rxjs-static/
 
 `gurezo/portal` は artifact をダウンロードし、`web-serial-rxjs/` を `firebase-public/web-serial-rxjs/` へ配置する。ビルド失敗時は upload ステップに到達しないため、失敗時に artifact は公開されない。
 
-## 公開 Hosting（#151 / #361）
+## 公開 Hosting（#151 / #361 / #524）
 
 | 項目 | 値 |
 | --- | --- |
-| canonical 公開 URL | `https://gurezo.net/web-serial-rxjs/` |
+| canonical 公開 URL | `https://gurezo.net/web-serial-rxjs/` のみ |
 | Hosting | `gurezo/portal` 経由の Firebase Hosting |
 | 本リポジトリ | 静的 artifact の生成と upload のみ（`portal-static-artifact.yml`） |
-| GitHub Pages | 廃止（#361）。本ドキュメントサイト向けに Pages deploy を再有効化しない |
+| GitHub Pages | 廃止（#361 / #524）。本ドキュメントサイト向けに Pages deploy を再有効化しない |
+| 旧 GitHub Pages URL | `https://gurezo.github.io/web-serial-rxjs/` — 非公式・廃止済み。廃止の説明以外ではリンクしない |
+
+### 公開後の URL・メタデータ方針（#524）
+
+`gurezo.net` 公開後も公式導線を次に揃える:
+
+| 対象 | 期待値 |
+| --- | --- |
+| リポジトリ Website URL（GitHub Settings → General → Website） | `https://gurezo.net/web-serial-rxjs/` |
+| GitHub Pages | 無効（Settings → Pages → None）。`main` の `/docs` から公開しない |
+| `package.json` / README / Guide / Examples / issue forms | `https://gurezo.net/web-serial-rxjs/` |
+| Pages deploy workflow | 再追加しない（#361） |
+
+Pages 無効化と Website URL 更新は必要に応じて `gh` で行う:
+
+```bash
+gh api -X PATCH repos/gurezo/web-serial-rxjs -f homepage='https://gurezo.net/web-serial-rxjs/'
+gh api -X DELETE repos/gurezo/web-serial-rxjs/pages
+```
+
+Pages 無効化後（`has_pages: false`）も、`https://gurezo.github.io/web-serial-rxjs/` はしばらくキャッシュ応答を返すことがある。当該ホストは非公式として扱い、依存しない。旧 GitHub Pages ホストからの HTTP redirect（必要な場合）は GitHub Pages / DNS / portal 側の設定であり、本リポジトリの静的 fragment の責務ではない。
+
+**#524 検証メモ（2026-08-05）:** GitHub Website URL は `https://gurezo.net/web-serial-rxjs/`、Pages は無効化済み。主要な `gurezo.net` docs / examples URL は 200。`guide/*/troubleshooting.html` は `gurezo/portal` が最新 artifact を再取り込むまで 404（#523 の内容は `main` 済み）。ドメインルートの `robots.txt` / `sitemap.xml` は portal follow-up（現状 404）。
+
+### SEO 責務分担（#524）
+
+| 関心事 | 責務 | 備考 |
+| --- | --- | --- |
+| docs fragment HTML の `rel=canonical` と Open Graph（`og:title` / `og:url` / `og:description` / `og:type`） | 本リポジトリ | `pnpm run docs` で注入（サイト index、examples index、Guide、API Reference） |
+| ドメインルートの `robots.txt` / `sitemap.xml` | `gurezo/portal` | `web-serial-rxjs` portal fragment には含めない。portal 側 follow-up として追跡する |
+| 旧 Pages → `gurezo.net` の redirect | GitHub Pages / portal / DNS | 方針のみここに記載。実装は fragment 外 |
+
+`troubleshooting.html` などが `main` に存在するのに `gurezo.net` で 404 の場合は、`gurezo/portal` で最新の `web-serial-rxjs-static` artifact を再取り込みする（本リポジトリは artifact upload まで）。
 
 ## Issue 間の責務境界
 
@@ -226,6 +259,7 @@ web-serial-rxjs-static/
 | **#151** | Firebase Hosting 移行の親（レイアウトは本リポ、最終 deploy は portal） |
 | **#360** | docs + examples の静的 artifact 集約 workflow |
 | **#361** | URL 更新と GitHub Pages 停止 |
+| **#524** | 公開後の URL / メタデータ監査、docs HTML の canonical + OGP、Pages / Website 設定 |
 
 ## 後続 Issue 向けチェックリスト
 
@@ -243,6 +277,7 @@ web-serial-rxjs-static/
 - [x] **#359** — Vue example を `dist/portal/web-serial-rxjs/examples/vue/` に出力
 - [x] **#360** — GitHub Actions で `web-serial-rxjs-static` artifact を upload
 - [x] **#361** — 公式 URL を `gurezo.net` に更新し、GitHub Pages deploy workflow を削除
+- [ ] **#524** — URL / メタデータ監査、docs canonical + OGP、Pages 無効化、portal SEO follow-up の文書化
 - [ ] **#151** — `gurezo/portal` 経由で公開（内部パスは再定義しない）
 
 ## 参照
@@ -258,7 +293,9 @@ web-serial-rxjs-static/
 - [Portal Vue example #359](https://github.com/gurezo/web-serial-rxjs/issues/359)
 - [Portal static artifact CI #360](https://github.com/gurezo/web-serial-rxjs/issues/360)
 - [URL 更新と GitHub Pages 停止 #361](https://github.com/gurezo/web-serial-rxjs/issues/361)
+- [公開後の URL / メタデータ監査 #524](https://github.com/gurezo/web-serial-rxjs/issues/524)
 - [Firebase 移行親 #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
+- [ユーザビリティ親 #516](https://github.com/gurezo/web-serial-rxjs/issues/516)
 - [TypeDoc 設定](../typedoc.json)
 - [Portal static artifact workflow](../../../.github/workflows/portal-static-artifact.yml)
 - [English version](./ARCHITECTURE.md)

@@ -67,7 +67,12 @@ ${cards}
 </div>
 </div>`;
 
-const html = `${buildTypeDocHead({ title, assetBase, dataBase })}
+const html = `${buildTypeDocHead({
+  title,
+  assetBase,
+  dataBase,
+  canonicalPath: 'examples/',
+})}
 ${buildTypeDocBodyStart({
   title,
   titleHref: '../index.html',

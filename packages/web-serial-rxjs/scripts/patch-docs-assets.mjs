@@ -1,13 +1,15 @@
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 import { buildDocumentUrlMap } from './docs-paths.mjs';
+import { extractHtmlTitle, injectSeoMetaTags } from './docs-theme.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const apiAssetsRoot = join(__dirname, '../../../docs/api/assets');
 const apiRoot = join(__dirname, '../../../docs/api');
+const docsRoot = join(__dirname, '../../../docs');
 
 const urlMap = buildDocumentUrlMap();
 
@@ -63,12 +65,23 @@ patchCompressedAsset(join(apiAssetsRoot, 'search.js'), 'searchData');
 patchCompressedAsset(join(apiAssetsRoot, 'navigation.js'), 'navigationData');
 
 let htmlUpdated = 0;
+let seoUpdated = 0;
 for (const htmlFile of collectHtmlFiles(apiRoot)) {
   const original = readFileSync(htmlFile, 'utf8');
   let next = original;
 
   for (const [from, to] of urlMap.entries()) {
     next = next.replaceAll(from, to);
+  }
+
+  const docsRelPath = relative(docsRoot, htmlFile).split('\\').join('/');
+  const withSeo = injectSeoMetaTags(next, {
+    title: extractHtmlTitle(next),
+    canonicalPath: docsRelPath,
+  });
+  if (withSeo !== next) {
+    seoUpdated += 1;
+    next = withSeo;
   }
 
   if (next !== original) {
@@ -78,3 +91,4 @@ for (const htmlFile of collectHtmlFiles(apiRoot)) {
 }
 
 console.log(`Updated document links in ${htmlUpdated} API HTML files.`);
+console.log(`Injected canonical/OGP meta in ${seoUpdated} API HTML files.`);

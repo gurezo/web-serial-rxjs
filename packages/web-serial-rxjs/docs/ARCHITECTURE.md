@@ -197,14 +197,47 @@ web-serial-rxjs-static/
 
 `gurezo/portal` downloads the artifact and places `web-serial-rxjs/` under `firebase-public/web-serial-rxjs/`. Build failure skips the upload step, so no artifact is published on failure.
 
-## Public hosting (#151 / #361)
+## Public hosting (#151 / #361 / #524)
 
 | Item | Value |
 | --- | --- |
-| Canonical public URL | `https://gurezo.net/web-serial-rxjs/` |
+| Canonical public URL | `https://gurezo.net/web-serial-rxjs/` only |
 | Hosting | Firebase Hosting via `gurezo/portal` |
 | This repo | Builds and uploads static artifact only (`portal-static-artifact.yml`) |
-| GitHub Pages | Retired (#361). Do not re-enable Pages deploy for this documentation site. |
+| GitHub Pages | Retired (#361 / #524). Do not re-enable Pages deploy for this documentation site. |
+| Former GitHub Pages URL | `https://gurezo.github.io/web-serial-rxjs/` — unofficial / retired. Do not link to it except when documenting retirement. |
+
+### Post-publish URL and metadata policy (#524)
+
+After publishing on `gurezo.net`, keep official entry points aligned:
+
+| Surface | Expected value |
+| --- | --- |
+| Repository Website URL (GitHub Settings → General → Website) | `https://gurezo.net/web-serial-rxjs/` |
+| GitHub Pages | Disabled (Settings → Pages → None). Do not publish from `main` `/docs`. |
+| `package.json` / README / Guide / Examples / issue forms | `https://gurezo.net/web-serial-rxjs/` |
+| Pages deploy workflow | Must not be re-added (#361) |
+
+Disable Pages and update the Website URL with `gh` when needed:
+
+```bash
+gh api -X PATCH repos/gurezo/web-serial-rxjs -f homepage='https://gurezo.net/web-serial-rxjs/'
+gh api -X DELETE repos/gurezo/web-serial-rxjs/pages
+```
+
+After Pages is disabled (`has_pages: false`), `https://gurezo.github.io/web-serial-rxjs/` may still return cached responses for a while. Treat that host as unofficial; do not rely on it. HTTP redirects from the former GitHub Pages host (if any) are owned by GitHub Pages / DNS / portal configuration, not by this repository's static fragment.
+
+**#524 verification notes (2026-08-05):** GitHub Website URL points at `https://gurezo.net/web-serial-rxjs/`; Pages is disabled. Primary `gurezo.net` docs / examples URLs return 200. `guide/*/troubleshooting.html` still 404 until `gurezo/portal` re-imports the latest artifact (#523 content is on `main`). Domain-root `robots.txt` / `sitemap.xml` remain portal follow-ups (currently 404).
+
+### SEO responsibility split (#524)
+
+| Concern | Owner | Notes |
+| --- | --- | --- |
+| `rel=canonical` and Open Graph (`og:title`, `og:url`, `og:description`, `og:type`) on docs fragment HTML | This repository | Injected during `pnpm run docs` (site index, examples index, Guide, API Reference) |
+| Domain-root `robots.txt` / `sitemap.xml` | `gurezo/portal` | Not part of the `web-serial-rxjs` portal fragment. Track as a portal follow-up. |
+| Former Pages → `gurezo.net` redirect | GitHub Pages / portal / DNS | Documented here; implementation is outside this fragment |
+
+When Guide pages such as `troubleshooting.html` exist on `main` but return 404 on `gurezo.net`, re-import the latest `web-serial-rxjs-static` artifact in `gurezo/portal` (this repository only uploads the artifact).
 
 ## Issue boundaries
 
@@ -226,6 +259,7 @@ web-serial-rxjs-static/
 | **#151** | Firebase Hosting migration parent (layout here; final deploy via portal) |
 | **#360** | Aggregate static artifact workflow (docs + examples) |
 | **#361** | URL updates and GitHub Pages shutdown |
+| **#524** | Post-publish URL / metadata audit; docs HTML canonical + OGP; Pages / Website settings |
 
 ## Checklist for downstream issues
 
@@ -243,6 +277,7 @@ web-serial-rxjs-static/
 - [x] **#359** — Emit Vue example at `dist/portal/web-serial-rxjs/examples/vue/`
 - [x] **#360** — Upload `web-serial-rxjs-static` artifact via GitHub Actions
 - [x] **#361** — Point official URLs at `gurezo.net`; remove GitHub Pages deploy workflow
+- [ ] **#524** — Audit URLs / metadata; add docs canonical + OGP; disable Pages; document portal SEO follow-up
 - [ ] **#151** — Publish via `gurezo/portal` without redefining internal paths
 
 ## References
@@ -258,7 +293,9 @@ web-serial-rxjs-static/
 - [Portal Vue example #359](https://github.com/gurezo/web-serial-rxjs/issues/359)
 - [Portal static artifact CI #360](https://github.com/gurezo/web-serial-rxjs/issues/360)
 - [URL updates and GitHub Pages shutdown #361](https://github.com/gurezo/web-serial-rxjs/issues/361)
+- [Post-publish URL / metadata audit #524](https://github.com/gurezo/web-serial-rxjs/issues/524)
 - [Firebase migration parent #151](https://github.com/gurezo/web-serial-rxjs/issues/151)
+- [Usability parent #516](https://github.com/gurezo/web-serial-rxjs/issues/516)
 - [TypeDoc configuration](../typedoc.json)
 - [Portal static artifact workflow](../../../.github/workflows/portal-static-artifact.yml)
 - [日本語版](./ARCHITECTURE.ja.md)
