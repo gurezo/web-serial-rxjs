@@ -54,8 +54,14 @@ describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSessions = [];
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    });
     container = document.createElement('div');
     container.innerHTML = `
+      <h2 id="requirements-title"></h2>
+      <ul id="requirements-list"></ul>
       <div id="browser-support-status"></div>
       <button id="connect-btn"></button>
       <button id="disconnect-btn"></button>
@@ -92,10 +98,17 @@ describe('App', () => {
     });
   });
 
-  it('should render browser support status based on isWebSerialSupported', () => {
+  it('should render requirements and browser support status', () => {
     app = new App();
+    expect(document.getElementById('requirements-title')?.textContent).toBe(
+      '利用条件',
+    );
+    expect(
+      document.getElementById('requirements-list')?.textContent,
+    ).toContain('HTTPS');
     const el = document.getElementById('browser-support-status');
     expect(el?.textContent).toContain('Web Serial API');
+    expect(el?.textContent).toContain('セキュアコンテキスト');
     expect(el?.className).toContain('success');
   });
 
