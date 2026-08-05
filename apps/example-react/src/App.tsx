@@ -1,9 +1,12 @@
 import {
+  formatExamplePortInfo,
+  formatExampleSessionStatus,
+  getExampleControlsEnabled,
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
 } from '@gurezo/examples-shared';
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
 import { useMemo, useState } from 'react';
 import { useSerialSession } from './hooks/useSerialSession';
 
@@ -27,14 +30,20 @@ export function App() {
     receivedData,
     errorMessage,
     errorType,
+    errorCode,
+    errorContext,
     connect$,
     disconnect$,
     send$,
     clearReceivedData,
+    clearError,
   } = useSerialSession(baudRate);
 
-  const connecting = state.status === SerialSessionStatus.Connecting;
-  const disconnecting = state.status === SerialSessionStatus.Disconnecting;
+  const sessionStatus = formatExampleSessionStatus(state);
+  const controls = getExampleControlsEnabled(state, canConnect);
+  const portInfoDisplay = isConnectedSessionState(state)
+    ? formatExamplePortInfo(state.portInfo)
+    : null;
 
   const status: { type: StatusType; message: string } = errorMessage
     ? {
@@ -42,13 +51,15 @@ export function App() {
         message:
           errorType === 'info' ? errorMessage : `エラー: ${errorMessage}`,
       }
-    : connecting
-      ? { type: 'info', message: '接続中...' }
-      : disconnecting
-        ? { type: 'info', message: '切断中...' }
-        : isConnected
-          ? { type: 'success', message: 'シリアルポートに接続しました。' }
-          : { type: 'info', message: 'シリアルポートに接続していません。' };
+    : sessionStatus.inProgress
+      ? {
+          type: 'info',
+          message:
+            sessionStatus.status === 'connecting' ? '接続中...' : '切断中...',
+        }
+      : isConnected
+        ? { type: 'success', message: 'シリアルポートに接続しました。' }
+        : { type: 'info', message: 'シリアルポートに接続していません。' };
 
   const handleConnect = () => {
     clearReceivedData();
@@ -167,19 +178,73 @@ export function App() {
             <button
               className="btn btn-primary"
               onClick={handleConnect}
-              disabled={!canConnect || isConnected || connecting}
+              disabled={!controls.connect}
             >
               接続
             </button>
             <button
               className="btn btn-secondary"
               onClick={handleDisconnect}
-              disabled={!isConnected || disconnecting}
+              disabled={!controls.disconnect}
             >
               切断
             </button>
           </div>
           <div className={`status-message ${status.type}`}>{status.message}</div>
+          <h3 className="subsection-title">セッション状態</h3>
+          <dl className="session-state-list">
+            <div>
+              <dt>status</dt>
+              <dd data-testid="session-status">{sessionStatus.display}</dd>
+            </div>
+            <div>
+              <dt>進行中</dt>
+              <dd data-testid="session-in-progress">
+                {sessionStatus.inProgress ? 'はい' : 'いいえ'}
+              </dd>
+            </div>
+            {portInfoDisplay ? (
+              <div>
+                <dt>ポート情報</dt>
+                <dd data-testid="session-port-info">{portInfoDisplay.display}</dd>
+              </div>
+            ) : null}
+          </dl>
+          <h3 className="subsection-title">最新エラー</h3>
+          {errorMessage ? (
+            <>
+              <dl className="session-state-list">
+                <div>
+                  <dt>message</dt>
+                  <dd data-testid="session-error-message">{errorMessage}</dd>
+                </div>
+                <div>
+                  <dt>code</dt>
+                  <dd data-testid="session-error-code">{errorCode}</dd>
+                </div>
+                {errorContext ? (
+                  <div>
+                    <dt>context</dt>
+                    <dd data-testid="session-error-context">{errorContext}</dd>
+                  </div>
+                ) : null}
+              </dl>
+              <div className="button-group">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={clearError}
+                  data-testid="clear-error"
+                >
+                  エラークリア
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="session-empty" data-testid="session-error-empty">
+              エラーはありません。
+            </p>
+          )}
         </section>
         <section className="section">
           <h2>データ送信</h2>
@@ -193,13 +258,13 @@ export function App() {
                 value={sendInput}
                 onChange={(e) => setSendInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={!isConnected}
+                disabled={!controls.send}
                 placeholder="送信するテキストを入力..."
               />
               <button
                 className="btn btn-primary"
                 onClick={handleSend}
-                disabled={!isConnected || !sendInput.trim()}
+                disabled={!controls.send || !sendInput.trim()}
               >
                 送信
               </button>

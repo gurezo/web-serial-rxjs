@@ -226,7 +226,58 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('エラー: write failed')).toBeInTheDocument();
+      expect(screen.getByTestId('session-error-message')).toHaveTextContent(
+        'write failed',
+      );
+      expect(screen.getByTestId('session-error-code')).toHaveTextContent(
+        'WRITE_FAILED',
+      );
     });
+  });
+
+  it('セッション状態パネルに status と VID/PID を表示する', async () => {
+    render(<App />);
+
+    expect(screen.getByTestId('session-status')).toHaveTextContent(
+      'idle（アイドル）',
+    );
+    expect(screen.getByTestId('session-error-empty')).toBeInTheDocument();
+
+    act(() =>
+      latestMock().stateSubject.next({
+        status: SS.Connected,
+        portInfo: { usbVendorId: 0x2341, usbProductId: 0x0043 },
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('session-status')).toHaveTextContent(
+        'connected（接続済み）',
+      );
+      expect(screen.getByTestId('session-port-info')).toHaveTextContent(
+        'Vendor ID: 0x2341 / Product ID: 0x0043',
+      );
+    });
+  });
+
+  it('エラークリアボタンで最新エラー表示を消せる', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    act(() =>
+      latestMock().errorsSubject.next(
+        new webSerialRxjs.SerialError(
+          webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+          'write failed',
+        ),
+      ),
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId('session-error-code')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('clear-error'));
+    expect(screen.getByTestId('session-error-empty')).toBeInTheDocument();
   });
 
   it('クリアボタンで受信データが空になる', async () => {
