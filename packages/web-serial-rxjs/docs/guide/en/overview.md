@@ -126,6 +126,7 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
 | **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
 | **[Advanced Usage](./advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
+| **[Troubleshooting](./troubleshooting.md)** | Common Web Serial / session problems and self-help checks. |
 | **[API Reference (TypeDoc)](modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
 | **[v2 → v3 Migration Guide](./migration-v3.md)** ([日本語](../ja/migration-v3.md)) | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](./migration-v2.md)** ([日本語](../ja/migration-v2.md)) | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
