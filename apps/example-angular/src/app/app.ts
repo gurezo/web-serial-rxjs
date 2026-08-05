@@ -53,7 +53,9 @@ export class App {
   });
   private readonly lastErrorDisplay = toSignal(
     this.serialService.errors$.pipe(
-      map((error): ExampleErrorDisplay => formatExampleSerialError(error)),
+      map(
+        (error): ExampleErrorDisplay | null => formatExampleSerialError(error),
+      ),
     ),
     { initialValue: null as ExampleErrorDisplay | null },
   );
