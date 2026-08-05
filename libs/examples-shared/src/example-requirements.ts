@@ -108,7 +108,12 @@ export function getExampleSupportStatus(): ExampleSupportStatus {
 export function formatExampleSerialError(
   error: SerialError,
 ): ExampleErrorDisplay {
-  if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
+  const isCancelled =
+    typeof error.is === 'function'
+      ? error.is(SerialErrorCode.OPERATION_CANCELLED)
+      : error.code === SerialErrorCode.OPERATION_CANCELLED;
+
+  if (isCancelled) {
     return {
       type: 'info',
       message: CANCEL_MESSAGE,
