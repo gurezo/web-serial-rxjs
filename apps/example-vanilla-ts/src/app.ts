@@ -1,5 +1,8 @@
 import {
+  appendExampleLineEnding,
   createSerialSessionController,
+  DEFAULT_EXAMPLE_LINE_ENDING,
+  EXAMPLE_LINE_ENDING_OPTIONS,
   formatExamplePortInfo,
   formatExampleSerialErrorDetail,
   formatExampleSessionStatus,
@@ -7,6 +10,7 @@ import {
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
+  type ExampleLineEnding,
   type ExampleNavLink,
   type ExampleSlug,
   type ExampleSerialErrorDetail,
@@ -118,6 +122,7 @@ export class App {
     const disconnectBtn = $<HTMLButtonElement>('disconnect-btn');
     const status = $<HTMLElement>('connection-status');
     const baudRateSelect = $<HTMLSelectElement>('baud-rate');
+    const lineEndingSelect = $<HTMLSelectElement>('line-ending');
     const sendInput = $<HTMLInputElement>('send-input');
     const sendBtn = $<HTMLButtonElement>('send-btn');
     const receiveOutput = $<HTMLTextAreaElement>('receive-output');
@@ -132,6 +137,16 @@ export class App {
     const errorContextRow = $<HTMLElement>('session-error-context-row');
     const errorContextEl = $<HTMLElement>('session-error-context');
     const clearErrorBtn = $<HTMLButtonElement>('clear-error-btn');
+
+    for (const opt of EXAMPLE_LINE_ENDING_OPTIONS) {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === DEFAULT_EXAMPLE_LINE_ENDING) {
+        option.selected = true;
+      }
+      lineEndingSelect.appendChild(option);
+    }
 
     const STATUS: Record<SerialSessionStatusType, [StatusType, string]> = {
       [S.Idle]: ['info', 'シリアルポートから切断しました。'],
@@ -241,7 +256,8 @@ export class App {
     const send = () => {
       const text = sendInput.value.trim();
       if (!text) return;
-      this.controller.send$(`${text}\n`).subscribe({
+      const ending = lineEndingSelect.value as ExampleLineEnding;
+      this.controller.send$(appendExampleLineEnding(text, ending)).subscribe({
         next: () => (sendInput.value = ''),
         error: () => void 0,
       });
