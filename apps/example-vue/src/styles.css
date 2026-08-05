@@ -110,6 +110,39 @@ main {
   margin-top: 0.5rem;
 }
 
+.session-state-list {
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.session-state-list > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 8px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+.session-state-list dt {
+  margin: 0;
+  font-weight: 600;
+  color: #555;
+}
+
+.session-state-list dd {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  color: #2c3e50;
+  word-break: break-word;
+}
+
+.session-empty {
+  margin: 0 0 12px;
+  color: #7f8c8d;
+  font-size: 0.95rem;
+}
+
 .form-group {
   margin-bottom: 16px;
 }

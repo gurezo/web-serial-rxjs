@@ -211,5 +211,27 @@ describe('App', () => {
     await wrapper.vm.$nextTick();
 
     expect(wrapper.text()).toContain('エラー: write failed');
+    expect(wrapper.find('[data-testid="session-error-code"]').text()).toBe(
+      'WRITE_FAILED',
+    );
+  });
+
+  it('should show session status and port info when connected', async () => {
+    const wrapper = mount(App);
+
+    expect(wrapper.find('[data-testid="session-status"]').text()).toContain(
+      'idle',
+    );
+
+    const connectButton = wrapper.findAll('.btn-primary')[0];
+    await connectButton.trigger('click');
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="session-status"]').text()).toContain(
+      'connected',
+    );
+    expect(wrapper.find('[data-testid="session-port-info"]').exists()).toBe(
+      true,
+    );
   });
 });

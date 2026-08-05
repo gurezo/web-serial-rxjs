@@ -1,6 +1,6 @@
 import {
   createSerialSessionController,
-  formatExampleSerialError,
+  formatExampleSerialErrorDetail,
   getExampleSupportStatus,
 } from '@gurezo/examples-shared';
 import {
@@ -20,10 +20,13 @@ export interface UseSerialClientReturn {
   receivedData: Ref<string>;
   errorMessage: Ref<string | null>;
   errorType: Ref<'info' | 'error' | null>;
+  errorCode: Ref<string | null>;
+  errorContext: Ref<string | null>;
   connect$: (baudRate?: number) => Observable<void>;
   disconnect$: () => Observable<void>;
   send$: (data: string | Uint8Array) => Observable<void>;
   clearReceivedData: () => void;
+  clearError: () => void;
 }
 
 export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
@@ -39,10 +42,14 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
   const receivedData = ref('');
   const errorMessage = ref<string | null>(null);
   const errorType = ref<'info' | 'error' | null>(null);
+  const errorCode = ref<string | null>(null);
+  const errorContext = ref<string | null>(null);
 
   const clearError = () => {
     errorMessage.value = null;
     errorType.value = null;
+    errorCode.value = null;
+    errorContext.value = null;
   };
 
   const stateSub = controller.state$.subscribe((next) => {
@@ -59,9 +66,11 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     receivedData.value = text;
   });
   const errorsSub = controller.errors$.subscribe((error: SerialError) => {
-    const display = formatExampleSerialError(error);
+    const display = formatExampleSerialErrorDetail(error);
     errorMessage.value = display.message;
     errorType.value = display.type;
+    errorCode.value = display.code;
+    errorContext.value = display.contextSummary;
   });
 
   const connect$ = (baudRate?: number): Observable<void> => {
@@ -91,9 +100,12 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     receivedData,
     errorMessage,
     errorType,
+    errorCode,
+    errorContext,
     connect$,
     disconnect$,
     send$,
     clearReceivedData,
+    clearError,
   };
 }
