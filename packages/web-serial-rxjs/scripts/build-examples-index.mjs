@@ -27,18 +27,39 @@ const toolbarLinks = buildToolbarLinks({
   siteIndexHref: '../index.html',
 });
 
-const cards = EXAMPLE_ENTRIES.map(
-  ({ slug, label, description }) => `<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
-<h2 style="margin:0 0 0.5rem;font-size:1.15rem;">${label}</h2>
-<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">${description}</p>
-<a href="${slug}/"><strong>Open ${label} example</strong></a>
-</section>`,
-).join('\n');
+const cards = EXAMPLE_ENTRIES.map(({ slug, label, description, audience, recommended }) => {
+  const badge = recommended
+    ? `<span style="display:inline-block;margin-left:0.5rem;padding:0.15rem 0.5rem;font-size:0.75rem;font-weight:600;border:1px solid var(--color-accent);border-radius:4px;color:var(--color-accent);vertical-align:middle;">Recommended</span>`
+    : '';
+  const purpose = audience || description;
+  return `<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
+<h2 style="margin:0 0 0.5rem;font-size:1.15rem;">${label}${badge}</h2>
+<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">${purpose}</p>
+<a href="${slug}/"><strong>Open example</strong></a>
+</section>`;
+}).join('\n');
 
 const mainContent = `<div class="col-content">
 <div class="tsd-page-title"><h1>web-serial-rxjs Examples</h1></div>
 <div class="tsd-panel tsd-typography">
 <p class="lead">Interactive framework examples for web-serial-rxjs. Each link resolves under <code>/web-serial-rxjs/examples/</code> when published via portal.</p>
+
+<h2>Which example should I start with?</h2>
+<ul>
+<li><strong>New to the library?</strong> Start with <strong>Vanilla TS</strong> (Recommended). It shows <code>SerialSession</code> with TypeScript and RxJS and no UI framework.</li>
+<li><strong>Prefer plain JavaScript?</strong> Use <strong>Vanilla JS</strong> for the same flow without TypeScript.</li>
+<li><strong>Building with a framework?</strong> Pick the example that matches your stack (React hook, Vue Composition API, Angular Service, or Svelte Store).</li>
+</ul>
+
+<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;margin:1.25rem 0;background:var(--color-background-secondary, transparent);">
+<p style="margin:0 0 0.5rem;"><strong>Requirements</strong></p>
+<ul style="margin:0;padding-left:1.25rem;">
+<li>Serve the page over <strong>HTTPS</strong> or <strong>localhost</strong> (secure context).</li>
+<li>Call <code>connect$()</code> from a <strong>user gesture</strong> (for example a button click). The browser will not open the port picker otherwise.</li>
+<li>Web Serial works on <strong>desktop</strong> browsers only (Chrome 89+, Edge 89+, Opera 75+, Firefox 151+). Mobile browsers and Safari are not supported. You need a serial device (or compatible adapter) to exercise real I/O.</li>
+</ul>
+</section>
+
 <div class="cards" style="display:grid;gap:1rem;margin-top:2rem;">
 ${cards}
 </div>
