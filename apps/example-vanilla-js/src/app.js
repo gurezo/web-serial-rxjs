@@ -1,5 +1,8 @@
 import {
+  appendExampleLineEnding,
   createSerialSessionController,
+  DEFAULT_EXAMPLE_LINE_ENDING,
+  EXAMPLE_LINE_ENDING_OPTIONS,
   formatExamplePortInfo,
   formatExampleSerialErrorDetail,
   formatExampleSessionStatus,
@@ -103,6 +106,7 @@ export class App {
     const disconnectBtn = $('disconnect-btn');
     const status = $('connection-status');
     const baudRateSelect = $('baud-rate');
+    const lineEndingSelect = $('line-ending');
     const sendInput = $('send-input');
     const sendBtn = $('send-btn');
     const receiveOutput = $('receive-output');
@@ -120,6 +124,16 @@ export class App {
     this.controller = createSerialSessionController({ initialBaudRate: 9600 });
     this.latestError = null;
     let lastState = { status: SerialSessionStatus.Idle };
+
+    for (const opt of EXAMPLE_LINE_ENDING_OPTIONS) {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === DEFAULT_EXAMPLE_LINE_ENDING) {
+        option.selected = true;
+      }
+      lineEndingSelect.appendChild(option);
+    }
 
     const STATUS = {
       idle: ['info', 'シリアルポートから切断しました。'],
@@ -230,10 +244,12 @@ export class App {
     const send = () => {
       const text = sendInput.value.trim();
       if (!text) return;
-      this.controller.send$(`${text}\n`).subscribe({
-        next: () => (sendInput.value = ''),
-        error: () => void 0,
-      });
+      this.controller
+        .send$(appendExampleLineEnding(text, lineEndingSelect.value))
+        .subscribe({
+          next: () => (sendInput.value = ''),
+          error: () => void 0,
+        });
     };
 
     fromEvent(sendBtn, 'click').subscribe(send);
