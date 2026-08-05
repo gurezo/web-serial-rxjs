@@ -100,6 +100,10 @@ describe('useSerialSession', () => {
   beforeEach(() => {
     mockCores = [];
     nextSupported = true;
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    });
     (globalThis as unknown as { __svelteCleanup?: () => void }).__svelteCleanup =
       undefined;
   });
@@ -120,7 +124,9 @@ describe('useSerialSession', () => {
     expect(get(s.isConnected)).toBe(false);
     expect(get(s.receivedData)).toBe('');
     expect(get(s.errorMessage)).toBeNull();
+    expect(get(s.errorType)).toBeNull();
     expect(get(s.browserSupported)).toBe(true);
+    expect(get(s.canConnect)).toBe(true);
   });
 
   it('createSerialSession に初期ボーレートを渡す', () => {
@@ -158,18 +164,30 @@ describe('useSerialSession', () => {
   it('errors$ の値が errorMessage に反映される', () => {
     const s = useSerialSession();
     const unsub = s.errorMessage.subscribe(() => void 0);
-    latestMock().errorsSubject.next({ message: 'boom' } as SerialError);
+    latestMock().errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'boom',
+      ),
+    );
     expect(get(s.errorMessage)).toBe('boom');
+    expect(get(s.errorType)).toBe('error');
     unsub();
   });
 
   it('state$ が connected / idle になると errorMessage がクリアされる', () => {
     const s = useSerialSession();
     const unsub = s.errorMessage.subscribe(() => void 0);
-    latestMock().errorsSubject.next({ message: 'boom' } as SerialError);
+    latestMock().errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'boom',
+      ),
+    );
     expect(get(s.errorMessage)).toBe('boom');
     latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     expect(get(s.errorMessage)).toBeNull();
+    expect(get(s.errorType)).toBeNull();
     unsub();
   });
 
