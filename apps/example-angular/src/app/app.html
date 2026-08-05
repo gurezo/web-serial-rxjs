@@ -75,17 +75,20 @@
   </header>
 
   <main>
-    <!-- ブラウザサポート -->
+    <!-- 利用条件・ブラウザサポート -->
     <section class="section">
-      <h2>ブラウザサポート</h2>
+      <h2>{{ requirements.title }}</h2>
+      <ul class="requirements-list">
+        @for (item of requirements.items; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+      <h3 class="subsection-title">ブラウザサポート</h3>
       <div
         class="status-message"
-        [ngClass]="browserSupported ? 'success' : 'error'"
+        [ngClass]="supportStatus.statusType"
       >
-        {{ browserSupported ? 'ブラウザは Web Serial API
-        をサポートしています。' : 'このブラウザは Web Serial API
-        をサポートしていません。Chrome、Edge、Opera などの Chromium
-        ベースのブラウザをご使用ください。' }}
+        {{ supportStatus.statusMessage }}
       </div>
     </section>
 
@@ -111,7 +114,7 @@
         <button
           class="btn btn-primary"
           (click)="handleConnect()"
-          [disabled]="!browserSupported || isConnected() || connecting()"
+          [disabled]="!canConnect || isConnected() || connecting()"
         >
           接続
         </button>
