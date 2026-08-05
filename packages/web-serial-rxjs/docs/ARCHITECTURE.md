@@ -225,7 +225,9 @@ gh api -X PATCH repos/gurezo/web-serial-rxjs -f homepage='https://gurezo.net/web
 gh api -X DELETE repos/gurezo/web-serial-rxjs/pages
 ```
 
-HTTP redirects from the former GitHub Pages host (if any) are owned by GitHub Pages / DNS / portal configuration, not by this repository's static fragment.
+After Pages is disabled (`has_pages: false`), `https://gurezo.github.io/web-serial-rxjs/` may still return cached responses for a while. Treat that host as unofficial; do not rely on it. HTTP redirects from the former GitHub Pages host (if any) are owned by GitHub Pages / DNS / portal configuration, not by this repository's static fragment.
+
+**#524 verification notes (2026-08-05):** GitHub Website URL points at `https://gurezo.net/web-serial-rxjs/`; Pages is disabled. Primary `gurezo.net` docs / examples URLs return 200. `guide/*/troubleshooting.html` still 404 until `gurezo/portal` re-imports the latest artifact (#523 content is on `main`). Domain-root `robots.txt` / `sitemap.xml` remain portal follow-ups (currently 404).
 
 ### SEO responsibility split (#524)
 

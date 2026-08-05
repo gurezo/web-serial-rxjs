@@ -225,7 +225,9 @@ gh api -X PATCH repos/gurezo/web-serial-rxjs -f homepage='https://gurezo.net/web
 gh api -X DELETE repos/gurezo/web-serial-rxjs/pages
 ```
 
-旧 GitHub Pages ホストからの HTTP redirect（必要な場合）は GitHub Pages / DNS / portal 側の設定であり、本リポジトリの静的 fragment の責務ではない。
+Pages 無効化後（`has_pages: false`）も、`https://gurezo.github.io/web-serial-rxjs/` はしばらくキャッシュ応答を返すことがある。当該ホストは非公式として扱い、依存しない。旧 GitHub Pages ホストからの HTTP redirect（必要な場合）は GitHub Pages / DNS / portal 側の設定であり、本リポジトリの静的 fragment の責務ではない。
+
+**#524 検証メモ（2026-08-05）:** GitHub Website URL は `https://gurezo.net/web-serial-rxjs/`、Pages は無効化済み。主要な `gurezo.net` docs / examples URL は 200。`guide/*/troubleshooting.html` は `gurezo/portal` が最新 artifact を再取り込むまで 404（#523 の内容は `main` 済み）。ドメインルートの `robots.txt` / `sitemap.xml` は portal follow-up（現状 404）。
 
 ### SEO 責務分担（#524）
 
