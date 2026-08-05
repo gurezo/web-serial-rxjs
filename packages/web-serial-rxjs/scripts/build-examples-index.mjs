@@ -58,6 +58,7 @@ const mainContent = `<div class="col-content">
 <li>Call <code>connect$()</code> from a <strong>user gesture</strong> (for example a button click). The browser will not open the port picker otherwise.</li>
 <li>Web Serial works on <strong>desktop</strong> browsers only (Chrome 89+, Edge 89+, Opera 75+, Firefox 151+). Mobile browsers and Safari are not supported. You need a serial device (or compatible adapter) to exercise real I/O.</li>
 </ul>
+<p style="margin:0.75rem 0 0;color:var(--color-text-secondary);">Stuck? See <a href="../guide/en/troubleshooting.html">Troubleshooting (English)</a> · <a href="../guide/ja/troubleshooting.html">トラブルシューティング（日本語）</a>.</p>
 </section>
 
 <div class="cards" style="display:grid;gap:1rem;margin-top:2rem;">
