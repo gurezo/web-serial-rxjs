@@ -1,8 +1,15 @@
+import { getExampleNavLinks } from '@gurezo/examples-shared';
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { useState } from 'react';
 import { useSerialSession } from './hooks/useSerialSession';
 
 type StatusType = 'info' | 'success' | 'error';
+
+const navLinks = getExampleNavLinks('react');
+const externalLinkProps = {
+  target: '_blank',
+  rel: 'noopener noreferrer',
+} as const;
 
 export function App() {
   const [baudRate, setBaudRate] = useState(9600);
@@ -64,6 +71,55 @@ export function App() {
         <p className="subtitle">
           React カスタムフックを使用した Web Serial API のサンプル
         </p>
+        <nav className="example-nav" aria-label="Example links">
+          <ul className="example-nav-primary">
+            <li>
+              <a href={navLinks.viewSource.href} {...externalLinkProps}>
+                {navLinks.viewSource.label}
+              </a>
+            </li>
+            <li>
+              <a href={navLinks.documentation.href} {...externalLinkProps}>
+                {navLinks.documentation.label}
+              </a>
+            </li>
+            <li>
+              <a href={navLinks.backToExamples.href} {...externalLinkProps}>
+                {navLinks.backToExamples.label}
+              </a>
+            </li>
+            <li>
+              <a href={navLinks.reportIssue.href} {...externalLinkProps}>
+                {navLinks.reportIssue.label}
+              </a>
+            </li>
+          </ul>
+          <ul className="example-nav-source">
+            <li>
+              <a href={navLinks.sourceParts.entry.href} {...externalLinkProps}>
+                {navLinks.sourceParts.entry.label}
+              </a>
+            </li>
+            <li>
+              <a
+                href={navLinks.sourceParts.serviceHookStore.href}
+                {...externalLinkProps}
+              >
+                {navLinks.sourceParts.serviceHookStore.label}
+              </a>
+            </li>
+            <li>
+              <a href={navLinks.sourceParts.ui.href} {...externalLinkProps}>
+                {navLinks.sourceParts.ui.label}
+              </a>
+            </li>
+            <li>
+              <a href={navLinks.sourceParts.readme.href} {...externalLinkProps}>
+                {navLinks.sourceParts.readme.label}
+              </a>
+            </li>
+          </ul>
+        </nav>
       </header>
       <main>
         <section className="section">

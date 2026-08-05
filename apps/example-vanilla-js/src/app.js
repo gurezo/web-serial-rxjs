@@ -1,5 +1,8 @@
+import {
+  createSerialSessionController,
+  getExampleNavLinks,
+} from '@gurezo/examples-shared';
 import { isWebSerialSupported, SerialSessionStatus } from '@gurezo/web-serial-rxjs';
-import { createSerialSessionController } from '@gurezo/examples-shared';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -25,8 +28,57 @@ const setStatus = (el, type, msg) => {
   el.className = `status-message ${type}`;
 };
 
+const createLinkItem = (link) => {
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.href = link.href;
+  a.textContent = link.label;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  li.appendChild(a);
+  return li;
+};
+
+const mountExampleNav = (slug) => {
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  const links = getExampleNavLinks(slug);
+  const nav = document.createElement('nav');
+  nav.className = 'example-nav';
+  nav.setAttribute('aria-label', 'Example links');
+
+  const primary = document.createElement('ul');
+  primary.className = 'example-nav-primary';
+  for (const link of [
+    links.viewSource,
+    links.documentation,
+    links.backToExamples,
+    links.reportIssue,
+  ]) {
+    primary.appendChild(createLinkItem(link));
+  }
+
+  const source = document.createElement('ul');
+  source.className = 'example-nav-source';
+  for (const link of [
+    links.sourceParts.entry,
+    links.sourceParts.serviceHookStore,
+    links.sourceParts.ui,
+    links.sourceParts.readme,
+  ]) {
+    source.appendChild(createLinkItem(link));
+  }
+
+  nav.appendChild(primary);
+  nav.appendChild(source);
+  header.appendChild(nav);
+};
+
 export class App {
   constructor() {
+    mountExampleNav('vanilla-js');
+
     const connectBtn = $('connect-btn');
     const disconnectBtn = $('disconnect-btn');
     const status = $('connection-status');

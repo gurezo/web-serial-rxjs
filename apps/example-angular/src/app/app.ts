@@ -3,6 +3,7 @@ import { Component, computed, inject, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { getExampleNavLinks } from '@gurezo/examples-shared';
 import {
   isWebSerialSupported,
   SerialSessionStatus,
@@ -22,6 +23,8 @@ type StatusType = 'info' | 'success' | 'error';
 export class App {
   baudRate = 9600;
   sendInput = '';
+  readonly navLinks = getExampleNavLinks('angular');
+  readonly externalLinkRel = 'noopener noreferrer';
 
   private readonly serialService = inject(SerialClientService);
 
