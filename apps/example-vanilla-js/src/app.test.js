@@ -71,6 +71,7 @@ describe('App', () => {
         <option value="9600">9600</option>
         <option value="115200" selected>115200</option>
       </select>
+      <select id="line-ending"></select>
       <input id="send-input" />
       <button id="send-btn"></button>
       <textarea id="receive-output"></textarea>

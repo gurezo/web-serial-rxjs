@@ -1,11 +1,15 @@
 <script lang="ts">
   import {
+    appendExampleLineEnding,
+    DEFAULT_EXAMPLE_LINE_ENDING,
+    EXAMPLE_LINE_ENDING_OPTIONS,
     formatExamplePortInfo,
     formatExampleSessionStatus,
     getExampleControlsEnabled,
     getExampleNavLinks,
     getExampleRequirementsCopy,
     getExampleSupportStatus,
+    type ExampleLineEnding,
   } from '@gurezo/examples-shared';
   import {
     isConnectedSessionState,
@@ -17,9 +21,11 @@
   const requirements = getExampleRequirementsCopy();
   const supportStatus = getExampleSupportStatus();
   const externalLinkRel = 'noopener noreferrer';
+  const lineEndingOptions = EXAMPLE_LINE_ENDING_OPTIONS;
 
   let baudRate = 9600;
   let sendInput = '';
+  let lineEnding: ExampleLineEnding = DEFAULT_EXAMPLE_LINE_ENDING;
 
   const {
     canConnect,
@@ -97,7 +103,7 @@
     if (!text) {
       return;
     }
-    send$(`${text}\n`).subscribe({
+    send$(appendExampleLineEnding(text, lineEnding)).subscribe({
       next: () => {
         sendInput = '';
       },
@@ -300,6 +306,14 @@
     <!-- データ送信 -->
     <section class="section">
       <h2>データ送信</h2>
+      <div class="form-group">
+        <label for="line-ending">改行コード</label>
+        <select id="line-ending" class="form-control" bind:value={lineEnding}>
+          {#each lineEndingOptions as opt}
+            <option value={opt.value}>{opt.label}</option>
+          {/each}
+        </select>
+      </div>
       <div class="form-group">
         <label for="send-input">送信データ</label>
         <div class="input-group">
