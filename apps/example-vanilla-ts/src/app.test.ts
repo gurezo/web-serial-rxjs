@@ -66,6 +66,20 @@ describe('App', () => {
       <button id="connect-btn"></button>
       <button id="disconnect-btn"></button>
       <div id="connection-status"></div>
+      <dd id="session-status"></dd>
+      <dd id="session-in-progress"></dd>
+      <div id="session-port-info-row" hidden>
+        <dd id="session-port-info"></dd>
+      </div>
+      <dl id="session-error-panel" hidden>
+        <dd id="session-error-message"></dd>
+        <dd id="session-error-code"></dd>
+        <div id="session-error-context-row" hidden>
+          <dd id="session-error-context"></dd>
+        </div>
+      </dl>
+      <p id="session-error-empty"></p>
+      <button id="clear-error-btn" hidden></button>
       <select id="baud-rate">
         <option value="9600">9600</option>
         <option value="115200" selected>115200</option>
@@ -133,5 +147,15 @@ describe('App', () => {
     expect(webSerialRxjs.createSerialSession).toHaveBeenLastCalledWith({
       baudRate: 115200,
     });
+  });
+
+  it('should render session status panel', () => {
+    app = new App();
+    expect(document.getElementById('session-status')?.textContent).toContain(
+      'idle',
+    );
+    expect(
+      document.getElementById('session-error-empty')?.hidden,
+    ).toBe(false);
   });
 });

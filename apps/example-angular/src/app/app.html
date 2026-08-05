@@ -114,14 +114,14 @@
         <button
           class="btn btn-primary"
           (click)="handleConnect()"
-          [disabled]="!canConnect || isConnected() || connecting()"
+          [disabled]="!controls().connect"
         >
           接続
         </button>
         <button
           class="btn btn-secondary"
           (click)="handleDisconnect()"
-          [disabled]="!isConnected() || disconnecting()"
+          [disabled]="!controls().disconnect"
         >
           切断
         </button>
@@ -129,6 +129,60 @@
       <div class="status-message" [ngClass]="status().type">
         {{ status().message }}
       </div>
+      <h3 class="subsection-title">セッション状態</h3>
+      <dl class="session-state-list">
+        <div>
+          <dt>status</dt>
+          <dd data-testid="session-status">{{ sessionStatus().display }}</dd>
+        </div>
+        <div>
+          <dt>進行中</dt>
+          <dd data-testid="session-in-progress">
+            {{ sessionStatus().inProgress ? 'はい' : 'いいえ' }}
+          </dd>
+        </div>
+        @if (portInfoDisplay(); as portInfo) {
+          <div>
+            <dt>ポート情報</dt>
+            <dd data-testid="session-port-info">{{ portInfo.display }}</dd>
+          </div>
+        }
+      </dl>
+      <h3 class="subsection-title">最新エラー</h3>
+      @if (errorDetail(); as error) {
+        <dl class="session-state-list">
+          <div>
+            <dt>message</dt>
+            <dd data-testid="session-error-message">{{ error.message }}</dd>
+          </div>
+          <div>
+            <dt>code</dt>
+            <dd data-testid="session-error-code">{{ error.code }}</dd>
+          </div>
+          @if (error.contextSummary) {
+            <div>
+              <dt>context</dt>
+              <dd data-testid="session-error-context">
+                {{ error.contextSummary }}
+              </dd>
+            </div>
+          }
+        </dl>
+        <div class="button-group">
+          <button
+            type="button"
+            class="btn btn-outline"
+            (click)="clearError()"
+            data-testid="clear-error"
+          >
+            エラークリア
+          </button>
+        </div>
+      } @else {
+        <p class="session-empty" data-testid="session-error-empty">
+          エラーはありません。
+        </p>
+      }
     </section>
 
     <!-- データ送信 -->
@@ -143,13 +197,13 @@
             class="form-control"
             [(ngModel)]="sendInput"
             (keydown)="handleKeyDown($event)"
-            [disabled]="!isConnected()"
+            [disabled]="!controls().send"
             placeholder="送信するテキストを入力..."
           />
           <button
             class="btn btn-primary"
             (click)="handleSend()"
-            [disabled]="!isConnected() || !sendInput.trim()"
+            [disabled]="!controls().send || !sendInput.trim()"
           >
             送信
           </button>

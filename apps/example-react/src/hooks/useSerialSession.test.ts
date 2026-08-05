@@ -142,7 +142,7 @@ describe('useSerialSession', () => {
     expect(result.current.receivedData).toBe('foobar');
   });
 
-  it('errors$ の値が errorMessage に反映される', () => {
+  it('errors$ の値が errorMessage / errorCode に反映される', () => {
     const { result } = renderHook(() => useSerialSession());
     act(() =>
       latestMock().errorsSubject.next(
@@ -151,6 +151,7 @@ describe('useSerialSession', () => {
     );
     expect(result.current.errorMessage).toBe('boom');
     expect(result.current.errorType).toBe('error');
+    expect(result.current.errorCode).toBe(SerialErrorCode.WRITE_FAILED);
   });
 
   it('OPERATION_CANCELLED は info 案内文言に整形される', () => {
@@ -165,6 +166,7 @@ describe('useSerialSession', () => {
     );
     expect(result.current.errorType).toBe('info');
     expect(result.current.errorMessage).toContain('キャンセル');
+    expect(result.current.errorCode).toBe(SerialErrorCode.OPERATION_CANCELLED);
   });
 
   it('state$ が connected / idle になると errorMessage がクリアされる', () => {
@@ -178,6 +180,21 @@ describe('useSerialSession', () => {
     act(() => latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } }));
     expect(result.current.errorMessage).toBeNull();
     expect(result.current.errorType).toBeNull();
+    expect(result.current.errorCode).toBeNull();
+  });
+
+  it('clearError でエラー表示を手動クリアできる', () => {
+    const { result } = renderHook(() => useSerialSession());
+    act(() =>
+      latestMock().errorsSubject.next(
+        new SerialError(SerialErrorCode.WRITE_FAILED, 'boom'),
+      ),
+    );
+    expect(result.current.errorMessage).toBe('boom');
+    act(() => result.current.clearError());
+    expect(result.current.errorMessage).toBeNull();
+    expect(result.current.errorCode).toBeNull();
+    expect(result.current.errorContext).toBeNull();
   });
 
   it('clearReceivedData で receivedData が空になる', () => {

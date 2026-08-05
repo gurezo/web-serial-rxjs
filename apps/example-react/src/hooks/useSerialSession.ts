@@ -1,6 +1,6 @@
 import {
   createSerialSessionController,
-  formatExampleSerialError,
+  formatExampleSerialErrorDetail,
   getExampleSupportStatus,
   type SerialSessionController,
 } from '@gurezo/examples-shared';
@@ -21,10 +21,13 @@ export interface UseSerialSessionReturn {
   receivedData: string;
   errorMessage: string | null;
   errorType: 'info' | 'error' | null;
+  errorCode: string | null;
+  errorContext: string | null;
   connect$: (baudRate?: number) => Observable<void>;
   disconnect$: () => Observable<void>;
   send$: (data: string | Uint8Array) => Observable<void>;
   clearReceivedData: () => void;
+  clearError: () => void;
 }
 
 export function useSerialSession(
@@ -52,10 +55,14 @@ export function useSerialSession(
   const [receivedData, setReceivedData] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'info' | 'error' | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorContext, setErrorContext] = useState<string | null>(null);
 
   const clearError = () => {
     setErrorMessage(null);
     setErrorType(null);
+    setErrorCode(null);
+    setErrorContext(null);
   };
 
   useEffect(() => {
@@ -77,9 +84,11 @@ export function useSerialSession(
     sub.add(controller.terminalText$.subscribe(setReceivedData));
     sub.add(
       controller.errors$.subscribe((e: SerialError) => {
-        const display = formatExampleSerialError(e);
+        const display = formatExampleSerialErrorDetail(e);
         setErrorMessage(display.message);
         setErrorType(display.type);
+        setErrorCode(display.code);
+        setErrorContext(display.contextSummary);
       }),
     );
     return () => {
@@ -110,9 +119,12 @@ export function useSerialSession(
     receivedData,
     errorMessage,
     errorType,
+    errorCode,
+    errorContext,
     connect$,
     disconnect$,
     send$,
     clearReceivedData,
+    clearError,
   };
 }

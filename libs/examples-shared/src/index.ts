@@ -19,3 +19,13 @@ export {
   type ExampleSupportStatus,
   type ExampleUnsupportedReason,
 } from './example-requirements';
+export {
+  formatExamplePortInfo,
+  formatExampleSerialErrorDetail,
+  formatExampleSessionStatus,
+  getExampleControlsEnabled,
+  type ExampleControlsEnabled,
+  type ExamplePortInfoDisplay,
+  type ExampleSerialErrorDetail,
+  type ExampleSessionStatusDisplay,
+} from './example-session-display';

@@ -1,11 +1,14 @@
 <script lang="ts">
   import {
+    formatExamplePortInfo,
+    formatExampleSessionStatus,
+    getExampleControlsEnabled,
     getExampleNavLinks,
     getExampleRequirementsCopy,
     getExampleSupportStatus,
   } from '@gurezo/examples-shared';
   import {
-    SerialSessionStatus,
+    isConnectedSessionState,
     type SerialSessionState,
   } from '@gurezo/web-serial-rxjs';
   import { useSerialSession } from './stores/useSerialSession';
@@ -25,10 +28,13 @@
     receivedData,
     errorMessage,
     errorType,
+    errorCode,
+    errorContext,
     connect$,
     disconnect$,
     send$,
     clearReceivedData,
+    clearError,
   } = useSerialSession(baudRate);
 
   type StatusType = 'info' | 'success' | 'error';
@@ -44,28 +50,34 @@
         message: tone === 'info' ? error : `エラー: ${error}`,
       };
     }
-    switch (current.status) {
-      case SerialSessionStatus.Connecting:
-        return { type: 'info', message: '接続中...' };
-      case SerialSessionStatus.Disconnecting:
-        return { type: 'info', message: '切断中...' };
-      case SerialSessionStatus.Connected:
-        return { type: 'success', message: 'シリアルポートに接続しました。' };
-      case SerialSessionStatus.Unsupported:
-        return {
-          type: 'error',
-          message: supportStatus.statusMessage,
-        };
-      case SerialSessionStatus.Error:
-        return { type: 'error', message: 'エラーが発生しました。' };
-      default:
-        return { type: 'info', message: 'シリアルポートに接続していません。' };
+    const session = formatExampleSessionStatus(current);
+    if (session.inProgress) {
+      return {
+        type: 'info',
+        message: session.status === 'connecting' ? '接続中...' : '切断中...',
+      };
     }
+    if (isConnectedSessionState(current)) {
+      return { type: 'success', message: 'シリアルポートに接続しました。' };
+    }
+    if (current.status === 'unsupported') {
+      return {
+        type: 'error',
+        message: supportStatus.statusMessage,
+      };
+    }
+    if (current.status === 'error') {
+      return { type: 'error', message: 'エラーが発生しました。' };
+    }
+    return { type: 'info', message: 'シリアルポートに接続していません。' };
   };
 
   $: status = statusFor($state, $errorMessage, $errorType);
-  $: connecting = $state.status === SerialSessionStatus.Connecting;
-  $: disconnecting = $state.status === SerialSessionStatus.Disconnecting;
+  $: sessionStatus = formatExampleSessionStatus($state);
+  $: controls = getExampleControlsEnabled($state, $canConnect);
+  $: portInfoDisplay = isConnectedSessionState($state)
+    ? formatExamplePortInfo($state.portInfo)
+    : null;
 
   const handleConnect = () => {
     clearReceivedData();
@@ -216,14 +228,14 @@
         <button
           class="btn btn-primary"
           on:click={handleConnect}
-          disabled={!$canConnect || $isConnected || connecting}
+          disabled={!controls.connect}
         >
           接続
         </button>
         <button
           class="btn btn-secondary"
           on:click={handleDisconnect}
-          disabled={!$isConnected || disconnecting}
+          disabled={!controls.disconnect}
         >
           切断
         </button>
@@ -231,6 +243,58 @@
       <div class="status-message {status.type}">
         {status.message}
       </div>
+      <h3 class="subsection-title">セッション状態</h3>
+      <dl class="session-state-list">
+        <div>
+          <dt>status</dt>
+          <dd data-testid="session-status">{sessionStatus.display}</dd>
+        </div>
+        <div>
+          <dt>進行中</dt>
+          <dd data-testid="session-in-progress"
+            >{sessionStatus.inProgress ? 'はい' : 'いいえ'}</dd
+          >
+        </div>
+        {#if portInfoDisplay}
+          <div>
+            <dt>ポート情報</dt>
+            <dd data-testid="session-port-info">{portInfoDisplay.display}</dd>
+          </div>
+        {/if}
+      </dl>
+      <h3 class="subsection-title">最新エラー</h3>
+      {#if $errorMessage}
+        <dl class="session-state-list">
+          <div>
+            <dt>message</dt>
+            <dd data-testid="session-error-message">{$errorMessage}</dd>
+          </div>
+          <div>
+            <dt>code</dt>
+            <dd data-testid="session-error-code">{$errorCode}</dd>
+          </div>
+          {#if $errorContext}
+            <div>
+              <dt>context</dt>
+              <dd data-testid="session-error-context">{$errorContext}</dd>
+            </div>
+          {/if}
+        </dl>
+        <div class="button-group">
+          <button
+            type="button"
+            class="btn btn-outline"
+            data-testid="clear-error"
+            on:click={clearError}
+          >
+            エラークリア
+          </button>
+        </div>
+      {:else}
+        <p class="session-empty" data-testid="session-error-empty">
+          エラーはありません。
+        </p>
+      {/if}
     </section>
 
     <!-- データ送信 -->
@@ -245,13 +309,13 @@
             class="form-control"
             bind:value={sendInput}
             on:keydown={handleKeyDown}
-            disabled={!$isConnected}
+            disabled={!controls.send}
             placeholder="送信するテキストを入力..."
           />
           <button
             class="btn btn-primary"
             on:click={handleSend}
-            disabled={!$isConnected || !sendInput.trim()}
+            disabled={!controls.send || !sendInput.trim()}
           >
             送信
           </button>

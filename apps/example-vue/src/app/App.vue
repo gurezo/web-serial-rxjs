@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import {
+  formatExamplePortInfo,
+  formatExampleSessionStatus,
+  getExampleControlsEnabled,
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
 } from '@gurezo/examples-shared';
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
 import { computed, ref } from 'vue';
 import { useSerialClient } from '../composables/useSerialClient';
 
@@ -25,17 +28,23 @@ const {
   receivedData,
   errorMessage,
   errorType,
+  errorCode,
+  errorContext,
   connect$,
   disconnect$,
   send$,
   clearReceivedData,
+  clearError,
 } = useSerialClient(baudRate.value);
 
-const connecting = computed(
-  () => state.value.status === SerialSessionStatus.Connecting,
+const sessionStatus = computed(() => formatExampleSessionStatus(state.value));
+const controls = computed(() =>
+  getExampleControlsEnabled(state.value, canConnect.value),
 );
-const disconnecting = computed(
-  () => state.value.status === SerialSessionStatus.Disconnecting,
+const portInfoDisplay = computed(() =>
+  isConnectedSessionState(state.value)
+    ? formatExamplePortInfo(state.value.portInfo)
+    : null,
 );
 
 const status = computed<{ type: StatusType; message: string }>(() => {
@@ -48,23 +57,26 @@ const status = computed<{ type: StatusType; message: string }>(() => {
           : `エラー: ${errorMessage.value}`,
     };
   }
-  switch (state.value.status) {
-    case SerialSessionStatus.Connecting:
-      return { type: 'info', message: '接続中...' };
-    case SerialSessionStatus.Disconnecting:
-      return { type: 'info', message: '切断中...' };
-    case SerialSessionStatus.Connected:
-      return { type: 'success', message: 'シリアルポートに接続しました。' };
-    case SerialSessionStatus.Unsupported:
-      return {
-        type: 'error',
-        message: supportStatus.statusMessage,
-      };
-    case SerialSessionStatus.Error:
-      return { type: 'error', message: 'エラーが発生しました。' };
-    default:
-      return { type: 'info', message: 'シリアルポートに接続していません。' };
+  if (sessionStatus.value.inProgress) {
+    return {
+      type: 'info',
+      message:
+        sessionStatus.value.status === 'connecting' ? '接続中...' : '切断中...',
+    };
   }
+  if (isConnected.value) {
+    return { type: 'success', message: 'シリアルポートに接続しました。' };
+  }
+  if (state.value.status === 'unsupported') {
+    return {
+      type: 'error',
+      message: supportStatus.statusMessage,
+    };
+  }
+  if (state.value.status === 'error') {
+    return { type: 'error', message: 'エラーが発生しました。' };
+  }
+  return { type: 'info', message: 'シリアルポートに接続していません。' };
 });
 
 const handleConnect = () => {
@@ -222,14 +234,14 @@ const handleKeyDown = (e: KeyboardEvent) => {
           <button
             class="btn btn-primary"
             @click="handleConnect"
-            :disabled="!canConnect || isConnected || connecting"
+            :disabled="!controls.connect"
           >
             接続
           </button>
           <button
             class="btn btn-secondary"
             @click="handleDisconnect"
-            :disabled="!isConnected || disconnecting"
+            :disabled="!controls.disconnect"
           >
             切断
           </button>
@@ -237,6 +249,53 @@ const handleKeyDown = (e: KeyboardEvent) => {
         <div :class="['status-message', status.type]">
           {{ status.message }}
         </div>
+        <h3 class="subsection-title">セッション状態</h3>
+        <dl class="session-state-list">
+          <div>
+            <dt>status</dt>
+            <dd data-testid="session-status">{{ sessionStatus.display }}</dd>
+          </div>
+          <div>
+            <dt>進行中</dt>
+            <dd data-testid="session-in-progress">
+              {{ sessionStatus.inProgress ? 'はい' : 'いいえ' }}
+            </dd>
+          </div>
+          <div v-if="portInfoDisplay">
+            <dt>ポート情報</dt>
+            <dd data-testid="session-port-info">{{ portInfoDisplay.display }}</dd>
+          </div>
+        </dl>
+        <h3 class="subsection-title">最新エラー</h3>
+        <template v-if="errorMessage">
+          <dl class="session-state-list">
+            <div>
+              <dt>message</dt>
+              <dd data-testid="session-error-message">{{ errorMessage }}</dd>
+            </div>
+            <div>
+              <dt>code</dt>
+              <dd data-testid="session-error-code">{{ errorCode }}</dd>
+            </div>
+            <div v-if="errorContext">
+              <dt>context</dt>
+              <dd data-testid="session-error-context">{{ errorContext }}</dd>
+            </div>
+          </dl>
+          <div class="button-group">
+            <button
+              type="button"
+              class="btn btn-outline"
+              data-testid="clear-error"
+              @click="clearError"
+            >
+              エラークリア
+            </button>
+          </div>
+        </template>
+        <p v-else class="session-empty" data-testid="session-error-empty">
+          エラーはありません。
+        </p>
       </section>
 
       <!-- データ送信 -->
@@ -251,13 +310,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
               class="form-control"
               v-model="sendInput"
               @keydown="handleKeyDown"
-              :disabled="!isConnected"
+              :disabled="!controls.send"
               placeholder="送信するテキストを入力..."
             />
             <button
               class="btn btn-primary"
               @click="handleSend"
-              :disabled="!isConnected || !sendInput.trim()"
+              :disabled="!controls.send || !sendInput.trim()"
             >
               送信
             </button>

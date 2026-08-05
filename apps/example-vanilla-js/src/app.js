@@ -1,11 +1,17 @@
 import {
   createSerialSessionController,
-  formatExampleSerialError,
+  formatExamplePortInfo,
+  formatExampleSerialErrorDetail,
+  formatExampleSessionStatus,
+  getExampleControlsEnabled,
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
 } from '@gurezo/examples-shared';
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+import {
+  isConnectedSessionState,
+  SerialSessionStatus,
+} from '@gurezo/web-serial-rxjs';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -100,7 +106,20 @@ export class App {
     const sendInput = $('send-input');
     const sendBtn = $('send-btn');
     const receiveOutput = $('receive-output');
+    const sessionStatusEl = $('session-status');
+    const sessionInProgressEl = $('session-in-progress');
+    const portInfoRow = $('session-port-info-row');
+    const portInfoEl = $('session-port-info');
+    const errorPanel = $('session-error-panel');
+    const errorEmpty = $('session-error-empty');
+    const errorMessageEl = $('session-error-message');
+    const errorCodeEl = $('session-error-code');
+    const errorContextRow = $('session-error-context-row');
+    const errorContextEl = $('session-error-context');
+    const clearErrorBtn = $('clear-error-btn');
     this.controller = createSerialSessionController({ initialBaudRate: 9600 });
+    this.latestError = null;
+    let lastState = { status: SerialSessionStatus.Idle };
 
     const STATUS = {
       idle: ['info', 'シリアルポートから切断しました。'],
@@ -112,16 +131,71 @@ export class App {
       disposed: ['info', 'セッションは破棄されました。'],
     };
 
-    this.controller.state$.subscribe((state) => {
-      const connected = state.status === SerialSessionStatus.Connected;
-      const busy =
+    const renderErrorPanel = () => {
+      if (!this.latestError) {
+        errorPanel.hidden = true;
+        errorEmpty.hidden = false;
+        clearErrorBtn.hidden = true;
+        return;
+      }
+      errorPanel.hidden = false;
+      errorEmpty.hidden = true;
+      clearErrorBtn.hidden = false;
+      errorMessageEl.textContent = this.latestError.message;
+      errorCodeEl.textContent = this.latestError.code;
+      if (this.latestError.contextSummary) {
+        errorContextRow.hidden = false;
+        errorContextEl.textContent = this.latestError.contextSummary;
+      } else {
+        errorContextRow.hidden = true;
+        errorContextEl.textContent = '';
+      }
+    };
+
+    const clearError = () => {
+      this.latestError = null;
+      renderErrorPanel();
+      setStatus(status, ...STATUS[lastState.status]);
+    };
+
+    const renderSessionState = (state) => {
+      const session = formatExampleSessionStatus(state);
+      sessionStatusEl.textContent = session.display;
+      sessionInProgressEl.textContent = session.inProgress ? 'はい' : 'いいえ';
+      if (isConnectedSessionState(state)) {
+        portInfoRow.hidden = false;
+        portInfoEl.textContent = formatExamplePortInfo(state.portInfo).display;
+      } else {
+        portInfoRow.hidden = true;
+        portInfoEl.textContent = '';
+      }
+    };
+
+    const applyControls = (state) => {
+      const controls = getExampleControlsEnabled(state, supportStatus.canConnect);
+      connectBtn.disabled = !controls.connect;
+      disconnectBtn.disabled = !controls.disconnect;
+      sendInput.disabled = sendBtn.disabled = !controls.send;
+      baudRateSelect.disabled =
+        state.status === SerialSessionStatus.Connected ||
         state.status === SerialSessionStatus.Connecting ||
         state.status === SerialSessionStatus.Disconnecting;
-      connectBtn.disabled = !supportStatus.canConnect || connected || busy;
-      baudRateSelect.disabled = connected || busy;
-      disconnectBtn.disabled = !connected;
-      sendInput.disabled = sendBtn.disabled = !connected;
-      setStatus(status, ...STATUS[state.status]);
+    };
+
+    this.controller.state$.subscribe((state) => {
+      lastState = state;
+      applyControls(state);
+      renderSessionState(state);
+      if (
+        state.status === SerialSessionStatus.Connected ||
+        state.status === SerialSessionStatus.Idle
+      ) {
+        this.latestError = null;
+        renderErrorPanel();
+      }
+      if (!this.latestError) {
+        setStatus(status, ...STATUS[state.status]);
+      }
     });
 
     this.controller.terminalText$.subscribe((text) => {
@@ -130,7 +204,9 @@ export class App {
     });
 
     this.controller.errors$.subscribe((error) => {
-      const display = formatExampleSerialError(error);
+      const display = formatExampleSerialErrorDetail(error);
+      this.latestError = display;
+      renderErrorPanel();
       setStatus(
         status,
         display.type,
@@ -138,6 +214,8 @@ export class App {
       );
       console.error('Serial port error:', error);
     });
+
+    fromEvent(clearErrorBtn, 'click').subscribe(() => clearError());
 
     fromEvent(connectBtn, 'click').subscribe(() => {
       const baudRate = parseInt(baudRateSelect.value, 10);
@@ -170,5 +248,7 @@ export class App {
       this.controller.resetTerminalBuffer();
       receiveOutput.value = '';
     });
+
+    renderErrorPanel();
   }
 }

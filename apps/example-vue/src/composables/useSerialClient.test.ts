@@ -227,7 +227,7 @@ describe('useSerialClient', () => {
     expect(api.receivedData.value).toBe('chunk-1chunk-2');
   });
 
-  it('should set errorMessage from errors$ emissions', () => {
+  it('should set errorMessage and errorCode from errors$ emissions', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
@@ -239,6 +239,25 @@ describe('useSerialClient', () => {
     );
     expect(api.errorMessage.value).toBe('write failed');
     expect(api.errorType.value).toBe('error');
+    expect(api.errorCode.value).toBe(
+      webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+    );
+  });
+
+  it('should clear errors via clearError', () => {
+    const { api } = mountHarness();
+    const mock = latestMock();
+
+    mock.errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'write failed',
+      ),
+    );
+    api.clearError();
+    expect(api.errorMessage.value).toBe(null);
+    expect(api.errorCode.value).toBe(null);
+    expect(api.errorContext.value).toBe(null);
   });
 
   it('should propagate connect$ errors to subscribers', () => {
