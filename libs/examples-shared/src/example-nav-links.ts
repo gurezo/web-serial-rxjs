@@ -17,6 +17,7 @@ export interface ExampleNavLink {
 export interface ExampleNavLinks {
   viewSource: ExampleNavLink;
   documentation: ExampleNavLink;
+  troubleshooting: ExampleNavLink;
   backToExamples: ExampleNavLink;
   reportIssue: ExampleNavLink;
   sourceParts: {
@@ -103,6 +104,10 @@ export function getExampleNavLinks(slug: ExampleSlug): ExampleNavLinks {
     documentation: {
       label: 'Documentation',
       href: `${DOCS_ROOT}/`,
+    },
+    troubleshooting: {
+      label: 'Troubleshooting',
+      href: `${DOCS_ROOT}/guide/ja/troubleshooting.html`,
     },
     backToExamples: {
       label: 'Back to Examples',
