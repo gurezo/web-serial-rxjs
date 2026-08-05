@@ -12,7 +12,12 @@ import {
   rewriteTypedocDocumentHref,
   typedocFilenameToGuideRelPath,
 } from './docs-paths.mjs';
-import { buildToolbarLinks } from './docs-theme.mjs';
+import {
+  buildSeoMetaTags,
+  buildToolbarLinks,
+  extractHtmlTitle,
+  injectSeoMetaTags,
+} from './docs-theme.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,13 +46,18 @@ function buildDocumentRedirectHtml({ locale, guideRelPath }) {
     locale === 'ja'
       ? 'ガイドページへ移動しています…'
       : 'Redirecting to the guide page…';
+  const seo = buildSeoMetaTags({
+    title: 'Redirecting…',
+    canonicalPath: guideRelPath,
+    description: 'Redirecting to the guide page.',
+  });
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="refresh" content="0; url=${href}">
-  <link rel="canonical" href="${href}">
+  ${seo}
   <title>Redirecting…</title>
 </head>
 <body>
@@ -110,6 +120,11 @@ function rewriteGuideHtml(html, { locale, pagePath, guideRelPath }) {
 
   const lang = locale === 'ja' ? 'ja' : 'en';
   next = next.replace(/<html class="default" lang="en"/, `<html class="default" lang="${lang}"`);
+
+  next = injectSeoMetaTags(next, {
+    title: extractHtmlTitle(next),
+    canonicalPath: guideRelPath,
+  });
 
   return next;
 }

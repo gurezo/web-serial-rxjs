@@ -13,6 +13,75 @@ const PAGE_LABELS = {
   },
 };
 
+/** Canonical public origin for the documentation site (#524). */
+export const PUBLIC_DOCS_ORIGIN = 'https://gurezo.net/web-serial-rxjs';
+
+export const DEFAULT_DOCS_DESCRIPTION = 'Documentation for web-serial-rxjs';
+
+export function escapeHtmlAttr(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+/**
+ * Build an absolute public URL from a path relative to the docs site root.
+ * @param {string} canonicalPath e.g. '' | 'index.html' | 'guide/en/README.html' | 'examples/' | 'api/modules.html'
+ */
+export function publicDocsUrl(canonicalPath = '') {
+  const normalized = String(canonicalPath).replace(/^\//, '');
+  if (!normalized || normalized === 'index.html') {
+    return `${PUBLIC_DOCS_ORIGIN}/`;
+  }
+  return `${PUBLIC_DOCS_ORIGIN}/${normalized}`;
+}
+
+/**
+ * Canonical + Open Graph tags for docs fragment HTML (#524).
+ */
+export function buildSeoMetaTags({
+  title,
+  canonicalPath,
+  description = DEFAULT_DOCS_DESCRIPTION,
+}) {
+  const canonicalUrl = publicDocsUrl(canonicalPath);
+  const safeTitle = escapeHtmlAttr(title);
+  const safeDescription = escapeHtmlAttr(description);
+  const safeUrl = escapeHtmlAttr(canonicalUrl);
+
+  return [
+    `<link rel="canonical" href="${safeUrl}"/>`,
+    `<meta property="og:title" content="${safeTitle}"/>`,
+    `<meta property="og:description" content="${safeDescription}"/>`,
+    `<meta property="og:url" content="${safeUrl}"/>`,
+    `<meta property="og:type" content="website"/>`,
+  ].join('');
+}
+
+/**
+ * Inject SEO meta before `</head>`. Skips when canonical is already present.
+ */
+export function injectSeoMetaTags(html, options) {
+  if (/rel=["']canonical["']/i.test(html)) {
+    return html;
+  }
+  if (!/<\/head>/i.test(html)) {
+    return html;
+  }
+  return html.replace(/<\/head>/i, `${buildSeoMetaTags(options)}</head>`);
+}
+
+export function extractHtmlTitle(html, fallback = 'web-serial-rxjs') {
+  const match = html.match(/<title>([^<]*)<\/title>/i);
+  if (!match) {
+    return fallback;
+  }
+  const title = match[1].trim();
+  return title || fallback;
+}
+
 export function buildToolbarLinks({
   locale,
   guideIndexHref,
@@ -25,8 +94,19 @@ export function buildToolbarLinks({
   return `<div id="tsd-toolbar-links"><a href="${guideIndexHref}">${labels.guideIndex}</a><a href="${otherLocaleHref}">${labels.otherLocale}</a><a href="${apiHref}">${labels.apiReference}</a><a href="${siteIndexHref}">${labels.siteTop}</a></div>`;
 }
 
-export function buildTypeDocHead({ title, assetBase, dataBase = assetBase }) {
-  return `<!DOCTYPE html><html class="default" lang="en" data-base="${dataBase}"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>${title}</title><meta name="description" content="Documentation for web-serial-rxjs"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="${assetBase}assets/style.css"/><link rel="stylesheet" href="${assetBase}assets/highlight.css"/><script defer src="${assetBase}assets/main.js"></script><script async src="${assetBase}assets/icons.js" id="tsd-icons-script"></script><script async src="${assetBase}assets/search.js" id="tsd-search-script"></script><script async src="${assetBase}assets/navigation.js" id="tsd-nav-script"></script><script async src="${assetBase}assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="${assetBase}assets/rhineai-style.css"/></head>`;
+export function buildTypeDocHead({
+  title,
+  assetBase,
+  dataBase = assetBase,
+  canonicalPath,
+  description = DEFAULT_DOCS_DESCRIPTION,
+}) {
+  const seo =
+    canonicalPath !== undefined
+      ? buildSeoMetaTags({ title, canonicalPath, description })
+      : '';
+
+  return `<!DOCTYPE html><html class="default" lang="en" data-base="${dataBase}"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>${escapeHtmlAttr(title)}</title><meta name="description" content="${escapeHtmlAttr(description)}"/><meta name="viewport" content="width=device-width, initial-scale=1"/>${seo}<link rel="stylesheet" href="${assetBase}assets/style.css"/><link rel="stylesheet" href="${assetBase}assets/highlight.css"/><script defer src="${assetBase}assets/main.js"></script><script async src="${assetBase}assets/icons.js" id="tsd-icons-script"></script><script async src="${assetBase}assets/search.js" id="tsd-search-script"></script><script async src="${assetBase}assets/navigation.js" id="tsd-nav-script"></script><script async src="${assetBase}assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="${assetBase}assets/rhineai-style.css"/></head>`;
 }
 
 export function buildTypeDocBodyStart({ title, titleHref, toolbarLinks, assetBase }) {

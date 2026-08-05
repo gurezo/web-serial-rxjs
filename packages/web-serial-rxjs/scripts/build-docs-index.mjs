@@ -103,7 +103,12 @@ session.lines$.subscribe((line) => console.log(line));
 </div>
 </div>`;
 
-const html = `${buildTypeDocHead({ title, assetBase, dataBase })}
+const html = `${buildTypeDocHead({
+  title,
+  assetBase,
+  dataBase,
+  canonicalPath: 'index.html',
+})}
 ${buildTypeDocBodyStart({
   title,
   titleHref: 'index.html',
