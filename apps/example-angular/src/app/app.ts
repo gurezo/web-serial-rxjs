@@ -1,16 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, linkedSignal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  linkedSignal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
-  formatExampleSerialError,
+  formatExamplePortInfo,
+  formatExampleSerialErrorDetail,
+  formatExampleSessionStatus,
+  getExampleControlsEnabled,
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
-  type ExampleErrorDisplay,
+  type ExampleSerialErrorDetail,
 } from '@gurezo/examples-shared';
 import {
+  isConnectedSessionState,
   SerialSessionStatus,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
@@ -51,39 +61,38 @@ export class App {
     source: () => this.terminalText(),
     computation: (text) => text,
   });
-  private readonly lastErrorDisplay = toSignal(
+  private readonly lastErrorFromStream = toSignal(
     this.serialService.errors$.pipe(
       map(
-        (error): ExampleErrorDisplay | null => formatExampleSerialError(error),
+        (error): ExampleSerialErrorDetail =>
+          formatExampleSerialErrorDetail(error),
       ),
     ),
-    { initialValue: null as ExampleErrorDisplay | null },
+    { initialValue: null as ExampleSerialErrorDetail | null },
   );
 
-  readonly errorDisplay = computed(() => {
-    const status = this.state().status;
-    if (
-      status === SerialSessionStatus.Connected ||
-      status === SerialSessionStatus.Idle ||
-      status === SerialSessionStatus.Connecting
-    ) {
-      return null;
-    }
-    return this.lastErrorDisplay();
+  readonly errorDetail = linkedSignal({
+    source: () => this.lastErrorFromStream(),
+    computation: (detail) => detail,
   });
 
-  readonly connecting = computed(
-    () => this.state().status === SerialSessionStatus.Connecting,
+  readonly sessionStatus = computed(() =>
+    formatExampleSessionStatus(this.state()),
   );
-
-  readonly disconnecting = computed(
-    () => this.state().status === SerialSessionStatus.Disconnecting,
+  readonly controls = computed(() =>
+    getExampleControlsEnabled(this.state(), this.canConnect),
   );
+  readonly portInfoDisplay = computed(() => {
+    const current = this.state();
+    return isConnectedSessionState(current)
+      ? formatExamplePortInfo(current.portInfo)
+      : null;
+  });
 
   readonly hasReceivedData = computed(() => this.receivedData().length > 0);
 
   readonly status = computed((): { type: StatusType; message: string } => {
-    const error = this.errorDisplay();
+    const error = this.errorDetail();
     if (error) {
       return {
         type: error.type,
@@ -91,11 +100,14 @@ export class App {
           error.type === 'info' ? error.message : `エラー: ${error.message}`,
       };
     }
+    const session = this.sessionStatus();
+    if (session.inProgress) {
+      return {
+        type: 'info',
+        message: session.status === 'connecting' ? '接続中...' : '切断中...',
+      };
+    }
     switch (this.state().status) {
-      case SerialSessionStatus.Connecting:
-        return { type: 'info', message: '接続中...' };
-      case SerialSessionStatus.Disconnecting:
-        return { type: 'info', message: '切断中...' };
       case SerialSessionStatus.Connected:
         return { type: 'success', message: 'シリアルポートに接続しました。' };
       case SerialSessionStatus.Unsupported:
@@ -109,6 +121,22 @@ export class App {
         return { type: 'info', message: 'シリアルポートに接続していません。' };
     }
   });
+
+  constructor() {
+    effect(() => {
+      const status = this.state().status;
+      if (
+        status === SerialSessionStatus.Connected ||
+        status === SerialSessionStatus.Idle
+      ) {
+        this.errorDetail.set(null);
+      }
+    });
+  }
+
+  clearError(): void {
+    this.errorDetail.set(null);
+  }
 
   handleConnect(): void {
     this.resetTerminalView();
