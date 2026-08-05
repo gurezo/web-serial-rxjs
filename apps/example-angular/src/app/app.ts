@@ -10,6 +10,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
+  appendExampleLineEnding,
+  DEFAULT_EXAMPLE_LINE_ENDING,
+  EXAMPLE_LINE_ENDING_OPTIONS,
   formatExamplePortInfo,
   formatExampleSerialErrorDetail,
   formatExampleSessionStatus,
@@ -17,6 +20,7 @@ import {
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
+  type ExampleLineEnding,
   type ExampleSerialErrorDetail,
 } from '@gurezo/examples-shared';
 import {
@@ -38,6 +42,8 @@ type StatusType = 'info' | 'success' | 'error';
 export class App {
   baudRate = 9600;
   sendInput = '';
+  lineEnding: ExampleLineEnding = DEFAULT_EXAMPLE_LINE_ENDING;
+  readonly lineEndingOptions = EXAMPLE_LINE_ENDING_OPTIONS;
   readonly navLinks = getExampleNavLinks('angular');
   readonly requirements = getExampleRequirementsCopy();
   readonly supportStatus = getExampleSupportStatus();
@@ -160,14 +166,16 @@ export class App {
     if (!text) {
       return;
     }
-    this.serialService.send$(`${text}\n`).subscribe({
-      next: () => {
-        this.sendInput = '';
-      },
-      error: (error: unknown) => {
-        console.error('送信エラー:', error);
-      },
-    });
+    this.serialService
+      .send$(appendExampleLineEnding(text, this.lineEnding))
+      .subscribe({
+        next: () => {
+          this.sendInput = '';
+        },
+        error: (error: unknown) => {
+          console.error('送信エラー:', error);
+        },
+      });
   }
 
   handleKeyDown(event: KeyboardEvent): void {
