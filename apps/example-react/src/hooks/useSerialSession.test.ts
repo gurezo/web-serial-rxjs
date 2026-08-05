@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSerialSession } from './useSerialSession';
 
 const SS = webSerialRxjs.SerialSessionStatus;
+const { SerialError, SerialErrorCode } = webSerialRxjs;
 
 interface MockCore {
   session: SerialSession;
@@ -90,6 +91,10 @@ describe('useSerialSession', () => {
   beforeEach(() => {
     mockCores = [];
     nextSupported = true;
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    });
   });
 
   afterEach(() => {
@@ -102,7 +107,9 @@ describe('useSerialSession', () => {
     expect(result.current.isConnected).toBe(false);
     expect(result.current.receivedData).toBe('');
     expect(result.current.errorMessage).toBeNull();
+    expect(result.current.errorType).toBeNull();
     expect(result.current.browserSupported).toBe(true);
+    expect(result.current.canConnect).toBe(true);
   });
 
   it('createSerialSession に初期ボーレートを渡す', () => {
@@ -138,19 +145,39 @@ describe('useSerialSession', () => {
   it('errors$ の値が errorMessage に反映される', () => {
     const { result } = renderHook(() => useSerialSession());
     act(() =>
-      latestMock().errorsSubject.next({ message: 'boom' } as SerialError),
+      latestMock().errorsSubject.next(
+        new SerialError(SerialErrorCode.WRITE_FAILED, 'boom'),
+      ),
     );
     expect(result.current.errorMessage).toBe('boom');
+    expect(result.current.errorType).toBe('error');
+  });
+
+  it('OPERATION_CANCELLED は info 案内文言に整形される', () => {
+    const { result } = renderHook(() => useSerialSession());
+    act(() =>
+      latestMock().errorsSubject.next(
+        new SerialError(
+          SerialErrorCode.OPERATION_CANCELLED,
+          'Port selection was cancelled by the user',
+        ),
+      ),
+    );
+    expect(result.current.errorType).toBe('info');
+    expect(result.current.errorMessage).toContain('キャンセル');
   });
 
   it('state$ が connected / idle になると errorMessage がクリアされる', () => {
     const { result } = renderHook(() => useSerialSession());
     act(() =>
-      latestMock().errorsSubject.next({ message: 'boom' } as SerialError),
+      latestMock().errorsSubject.next(
+        new SerialError(SerialErrorCode.WRITE_FAILED, 'boom'),
+      ),
     );
     expect(result.current.errorMessage).toBe('boom');
     act(() => latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } }));
     expect(result.current.errorMessage).toBeNull();
+    expect(result.current.errorType).toBeNull();
   });
 
   it('clearReceivedData で receivedData が空になる', () => {

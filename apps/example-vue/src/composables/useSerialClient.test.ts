@@ -109,6 +109,10 @@ describe('useSerialClient', () => {
     vi.clearAllMocks();
     mockCores = [];
     nextSupported = true;
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    });
   });
 
   afterEach(() => {
@@ -128,10 +132,12 @@ describe('useSerialClient', () => {
   it('should initialize with default refs', () => {
     const { api } = mountHarness();
     expect(api.browserSupported.value).toBe(true);
+    expect(api.canConnect.value).toBe(true);
     expect(api.state.value).toEqual({ status: SS.Idle });
     expect(api.isConnected.value).toBe(false);
     expect(api.receivedData.value).toBe('');
     expect(api.errorMessage.value).toBe(null);
+    expect(api.errorType.value).toBe(null);
   });
 
   it('browserSupported reflects isWebSerialSupported when unsupported', () => {
@@ -155,11 +161,17 @@ describe('useSerialClient', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
-    mock.errorsSubject.next({ message: 'boom' } as SerialError);
+    mock.errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'boom',
+      ),
+    );
     expect(api.errorMessage.value).toBe('boom');
 
     mock.stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     expect(api.errorMessage.value).toBe(null);
+    expect(api.errorType.value).toBe(null);
   });
 
   it('should connect through the session', () => {
@@ -219,8 +231,14 @@ describe('useSerialClient', () => {
     const { api } = mountHarness();
     const mock = latestMock();
 
-    mock.errorsSubject.next({ message: 'write failed' } as SerialError);
+    mock.errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'write failed',
+      ),
+    );
     expect(api.errorMessage.value).toBe('write failed');
+    expect(api.errorType.value).toBe('error');
   });
 
   it('should propagate connect$ errors to subscribers', () => {

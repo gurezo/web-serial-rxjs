@@ -1,11 +1,13 @@
 import {
   createSerialSessionController,
+  formatExampleSerialError,
   getExampleNavLinks,
+  getExampleRequirementsCopy,
+  getExampleSupportStatus,
   type ExampleNavLink,
   type ExampleSlug,
 } from '@gurezo/examples-shared';
 import {
-  isWebSerialSupported,
   SerialSessionStatus,
   type SerialSessionStatus as SerialSessionStatusType,
 } from '@gurezo/web-serial-rxjs';
@@ -14,19 +16,7 @@ import { filter } from 'rxjs/operators';
 
 type StatusType = 'info' | 'success' | 'error';
 
-const UNSUPPORTED_MSG =
-  'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。';
 const S = SerialSessionStatus;
-
-const STATUS: Record<SerialSessionStatusType, [StatusType, string]> = {
-  [S.Idle]: ['info', 'シリアルポートから切断しました。'],
-  [S.Connecting]: ['info', '接続中です...'],
-  [S.Connected]: ['success', 'シリアルポートに接続しました。'],
-  [S.Disconnecting]: ['info', '切断中です...'],
-  [S.Unsupported]: ['error', UNSUPPORTED_MSG],
-  [S.Error]: ['error', 'エラーが発生しました。errors$ を確認してください。'],
-  [S.Disposed]: ['info', 'セッションは破棄されました。'],
-};
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -85,6 +75,28 @@ const mountExampleNav = (slug: ExampleSlug): void => {
   header.appendChild(nav);
 };
 
+const mountRequirements = (): ReturnType<typeof getExampleSupportStatus> => {
+  const requirements = getExampleRequirementsCopy();
+  const supportStatus = getExampleSupportStatus();
+
+  $<HTMLElement>('requirements-title').textContent = requirements.title;
+  const list = $<HTMLUListElement>('requirements-list');
+  list.replaceChildren();
+  for (const item of requirements.items) {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li);
+  }
+
+  setStatus(
+    $<HTMLElement>('browser-support-status'),
+    supportStatus.statusType,
+    supportStatus.statusMessage,
+  );
+
+  return supportStatus;
+};
+
 export class App {
   private readonly controller = createSerialSessionController({
     initialBaudRate: 9600,
@@ -92,6 +104,7 @@ export class App {
 
   constructor() {
     mountExampleNav('vanilla-ts');
+    const supportStatus = mountRequirements();
 
     const connectBtn = $<HTMLButtonElement>('connect-btn');
     const disconnectBtn = $<HTMLButtonElement>('disconnect-btn');
@@ -101,17 +114,20 @@ export class App {
     const sendBtn = $<HTMLButtonElement>('send-btn');
     const receiveOutput = $<HTMLTextAreaElement>('receive-output');
 
-    const supported = isWebSerialSupported();
-    setStatus(
-      $<HTMLElement>('browser-support-status'),
-      supported ? 'success' : 'error',
-      supported ? 'ブラウザは Web Serial API をサポートしています。' : UNSUPPORTED_MSG,
-    );
+    const STATUS: Record<SerialSessionStatusType, [StatusType, string]> = {
+      [S.Idle]: ['info', 'シリアルポートから切断しました。'],
+      [S.Connecting]: ['info', '接続中です...'],
+      [S.Connected]: ['success', 'シリアルポートに接続しました。'],
+      [S.Disconnecting]: ['info', '切断中です...'],
+      [S.Unsupported]: ['error', supportStatus.statusMessage],
+      [S.Error]: ['error', 'エラーが発生しました。errors$ を確認してください。'],
+      [S.Disposed]: ['info', 'セッションは破棄されました。'],
+    };
 
     this.controller.state$.subscribe((state) => {
       const connected = state.status === S.Connected;
       const busy = state.status === S.Connecting || state.status === S.Disconnecting;
-      connectBtn.disabled = !supported || connected || busy;
+      connectBtn.disabled = !supportStatus.canConnect || connected || busy;
       baudRateSelect.disabled = connected || busy;
       disconnectBtn.disabled = !connected;
       sendInput.disabled = sendBtn.disabled = !connected;
@@ -124,7 +140,12 @@ export class App {
     });
 
     this.controller.errors$.subscribe((error) => {
-      setStatus(status, 'error', `エラー: ${error.message}`);
+      const display = formatExampleSerialError(error);
+      setStatus(
+        status,
+        display.type,
+        display.type === 'info' ? display.message : `エラー: ${display.message}`,
+      );
       console.error('Serial port error:', error);
     });
 

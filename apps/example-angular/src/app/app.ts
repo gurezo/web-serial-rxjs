@@ -3,9 +3,14 @@ import { Component, computed, inject, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { getExampleNavLinks } from '@gurezo/examples-shared';
 import {
-  isWebSerialSupported,
+  formatExampleSerialError,
+  getExampleNavLinks,
+  getExampleRequirementsCopy,
+  getExampleSupportStatus,
+  type ExampleErrorDisplay,
+} from '@gurezo/examples-shared';
+import {
   SerialSessionStatus,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
@@ -24,11 +29,13 @@ export class App {
   baudRate = 9600;
   sendInput = '';
   readonly navLinks = getExampleNavLinks('angular');
+  readonly requirements = getExampleRequirementsCopy();
+  readonly supportStatus = getExampleSupportStatus();
   readonly externalLinkRel = 'noopener noreferrer';
 
   private readonly serialService = inject(SerialClientService);
 
-  readonly browserSupported = isWebSerialSupported();
+  readonly canConnect = this.supportStatus.canConnect;
   readonly state = toSignal(this.serialService.state$, {
     initialValue: {
       status: SerialSessionStatus.Idle,
@@ -44,14 +51,16 @@ export class App {
     source: () => this.terminalText(),
     computation: (text) => text,
   });
-  private readonly lastError = toSignal(
+  private readonly lastErrorDisplay = toSignal(
     this.serialService.errors$.pipe(
-      map((error): string | null => error.message),
+      map(
+        (error): ExampleErrorDisplay | null => formatExampleSerialError(error),
+      ),
     ),
-    { initialValue: null },
+    { initialValue: null as ExampleErrorDisplay | null },
   );
 
-  readonly errorMessage = computed(() => {
+  readonly errorDisplay = computed(() => {
     const status = this.state().status;
     if (
       status === SerialSessionStatus.Connected ||
@@ -60,7 +69,7 @@ export class App {
     ) {
       return null;
     }
-    return this.lastError();
+    return this.lastErrorDisplay();
   });
 
   readonly connecting = computed(
@@ -74,9 +83,13 @@ export class App {
   readonly hasReceivedData = computed(() => this.receivedData().length > 0);
 
   readonly status = computed((): { type: StatusType; message: string } => {
-    const error = this.errorMessage();
+    const error = this.errorDisplay();
     if (error) {
-      return { type: 'error', message: `エラー: ${error}` };
+      return {
+        type: error.type,
+        message:
+          error.type === 'info' ? error.message : `エラー: ${error.message}`,
+      };
     }
     switch (this.state().status) {
       case SerialSessionStatus.Connecting:
@@ -88,8 +101,7 @@ export class App {
       case SerialSessionStatus.Unsupported:
         return {
           type: 'error',
-          message:
-            'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
+          message: this.supportStatus.statusMessage,
         };
       case SerialSessionStatus.Error:
         return { type: 'error', message: 'エラーが発生しました。' };

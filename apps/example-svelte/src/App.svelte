@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { getExampleNavLinks } from '@gurezo/examples-shared';
+  import {
+    getExampleNavLinks,
+    getExampleRequirementsCopy,
+    getExampleSupportStatus,
+  } from '@gurezo/examples-shared';
   import {
     SerialSessionStatus,
     type SerialSessionState,
@@ -7,17 +11,20 @@
   import { useSerialSession } from './stores/useSerialSession';
 
   const navLinks = getExampleNavLinks('svelte');
+  const requirements = getExampleRequirementsCopy();
+  const supportStatus = getExampleSupportStatus();
   const externalLinkRel = 'noopener noreferrer';
 
   let baudRate = 9600;
   let sendInput = '';
 
   const {
-    browserSupported,
+    canConnect,
     state,
     isConnected,
     receivedData,
     errorMessage,
+    errorType,
     connect$,
     disconnect$,
     send$,
@@ -29,9 +36,13 @@
   const statusFor = (
     current: SerialSessionState,
     error: string | null,
+    tone: 'info' | 'error' | null,
   ): { type: StatusType; message: string } => {
     if (error) {
-      return { type: 'error', message: `エラー: ${error}` };
+      return {
+        type: tone === 'info' ? 'info' : 'error',
+        message: tone === 'info' ? error : `エラー: ${error}`,
+      };
     }
     switch (current.status) {
       case SerialSessionStatus.Connecting:
@@ -43,8 +54,7 @@
       case SerialSessionStatus.Unsupported:
         return {
           type: 'error',
-          message:
-            'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
+          message: supportStatus.statusMessage,
         };
       case SerialSessionStatus.Error:
         return { type: 'error', message: 'エラーが発生しました。' };
@@ -53,7 +63,7 @@
     }
   };
 
-  $: status = statusFor($state, $errorMessage);
+  $: status = statusFor($state, $errorMessage, $errorType);
   $: connecting = $state.status === SerialSessionStatus.Connecting;
   $: disconnecting = $state.status === SerialSessionStatus.Disconnecting;
 
@@ -170,13 +180,17 @@
   </header>
 
   <main>
-    <!-- ブラウザサポート -->
+    <!-- 利用条件・ブラウザサポート -->
     <section class="section">
-      <h2>ブラウザサポート</h2>
-      <div class="status-message {$browserSupported ? 'success' : 'error'}">
-        {$browserSupported
-          ? 'ブラウザは Web Serial API をサポートしています。'
-          : 'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。'}
+      <h2>{requirements.title}</h2>
+      <ul class="requirements-list">
+        {#each requirements.items as item}
+          <li>{item}</li>
+        {/each}
+      </ul>
+      <h3 class="subsection-title">ブラウザサポート</h3>
+      <div class="status-message {supportStatus.statusType}">
+        {supportStatus.statusMessage}
       </div>
     </section>
 
@@ -202,7 +216,7 @@
         <button
           class="btn btn-primary"
           on:click={handleConnect}
-          disabled={!$browserSupported || $isConnected || connecting}
+          disabled={!$canConnect || $isConnected || connecting}
         >
           接続
         </button>

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { getExampleNavLinks } from '@gurezo/examples-shared';
+import {
+  getExampleNavLinks,
+  getExampleRequirementsCopy,
+  getExampleSupportStatus,
+} from '@gurezo/examples-shared';
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
 import { computed, ref } from 'vue';
 import { useSerialClient } from '../composables/useSerialClient';
@@ -7,17 +11,20 @@ import { useSerialClient } from '../composables/useSerialClient';
 type StatusType = 'info' | 'success' | 'error';
 
 const navLinks = getExampleNavLinks('vue');
+const requirements = getExampleRequirementsCopy();
+const supportStatus = getExampleSupportStatus();
 const externalLinkRel = 'noopener noreferrer';
 
 const baudRate = ref(9600);
 const sendInput = ref('');
 
 const {
-  browserSupported,
+  canConnect,
   state,
   isConnected,
   receivedData,
   errorMessage,
+  errorType,
   connect$,
   disconnect$,
   send$,
@@ -33,7 +40,13 @@ const disconnecting = computed(
 
 const status = computed<{ type: StatusType; message: string }>(() => {
   if (errorMessage.value) {
-    return { type: 'error', message: `エラー: ${errorMessage.value}` };
+    return {
+      type: errorType.value === 'info' ? 'info' : 'error',
+      message:
+        errorType.value === 'info'
+          ? errorMessage.value
+          : `エラー: ${errorMessage.value}`,
+    };
   }
   switch (state.value.status) {
     case SerialSessionStatus.Connecting:
@@ -45,8 +58,7 @@ const status = computed<{ type: StatusType; message: string }>(() => {
     case SerialSessionStatus.Unsupported:
       return {
         type: 'error',
-        message:
-          'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。',
+        message: supportStatus.statusMessage,
       };
     case SerialSessionStatus.Error:
       return { type: 'error', message: 'エラーが発生しました。' };
@@ -175,20 +187,15 @@ const handleKeyDown = (e: KeyboardEvent) => {
     </header>
 
     <main>
-      <!-- ブラウザサポート -->
+      <!-- 利用条件・ブラウザサポート -->
       <section class="section">
-        <h2>ブラウザサポート</h2>
-        <div
-          :class="[
-            'status-message',
-            browserSupported ? 'success' : 'error',
-          ]"
-        >
-          {{
-            browserSupported
-              ? 'ブラウザは Web Serial API をサポートしています。'
-              : 'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。'
-          }}
+        <h2>{{ requirements.title }}</h2>
+        <ul class="requirements-list">
+          <li v-for="item in requirements.items" :key="item">{{ item }}</li>
+        </ul>
+        <h3 class="subsection-title">ブラウザサポート</h3>
+        <div :class="['status-message', supportStatus.statusType]">
+          {{ supportStatus.statusMessage }}
         </div>
       </section>
 
@@ -215,7 +222,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
           <button
             class="btn btn-primary"
             @click="handleConnect"
-            :disabled="!browserSupported || isConnected || connecting"
+            :disabled="!canConnect || isConnected || connecting"
           >
             接続
           </button>
