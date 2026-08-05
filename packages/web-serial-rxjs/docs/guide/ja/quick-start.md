@@ -4,6 +4,11 @@
 
 標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** は購読により実行されます。
 
+## 利用条件
+
+- ページは **HTTPS** または **localhost**（[セキュアコンテキスト](https://developer.mozilla.org/ja/docs/Web/Security/Secure_Contexts)）で配信してください。localhost 以外の平文 `http://` では Web Serial は使えません。
+- **`connect$()`** は **ユーザー操作**（ボタンクリックなど）から呼び出してください。そうでないとブラウザはポート選択ダイアログを開きません。
+
 ## インストール
 
 npm または pnpm でパッケージを導入します。

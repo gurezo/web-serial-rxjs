@@ -4,6 +4,11 @@ This is the **shortest path** to opening a serial port, receiving **newline-deli
 
 Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** run when you subscribe.
 
+## Requirements
+
+- Serve the page over **HTTPS** or **localhost** (a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts)). Web Serial is unavailable on plain `http://` hosts other than localhost.
+- Call **`connect$()`** from a **user gesture** (for example a button click). The browser will not show the port picker otherwise.
+
 ## Installation
 
 Install the package with npm or pnpm.
