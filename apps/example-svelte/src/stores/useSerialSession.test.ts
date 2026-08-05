@@ -161,7 +161,7 @@ describe('useSerialSession', () => {
     unsub();
   });
 
-  it('errors$ の値が errorMessage に反映される', () => {
+  it('errors$ の値が errorMessage / errorCode に反映される', () => {
     const s = useSerialSession();
     const unsub = s.errorMessage.subscribe(() => void 0);
     latestMock().errorsSubject.next(
@@ -172,6 +172,7 @@ describe('useSerialSession', () => {
     );
     expect(get(s.errorMessage)).toBe('boom');
     expect(get(s.errorType)).toBe('error');
+    expect(get(s.errorCode)).toBe(webSerialRxjs.SerialErrorCode.WRITE_FAILED);
     unsub();
   });
 
@@ -188,6 +189,23 @@ describe('useSerialSession', () => {
     latestMock().stateSubject.next({ status: SS.Connected, portInfo: { usbVendorId: 0, usbProductId: 0 } });
     expect(get(s.errorMessage)).toBeNull();
     expect(get(s.errorType)).toBeNull();
+    expect(get(s.errorCode)).toBeNull();
+    unsub();
+  });
+
+  it('clearError でエラー表示を手動クリアできる', () => {
+    const s = useSerialSession();
+    const unsub = s.errorMessage.subscribe(() => void 0);
+    latestMock().errorsSubject.next(
+      new webSerialRxjs.SerialError(
+        webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+        'boom',
+      ),
+    );
+    s.clearError();
+    expect(get(s.errorMessage)).toBeNull();
+    expect(get(s.errorCode)).toBeNull();
+    expect(get(s.errorContext)).toBeNull();
     unsub();
   });
 

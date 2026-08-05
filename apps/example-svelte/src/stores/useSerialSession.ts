@@ -1,6 +1,6 @@
 import {
   createSerialSessionController,
-  formatExampleSerialError,
+  formatExampleSerialErrorDetail,
   getExampleSupportStatus,
 } from '@gurezo/examples-shared';
 import {
@@ -21,10 +21,13 @@ export interface UseSerialSessionReturn {
   receivedData: Readable<string>;
   errorMessage: Readable<string | null>;
   errorType: Readable<'info' | 'error' | null>;
+  errorCode: Readable<string | null>;
+  errorContext: Readable<string | null>;
   connect$: (baudRate?: number) => Observable<void>;
   disconnect$: () => Observable<void>;
   send$: (data: string | Uint8Array) => Observable<void>;
   clearReceivedData: () => void;
+  clearError: () => void;
 }
 
 export function useSerialSession(
@@ -58,13 +61,24 @@ export function useSerialSession(
 
   const errorMessage = writable<string | null>(null);
   const errorType = writable<'info' | 'error' | null>(null);
+  const errorCode = writable<string | null>(null);
+  const errorContext = writable<string | null>(null);
+
+  const clearError = (): void => {
+    errorMessage.set(null);
+    errorType.set(null);
+    errorCode.set(null);
+    errorContext.set(null);
+  };
 
   const errorSub = new Subscription();
   errorSub.add(
     controller.errors$.subscribe((e: SerialError) => {
-      const display = formatExampleSerialError(e);
+      const display = formatExampleSerialErrorDetail(e);
       errorMessage.set(display.message);
       errorType.set(display.type);
+      errorCode.set(display.code);
+      errorContext.set(display.contextSummary);
     }),
   );
   errorSub.add(
@@ -73,8 +87,7 @@ export function useSerialSession(
         next.status === SerialSessionStatus.Connected ||
         next.status === SerialSessionStatus.Idle
       ) {
-        errorMessage.set(null);
-        errorType.set(null);
+        clearError();
       }
     }),
   );
@@ -108,9 +121,12 @@ export function useSerialSession(
     receivedData,
     errorMessage,
     errorType,
+    errorCode,
+    errorContext,
     connect$,
     disconnect$,
     send$,
     clearReceivedData,
+    clearError,
   };
 }
