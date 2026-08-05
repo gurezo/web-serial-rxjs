@@ -102,7 +102,7 @@ function summarizeContext(context: unknown): string | null {
   const parts: string[] = [];
 
   if ('cause' in record) {
-    const cause = record.cause;
+    const cause = record['cause'];
     if (cause instanceof Error) {
       parts.push(`cause: ${cause.name}: ${cause.message}`);
     } else if (cause !== undefined && cause !== null) {
@@ -110,21 +110,21 @@ function summarizeContext(context: unknown): string | null {
     }
   }
 
-  if (typeof record.maxChars === 'number') {
-    parts.push(`maxChars: ${record.maxChars}`);
+  if (typeof record['maxChars'] === 'number') {
+    parts.push(`maxChars: ${record['maxChars']}`);
   }
 
-  if (typeof record.field === 'string') {
-    parts.push(`field: ${record.field}`);
+  if (typeof record['field'] === 'string') {
+    parts.push(`field: ${record['field']}`);
   }
   if ('value' in record) {
-    parts.push(`value: ${String(record.value)}`);
+    parts.push(`value: ${String(record['value'])}`);
   }
-  if (typeof record.constraint === 'string') {
-    parts.push(`constraint: ${record.constraint}`);
+  if (typeof record['constraint'] === 'string') {
+    parts.push(`constraint: ${record['constraint']}`);
   }
-  if (typeof record.filterIndex === 'number') {
-    parts.push(`filterIndex: ${record.filterIndex}`);
+  if (typeof record['filterIndex'] === 'number') {
+    parts.push(`filterIndex: ${record['filterIndex']}`);
   }
 
   if (parts.length === 0) {

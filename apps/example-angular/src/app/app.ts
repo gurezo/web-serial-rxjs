@@ -64,7 +64,7 @@ export class App {
   private readonly lastErrorFromStream = toSignal(
     this.serialService.errors$.pipe(
       map(
-        (error): ExampleSerialErrorDetail =>
+        (error): ExampleSerialErrorDetail | null =>
           formatExampleSerialErrorDetail(error),
       ),
     ),
@@ -72,8 +72,8 @@ export class App {
   );
 
   readonly errorDetail = linkedSignal({
-    source: () => this.lastErrorFromStream(),
-    computation: (detail) => detail,
+    source: (): ExampleSerialErrorDetail | null => this.lastErrorFromStream(),
+    computation: (detail: ExampleSerialErrorDetail | null) => detail,
   });
 
   readonly sessionStatus = computed(() =>
