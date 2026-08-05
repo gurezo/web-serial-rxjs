@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import {
+  appendExampleLineEnding,
+  DEFAULT_EXAMPLE_LINE_ENDING,
+  EXAMPLE_LINE_ENDING_OPTIONS,
   formatExamplePortInfo,
   formatExampleSessionStatus,
   getExampleControlsEnabled,
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
+  type ExampleLineEnding,
 } from '@gurezo/examples-shared';
 import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
 import { computed, ref } from 'vue';
@@ -17,9 +21,11 @@ const navLinks = getExampleNavLinks('vue');
 const requirements = getExampleRequirementsCopy();
 const supportStatus = getExampleSupportStatus();
 const externalLinkRel = 'noopener noreferrer';
+const lineEndingOptions = EXAMPLE_LINE_ENDING_OPTIONS;
 
 const baudRate = ref(9600);
 const sendInput = ref('');
+const lineEnding = ref<ExampleLineEnding>(DEFAULT_EXAMPLE_LINE_ENDING);
 
 const {
   canConnect,
@@ -101,7 +107,7 @@ const handleSend = () => {
   if (!text) {
     return;
   }
-  send$(`${text}\n`).subscribe({
+  send$(appendExampleLineEnding(text, lineEnding.value)).subscribe({
     next: () => {
       sendInput.value = '';
     },
@@ -301,6 +307,22 @@ const handleKeyDown = (e: KeyboardEvent) => {
       <!-- データ送信 -->
       <section class="section">
         <h2>データ送信</h2>
+        <div class="form-group">
+          <label for="line-ending">改行コード</label>
+          <select
+            id="line-ending"
+            class="form-control"
+            v-model="lineEnding"
+          >
+            <option
+              v-for="opt in lineEndingOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="send-input">送信データ</label>
           <div class="input-group">
