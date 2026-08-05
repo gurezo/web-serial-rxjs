@@ -1,10 +1,14 @@
 import {
+  appendExampleLineEnding,
+  DEFAULT_EXAMPLE_LINE_ENDING,
+  EXAMPLE_LINE_ENDING_OPTIONS,
   formatExamplePortInfo,
   formatExampleSessionStatus,
   getExampleControlsEnabled,
   getExampleNavLinks,
   getExampleRequirementsCopy,
   getExampleSupportStatus,
+  type ExampleLineEnding,
 } from '@gurezo/examples-shared';
 import { isConnectedSessionState } from '@gurezo/web-serial-rxjs';
 import { useMemo, useState } from 'react';
@@ -22,6 +26,9 @@ const externalLinkProps = {
 export function App() {
   const [baudRate, setBaudRate] = useState(9600);
   const [sendInput, setSendInput] = useState('');
+  const [lineEnding, setLineEnding] = useState<ExampleLineEnding>(
+    DEFAULT_EXAMPLE_LINE_ENDING,
+  );
   const supportStatus = useMemo(() => getExampleSupportStatus(), []);
   const {
     canConnect,
@@ -74,7 +81,7 @@ export function App() {
   const handleSend = () => {
     const text = sendInput.trim();
     if (!text) return;
-    send$(`${text}\n`).subscribe({
+    send$(appendExampleLineEnding(text, lineEnding)).subscribe({
       next: () => setSendInput(''),
       error: (e: unknown) => console.error('送信エラー:', e),
     });
@@ -248,6 +255,23 @@ export function App() {
         </section>
         <section className="section">
           <h2>データ送信</h2>
+          <div className="form-group">
+            <label htmlFor="line-ending">改行コード</label>
+            <select
+              id="line-ending"
+              className="form-control"
+              value={lineEnding}
+              onChange={(e) =>
+                setLineEnding(e.target.value as ExampleLineEnding)
+              }
+            >
+              {EXAMPLE_LINE_ENDING_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="form-group">
             <label htmlFor="send-input">送信データ</label>
             <div className="input-group">
