@@ -86,6 +86,10 @@ const latestMock = (): MockSession => {
 describe('App', () => {
   beforeEach(() => {
     mockSessions = [];
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    });
   });
 
   afterEach(() => {
@@ -104,10 +108,16 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
-  it('ブラウザサポート状況を表示する', () => {
+  it('利用条件とブラウザサポート状況を表示する', () => {
     render(<App />);
+    expect(screen.getByText('利用条件')).toBeInTheDocument();
     expect(
-      screen.getByText('ブラウザは Web Serial API をサポートしています。'),
+      screen.getByText(/HTTPS または localhost/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'ブラウザは Web Serial API をサポートしており、セキュアコンテキストで実行中です。',
+      ),
     ).toBeInTheDocument();
   });
 
@@ -208,7 +218,10 @@ describe('App', () => {
   it('errors$ 発火時にエラーメッセージを表示する', async () => {
     render(<App />);
 
-    const err = { message: 'write failed' } as SerialError;
+    const err = new webSerialRxjs.SerialError(
+      webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+      'write failed',
+    );
     act(() => latestMock().errorsSubject.next(err));
 
     await waitFor(() => {

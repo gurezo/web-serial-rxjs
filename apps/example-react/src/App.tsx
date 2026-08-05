@@ -1,11 +1,16 @@
-import { getExampleNavLinks } from '@gurezo/examples-shared';
+import {
+  getExampleNavLinks,
+  getExampleRequirementsCopy,
+  getExampleSupportStatus,
+} from '@gurezo/examples-shared';
 import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSerialSession } from './hooks/useSerialSession';
 
 type StatusType = 'info' | 'success' | 'error';
 
 const navLinks = getExampleNavLinks('react');
+const requirements = getExampleRequirementsCopy();
 const externalLinkProps = {
   target: '_blank',
   rel: 'noopener noreferrer',
@@ -14,12 +19,14 @@ const externalLinkProps = {
 export function App() {
   const [baudRate, setBaudRate] = useState(9600);
   const [sendInput, setSendInput] = useState('');
+  const supportStatus = useMemo(() => getExampleSupportStatus(), []);
   const {
-    browserSupported,
+    canConnect,
     state,
     isConnected,
     receivedData,
     errorMessage,
+    errorType,
     connect$,
     disconnect$,
     send$,
@@ -30,7 +37,11 @@ export function App() {
   const disconnecting = state.status === SerialSessionStatus.Disconnecting;
 
   const status: { type: StatusType; message: string } = errorMessage
-    ? { type: 'error', message: `エラー: ${errorMessage}` }
+    ? {
+        type: errorType === 'info' ? 'info' : 'error',
+        message:
+          errorType === 'info' ? errorMessage : `エラー: ${errorMessage}`,
+      }
     : connecting
       ? { type: 'info', message: '接続中...' }
       : disconnecting
@@ -123,11 +134,15 @@ export function App() {
       </header>
       <main>
         <section className="section">
-          <h2>ブラウザサポート</h2>
-          <div className={`status-message ${browserSupported ? 'success' : 'error'}`}>
-            {browserSupported
-              ? 'ブラウザは Web Serial API をサポートしています。'
-              : 'このブラウザは Web Serial API をサポートしていません。Chrome、Edge、Opera などの Chromium ベースのブラウザをご使用ください。'}
+          <h2>{requirements.title}</h2>
+          <ul className="requirements-list">
+            {requirements.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <h3 className="subsection-title">ブラウザサポート</h3>
+          <div className={`status-message ${supportStatus.statusType}`}>
+            {supportStatus.statusMessage}
           </div>
         </section>
         <section className="section">
@@ -152,7 +167,7 @@ export function App() {
             <button
               className="btn btn-primary"
               onClick={handleConnect}
-              disabled={!browserSupported || isConnected || connecting}
+              disabled={!canConnect || isConnected || connecting}
             >
               接続
             </button>

@@ -1,23 +1,26 @@
 import {
-  isWebSerialSupported,
+  createSerialSessionController,
+  formatExampleSerialError,
+  getExampleSupportStatus,
+  type SerialSessionController,
+} from '@gurezo/examples-shared';
+import {
   SerialSessionStatus,
   type SerialError,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import {
-  createSerialSessionController,
-  type SerialSessionController,
-} from '@gurezo/examples-shared';
 import { useEffect, useRef, useState } from 'react';
 import { type Observable, Subscription } from 'rxjs';
 
 /** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続時は世代でリセット）。 */
 export interface UseSerialSessionReturn {
   browserSupported: boolean;
+  canConnect: boolean;
   state: SerialSessionState;
   isConnected: boolean;
   receivedData: string;
   errorMessage: string | null;
+  errorType: 'info' | 'error' | null;
   connect$: (baudRate?: number) => Observable<void>;
   disconnect$: () => Observable<void>;
   send$: (data: string | Uint8Array) => Observable<void>;
@@ -41,13 +44,19 @@ export function useSerialSession(
 
   ensureController(initialBaudRate);
 
-  const [browserSupported] = useState(() => isWebSerialSupported());
+  const [supportStatus] = useState(() => getExampleSupportStatus());
   const [state, setState] = useState<SerialSessionState>({
     status: SerialSessionStatus.Idle,
   });
   const [isConnected, setIsConnected] = useState(false);
   const [receivedData, setReceivedData] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'info' | 'error' | null>(null);
+
+  const clearError = () => {
+    setErrorMessage(null);
+    setErrorType(null);
+  };
 
   useEffect(() => {
     ensureController(initialBaudRate);
@@ -60,13 +69,18 @@ export function useSerialSession(
         if (
           next.status === SerialSessionStatus.Connected ||
           next.status === SerialSessionStatus.Idle
-        )
-          setErrorMessage(null);
+        ) {
+          clearError();
+        }
       }),
     );
     sub.add(controller.terminalText$.subscribe(setReceivedData));
     sub.add(
-      controller.errors$.subscribe((e: SerialError) => setErrorMessage(e.message)),
+      controller.errors$.subscribe((e: SerialError) => {
+        const display = formatExampleSerialError(e);
+        setErrorMessage(display.message);
+        setErrorType(display.type);
+      }),
     );
     return () => {
       sub.unsubscribe();
@@ -89,11 +103,13 @@ export function useSerialSession(
   };
 
   return {
-    browserSupported,
+    browserSupported: supportStatus.apiSupported,
+    canConnect: supportStatus.canConnect,
     state,
     isConnected,
     receivedData,
     errorMessage,
+    errorType,
     connect$,
     disconnect$,
     send$,
