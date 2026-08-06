@@ -8,7 +8,7 @@ This page maps directly to [issue #228](https://github.com/gurezo/web-serial-rxj
 
 **Default:** `lines$` emits one complete line at a time, handling `\n`, `\r\n`, and a lone interior `\r` the way the built-in line buffer does. It is the right choice for typical newline-delimited devices.
 
-`receive$` still emits raw UTF-8 decoded **chunks** as they arrive. Use `scan` (or a similar stateful transform) when you need a custom delimiter, regex split, or batching that differs from the built-in `lines$`:
+`receive$` still emits unframed UTF-8 decoded **chunks** as they arrive (decoded text, not wire bytes). Use `scan` (or a similar stateful transform) when you need a custom delimiter, regex split, or batching that differs from the built-in `lines$`:
 
 ```typescript
 import { filter, map, scan } from 'rxjs';

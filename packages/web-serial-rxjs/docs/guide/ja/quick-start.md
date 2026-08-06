@@ -2,7 +2,7 @@
 
 **最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./overview.md#serialsessionの全体像)を参照してください。
 
-標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す生のチャンク列のままです。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** は購読により実行されます。
+標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す**未フレーミングの UTF-8 チャンク**（デコード済みテキスト。ワイヤ上の生バイトではない）です。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** は購読により実行されます。
 
 ## 利用条件
 
