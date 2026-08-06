@@ -9,7 +9,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 1. **[概要](./overview.md)** — `SerialSession` の公開面、`state$` / `errors$` の位置付け、最小サンプル
 2. **[クイックスタート](./quick-start.md)** — インストール、接続、受信・送信、切断・破棄、エラーハンドリング
 3. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、擬似リクエスト／レスポンス、リカバリ
-4. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足（TypeDoc の代替ではありません）
+4. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約（TypeDoc の代替ではありません）
 5. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
 
 既存コードから移行する場合:
@@ -25,7 +25,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[概要](./overview.md)** | 公開面の早見表、機能概要、最小サンプル |
 | **[クイックスタート](./quick-start.md)** | インストールから切断までの基本フロー |
 | **[高度な使用方法](./advanced-usage.md)** | 応用パターンと RxJS レシピ |
-| **[API の概念と設計メモ](./concepts.md)** | オプション・エラーコード・型の表形式補足 |
+| **[API の概念と設計メモ](./concepts.md)** | オプション・エラーコード・型の表形式補足、差し替え可能な `SerialSession` 契約 |
 | **[トラブルシューティング](./troubleshooting.md)** | よくある問題の確認手順と報告時の情報 |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |

@@ -7,6 +7,13 @@ import type { SerialSessionState } from './serial-session-state';
  * Public API for interacting with the Web Serial API through a
  * minimal, session-oriented surface.
  *
+ * This interface is the **swappable public contract** for dependency injection
+ * and test fakes. Prefer typing application code against `SerialSession` and
+ * calling {@link createSerialSession} only at composition boundaries. Any
+ * object that structurally matches this shape (including a hand-written fake)
+ * is assignable to `SerialSession`; a separate `SerialSessionLike`-style
+ * alias is intentionally not exported.
+ *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
  * can drive their UI from `state$` (canonical lifecycle state) + `errors$`
  * (error event channel) + `receive$` + `terminalText$` + `lines$` and never
@@ -50,6 +57,7 @@ import type { SerialSessionState } from './serial-session-state';
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/200 | Issue #200}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/536 | Issue #536}
  */
 export interface SerialSession {
   /**

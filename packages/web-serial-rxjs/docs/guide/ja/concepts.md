@@ -215,6 +215,79 @@ interface SerialSession {
 }
 ```
 
+### 差し替え可能な公開契約（Decision #536）
+
+`SerialSession` はクラスではなく、package から export される **公開 interface** です。アプリケーションコードは具象の `createSerialSession()` 戻り値に直接依存せず、この型に依存してください。生成は DI 境界・ファクトリ・Composition root に閉じます。
+
+**Decision:** 別名の `SerialSessionLike` などは **追加しません**。
+
+| 理由 | 説明 |
+| --- | --- |
+| 既存契約で十分 | `SerialSession` がすでに差し替え可能な公開契約 |
+| 構造的型付け | 同形の Fake は `SerialSession` にそのまま代入できる |
+| 二重管理を避ける | 別名 interface は長期互換・文書・型のコストだけが増える |
+| Parent #535 | コア API を安易に拡張しない |
+
+本格的な Fake / 実機なしテスト Recipe は [#537](https://github.com/gurezo/web-serial-rxjs/issues/537) で整備します。ここでは型が通る最小スケルトンまで示します。
+
+#### 推奨パターン
+
+```typescript
+import {
+  createSerialSession,
+  type SerialSession,
+} from '@gurezo/web-serial-rxjs';
+
+// アプリ層: SerialSession だけを受け取る
+function createSerialUi(session: SerialSession) {
+  return session.state$.subscribe((state) => {
+    // UI 更新
+  });
+}
+
+// 境界でのみ具象を生成
+const session = createSerialSession({ baudRate: 115200 });
+createSerialUi(session);
+```
+
+#### 最小 Fake スケルトン
+
+```typescript
+import { EMPTY, of, type Observable } from 'rxjs';
+import type { SerialError, SerialPayload, SerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+function createFakeSerialSession(
+  overrides: Partial<SerialSession> = {},
+): SerialSession {
+  const idle: SerialSessionState = { status: SerialSessionStatus.Idle };
+  return {
+    state$: of(idle),
+    errors$: EMPTY as Observable<SerialError>,
+    receive$: EMPTY,
+    terminalText$: of(''),
+    lines$: EMPTY,
+    connect$: () => EMPTY,
+    disconnect$: () => EMPTY,
+    dispose$: () => EMPTY,
+    send$: (_data: SerialPayload) => EMPTY,
+    ...overrides,
+  };
+}
+
+const fake: SerialSession = createFakeSerialSession();
+```
+
+#### フレームワークへの適用メモ
+
+| 環境 | 型の置き方（例） |
+| --- | --- |
+| Angular | `InjectionToken<SerialSession>` で注入し、本番は `createSerialSession()`、テストは Fake |
+| React | props / Context の型を `SerialSession` にする |
+| Vue | `provide` / `inject` の値の型を `SerialSession` にする |
+| Svelte | `setContext` / `getContext` の型を `SerialSession` にする |
+| Vanilla TS | コンストラクタやファクトリ引数を `SerialSession` にする |
+
 ### `isWebSerialSupported(): boolean`
 
 同期的な feature detection。`navigator.serial` が存在すれば `true` を返します。セッション生成**前**に使ってください。生成後の unsupported UI は `state$` の `SerialSessionStatus.Unsupported` を推奨します。詳細は [v4 への移行 – ブラウザー対応判定](./migration-v4.md#ブラウザー対応判定) を参照してください。

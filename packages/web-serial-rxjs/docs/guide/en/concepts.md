@@ -215,6 +215,79 @@ interface SerialSession {
 }
 ```
 
+### Swappable public contract (Decision #536)
+
+`SerialSession` is an exported **public interface**, not a class. Prefer typing application code against this type instead of coupling to the concrete `createSerialSession()` return site. Create real sessions only at DI boundaries, factories, or composition roots.
+
+**Decision:** Do **not** add a separate `SerialSessionLike` (or similar) alias.
+
+| Reason | Detail |
+| --- | --- |
+| Existing contract is enough | `SerialSession` is already the swappable public contract |
+| Structural typing | Any same-shaped fake is assignable to `SerialSession` |
+| Avoid dual maintenance | A second interface only adds long-term compatibility and docs cost |
+| Parent #535 | Do not casually extend the core API |
+
+Full Fake / hardware-free testing recipes land in [#537](https://github.com/gurezo/web-serial-rxjs/issues/537). Below is only a minimal skeleton that type-checks.
+
+#### Recommended pattern
+
+```typescript
+import {
+  createSerialSession,
+  type SerialSession,
+} from '@gurezo/web-serial-rxjs';
+
+// App layer: depend on SerialSession only
+function createSerialUi(session: SerialSession) {
+  return session.state$.subscribe((state) => {
+    // update UI
+  });
+}
+
+// Create the concrete session at the boundary
+const session = createSerialSession({ baudRate: 115200 });
+createSerialUi(session);
+```
+
+#### Minimal fake skeleton
+
+```typescript
+import { EMPTY, of, type Observable } from 'rxjs';
+import type { SerialError, SerialPayload, SerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
+import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
+
+function createFakeSerialSession(
+  overrides: Partial<SerialSession> = {},
+): SerialSession {
+  const idle: SerialSessionState = { status: SerialSessionStatus.Idle };
+  return {
+    state$: of(idle),
+    errors$: EMPTY as Observable<SerialError>,
+    receive$: EMPTY,
+    terminalText$: of(''),
+    lines$: EMPTY,
+    connect$: () => EMPTY,
+    disconnect$: () => EMPTY,
+    dispose$: () => EMPTY,
+    send$: (_data: SerialPayload) => EMPTY,
+    ...overrides,
+  };
+}
+
+const fake: SerialSession = createFakeSerialSession();
+```
+
+#### Framework notes
+
+| Environment | Typical typing |
+| --- | --- |
+| Angular | Inject `InjectionToken<SerialSession>`; production uses `createSerialSession()`, tests use a fake |
+| React | Type props / Context as `SerialSession` |
+| Vue | Type `provide` / `inject` values as `SerialSession` |
+| Svelte | Type `setContext` / `getContext` as `SerialSession` |
+| Vanilla TS | Take `SerialSession` in constructors or factories |
+
 ### `isWebSerialSupported(): boolean`
 
 Synchronous feature check. Returns `true` when `navigator.serial` is available. Prefer this **before** creating a session. After the session exists, drive unsupported UI from `state$` with `SerialSessionStatus.Unsupported`. See [Migrating to v4 – browser support](./migration-v4.md#browser-support-detection).
