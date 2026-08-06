@@ -10,7 +10,8 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 2. **[クイックスタート](./quick-start.md)** — インストール、接続、受信・送信、切断・破棄、エラーハンドリング
 3. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、擬似リクエスト／レスポンス、リカバリ
 4. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
-5. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
+5. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
+6. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
 
 既存コードから移行する場合:
 
@@ -26,6 +27,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[クイックスタート](./quick-start.md)** | インストールから切断までの基本フロー |
 | **[高度な使用方法](./advanced-usage.md)** | 応用パターンと RxJS レシピ |
 | **[API の概念と設計メモ](./concepts.md)** | オプション・エラーコード・型の表形式補足、差し替え可能な `SerialSession` 契約、[対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) |
+| **[実機なしテスト](./testing.md)** | 制御可能な Fake `SerialSession`、Vitest / Angular / React 例（npm 非同梱） |
 | **[トラブルシューティング](./troubleshooting.md)** | よくある問題の確認手順と報告時の情報 |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |
