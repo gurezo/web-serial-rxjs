@@ -36,7 +36,7 @@
 - バイト列 API 追加が破壊的変更か、加算的な opt-in か
 - 不正な UTF-8 / バイナリプロトコルを先に `TextDecoder` へ通してはいけない点
 
-後続の設計検討は親 Issue [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) 配下で追跡し、現行の対応範囲の明文化は [#540](https://github.com/gurezo/web-serial-rxjs/issues/540) です。
+後続の設計検討は [#545](https://github.com/gurezo/web-serial-rxjs/issues/545)（親 Issue [#535](https://github.com/gurezo/web-serial-rxjs/issues/535)）で追跡し、現行の対応範囲の明文化は [#540](https://github.com/gurezo/web-serial-rxjs/issues/540) です。
 
 ## 公開 export
 

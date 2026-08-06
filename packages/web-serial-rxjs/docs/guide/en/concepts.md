@@ -36,7 +36,7 @@ A possible future API (for example `receiveBytes$`) is **not** implemented in th
 - Whether introducing bytes is a breaking change or an additive opt-in
 - Invalid UTF-8 / binary protocols that must not pass through `TextDecoder` first
 
-Track follow-up design work under parent [#535](https://github.com/gurezo/web-serial-rxjs/issues/535); documentation of current limits is [#540](https://github.com/gurezo/web-serial-rxjs/issues/540).
+Track follow-up design work under [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) (parent [#535](https://github.com/gurezo/web-serial-rxjs/issues/535)); documentation of current limits is [#540](https://github.com/gurezo/web-serial-rxjs/issues/540).
 
 ## Public exports
 
