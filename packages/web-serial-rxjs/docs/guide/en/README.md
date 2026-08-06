@@ -10,9 +10,10 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 2. **[Quick Start](./quick-start.md)** — installation, connect, receive/send, disconnect/dispose, error handling
 3. **[Advanced Usage](./advanced-usage.md)** — line framing, derived streams, recovery
 4. **[Request / Response](./request-response.md)** — wait for replies on `lines$` / `receive$`, serialize commands
-5. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
-6. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
-7. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
+5. **[Timeout / cancel / retry](./timeout-cancel-retry.md)** — deadlines, teardown cancel, bounded retry (no core auto-retry)
+6. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
+7. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
+8. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
 
 When migrating existing code:
 
@@ -28,6 +29,7 @@ When migrating existing code:
 | **[Quick Start](./quick-start.md)** | Basic flow from installation through disconnect |
 | **[Advanced Usage](./advanced-usage.md)** | Application patterns and RxJS recipes |
 | **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$` (no core `request$`) |
+| **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, cancel on teardown, limited retry (no core auto-retry) |
 | **[API concepts and design notes](./concepts.md)** | Options, error codes, type tables, swappable `SerialSession` contract, [supported data](./concepts.md#supported-data-text--binary--charset) |
 | **[Hardware-free testing](./testing.md)** | Controllable Fake `SerialSession`, Vitest / Angular / React examples (npm: not bundled) |
 | **[Troubleshooting](./troubleshooting.md)** | Common problems, check steps, and what to report |

@@ -122,6 +122,7 @@ session.send$('hello\r\n').subscribe();
 | **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、派生ストリーム、リカバリ。 |
 | **[Request / Response](./request-response.md)** | `lines$` / `receive$` でのコマンド送信後の応答待ち。 |
+| **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** | タイムアウト、破棄時キャンセル、回数制限付き再試行。 |
 | **[トラブルシューティング](./troubleshooting.md)** | Web Serial / セッションのよくある問題と自己解決手順。 |
 | **[API Reference（TypeDoc）](../../api/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
 | **[v2 → v3 マイグレーション](./migration-v3.md)**（[English](../en/migration-v3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |

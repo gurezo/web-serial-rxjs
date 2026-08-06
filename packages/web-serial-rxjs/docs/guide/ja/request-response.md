@@ -2,7 +2,7 @@
 
 シリアル機器では、**コマンド送信後に条件に合う応答を待つ**流れがよくあります。本 Recipe は、コア API に `request$()` を追加せず、`SerialSession` 上の RxJS 組み合わせでその流れを組み立てる方法を示します。
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · 関連: [実機なしテスト](./testing.md) · 後続: タイムアウト・キャンセル・再試行（[#539](https://github.com/gurezo/web-serial-rxjs/issues/539)）
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · 関連: [実機なしテスト](./testing.md) · [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)
 
 ## スコープの判断
 
@@ -181,7 +181,7 @@ try {
 }
 ```
 
-キャンセル・再試行・バックオフの方針は [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) を参照してください。
+キャンセル・再試行・バックオフの方針は [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) を参照してください。
 
 ## 複数コマンドの直列化: `concatMap` と `switchMap`
 
@@ -214,4 +214,4 @@ pnpm --filter @gurezo/web-serial-rxjs exec vitest run tests/session/request-resp
 
 - [高度な使用方法](./advanced-usage.md) — 行フレーミング、`readUntil`、順序付き送信
 - [実機なしテスト](./testing.md) — Fake `SerialSession`
-- 後続: [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) タイムアウト・キャンセル・再試行
+- [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) — 期限、破棄時キャンセル、回数制限付き再試行
