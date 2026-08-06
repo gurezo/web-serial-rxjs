@@ -1,6 +1,6 @@
 # 高度な使用方法
 
-`SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession の概要](./overview.md#serialsessionの全体像)と[クイックスタート](./quick-start.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。ライフサイクルとエラーは `state$` の `state.status` narrowing と `errors$` の `error.is()` を優先してください — [v3 への移行](./migration-v3.md) を参照。DI やテスト用 Fake で具象実装を差し替える場合は、[差し替え可能な公開契約](./concepts.md#差し替え可能な公開契約decision-536)と [Fake SerialSession による実機なしテスト](./testing.md) を参照してください。
+`SerialSession` は意図的に小さな公開面に絞られています。応用パターンの大半は、`receive$` と `send$` の上に普通の RxJS オペレータを組み合わせることで表現できます。API の全体像は先に[SerialSession の概要](./overview.md#serialsessionの全体像)と[クイックスタート](./quick-start.md)を読み、本ページは概要で省いた**行フレーミング・派生ストリーム・リカバリ**のレシピに絞ります。**コマンド送信後の応答待ち**（`lines$` / `receive$`、待ち→送信、`concatMap` 直列化）は専用の [Request / Response レシピ](./request-response.md) を参照してください。ライフサイクルとエラーは `state$` の `state.status` narrowing と `errors$` の `error.is()` を優先してください — [v3 への移行](./migration-v3.md) を参照。DI やテスト用 Fake で具象実装を差し替える場合は、[差し替え可能な公開契約](./concepts.md#差し替え可能な公開契約decision-536)と [Fake SerialSession による実機なしテスト](./testing.md) を参照してください。
 
 本ページは [Issue #228](https://github.com/gurezo/web-serial-rxjs/issues/228) で列挙したパターンに対応します。**`lines$`** は `SerialSession` の組み込みとして用意されています。接続 UI には **`state$`** narrowing を優先してください。**`sendLine`・`readUntil`・`waitForState`** などは、引き続きコア API の上に組み立てるパターンです（専用の追加 export はありません）。USB OTG シリアルコンソールの実例として [CHIRIMEN PiZeroWebSerialConsole](https://github.com/chirimen-oh/PiZeroWebSerialConsole) があります。同アプリの読み書きループを `SerialSession` で書き直すときも、ここでのレシピがそのまま使えます。
 
@@ -100,6 +100,8 @@ from(commands)
 ```
 
 ## readUntil パターン（`readUntil$` / プロンプト待ち）
+
+行待ち・送信エラーとタイムアウトの区別・`concatMap` 直列化を含む正式な Request / Response Recipe は **[Request / Response レシピ](./request-response.md)** を参照してください。以下は `receive$` のプロンプト待ちの短い入門です。
 
 `receive$` は**チャンク**単位であり、メッセージ単位ではありません。**readUntil** はバッファに蓄積したテキストが述語（区切り・正規表現・プロンプト）を満たすまで待ちます。`receive$` はホットで過去チャンクを後から購読しただけでは再現されないため、相手がすぐ応答するなら **`send$` する前に `receive$` 側の待ち受けを開始**してください。
 

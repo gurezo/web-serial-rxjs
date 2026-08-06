@@ -14,7 +14,7 @@ Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [
 | How to use | Copy the helper below into your test tree, or keep an equivalent local Fake |
 | Repo reference | [`tests/helpers/fake-serial-session.ts`](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/tests/helpers/fake-serial-session.ts) (CI examples only; not published) |
 
-A future `@gurezo/web-serial-rxjs/testing` entry may be considered if Request/Response (#538) and timeout recipes (#539) prove a shared helper is worth maintaining. Until then, keep the public surface small.
+A future `@gurezo/web-serial-rxjs/testing` entry may be considered if shared helpers across [Request / Response](./request-response.md) and timeout recipes (#539) prove worth maintaining. Until then, keep the public surface small.
 
 ## Dependency injection pattern
 
@@ -345,4 +345,5 @@ it('reads connected state from Fake', async () => {
 
 - [Swappable public contract](./concepts.md#swappable-public-contract-decision-536)
 - [Advanced Usage](./advanced-usage.md) — compose RxJS on top of `receive$` / `send$`
-- Follow-ups: Request/Response (#538), timeout / cancel / retry (#539)
+- [Request / Response recipes](./request-response.md) — command + matching reply (#538)
+- Follow-up: timeout / cancel / retry (#539)

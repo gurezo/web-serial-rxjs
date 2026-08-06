@@ -126,7 +126,8 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | **[日本語 Guide 索引](../ja/README.md)** | Getting Started の読み順と一覧。 |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
 | **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
-| **[Advanced Usage](./advanced-usage.md)** | Line framing, request/response-style flows, and recovery. |
+| **[Advanced Usage](./advanced-usage.md)** | Line framing, derived streams, and recovery. |
+| **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$`. |
 | **[Troubleshooting](./troubleshooting.md)** | Common Web Serial / session problems and self-help checks. |
 | **[API Reference (TypeDoc)](modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
 | **[v2 → v3 Migration Guide](./migration-v3.md)** ([日本語](../ja/migration-v3.md)) | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
