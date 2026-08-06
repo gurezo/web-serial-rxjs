@@ -62,8 +62,8 @@ session.send$('hi').subscribe();
 | `client.disconnect()`                   | `session.disconnect$()`                                                  |
 | `client.connected` / `client.connected$`| `session.state$`（`SerialSessionStatus.Connected` で narrowing、または `map` で boolean を derive） |
 | `client.state$`（discriminated object） | `session.state$`（`SerialSessionState` 文字列ユニオン）                 |
-| `client.text$` / `client.lines$`        | `session.lines$`（行区切り）または `session.receive$`（生の UTF-8 チャンク） |
-| `client.bytes$`                         | v2 では非公開。バイトが必要なら `new TextEncoder().encode(chunk)` などで変換するか issue でリクエストしてください |
+| `client.text$` / `client.lines$`        | `session.lines$`（行区切り）または `session.receive$`（未フレーミングの UTF-8 デコードチャンク） |
+| `client.bytes$`                         | v2 以降も非公開。バイナリ受信 API は依然ありません。`new TextEncoder().encode(chunk)` はデコード済み文字列の**再エンコード**であり、元のワイヤバイトの復元ではありません（不正な UTF-8 / バイナリプロトコルでは損失します）。`Uint8Array` 受信が必要なら設計 Issue を起票してください |
 | `client.write(bytes)`                   | `session.send$(bytes)`                                                   |
 | `client.writeText(str)`                 | `session.send$(str)`                                                     |
 | `client.send$(data)`                    | `session.send$(data)`                                                    |

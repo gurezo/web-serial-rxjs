@@ -46,16 +46,16 @@
 
 ## SerialSession の全体像
 
-`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、**ターミナルにそのまま出す出力**は **`receive$`**、**改行区切りのログや解析**は **`lines$`** が担当します。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。
+`createSerialSession` が返す **SerialSession** だけを使います。公開 API は意図的に小さく、**未フレーミングの UTF-8 デコードチャンク**（ターミナルや `\r` 再描画向け。ワイヤ上の生バイトではない）は **`receive$`**、**改行区切りのログや解析**は **`lines$`** が担当します。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。対応範囲: [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード)。
 
 | 公開面 | 役割 |
 | --- | --- |
 | `state$` | **Canonical 接続ライフサイクル** — discriminated union（`status` + 必要に応じ `portInfo` / `error`）。購読時に現在値をリプレイ。分岐は **`SerialSessionStatus`** との比較を推奨。 |
 | `SerialSessionStatus` | **状態定数** — エクスポートされる const object（例: `SerialSessionStatus.Connected` → `'connected'`）。`state$.status` と比較する。 |
 | `SerialSessionState` | **`state$` の payload 型** — discriminated union。 |
-| `receive$` | **生のデコードチャンク** — UTF-8 テキストを read pump が返すとおりに受け取る（行揃えではない。マルチバイト安全）。`\r` 等も保持。**ターミナル風の表示**や `\r` による上書き表示向け。 |
+| `receive$` | **デコード済みテキストチャンク** — UTF-8 テキストを read pump が返すとおりに受け取る（行揃えではない。マルチバイト安全。**ワイヤ上の生バイトではない**）。`\r` 等も保持。**ターミナル風の表示**や `\r` による上書き表示向け。 |
 | `terminalText$` | **ターミナル表示向けの累積テキスト** — `receive$` 由来の表示用テキスト。`\r` による上書きを折りたたみつつ通常の改行挙動は維持します。既定ではプレーンテキスト UI 向けに ANSI エスケープを除去します（生データは `receive$`）。ターミナル風ビューへ 1 つの文字列をそのままバインドしたい場合に使います。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持します（`SerialSessionOptions.terminalBuffer` で変更可能）。 |
-| `lines$` | **行単位の受信** — `\n` / `\r\n` / 内部の `\r` など実装に従い 1 行ずつ emit。**ログ・1 行ごとの解析**向け。`\r` をそのまま残す必要がある raw ターミナル表示には向かない。 |
+| `lines$` | **行単位の受信** — `\n` / `\r\n` / 内部の `\r` など実装に従い 1 行ずつ emit。**ログ・1 行ごとの解析**向け。`\r` をそのまま残す必要がある未フレーミングのターミナル表示には向かない。 |
 | `errors$` | **Canonical error event channel** — 接続・読み取り・書き込み・クローズのすべての `SerialError`（fatal / non-fatal）。 |
 | `connect$()` | ポート選択 → オープン → 内部 read pump 開始。 |
 | `disconnect$()` | ポートを閉じ、pump を停止。セッションは `idle` に戻り再利用可能。 |
@@ -77,7 +77,7 @@
 | `SerialSessionStatus.Error` | `'error'` | 接続まわりの致命エラー。`error` 付き。 |
 | `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
-**`receive$` と `lines$`:** 機器から来たバイト列を**そのまま**画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。
+**`receive$` と `lines$`:** 機器から来た **UTF-8 デコード済みチャンク**を行分割せず画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。制御文字は保持されますが、**ワイヤ上の生バイトではありません**。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。詳細は [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 **UI 用の接続 boolean** — フラグだけ必要な場合は `state$` から derive するか（[高度な使用方法](./advanced-usage.md#接続中フラグ（-narrowing）)）、`state.status === SerialSessionStatus.Connected` で narrowing してください。削除された convenience API は [v3 移行ガイド – Phase 1 API 削除](./migration-v3.md#phase-1-api-削除) を参照してください。
 

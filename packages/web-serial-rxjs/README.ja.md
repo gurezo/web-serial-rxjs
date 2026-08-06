@@ -6,6 +6,8 @@
 
 Web Serial API を最小限の Session 指向 RxJS 表面でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、`state$`（canonical lifecycle state）/ `errors$`（error event channel）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。read loop や送信キューの自前実装は不要です。
 
+**主対象は UTF-8 テキスト通信です。** 受信データは常にストリーミング UTF-8 `TextDecoder` でデコードされます。`receive$` が返すのは**デコード済みテキストチャンク**（行未分割）であり、ワイヤ上の生バイトではありません。バイナリ**送信**（`send$(Uint8Array)`）は対応しますが、バイナリ**受信**・UTF-8 以外の文字コード・プロトコルフレーミング（Modbus / COBS / SLIP など）は対象外です。詳細は下記の [対応範囲](#対応範囲テキスト--バイナリ--文字コード) と [API の概念](./docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+
 ## ブラウザサポート
 
 Web Serial API は**デスクトップ**ブラウザでのみサポートされています。スマートフォンなどのモバイルブラウザには対応していません。
@@ -29,15 +31,30 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 
 `connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）と置換先は [v4 への移行](./docs/guide/ja/migration-v4.md) を参照してください。
 
+## 対応範囲（テキスト / バイナリ / 文字コード）
+
+| 項目 | 現在の対応 |
+| --- | --- |
+| UTF-8 テキスト送受信 | 対応 |
+| チャンク単位の文字列受信 | `receive$`（デコード済みチャンク。生バイトではない） |
+| 改行区切りの文字列受信 | `lines$` |
+| `\r` を含むターミナル表示 | `receive$` / `terminalText$` |
+| バイナリ送信 | `send$(Uint8Array)` で対応 |
+| バイナリ受信 | **非対応**（生 `Uint8Array` 受信ストリームなし） |
+| UTF-8 以外の文字コード | **非対応** |
+| 特定プロトコル（Modbus / COBS / SLIP など） | **利用側で実装** |
+
+詳細と将来検討時の設計論点: [API の概念 — 対応範囲](./docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード)。
+
 ## `receive$` と `lines$`
 
 購読するストリームはユースケースに合わせて選んでください。**`lines$`** をターミナル表示に使うと `\r` が失われ再描画できず、シェル出力（例: `ls -la` の整形）が崩れます。詳細は [概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md) を参照してください。
 
-### `receive$`（raw ストリーム）
+### `receive$`（デコード済みチャンク）
 
-- UTF-8 の**デコードチャンク**をそのまま届く順に（行揃えではありません）。
-- `\r` や行途中の断片など制御文字も保持します。
-- **ターミナル表示**、**プロンプト判定**、自前の**バッファ**/スクロールバック、raw を前提にした処理に使います。
+- UTF-8 の**デコードチャンク**をそのまま届く順に（行揃えではありません）。**ワイヤ上の生バイトではありません**。
+- デコード後のテキストとして `\r` や行途中の断片など制御文字も保持します。
+- **ターミナル表示**、**プロンプト判定**、自前の**バッファ**/スクロールバック、未フレーミングのデコードストリーム処理に使います。
 
 ### `lines$`（行単位のイベント）
 

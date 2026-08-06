@@ -62,8 +62,8 @@ The following v1 exports are **deleted** and no compatibility shim is provided.
 | `client.disconnect()`                   | `session.disconnect$()`                                                 |
 | `client.connected` / `client.connected$`| `session.state$` (narrow on `SerialSessionStatus.Connected`, or derive a boolean with `map`) |
 | `client.state$` (discriminated object)  | `session.state$` (`SerialSessionState` string union)                  |
-| `client.text$` / `client.lines$`        | `session.lines$` (line-delimited) or `session.receive$` (raw UTF-8 chunks) |
-| `client.bytes$`                         | Not exposed in v2. Convert with `new TextEncoder().encode(chunk)` if you need bytes, or open an issue. |
+| `client.text$` / `client.lines$`        | `session.lines$` (line-delimited) or `session.receive$` (unframed UTF-8 decoded chunks) |
+| `client.bytes$`                         | Not exposed in v2+. There is still no binary receive API. `new TextEncoder().encode(chunk)` only **re-encodes** a decoded string and does **not** recover original wire bytes (lossy for invalid UTF-8 / binary protocols). Prefer opening a design issue if you need `Uint8Array` receive. |
 | `client.write(bytes)`                   | `session.send$(bytes)`                                                  |
 | `client.writeText(str)`                 | `session.send$(str)`                                                    |
 | `client.send$(data)`                    | `session.send$(data)`                                                   |

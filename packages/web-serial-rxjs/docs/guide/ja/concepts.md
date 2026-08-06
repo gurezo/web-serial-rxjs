@@ -5,6 +5,39 @@
 
 公開 API は、1 つのファクトリ（`createSerialSession`）、1 つのランタイムインターフェイス（`SerialSession`）、1 つの options 型、1 つの状態ユニオン、2 つのエラー型のみで構成されます。
 
+## 対応範囲（テキスト / バイナリ / 文字コード）
+
+本ライブラリは **UTF-8 テキスト中心**です。内部の read pump は常にストリーミング `TextDecoder`（UTF-8、`fatal: false`、`stream: true`）でデコードします。公開のエンコーディングオプションはありません。
+
+| 項目 | 現在の対応 |
+| --- | --- |
+| UTF-8 テキスト送受信 | 対応 |
+| チャンク単位の文字列受信 | `receive$` — **デコード済みチャンク**（行未分割のテキスト。ワイヤ上の生バイトではない） |
+| 改行区切りの文字列受信 | `lines$` |
+| `\r` を含むターミナル表示 | `receive$` / `terminalText$` |
+| バイナリ送信 | `send$(Uint8Array)` — バイト列をそのまま送信 |
+| バイナリ受信 | **非対応** — `receiveBytes$` や生 `Uint8Array` 受信ストリームなし |
+| UTF-8 以外の文字コード（例: Shift_JIS） | **非対応** |
+| 特定プロトコル（Modbus RTU / COBS / SLIP / 独自バイナリフレーム） | **利用側で実装** — デコード済みテキスト上で組み立てるか、本ライブラリ外で扱う |
+
+### `receive$` における「raw」の意味
+
+ドキュメントや JSDoc で言う **raw** は、**行未分割のデコード済みテキストチャンク**（`\r` などの制御文字を保持）を指します。ワイヤ上の生バイトや `Uint8Array` ストリームではありません。
+
+`send$(string)` は共有 `TextEncoder`（UTF-8）でエンコードします。`send$(Uint8Array)` はバイト列をそのまま書き込みます。受信は常に UTF-8 テキストのみのため、バイナリについては送受信が**非対称**です。
+
+### 将来のバイナリ受信（設計論点のみ）
+
+将来の API（例: `receiveBytes$`）は**本リリースでは実装しません**。再検討する場合は少なくとも次を整理する必要があります。
+
+- Web Serial `ReadableStream` の read サイズとチャンク境界
+- 購読が遅い場合のバックプレッシャー / 未読バッファ増大
+- 既存の `receive$` / `lines$` / `terminalText$` との関係（並列ストリームか置換か）
+- バイト列 API 追加が破壊的変更か、加算的な opt-in か
+- 不正な UTF-8 / バイナリプロトコルを先に `TextDecoder` へ通してはいけない点
+
+後続の設計検討は [#545](https://github.com/gurezo/web-serial-rxjs/issues/545)（親 Issue [#535](https://github.com/gurezo/web-serial-rxjs/issues/535)）で追跡し、現行の対応範囲の明文化は [#540](https://github.com/gurezo/web-serial-rxjs/issues/540) です。
+
 ## 公開 export
 
 ```typescript
@@ -316,7 +349,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `receive$: Observable<string>`
 
-内部の read pump が push する UTF-8 デコード済みテキスト（**行揃いではない**生チャンク列）。**subscription-lazy ではありません**：pump は `connect$` によって起動され、チャンクは multicast されます。遅れて購読した consumer は新しいデータのみを受け取ります。`\r` を含む制御文字もそのまま保持されます。**ターミナル風の表示**や **`\r` による上書き行**が必要なときは `receive$` を使います。**改行区切りのログ**や **1 行ずつの解析**には `lines$` を使います。
+内部の read pump が push する UTF-8 デコード済みテキスト（**行揃いではない**デコードチャンク列。**ワイヤ上の生バイトではありません**）。**subscription-lazy ではありません**：pump は `connect$` によって起動され、チャンクは multicast されます。遅れて購読した consumer は新しいデータのみを受け取ります。`\r` を含む制御文字もそのまま保持されます。**ターミナル風の表示**や **`\r` による上書き行**が必要なときは `receive$` を使います。**改行区切りのログ**や **1 行ずつの解析**には `lines$` を使います。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ### `terminalText$: Observable<string>`
 
@@ -324,11 +357,11 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `lines$: Observable<string>`
 
-`\n` / `\r\n` など（実装に従い単独の `\r` も扱い）を区切りとした**行単位**の文字列。行末の改行が揃うまで内部バッファに保持し、揃った行だけが emit されます。既定では未完成 tail は `SerialSessionOptions.lineBuffer` により最大 1,048,576 文字まで保持し、超過時は先頭を破棄して `LINE_BUFFER_OVERFLOW` を `errors$` に通知します（切断はしません）。read pump については `receive$` と同様に **subscription-lazy ではありません**。ログ・パーサ向けであり、`\r` をそのまま活かす raw ターミナル表示には **`receive$`** を使ってください。
+`\n` / `\r\n` など（実装に従い単独の `\r` も扱い）を区切りとした**行単位**の文字列。行末の改行が揃うまで内部バッファに保持し、揃った行だけが emit されます。既定では未完成 tail は `SerialSessionOptions.lineBuffer` により最大 1,048,576 文字まで保持し、超過時は先頭を破棄して `LINE_BUFFER_OVERFLOW` を `errors$` に通知します（切断はしません）。read pump については `receive$` と同様に **subscription-lazy ではありません**。ログ・パーサ向けであり、`\r` をそのまま活かす未フレーミングのターミナル表示には **`receive$`** を使ってください。
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**
+ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。`Uint8Array` はそのまま書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ## SerialError / SerialErrorCode
 

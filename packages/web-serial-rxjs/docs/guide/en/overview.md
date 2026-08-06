@@ -52,16 +52,16 @@ This library is framework-agnostic and can be used with:
 
 ## SerialSession at a glance
 
-`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **raw decoder output** (including terminals and `\r` redraws), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](./advanced-usage.md)).
+`createSerialSession` returns a single **SerialSession**. All interaction goes through the fields below. The public API is intentionally small; **`receive$`** is for **unframed UTF-8 decoder chunks** (including terminals and `\r` redraws — not wire bytes), **`lines$`** for **newline-delimited logs and parsers**. When you need **custom** framing, compose plain RxJS on `receive$` (see [Advanced Usage](./advanced-usage.md)). Data scope: [Supported data](./concepts.md#supported-data-text--binary--charset).
 
 | Surface | Role |
 | --- | --- |
 | `state$` | **Canonical connection lifecycle** — discriminated union (`status` plus optional `portInfo` / `error`). Replays on subscribe. Compare **`state.status`** with **`SerialSessionStatus`**. |
 | `SerialSessionStatus` | **Status constants** — const object (e.g. `SerialSessionStatus.Connected` → `'connected'`). Compare with `state$.status`. |
 | `SerialSessionState` | **Payload type** for `state$` (discriminated union). |
-| `receive$` | **Raw decoder chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
+| `receive$` | **Decoded text chunks** — UTF-8 text as emitted by the pump (not line-aligned; multi-byte safe; **not** wire bytes). Preserves `\r` and other control characters. Use for **terminal-like mirrors** and progress output that relies on carriage-return redraws. |
 | `terminalText$` | **Terminal-ready cumulative text** — display-oriented text derived from `receive$` that folds carriage-return redraws while keeping normal newline behavior. By default strips ANSI escape sequences for plain-text UIs; use `receive$` for raw output. Use when you want to bind one string directly to a terminal-like viewport. By default retains at most 10,000 lines and 1,048,576 characters (configure via `SerialSessionOptions.terminalBuffer`). |
-| `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring raw terminal streams where `\r` must stay intact. |
+| `lines$` | **Line-delimited UTF-8 text** — one string per complete line via the built-in buffer (`\n`, `\r\n`, interior `\r`). Use for **logs** and **line-by-line parsing**, not for mirroring unframed terminal streams where `\r` must stay intact. |
 | `errors$` | **Canonical error event channel** — all `SerialError` instances from connect / read / write / close (fatal and non-fatal). |
 | `connect$()` | **Open** a user-selected port and start the internal read pump. |
 | `disconnect$()` | **Close** the port and stop the pump. The session stays reusable (`idle`). |
@@ -83,7 +83,7 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 | `SerialSessionStatus.Error` | `'error'` | Fatal failure (`error` included). |
 | `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`. |
 
-**`receive$` vs `lines$`:** use **`receive$`** when the UI must show **exactly** what the device sent (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./advanced-usage.md#line-framing)).
+**`receive$` vs `lines$`:** use **`receive$`** when the UI must preserve **unframed UTF-8 decoder chunks** from the device text stream (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). This is decoded text with control characters intact — **not** raw wire bytes. Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./advanced-usage.md#line-framing)). See [Supported data](./concepts.md#supported-data-text--binary--charset).
 
 **Connected boolean for UI** — when you only need a flag, derive it from `state$` (see [Advanced Usage](./advanced-usage.md#connected-boolean-ui-narrowing)) or narrow on `state.status === SerialSessionStatus.Connected`. Removed convenience APIs are documented in [Migrating to v3 – Phase 1 API removals](./migration-v3.md#phase-1-api-removals).
 

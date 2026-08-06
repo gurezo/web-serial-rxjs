@@ -24,7 +24,7 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 ## Features
 
 - **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$`
-- **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
+- **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly. This library is **text-first**: binary receive and non-UTF-8 charsets are out of scope (binary **send** via `send$(Uint8Array)` is supported). See the [package README supported-data table](packages/web-serial-rxjs/README.md#supported-data-text--binary--charset) and [Guide concepts](packages/web-serial-rxjs/docs/guide/en/concepts.md#supported-data-text--binary--charset)
 - **Ordered send queue**: concurrent `send$` calls are serialised internally in call order, without the caller having to manage a writer
 - **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
 - **Explicit lifecycle**: `state$` emits a discriminated union with `status` (`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`) so UIs can narrow on `state.status` and access per-state data such as `state.portInfo`

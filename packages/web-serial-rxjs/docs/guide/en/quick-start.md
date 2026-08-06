@@ -2,7 +2,7 @@
 
 This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `errors$`, `receive$`, `lines$`, and the imperative methods, read [SerialSession overview](./overview.md#serialsession-at-a-glance) first.
 
-Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the raw UTF-8 decoder chunk stream when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** run when you subscribe.
+Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the unframed UTF-8 decoder chunk stream (decoded text, not wire bytes) when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** run when you subscribe.
 
 ## Requirements
 
