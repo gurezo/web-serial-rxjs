@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: 🔒 Report a vulnerability (Security Policy)
+    url: https://github.com/gurezo/web-serial-rxjs/security/advisories/new
+    about: Do not post vulnerability details in public issues — use private vulnerability reporting
+  - name: 🔒 脆弱性の報告（セキュリティポリシー）
+    url: https://github.com/gurezo/web-serial-rxjs/security/advisories/new
+    about: 脆弱性の詳細は公開 Issue に書かず、Private Vulnerability Reporting を利用してください
   - name: 💬 Questions / Q&A (Discussions)
     url: https://github.com/gurezo/web-serial-rxjs/discussions
     about: Please use Discussions for questions and usage help (バグ報告・機能要望以外の質問は Discussions へ)

@@ -577,5 +577,6 @@ Hand-written Guide source and generated API Reference output are separated. See 
 
 - **GitHub Issues**: [Open an issue](https://github.com/gurezo/web-serial-rxjs/issues)
 - **GitHub Repository**: [web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
+- **Security**: To report a vulnerability, follow the [Security Policy](SECURITY.md) ([日本語](SECURITY.ja.md)). Do **not** post vulnerability details in a public issue.
 
 Thank you for contributing to web-serial-rxjs! 🎉

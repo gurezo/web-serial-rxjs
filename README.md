@@ -18,6 +18,7 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 - [Project Icon](#project-icon)
 - [AI Assistant (MCP)](#ai-assistant-mcp)
 - [Contributing](#contributing)
+- [Security](#security)
 - [License](#license)
 - [Links](#links)
 
@@ -187,6 +188,10 @@ For Japanese contributors, please see [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md).
 
 For release instructions, see [RELEASING.md](RELEASING.md) (or [RELEASING.ja.md](RELEASING.ja.md) for Japanese).
 
+## Security
+
+To report a vulnerability privately, see the [Security Policy](SECURITY.md) ([日本語](SECURITY.ja.md)). Do **not** open a public issue with vulnerability details.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -195,4 +200,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **GitHub Repository**: [https://github.com/gurezo/web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
 - **Issues**: [https://github.com/gurezo/web-serial-rxjs/issues](https://github.com/gurezo/web-serial-rxjs/issues)
+- **Security Policy**: [SECURITY.md](SECURITY.md) ([日本語](SECURITY.ja.md))
 - **Web Serial API Specification**: [https://wicg.github.io/serial/](https://wicg.github.io/serial/)
