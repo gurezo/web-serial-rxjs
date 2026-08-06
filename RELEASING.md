@@ -92,11 +92,20 @@ Once you push the tag, GitHub Actions automatically:
 2. ✅ Installs dependencies (`pnpm install --frozen-lockfile`)
 3. ✅ Runs tests (`pnpm test`)
 4. ✅ Builds the package (`pnpm exec nx build web-serial-rxjs`) via the same package scripts used for npm publish
-5. ✅ Verifies publish dist artifacts (`dist/index.mjs`, `dist/index.d.ts`) and npm pack contents
+5. ✅ Runs `verify:dist` (built `dist/` + public API allowlist) and `verify:pack` (npm tarball contents, package metadata, README links, consumer ESM/types smoke)
 6. ✅ Creates a release zip file
 7. ✅ Publishes to npm using Trusted Publishing (OIDC) - no tokens needed!
 8. ✅ Creates a GitHub Release with auto-generated release notes
 9. ✅ Attaches the release zip to the GitHub Release
+
+**Verification split** (also run on pull requests via CI):
+
+| Command | What it checks |
+| --- | --- |
+| `pnpm exec nx run web-serial-rxjs:verify-dist` | Post-build `dist/` artifacts and public API surface |
+| `pnpm exec nx run web-serial-rxjs:verify-pack` | Packed npm tarball: required files, forbidden paths, `homepage` / `repository` / `bugs`, README removed-API wording, major links, local consumer import/types smoke (`tools/package-smoke-test`) |
+
+Automated **post-publish** smoke against the live npm registry is intentionally out of scope; use the manual install check in Step 5 after each release.
 
 You can monitor the progress in the [Actions tab](https://github.com/gurezo/web-serial-rxjs/actions) on GitHub.
 
