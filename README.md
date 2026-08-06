@@ -16,7 +16,6 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 - [Documentation](#documentation)
 - [Examples](#examples)
 - [Project Icon](#project-icon)
-- [AI Assistant (MCP)](#ai-assistant-mcp)
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
@@ -135,31 +134,6 @@ RxJS-based abstractions for the Web Serial API.
 
 This project is an independent open source project and is **not affiliated with,
 endorsed by, or sponsored by the [ReactiveX](http://reactivex.io/) or [RxJS](https://rxjs.dev/) project**.
-
-## AI Assistant (MCP)
-
-This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
-
-| Server          | Purpose                                                                                |
-| --------------- | -------------------------------------------------------------------------------------- |
-| **nx-mcp**      | Nx workspace analysis, project graph, CI monitoring, and documentation                 |
-| **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
-| **svelte**      | Svelte/SvelteKit documentation and code analysis for example-svelte                    |
-
-**Configuration files:**
-
-- `.mcp.json` - Standard MCP configuration (Cursor, VS Code, Claude, etc.)
-- `.cursor/mcp.json` - Cursor-specific configuration
-
-To use MCP servers in Cursor, the configuration is automatically loaded from `.cursor/mcp.json`. For VS Code, add the MCP extension and configure it to use `.mcp.json`, or add the server definitions to your MCP settings.
-
-### Cursor rules and agents
-
-This repository also ships [Cursor](https://www.cursor.com/) rules under `.cursor/rules/` (grouped by topic: `commits/` for Conventional Commits and PR titles, `typescript/`, `rxjs/`, `angular/`, `nx/` including Nx workspace tasks and **commit scope** guidance, `examples/`, and `workflow/`). Rules are split into small `.mdc` files by responsibility to reduce overlap and keep prompts focused.
-
-- `.cursor/agents/ci-monitor-subagent.md` — optional CI helper used with `/monitor-ci` and the Nx MCP `ci_information` / `update_self_healing_fix` tools when Nx Cloud CI monitoring is enabled.
-
-Commit scope tables stay aligned with `commitlint.config.js`; see `.cursor/skills/conventional-commits/` for examples and the scope list.
 
 ## Development and Release Strategy
 

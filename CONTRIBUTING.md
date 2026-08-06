@@ -78,16 +78,35 @@ This will ensure that commit messages are automatically checked for Conventional
 
 ### 5. AI Assistant (MCP) - Optional
 
-This project includes MCP (Model Context Protocol) server configuration for AI-assisted development. See the [AI Assistant (MCP)](README.md#ai-assistant-mcp) section in the README for available servers (Nx, Angular CLI, Svelte) and configuration details.
+This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
+
+| Server          | Purpose                                                                                |
+| --------------- | -------------------------------------------------------------------------------------- |
+| **nx-mcp**      | Nx workspace analysis, project graph, CI monitoring, and documentation                 |
+| **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
+| **svelte**      | Svelte/SvelteKit documentation and code analysis for example-svelte                    |
+
+**Configuration files:**
+
+- `.mcp.json` - Standard MCP configuration (Cursor, VS Code, Claude, etc.)
+- `.cursor/mcp.json` - Cursor-specific configuration
+
+To use MCP servers in Cursor, the configuration is automatically loaded from `.cursor/mcp.json`. For VS Code, add the MCP extension and configure it to use `.mcp.json`, or add the server definitions to your MCP settings.
 
 ### 6. Cursor Rules / Skills - Optional
 
-When you open this repository in [Cursor](https://www.cursor.com/), the following rules and skills are automatically applied so the AI generates Conventional Commits compliant commit messages and PR titles:
+This repository ships [Cursor](https://www.cursor.com/) rules under `.cursor/rules/` (grouped by topic: `commits/` for Conventional Commits and PR titles, `typescript/`, `rxjs/`, `angular/`, `nx/` including Nx workspace tasks and **commit scope** guidance, `examples/`, and `workflow/`). Rules are split into small `.mdc` files by responsibility to reduce overlap and keep prompts focused.
+
+When you open this repository in Cursor, the following rules and skills help the AI generate Conventional Commits compliant commit messages and PR titles:
 
 - `.cursor/rules/commits/40-conventional-commits.mdc`: Conventional Commits base rule
 - `.cursor/rules/commits/41-pull-request-title.mdc`: PR title convention
 - `.cursor/rules/nx/30-nx-project-scope.mdc`: Resolve scope from `project.json` `name`
 - `.cursor/skills/conventional-commits/`: Examples / assertions / scope list
+
+- `.cursor/agents/ci-monitor-subagent.md` — optional CI helper used with `/monitor-ci` and the Nx MCP `ci_information` / `update_self_healing_fix` tools when Nx Cloud CI monitoring is enabled.
+
+Commit scope tables stay aligned with `commitlint.config.js`; see `.cursor/skills/conventional-commits/` for examples and the scope list.
 
 When you add or rename a `project.json`, keep `commitlint.config.js` (`scope-enum`), `.cursor/skills/conventional-commits/scopes.md`, and `.cursor/rules/nx/30-nx-project-scope.mdc` in sync.
 

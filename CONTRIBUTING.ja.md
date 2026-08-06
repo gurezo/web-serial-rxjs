@@ -78,16 +78,35 @@ pnpm run prepare
 
 ### 5. AI アシスタント（MCP）— 任意
 
-このプロジェクトには、AI 支援開発向けの MCP（Model Context Protocol）サーバー設定が含まれています。利用可能なサーバー（Nx、Angular CLI、Svelte）と設定の詳細は、README の [AI アシスタント（MCP）](README.ja.md#ai-アシスタントmcp) セクションを参照してください。
+このプロジェクトには、AI 支援開発向けの [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) サーバー設定が含まれています。利用可能な MCP サーバーは次のとおりです。
+
+| サーバー | 用途 |
+| -------- | ---- |
+| **nx-mcp** | Nx ワークスペース分析、プロジェクトグラフ、CI 監視、ドキュメント |
+| **angular-cli** | example-angular 向け Angular CLI ツール（コード生成、ドキュメント、ベストプラクティス） |
+| **svelte** | example-svelte 向け Svelte / SvelteKit ドキュメントとコード分析 |
+
+**設定ファイル:**
+
+- `.mcp.json` — 標準 MCP 設定（Cursor、VS Code、Claude など）
+- `.cursor/mcp.json` — Cursor 専用設定
+
+Cursor では `.cursor/mcp.json` から設定が自動的に読み込まれます。VS Code では MCP 拡張機能を追加し `.mcp.json` を使うか、MCP 設定にサーバー定義を追加してください。
 
 ### 6. Cursor Rules / Skills — 任意
 
-[Cursor](https://www.cursor.com/) でこのリポジトリを開くと、以下の Rules / Skills が自動的に適用され、AI が Conventional Commits 準拠の commit message / PR タイトルを生成できるようになります。
+このリポジトリには `.cursor/rules/` 配下に [Cursor](https://www.cursor.com/) 用ルールも同梱されています（トピック別: Conventional Commits と PR タイトル用の `commits/`、`typescript/`、`rxjs/`、`angular/`、Nx ワークスペースタスクと **commit scope** ガイドを含む `nx/`、`examples/`、`workflow/`）。ルールは責務ごとに小さな `.mdc` ファイルへ分割し、重複を減らしてプロンプトを絞り込んでいます。
+
+Cursor でこのリポジトリを開くと、以下の Rules / Skills が AI による Conventional Commits 準拠の commit message / PR タイトル生成を支援します。
 
 - `.cursor/rules/commits/40-conventional-commits.mdc`: Conventional Commits の基本ルール
 - `.cursor/rules/commits/41-pull-request-title.mdc`: PR タイトル規約
 - `.cursor/rules/nx/30-nx-project-scope.mdc`: `project.json` の `name` を scope として解決
 - `.cursor/skills/conventional-commits/`: 例集 / 検証項目 / scope 一覧
+
+- `.cursor/agents/ci-monitor-subagent.md` — Nx Cloud CI 監視が有効な場合に `/monitor-ci` および Nx MCP の `ci_information` / `update_self_healing_fix` ツールと併用する任意の CI ヘルパー
+
+commit scope の表は `commitlint.config.js` と整合します。例と scope 一覧は `.cursor/skills/conventional-commits/` を参照してください。
 
 新しい `project.json` を追加・リネームしたときは、`commitlint.config.js` の `scope-enum`、`.cursor/skills/conventional-commits/scopes.md`、`.cursor/rules/nx/30-nx-project-scope.mdc` も同時に更新してください。
 
