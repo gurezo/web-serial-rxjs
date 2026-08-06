@@ -2,7 +2,7 @@
 
 Serial devices often expect a **command**, then a **matching reply** (a line, a prompt, or a terminator). This recipe shows how to build that flow with plain RxJS on top of `SerialSession` — **without** adding a core `request$()` API.
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · Related: [Hardware-free testing](./testing.md) · Follow-up: timeout / cancel / retry ([#539](https://github.com/gurezo/web-serial-rxjs/issues/539))
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · Related: [Hardware-free testing](./testing.md) · [Timeout / cancel / retry](./timeout-cancel-retry.md)
 
 ## Scope decision
 
@@ -181,7 +181,7 @@ try {
 }
 ```
 
-Cancel / retry / backoff policies belong in [#539](https://github.com/gurezo/web-serial-rxjs/issues/539).
+Cancel / retry / backoff policies belong in [Timeout / cancel / retry](./timeout-cancel-retry.md).
 
 ## Serialize multiple commands: `concatMap` vs `switchMap`
 
@@ -214,4 +214,4 @@ Drive replies with the Fake from [Hardware-free testing](./testing.md) (`emitLin
 
 - [Advanced Usage](./advanced-usage.md) — line framing, `readUntil`, ordered writes
 - [Hardware-free testing](./testing.md) — Fake `SerialSession`
-- Follow-up: [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) timeout / cancel / retry
+- [Timeout / cancel / retry](./timeout-cancel-retry.md) — deadlines, teardown cancel, bounded retry

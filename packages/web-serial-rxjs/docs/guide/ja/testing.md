@@ -14,7 +14,7 @@ Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [
 | 使い方 | 下のヘルパーをテストツリーへコピーするか、同等の Fake をアプリ側で定義する |
 | リポジトリ参照 | [`tests/helpers/fake-serial-session.ts`](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/tests/helpers/fake-serial-session.ts)（CI 用の例。公開物ではない） |
 
-[Request / Response](./request-response.md) やタイムアウト Recipe（#539）で共有ヘルパーの必要性が固まった場合に、将来 `@gurezo/web-serial-rxjs/testing` などを検討します。それまでは公開面を小さく保ちます。
+[Request / Response](./request-response.md) や [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) で共有ヘルパーの必要性が固まった場合に、将来 `@gurezo/web-serial-rxjs/testing` などを検討します。それまでは公開面を小さく保ちます。
 
 ## 依存の差し替えパターン
 
@@ -346,4 +346,4 @@ it('reads connected state from Fake', async () => {
 - [差し替え可能な公開契約](./concepts.md#差し替え可能な公開契約decision-536)
 - [高度な使用方法](./advanced-usage.md) — `receive$` / `send$` 上の RxJS 組み立て
 - [Request / Response レシピ](./request-response.md) — コマンド送信後の応答待ち（#538）
-- 後続: タイムアウト・キャンセル・再試行（#539）
+- [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) — 期限、破棄時キャンセル、回数制限付き再試行（#539）
