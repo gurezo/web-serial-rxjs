@@ -1,6 +1,6 @@
 {
   "name": "@gurezo/web-serial-rxjs/workspace",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
