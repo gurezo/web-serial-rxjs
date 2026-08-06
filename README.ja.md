@@ -24,7 +24,7 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 ## 機能
 
 - **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（error event channel）/ `receive$` / `lines$` と `connect$` / `disconnect$` / `dispose$` / `send$` を公開
-- **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます
+- **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます。本ライブラリは **テキスト中心**で、バイナリ受信・UTF-8 以外の文字コードは対象外です（バイナリ**送信**の `send$(Uint8Array)` は対応）。詳細は [パッケージ README の対応範囲表](packages/web-serial-rxjs/README.ja.md#対応範囲テキスト--バイナリ--文字コード) と [Guide の概念](packages/web-serial-rxjs/docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください
 - **順序保証された送信キュー**: 並行する `send$` 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます
 - **統一エラーチャネル**: すべての I/O エラーは `SerialError` に正規化され `errors$` に多重化されます
 - **明示的なライフサイクル**: `state$` は `status` を持つ discriminated union（`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`）を emit するので、`state.status` で narrowing し `state.portInfo` などにアクセスできます
