@@ -92,11 +92,20 @@ git push origin v1.0.0
 2. ✅ 依存関係をインストール（`pnpm install --frozen-lockfile`）
 3. ✅ テストを実行（`pnpm test`）
 4. ✅ パッケージをビルド（`pnpm exec nx build web-serial-rxjs`）— npm publish と同じ package scripts 経由
-5. ✅ 配布用 dist 成果物（`dist/index.mjs`, `dist/index.d.ts`）と npm pack 内容を検証
+5. ✅ `verify:dist`（ビルド済み `dist/` + 公開 API allowlist）と `verify:pack`（npm tarball 内容、package metadata、README リンク、消費者 ESM/型 smoke）を実行
 6. ✅ リリース用 zip ファイルを作成
 7. ✅ Trusted Publishing (OIDC) を使用して npm に公開 - トークン不要！
 8. ✅ 自動生成されたリリースノート付きの GitHub リリースを作成
 9. ✅ GitHub リリースにリリース zip を添付
+
+**検証の責務分担**（PR の CI でも実行）:
+
+| コマンド | 検証内容 |
+| --- | --- |
+| `pnpm exec nx run web-serial-rxjs:verify-dist` | ビルド直後の `dist/` 成果物と公開 API 表面 |
+| `pnpm exec nx run web-serial-rxjs:verify-pack` | npm tarball: 必須ファイル、禁止パス、`homepage` / `repository` / `bugs`、README の削除済み API 表記、主要リンク、ローカル消費者 import/型 smoke（`tools/package-smoke-test`） |
+
+npm レジストリへの公開**後**の自動 smoke は対象外です。各リリース後はステップ 5 の手動インストール確認を行ってください。
 
 進行状況は GitHub の [Actions タブ](https://github.com/gurezo/web-serial-rxjs/actions) で確認できます。
 

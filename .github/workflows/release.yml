@@ -31,30 +31,7 @@ jobs:
       - run: pnpm test
       - run: pnpm exec nx build web-serial-rxjs
       - run: pnpm exec nx run web-serial-rxjs:verify-dist
-      - name: Verify npm package includes required files
-        shell: bash
-        run: |
-          set -euo pipefail
-          PACK_RESULT="$(npm pack --dry-run --json ./packages/web-serial-rxjs)"
-
-          node -e '
-            const result = JSON.parse(process.argv[1]);
-            const files = (result[0]?.files ?? []).map((file) => file.path);
-            const required = [
-              "README.md",
-              "README.ja.md",
-              "dist/index.mjs",
-              "dist/index.d.ts",
-            ];
-            const missing = required.filter((path) => !files.includes(path));
-
-            if (missing.length > 0) {
-              console.error(`Missing files in npm pack output: ${missing.join(", ")}`);
-              process.exit(1);
-            }
-
-            console.log("Verified npm pack includes required publish files.");
-          ' "$PACK_RESULT"
+      - run: pnpm exec nx run web-serial-rxjs:verify-pack
 
       # リリース添付用の zip を作る（パッケージ単位）
       - name: Create release zip

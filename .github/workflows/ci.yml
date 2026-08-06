@@ -49,5 +49,8 @@ jobs:
       - name: Verify publish dist artifacts
         run: pnpm exec nx run web-serial-rxjs:verify-dist
 
+      - name: Verify npm pack contents
+        run: pnpm exec nx run web-serial-rxjs:verify-pack
+
       - name: Run tests
         run: pnpm test

@@ -6,7 +6,7 @@
 
 Web Serial API を最小限の Session 指向 RxJS 表面でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、`state$`（canonical lifecycle state）/ `errors$`（error event channel）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。read loop や送信キューの自前実装は不要です。
 
-**主対象は UTF-8 テキスト通信です。** 受信データは常にストリーミング UTF-8 `TextDecoder` でデコードされます。`receive$` が返すのは**デコード済みテキストチャンク**（行未分割）であり、ワイヤ上の生バイトではありません。バイナリ**送信**（`send$(Uint8Array)`）は対応しますが、バイナリ**受信**・UTF-8 以外の文字コード・プロトコルフレーミング（Modbus / COBS / SLIP など）は対象外です。詳細は下記の [対応範囲](#対応範囲テキスト--バイナリ--文字コード) と [API の概念](./docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+**主対象は UTF-8 テキスト通信です。** 受信データは常にストリーミング UTF-8 `TextDecoder` でデコードされます。`receive$` が返すのは**デコード済みテキストチャンク**（行未分割）であり、ワイヤ上の生バイトではありません。バイナリ**送信**（`send$(Uint8Array)`）は対応しますが、バイナリ**受信**・UTF-8 以外の文字コード・プロトコルフレーミング（Modbus / COBS / SLIP など）は対象外です。詳細は下記の [対応範囲](#対応範囲テキスト--バイナリ--文字コード) と [API の概念](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ## ブラウザサポート
 
@@ -25,11 +25,11 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 
 ## 接続状態（ライフサイクル UI）
 
-ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v4 への移行](./docs/guide/ja/migration-v4.md) を参照してください。
+ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v4 への移行](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) を参照してください。
 
 ## 接続中のポート情報（デバイス識別）
 
-`connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）と置換先は [v4 への移行](./docs/guide/ja/migration-v4.md) を参照してください。
+`connect$` 成功後、`state$` を `state.status === SerialSessionStatus.Connected` で handling する場合は **`state.portInfo`** を canonical API として使用してください。生の `SerialPort` は公開しません。削除された convenience API（`isConnected$`、`portInfo$`、`getPortInfo()`、`destroy$()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）と置換先は [v4 への移行](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) を参照してください。
 
 ## 対応範囲（テキスト / バイナリ / 文字コード）
 
@@ -44,7 +44,7 @@ Web Serial API は**デスクトップ**ブラウザでのみサポートされ�
 | UTF-8 以外の文字コード | **非対応** |
 | 特定プロトコル（Modbus / COBS / SLIP など） | **利用側で実装** |
 
-詳細と将来検討時の設計論点: [API の概念 — 対応範囲](./docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード)。
+詳細と将来検討時の設計論点: [API の概念 — 対応範囲](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード)。
 
 ## `receive$` と `lines$`
 
