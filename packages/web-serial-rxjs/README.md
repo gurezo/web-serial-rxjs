@@ -6,6 +6,8 @@
 
 A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The public API exposes a single `SerialSession` so applications can drive their UI from `state$` (canonical lifecycle state) + `errors$` (error event channel) + `receive$` + `lines$`, without rebuilding read loops or send queues themselves.
 
+**Primary focus: UTF-8 text.** Incoming data is always decoded with a streaming UTF-8 `TextDecoder`. `receive$` emits **decoded text chunks** (unframed), not raw wire bytes. Binary **send** via `send$(Uint8Array)` is supported; binary **receive**, non-UTF-8 charsets, and protocol framing (Modbus, COBS, SLIP, …) are out of scope. See [Supported data](#supported-data-text--binary--charset) below and [API concepts](./docs/guide/en/concepts.md#supported-data-text--binary--charset).
+
 ## Browser support
 
 The Web Serial API is supported on **desktop** browsers only. Smartphones and other mobile browsers are not supported.
@@ -29,15 +31,30 @@ Prefer **`state$`** with `state.status` narrowing as the canonical API for lifec
 
 After a successful `connect$`, use `state.portInfo` when handling `state$` with `state.status === SerialSessionStatus.Connected` — this is the canonical API. Raw `SerialPort` is not exposed. Removed convenience APIs (`isConnected$`, `portInfo$`, `getPortInfo()`, `destroy$()`, `getCurrentPort()`, `receiveReplay$`, `isBrowserSupported()`) and their replacements are documented in [Migrating to v4](./docs/guide/en/migration-v4.md).
 
+## Supported data (text / binary / charset)
+
+| Item | Current support |
+| --- | --- |
+| UTF-8 text send / receive | Supported |
+| Chunk-oriented string receive | `receive$` (decoded chunks, not wire bytes) |
+| Newline-delimited string receive | `lines$` |
+| Terminal display with `\r` redraws | `receive$` / `terminalText$` |
+| Binary send | `send$(Uint8Array)` |
+| Binary receive | **Not supported** (no raw `Uint8Array` receive stream) |
+| Non-UTF-8 charsets | **Not supported** |
+| Protocol framing (Modbus, COBS, SLIP, …) | **Application-side** |
+
+Full notes and future design considerations: [API concepts — Supported data](./docs/guide/en/concepts.md#supported-data-text--binary--charset).
+
 ## `receive$` vs `lines$`
 
 Pick the stream that matches your use case. Using **`lines$`** for a terminal mirror drops `\r` and redraw behaviour, which breaks shells and tools that rely on carriage-return updates ([overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md)).
 
-### `receive$` (raw stream)
+### `receive$` (decoded chunks)
 
-- UTF-8 **decoder chunks** as they arrive—not line-aligned.
-- Preserves `\r`, partial lines, and other control characters.
-- Use for: **terminal display**, **prompt detection**, **buffering** / scrollback you control, and other **raw-stream** handling.
+- UTF-8 **decoder chunks** as they arrive—not line-aligned, and **not** raw wire bytes.
+- Preserves `\r`, partial lines, and other control characters from the decoded text.
+- Use for: **terminal display**, **prompt detection**, **buffering** / scrollback you control, and other unframed decoded-stream handling.
 
 ### `lines$` (line-delimited events)
 
