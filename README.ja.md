@@ -6,17 +6,23 @@
 
 Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、アプリケーション側は `state$`（canonical lifecycle state）/ `errors$`（error event channel）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
 
+**主な対象読者:** この README は主に**ライブラリ利用者**向けです（インストール、接続、サンプル、Guide）。コントリビュータ・メンテナは [貢献](#貢献) および [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) から始めてください。短い [npm パッケージ README](packages/web-serial-rxjs/README.ja.md) は `@gurezo/web-serial-rxjs` と一緒に公開される利用者向け索引です。このリポジトリ README はモノレポのハブ（`apps/` のサンプル、貢献、開発ツール案内）です。
+
 ## 目次
 
-- [SerialSession の全体像](#serialsessionの全体像)
 - [機能](#機能)
 - [対応フレームワーク](#対応フレームワーク)
 - [ブラウザサポート](#ブラウザサポート)
 - [インストール](#インストール)
+- [SerialSession の全体像](#serialsessionの全体像)
 - [ドキュメント](#ドキュメント)
 - [サンプル](#サンプル)
-- [プロジェクトアイコンについて](#プロジェクトアイコンについて)
+- [マイグレーション](#マイグレーション)
+- [トラブルシューティング](#トラブルシューティング)
 - [貢献](#貢献)
+- [開発ツール](#開発ツール)
+- [開発とリリース戦略](#開発とリリース戦略)
+- [プロジェクトアイコンについて](#プロジェクトアイコンについて)
 - [セキュリティ](#セキュリティ)
 - [ライセンス](#ライセンス)
 - [リンク](#リンク)
@@ -93,9 +99,12 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 **公開ドキュメントサイト:** [gurezo.net/web-serial-rxjs](https://gurezo.net/web-serial-rxjs/)
 
+**役割分担:** [npm パッケージ README](packages/web-serial-rxjs/README.ja.md) はパッケージ同梱の短い利用者向け索引、**このリポジトリ README** はモノレポのサンプル・貢献入口・開発ツール案内です。
+
 | ドキュメント | 用途 |
 | --- | --- |
 | **この README** | モノレポのハブ：機能要約、サンプル、貢献導線。 |
+| **[npm パッケージ README](packages/web-serial-rxjs/README.ja.md)** | `@gurezo/web-serial-rxjs` と同梱される短い利用者向け索引。 |
 | **[日本語 Guide（公開サイト）](https://gurezo.net/web-serial-rxjs/guide/ja/README.html)** | Getting Started の読み順と一覧（公開サイト）。 |
 | **[English Guide（公開サイト）](https://gurezo.net/web-serial-rxjs/guide/en/README.html)** | Getting Started reading order and full index on the published site. |
 | **[API Reference（公開サイト）](https://gurezo.net/web-serial-rxjs/api/index.html)** | 英語 TypeDoc API Reference（公開サイト）。 |
@@ -124,29 +133,19 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 各例には、セットアップと使用方法の説明を含む README が含まれています。
 
-## プロジェクトアイコンについて
+## マイグレーション
 
-このプロジェクトのアイコンには、[RxJS](https://rxjs.dev/) のロゴから着想を得たデザインに、
-Web Serial を表すシリアルコネクタのモチーフを組み合わせたものを使用しています。
+旧メジャーバージョンからのアップグレード:
 
-このアイコンは、本ライブラリが Web Serial API を RxJS ベースで扱うための
-ライブラリであることを示す目的でのみ使用しています。
+- [v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v4.md)）
+- [v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)）
+- [v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v2.md)）
 
-本プロジェクトは **[ReactiveX](http://reactivex.io/) / [RxJS](https://rxjs.dev/) 公式とは関係のない独立したオープンソースプロジェクト** であり、
-公式な提携・承認・スポンサー関係はありません。
+## トラブルシューティング
 
-## 開発とリリース戦略
+Web Serial / セッションのよくある問題と自己解決手順:
 
-このプロジェクトは**trunk-based開発**アプローチに従います：
-
-- **`main`ブランチ**: 常にリリース可能な状態
-- **短命ブランチ**: `feature/*`, `fix/*`, `docs/*` はプルリクエスト用
-- **リリース**: ブランチではなくGitタグ（例: `v1.0.0`）で管理
-- **バージョン保守**: 複数のメジャーバージョンを保守する必要がある場合のみ `release/v*` ブランチを追加
-
-詳細な貢献ガイドラインについては、[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
-
-詳細なリリース手順については、[RELEASING.ja.md](RELEASING.ja.md) を参照してください。
+- [トラブルシューティング（日本語 Guide）](packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md)（[English](packages/web-serial-rxjs/docs/guide/en/troubleshooting.md)）
 
 ## 貢献
 
@@ -161,6 +160,33 @@ Web Serial を表すシリアルコネクタのモチーフを組み合わせた
 英語版の貢献ガイドは [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
 リリース手順については、[RELEASING.ja.md](RELEASING.ja.md)（または英語版は [RELEASING.md](RELEASING.md)）を参照してください。
+
+## 開発ツール
+
+このリポジトリでの AI 支援開発について:
+
+- **MCP サーバー**（Nx、Angular CLI、Svelte）と設定 — CONTRIBUTING.ja.md の [AI アシスタント（MCP）](CONTRIBUTING.ja.md#5-ai-アシスタントmcp--任意) を参照
+- **Cursor rules / skills / agents** — CONTRIBUTING.ja.md の [Cursor Rules / Skills](CONTRIBUTING.ja.md#6-cursor-rules--skills--任意) を参照
+
+English: see the same sections in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 開発とリリース戦略
+
+このプロジェクトは **trunk-based 開発**に従います。`main` は常にリリース可能、作業は短命の `feature/*` / `fix/*` / `docs/*` プルリクエスト経由、リリースは Git タグ（例: `v1.0.0`）です。
+
+- 貢献の詳細: [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md)
+- リリース手順: [RELEASING.ja.md](RELEASING.ja.md)
+
+## プロジェクトアイコンについて
+
+このプロジェクトのアイコンには、[RxJS](https://rxjs.dev/) のロゴから着想を得たデザインに、
+Web Serial を表すシリアルコネクタのモチーフを組み合わせたものを使用しています。
+
+このアイコンは、本ライブラリが Web Serial API を RxJS ベースで扱うための
+ライブラリであることを示す目的でのみ使用しています。
+
+本プロジェクトは **[ReactiveX](http://reactivex.io/) / [RxJS](https://rxjs.dev/) 公式とは関係のない独立したオープンソースプロジェクト** であり、
+公式な提携・承認・スポンサー関係はありません。
 
 ## セキュリティ
 
