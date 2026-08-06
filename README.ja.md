@@ -18,6 +18,7 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 - [プロジェクトアイコンについて](#プロジェクトアイコンについて)
 - [AI アシスタント（MCP）](#ai-アシスタントmcp)
 - [貢献](#貢献)
+- [セキュリティ](#セキュリティ)
 - [ライセンス](#ライセンス)
 - [リンク](#リンク)
 
@@ -187,6 +188,10 @@ commit scope の表は `commitlint.config.js` と整合します。例と scope 
 
 リリース手順については、[RELEASING.ja.md](RELEASING.ja.md)（または英語版は [RELEASING.md](RELEASING.md)）を参照してください。
 
+## セキュリティ
+
+脆弱性を非公開で報告する方法は、[セキュリティポリシー](SECURITY.ja.md)（[English](SECURITY.md)）を参照してください。脆弱性の詳細を公開の Issue に投稿しないでください。
+
 ## ライセンス
 
 このプロジェクトは MIT ライセンスの下で公開されています。詳細は [LICENSE](LICENSE) ファイルを参照してください。
@@ -195,4 +200,5 @@ commit scope の表は `commitlint.config.js` と整合します。例と scope 
 
 - **GitHub リポジトリ**: [https://github.com/gurezo/web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
 - **イシュー**: [https://github.com/gurezo/web-serial-rxjs/issues](https://github.com/gurezo/web-serial-rxjs/issues)
+- **セキュリティポリシー**: [SECURITY.ja.md](SECURITY.ja.md)（[English](SECURITY.md)）
 - **Web Serial API 仕様**: [https://wicg.github.io/serial/](https://wicg.github.io/serial/)

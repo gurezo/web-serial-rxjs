@@ -580,5 +580,6 @@ nx graph
 
 - **GitHub Issues**: [イシューを開く](https://github.com/gurezo/web-serial-rxjs/issues)
 - **GitHubリポジトリ**: [web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
+- **セキュリティ**: 脆弱性の報告は [セキュリティポリシー](SECURITY.ja.md)（[English](SECURITY.md)）に従ってください。脆弱性の詳細を公開の Issue に投稿しないでください。
 
 web-serial-rxjs への貢献ありがとうございます！🎉
