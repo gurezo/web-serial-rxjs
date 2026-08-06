@@ -261,7 +261,7 @@ interface SerialSession {
 | Avoid dual maintenance | A second interface only adds long-term compatibility and docs cost |
 | Parent #535 | Do not casually extend the core API |
 
-Full Fake / hardware-free testing recipes land in [#537](https://github.com/gurezo/web-serial-rxjs/issues/537). Below is only a minimal skeleton that type-checks.
+For a controllable Fake, Vitest examples, Angular / React injection, and the **npm packaging decision** (Fake is **not** published), see **[Hardware-free testing with a Fake SerialSession](./testing.md)** (#537).
 
 #### Recommended pattern
 
@@ -283,40 +283,12 @@ const session = createSerialSession({ baudRate: 115200 });
 createSerialUi(session);
 ```
 
-#### Minimal fake skeleton
-
-```typescript
-import { EMPTY, of, type Observable } from 'rxjs';
-import type { SerialError, SerialPayload, SerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
-
-function createFakeSerialSession(
-  overrides: Partial<SerialSession> = {},
-): SerialSession {
-  const idle: SerialSessionState = { status: SerialSessionStatus.Idle };
-  return {
-    state$: of(idle),
-    errors$: EMPTY as Observable<SerialError>,
-    receive$: EMPTY,
-    terminalText$: of(''),
-    lines$: EMPTY,
-    connect$: () => EMPTY,
-    disconnect$: () => EMPTY,
-    dispose$: () => EMPTY,
-    send$: (_data: SerialPayload) => EMPTY,
-    ...overrides,
-  };
-}
-
-const fake: SerialSession = createFakeSerialSession();
-```
-
 #### Framework notes
 
 | Environment | Typical typing |
 | --- | --- |
-| Angular | Inject `InjectionToken<SerialSession>`; production uses `createSerialSession()`, tests use a fake |
-| React | Type props / Context as `SerialSession` |
+| Angular | Inject `InjectionToken<SerialSession>`; production uses `createSerialSession()`, tests use a fake — see [testing](./testing.md#angular-inject-serialsession) |
+| React | Type props / Context as `SerialSession` — see [testing](./testing.md#react-context-typed-as-serialsession) |
 | Vue | Type `provide` / `inject` values as `SerialSession` |
 | Svelte | Type `setContext` / `getContext` as `SerialSession` |
 | Vanilla TS | Take `SerialSession` in constructors or factories |

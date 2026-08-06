@@ -261,7 +261,7 @@ interface SerialSession {
 | 二重管理を避ける | 別名 interface は長期互換・文書・型のコストだけが増える |
 | Parent #535 | コア API を安易に拡張しない |
 
-本格的な Fake / 実機なしテスト Recipe は [#537](https://github.com/gurezo/web-serial-rxjs/issues/537) で整備します。ここでは型が通る最小スケルトンまで示します。
+制御可能な Fake、Vitest 例、Angular / React への注入、および **npm 同梱の判断**（Fake は **公開しない**）は **[Fake SerialSession による実機なしテスト](./testing.md)**（#537）を参照してください。
 
 #### 推奨パターン
 
@@ -283,40 +283,12 @@ const session = createSerialSession({ baudRate: 115200 });
 createSerialUi(session);
 ```
 
-#### 最小 Fake スケルトン
-
-```typescript
-import { EMPTY, of, type Observable } from 'rxjs';
-import type { SerialError, SerialPayload, SerialSession, SerialSessionState } from '@gurezo/web-serial-rxjs';
-import { SerialSessionStatus } from '@gurezo/web-serial-rxjs';
-
-function createFakeSerialSession(
-  overrides: Partial<SerialSession> = {},
-): SerialSession {
-  const idle: SerialSessionState = { status: SerialSessionStatus.Idle };
-  return {
-    state$: of(idle),
-    errors$: EMPTY as Observable<SerialError>,
-    receive$: EMPTY,
-    terminalText$: of(''),
-    lines$: EMPTY,
-    connect$: () => EMPTY,
-    disconnect$: () => EMPTY,
-    dispose$: () => EMPTY,
-    send$: (_data: SerialPayload) => EMPTY,
-    ...overrides,
-  };
-}
-
-const fake: SerialSession = createFakeSerialSession();
-```
-
 #### フレームワークへの適用メモ
 
 | 環境 | 型の置き方（例） |
 | --- | --- |
-| Angular | `InjectionToken<SerialSession>` で注入し、本番は `createSerialSession()`、テストは Fake |
-| React | props / Context の型を `SerialSession` にする |
+| Angular | `InjectionToken<SerialSession>` で注入し、本番は `createSerialSession()`、テストは Fake — [testing](./testing.md#angular-serialsession-を注入する) |
+| React | props / Context の型を `SerialSession` にする — [testing](./testing.md#react-serialsession-型の-context) |
 | Vue | `provide` / `inject` の値の型を `SerialSession` にする |
 | Svelte | `setContext` / `getContext` の型を `SerialSession` にする |
 | Vanilla TS | コンストラクタやファクトリ引数を `SerialSession` にする |
