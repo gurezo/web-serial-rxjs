@@ -9,7 +9,7 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 1. **[Overview](./overview.md)** — `SerialSession` public surface, role of `state$` / `errors$`, minimal sample
 2. **[Quick Start](./quick-start.md)** — installation, connect, receive/send, disconnect/dispose, error handling
 3. **[Advanced Usage](./advanced-usage.md)** — line framing, request/response-style flows, recovery
-4. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract (not a TypeDoc substitute)
+4. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
 5. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
 
 When migrating existing code:
@@ -25,7 +25,7 @@ When migrating existing code:
 | **[Overview](./overview.md)** | Public surface quick reference, feature summary, minimal sample |
 | **[Quick Start](./quick-start.md)** | Basic flow from installation through disconnect |
 | **[Advanced Usage](./advanced-usage.md)** | Application patterns and RxJS recipes |
-| **[API concepts and design notes](./concepts.md)** | Options, error codes, type tables, swappable `SerialSession` contract |
+| **[API concepts and design notes](./concepts.md)** | Options, error codes, type tables, swappable `SerialSession` contract, [supported data](./concepts.md#supported-data-text--binary--charset) |
 | **[Troubleshooting](./troubleshooting.md)** | Common problems, check steps, and what to report |
 | **[v3 → v4 Migration](./migration-v4.md)** | Unified Phase 1+2 public API cleanup |
 | **[v2 → v3 Migration](./migration-v3.md)** | Steps to adopt v3 canonical API |

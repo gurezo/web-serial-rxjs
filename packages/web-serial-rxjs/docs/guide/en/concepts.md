@@ -5,6 +5,39 @@ For exhaustive public API specifications, see the [English TypeDoc API Reference
 
 The public surface consists of a single factory (`createSerialSession`), the runtime `SerialSession` interface, one options type, one state union, and two error types.
 
+## Supported data (text / binary / charset)
+
+This library is **UTF-8 text–first**. The internal read pump always decodes with a streaming `TextDecoder` (UTF-8, `fatal: false`, `stream: true`). There is no public encoding option.
+
+| Item | Current support |
+| --- | --- |
+| UTF-8 text send / receive | Supported |
+| Chunk-oriented string receive | `receive$` — **decoded chunks** (unframed text, not wire bytes) |
+| Newline-delimited string receive | `lines$` |
+| Terminal display with `\r` redraws | `receive$` / `terminalText$` |
+| Binary send | `send$(Uint8Array)` — bytes passed through unchanged |
+| Binary receive | **Not supported** — no `receiveBytes$` or raw `Uint8Array` receive stream |
+| Non-UTF-8 charsets (e.g. Shift_JIS) | **Not supported** |
+| Protocol framing (Modbus RTU, COBS, SLIP, custom binary frames) | **Application-side** — compose on decoded text or handle outside this library |
+
+### What “raw” means on `receive$`
+
+In docs and JSDoc, **raw** means **unframed decoded text chunks** (not line-split; `\r` and other control characters preserved). It does **not** mean raw wire bytes or a `Uint8Array` stream.
+
+`send$(string)` encodes with a shared `TextEncoder` (UTF-8). `send$(Uint8Array)` writes the bytes as-is. Receive remains UTF-8 text only, so send/receive are **asymmetric** for binary payloads.
+
+### Future binary receive (design notes only)
+
+A possible future API (for example `receiveBytes$`) is **not** implemented in this release. If revisited, design should address at least:
+
+- Chunk boundaries vs Web Serial `ReadableStream` read sizes
+- Backpressure / unread buffer growth when subscribers are slow
+- Relationship to existing `receive$` / `lines$` / `terminalText$` (parallel stream vs replacement)
+- Whether introducing bytes is a breaking change or an additive opt-in
+- Invalid UTF-8 / binary protocols that must not pass through `TextDecoder` first
+
+Track follow-up design work under parent [#535](https://github.com/gurezo/web-serial-rxjs/issues/535); documentation of current limits is [#540](https://github.com/gurezo/web-serial-rxjs/issues/540).
+
 ## Public exports
 
 ```typescript
@@ -316,7 +349,7 @@ Primary error channel. Every connect / read / write / close failure is normalise
 
 ### `receive$: Observable<string>`
 
-UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Carriage returns and other control characters are preserved. Use **`receive$`** for terminal-like mirrors and any output that depends on `\r` (for example interactive shells or progress lines). Use **`lines$`** for newline-framed logs and line-by-line parsing.
+UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not line-oriented, and **not** wire bytes). **Not subscription-lazy** — the pump is started by `connect$` and chunks are multicast. Late subscribers see only new data. Carriage returns and other control characters are preserved. Use **`receive$`** for terminal-like mirrors and any output that depends on `\r` (for example interactive shells or progress lines). Use **`lines$`** for newline-framed logs and line-by-line parsing. See [Supported data](#supported-data-text--binary--charset).
 
 ### `terminalText$: Observable<string>`
 
@@ -324,11 +357,11 @@ Terminal-display oriented cumulative text derived from `receive$`. Collapses `\r
 
 ### `lines$: Observable<string>`
 
-The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. By default the incomplete tail is capped at 1,048,576 characters via `SerialSessionOptions.lineBuffer`; overflow discards leading tail data and emits `LINE_BUFFER_OVERFLOW` on `errors$` without disconnecting. **Not subscription-lazy** with respect to the read pump, like `receive$`. Choose **`lines$`** for logs and parsers; for raw terminal display where `\r` redraw semantics matter, subscribe to **`receive$`** instead.
+The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. By default the incomplete tail is capped at 1,048,576 characters via `SerialSessionOptions.lineBuffer`; overflow discards leading tail data and emits `LINE_BUFFER_OVERFLOW` on `errors$` without disconnecting. **Not subscription-lazy** with respect to the read pump, like `receive$`. Choose **`lines$`** for logs and parsers; for unframed terminal display where `\r` redraw semantics matter, subscribe to **`receive$`** instead.
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.**
+Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. `Uint8Array` values are written unchanged (binary **send** only — there is no matching binary receive API). Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.** See [Supported data](#supported-data-text--binary--charset).
 
 ## SerialError / SerialErrorCode
 
