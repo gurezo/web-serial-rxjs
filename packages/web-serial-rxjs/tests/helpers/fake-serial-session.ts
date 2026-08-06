@@ -56,6 +56,15 @@ export type FakeSerialSessionHandle = {
   emitLine(line: string): void;
   emitError(error: SerialError): void;
   failNextConnect(error?: SerialError): void;
+  /**
+   * Fail the next `times` `connect$` subscriptions with the same error.
+   * Useful for limited-retry recipe tests (#539).
+   */
+  failConnectTimes(times: number, error?: SerialError): void;
+  /**
+   * Make the next `connect$` hang (never emit). Pair with RxJS `timeout`.
+   */
+  hangNextConnect(): void;
   failNextSend(error?: SerialError): void;
   /**
    * Simulate an unexpected device unplug while connected.
@@ -77,8 +86,10 @@ export function createFakeSerialSession(): FakeSerialSessionHandle {
   const terminalTextSubject = new BehaviorSubject<string>('');
 
   const sent: SerialPayload[] = [];
+  let remainingConnectFailures = 0;
   let nextConnectError: SerialError | undefined;
   let nextSendError: SerialError | undefined;
+  let hangNextConnect = false;
 
   const session: SerialSession = {
     state$: stateSubject.asObservable(),
@@ -89,6 +100,25 @@ export function createFakeSerialSession(): FakeSerialSessionHandle {
 
     connect$: (): Observable<void> =>
       defer(() => {
+        if (hangNextConnect) {
+          hangNextConnect = false;
+          stateSubject.next({ status: SerialSessionStatus.Connecting });
+          // Never emits — use with RxJS timeout in recipe tests (#539).
+          return new Observable<void>(() => undefined);
+        }
+
+        if (remainingConnectFailures > 0) {
+          remainingConnectFailures -= 1;
+          const error = nextConnectError ?? defaultConnectError();
+          if (remainingConnectFailures === 0) {
+            nextConnectError = undefined;
+          }
+          stateSubject.next({ status: SerialSessionStatus.Connecting });
+          stateSubject.next({ status: SerialSessionStatus.Idle });
+          errorsSubject.next(error);
+          return throwError(() => error);
+        }
+
         if (nextConnectError !== undefined) {
           const error = nextConnectError;
           nextConnectError = undefined;
@@ -152,6 +182,17 @@ export function createFakeSerialSession(): FakeSerialSessionHandle {
     },
     failNextConnect(error: SerialError = defaultConnectError()): void {
       nextConnectError = error;
+      remainingConnectFailures = 0;
+    },
+    failConnectTimes(
+      times: number,
+      error: SerialError = defaultConnectError(),
+    ): void {
+      remainingConnectFailures = Math.max(0, times);
+      nextConnectError = error;
+    },
+    hangNextConnect(): void {
+      hangNextConnect = true;
     },
     failNextSend(error: SerialError = defaultSendError()): void {
       nextSendError = error;
