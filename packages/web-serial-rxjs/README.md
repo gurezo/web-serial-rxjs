@@ -122,7 +122,8 @@ pnpm add rxjs
 | [v3 → v4 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v4.md) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup) |
 | [v2 → v3 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v3.md) | `state$` discriminated union, `SerialSessionStatus`, `context.cause` |
 | [v1 → v2 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v2.md) | Replacing the removed v1 `SerialClient` / `ShellClient` API |
-| [Repository README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md) | Monorepo layout, **examples** under `apps/`, contributing, MCP, and project icon |
+| [Repository README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md) | Monorepo hub: **examples** under `apps/`, contribution entry, development-tool pointers |
+| [CONTRIBUTING](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.md#5-ai-assistant-mcp---optional) | MCP / Cursor setup for repository contributors |
 
 ## License
 

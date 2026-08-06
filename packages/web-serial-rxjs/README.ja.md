@@ -118,7 +118,8 @@ pnpm add rxjs
 | [v3 → v4 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理） |
 | [v2 → v3 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v3.md) | `state$` discriminated union、`SerialSessionStatus`、`context.cause` |
 | [v1 → v2 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v2.md) | 廃止された v1 API の置き換え |
-| **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ構成、**`apps/` のサンプル**、貢献、MCP、プロジェクトアイコン |
+| **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポのハブ：**`apps/` のサンプル**、貢献入口、開発ツール案内 |
+| **[CONTRIBUTING](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.ja.md#5-ai-アシスタントmcp--任意)** | リポジトリ貢献者向けの MCP / Cursor 設定 |
 
 ## ライセンス
 

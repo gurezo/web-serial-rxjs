@@ -6,18 +6,23 @@
 
 A TypeScript library that wraps the Web Serial API with a minimal, session-oriented RxJS surface. The public API exposes a single `SerialSession` so applications can drive their UI from `state$` (canonical lifecycle state) + `errors$` (error event channel) + `receive$` + `lines$`, without rebuilding state, read loops, or send queues themselves.
 
+**Audience:** This README is primarily for **library users** (install, connect, Examples, Guide). Contributors and maintainers should start from [Contributing](#contributing) and [CONTRIBUTING.md](CONTRIBUTING.md). The short [npm package README](packages/web-serial-rxjs/README.md) is the consumer-facing index published with `@gurezo/web-serial-rxjs`; this repository README is the monorepo hub (examples under `apps/`, contribution, and development tools).
+
 ## Table of Contents
 
-- [SerialSession at a glance](#serialsession-at-a-glance)
 - [Features](#features)
 - [Framework Support](#framework-support)
 - [Browser Support](#browser-support)
 - [Installation](#installation)
+- [SerialSession at a glance](#serialsession-at-a-glance)
 - [Documentation](#documentation)
 - [Examples](#examples)
-- [Project Icon](#project-icon)
-- [AI Assistant (MCP)](#ai-assistant-mcp)
+- [Migration](#migration)
+- [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Development tools](#development-tools)
+- [Development and Release Strategy](#development-and-release-strategy)
+- [Project Icon](#project-icon)
 - [Security](#security)
 - [License](#license)
 - [Links](#links)
@@ -94,9 +99,12 @@ Documentation is split into **Guide** (how to use; Japanese and English hand-wri
 
 **Published documentation site:** [gurezo.net/web-serial-rxjs](https://gurezo.net/web-serial-rxjs/)
 
+**Role split:** use the [npm package README](packages/web-serial-rxjs/README.md) for a short consumer index shipped with the package; use **this repository README** for monorepo examples, contribution entry points, and development-tool pointers.
+
 | Doc | Use it for |
 | --- | --- |
 | **This README** | Monorepo hub: feature summary, examples, and contribution links. |
+| **[npm package README](packages/web-serial-rxjs/README.md)** | Short consumer-facing index published with `@gurezo/web-serial-rxjs`. |
 | **[English Guide (site)](https://gurezo.net/web-serial-rxjs/guide/en/README.html)** | Getting Started reading order and full index on the published site. |
 | **[日本語 Guide (site)](https://gurezo.net/web-serial-rxjs/guide/ja/README.html)** | Getting Started の読み順と一覧（公開サイト）。 |
 | **[API Reference (site)](https://gurezo.net/web-serial-rxjs/api/index.html)** | English TypeDoc API Reference on the published site. |
@@ -125,54 +133,19 @@ Each sample is a **minimal smoke test** for **connect**, **receive** (terminal-s
 
 Each example includes a README with setup and usage instructions.
 
-## Project Icon
+## Migration
 
-The project icon includes a modified design inspired by the [RxJS](https://rxjs.dev/) logo,
-combined with a serial connector motif to represent Web Serial communication.
+Upgrading from an older major version:
 
-The icon is used only to indicate that this library provides
-RxJS-based abstractions for the Web Serial API.
+- [v3 → v4 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v4.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)
+- [v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)
+- [v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v2.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)
 
-This project is an independent open source project and is **not affiliated with,
-endorsed by, or sponsored by the [ReactiveX](http://reactivex.io/) or [RxJS](https://rxjs.dev/) project**.
+## Troubleshooting
 
-## AI Assistant (MCP)
+Common Web Serial / session problems and self-help checks:
 
-This project includes [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server configuration for AI-assisted development. The following MCP servers are available:
-
-| Server          | Purpose                                                                                |
-| --------------- | -------------------------------------------------------------------------------------- |
-| **nx-mcp**      | Nx workspace analysis, project graph, CI monitoring, and documentation                 |
-| **angular-cli** | Angular CLI tools for example-angular (code generation, documentation, best practices) |
-| **svelte**      | Svelte/SvelteKit documentation and code analysis for example-svelte                    |
-
-**Configuration files:**
-
-- `.mcp.json` - Standard MCP configuration (Cursor, VS Code, Claude, etc.)
-- `.cursor/mcp.json` - Cursor-specific configuration
-
-To use MCP servers in Cursor, the configuration is automatically loaded from `.cursor/mcp.json`. For VS Code, add the MCP extension and configure it to use `.mcp.json`, or add the server definitions to your MCP settings.
-
-### Cursor rules and agents
-
-This repository also ships [Cursor](https://www.cursor.com/) rules under `.cursor/rules/` (grouped by topic: `commits/` for Conventional Commits and PR titles, `typescript/`, `rxjs/`, `angular/`, `nx/` including Nx workspace tasks and **commit scope** guidance, `examples/`, and `workflow/`). Rules are split into small `.mdc` files by responsibility to reduce overlap and keep prompts focused.
-
-- `.cursor/agents/ci-monitor-subagent.md` — optional CI helper used with `/monitor-ci` and the Nx MCP `ci_information` / `update_self_healing_fix` tools when Nx Cloud CI monitoring is enabled.
-
-Commit scope tables stay aligned with `commitlint.config.js`; see `.cursor/skills/conventional-commits/` for examples and the scope list.
-
-## Development and Release Strategy
-
-This project follows a **trunk-based development** approach:
-
-- **`main` branch**: Always in a release-ready state
-- **Short-lived branches**: `feature/*`, `fix/*`, `docs/*` for pull requests
-- **Releases**: Managed via Git tags (e.g., `v1.0.0`), not branches
-- **Version maintenance**: `release/v*` branches are added only when needed for maintaining multiple major versions
-
-For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-For detailed release instructions, see [RELEASING.md](RELEASING.md).
+- [Troubleshooting (English Guide)](packages/web-serial-rxjs/docs/guide/en/troubleshooting.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md)
 
 ## Contributing
 
@@ -187,6 +160,33 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 For Japanese contributors, please see [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md).
 
 For release instructions, see [RELEASING.md](RELEASING.md) (or [RELEASING.ja.md](RELEASING.ja.md) for Japanese).
+
+## Development tools
+
+For AI-assisted development in this repository:
+
+- **MCP servers** (Nx, Angular CLI, Svelte) and configuration — see [AI Assistant (MCP)](CONTRIBUTING.md#5-ai-assistant-mcp---optional) in CONTRIBUTING
+- **Cursor rules, skills, and agents** — see [Cursor Rules / Skills](CONTRIBUTING.md#6-cursor-rules--skills---optional) in CONTRIBUTING
+
+日本語は [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) の同セクションを参照してください。
+
+## Development and Release Strategy
+
+This project follows **trunk-based development**: `main` stays release-ready; work lands via short-lived `feature/*` / `fix/*` / `docs/*` pull requests; releases are Git tags (for example `v1.0.0`).
+
+- Contribution details: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Release instructions: [RELEASING.md](RELEASING.md)
+
+## Project Icon
+
+The project icon includes a modified design inspired by the [RxJS](https://rxjs.dev/) logo,
+combined with a serial connector motif to represent Web Serial communication.
+
+The icon is used only to indicate that this library provides
+RxJS-based abstractions for the Web Serial API.
+
+This project is an independent open source project and is **not affiliated with,
+endorsed by, or sponsored by the [ReactiveX](http://reactivex.io/) or [RxJS](https://rxjs.dev/) project**.
 
 ## Security
 
