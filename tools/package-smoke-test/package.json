@@ -1,0 +1,17 @@
+{
+  "name": "web-serial-rxjs-package-smoke-test",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Consumer smoke fixture for npm pack verification (Issue #543). Not part of the pnpm workspace.",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@gurezo/web-serial-rxjs": "file:./packed.tgz",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.0"
+  }
+}
