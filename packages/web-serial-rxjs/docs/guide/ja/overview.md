@@ -80,7 +80,7 @@
 
 **`receive$` と `lines$`:** 機器から来た **UTF-8 デコード済みチャンク**を行分割せず画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。制御文字は保持されますが、**ワイヤ上の生バイトではありません**。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。詳細は [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
-**UI 用の接続 boolean** — フラグだけ必要な場合は `state$` から derive するか（[高度な使用方法](./advanced-usage.md#接続中フラグ（-narrowing）)）、`state.status === SerialSessionStatus.Connected` で narrowing してください。削除された convenience API は [v3 移行ガイド – Phase 1 API 削除](./migration-v3.md#phase-1-api-削除) を参照してください。
+**UI 用の接続 boolean** — フラグだけ必要な場合は `state$` から derive するか（[高度な使用方法](./advanced-usage.md#接続中フラグ（-narrowing）)）、`state.status === SerialSessionStatus.Connected` で narrowing してください。削除された convenience API は [v4 への移行 – Phase 1 API 削除](./migration-v4.md#phase-1-api-削除) を参照してください。
 
 **`lines$`（行区切り）** — 組み込みの行分割。ターミナルのミラーや `\r` を保持したいときは **`receive$`** を購読します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。
 
