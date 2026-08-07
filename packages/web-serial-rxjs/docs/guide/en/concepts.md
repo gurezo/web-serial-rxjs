@@ -60,14 +60,14 @@ import {
 
 ## Deprecated exports
 
-The following remain available from the public export in v3.x but are not part of the canonical API. They are scheduled for removal in the next major version. See [Migrating to v3 – §9 `assertNever` public export audit](./migration-v3.md#9-public-export-audit).
+The following remain available from the public export in **v4** but are not part of the canonical API. They are **deprecated** and scheduled for removal in a future major (**v5+**). See [Migrating to v3 – §9 `assertNever` public export audit](./migration-v3.md#9-public-export-audit) for the audit history. APIs already removed in v4 (`destroy$`, `isConnected$`, `portInfo$`, `getPortInfo()`, `getCurrentPort()`, `receiveReplay$`, `isBrowserSupported()`, …) are documented in [Migrating to v4](./migration-v4.md).
 
 | Export | Status | Migration |
 | --- | --- | --- |
-| `assertNever` | `@deprecated` in v3.x | Define a local helper in application code, or use `switch (state.status)` with `SerialSessionStatus` |
+| `assertNever` | `@deprecated` in v4 | Define a local helper in application code, or use `switch (state.status)` with `SerialSessionStatus` |
 
 ```typescript
-// Deprecated (still works in v3.x but triggers warnings)
+// Deprecated (still available in v4 but triggers warnings)
 import { assertNever } from '@gurezo/web-serial-rxjs';
 
 // Recommended: local helper
@@ -339,7 +339,7 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 
 `SerialError` extends `Error` with a `code: SerialErrorCode` and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code.
 
-For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in v3.x for backward compatibility but is **deprecated** and scheduled for removal in the next major version. See [Migrating to v3 – originalError deprecation](./migration-v3.md#3-originalerror-deprecation).
+For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in **v4** for backward compatibility but is **deprecated** and scheduled for removal in a future major (**v5+**). See [Migrating to v3 – originalError deprecation](./migration-v3.md#3-originalerror-deprecation).
 
 ```typescript
 session.errors$.subscribe((error) => {
@@ -370,7 +370,7 @@ Runtime emission coverage for the implemented codes is audited in [Migrating to 
 
 `ValidationErrorContext` is `{ field: string; value: unknown; constraint: ValidationErrorConstraint; filterIndex?: number }`. `message` stays human-readable; use `context` for programmatic handling.
 
-### Implemented (emitted in v3.x)
+### Implemented (emitted in v4)
 
 | Code                     | When it is emitted                                                  |
 | ------------------------ | ------------------------------------------------------------------- |
@@ -389,7 +389,7 @@ Runtime emission coverage for the implemented codes is audited in [Migrating to 
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$`.                       |
 | `UNKNOWN`                | Unclassified dispose / disconnect fallback; see `context.cause`.    |
 
-### Reserved (not emitted in v3.x; scheduled for removal in next major)
+### Reserved (not emitted in v4; scheduled for removal in a future major / v5+)
 
 | Code                     | Notes                                                               |
 | ------------------------ | ------------------------------------------------------------------- |
