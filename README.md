@@ -198,6 +198,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Links
 
+- **Documentation**: [https://gurezo.net/web-serial-rxjs/](https://gurezo.net/web-serial-rxjs/)
 - **GitHub Repository**: [https://github.com/gurezo/web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
 - **Issues**: [https://github.com/gurezo/web-serial-rxjs/issues](https://github.com/gurezo/web-serial-rxjs/issues)
 - **Security Policy**: [SECURITY.md](SECURITY.md) ([日本語](SECURITY.ja.md))

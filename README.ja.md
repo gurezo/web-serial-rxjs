@@ -198,6 +198,7 @@ Web Serial を表すシリアルコネクタのモチーフを組み合わせた
 
 ## リンク
 
+- **ドキュメント**: [https://gurezo.net/web-serial-rxjs/](https://gurezo.net/web-serial-rxjs/)
 - **GitHub リポジトリ**: [https://github.com/gurezo/web-serial-rxjs](https://github.com/gurezo/web-serial-rxjs)
 - **イシュー**: [https://github.com/gurezo/web-serial-rxjs/issues](https://github.com/gurezo/web-serial-rxjs/issues)
 - **セキュリティポリシー**: [SECURITY.ja.md](SECURITY.ja.md)（[English](SECURITY.md)）
