@@ -41,6 +41,8 @@ session.errors$.subscribe((error) => {
 
 [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) の Phase 1 では、重複・escape hatch な API を削除し、ライフサイクルと破棄の正規情報源を `state$` と `dispose$()` に統一しました。ドキュメント整備は [#478](https://github.com/gurezo/web-serial-rxjs/issues/478) です。
 
+**これらの削除は v4 で出荷済みです。** Phase 1+2 をまとめた移行手順は [v4 への移行](./migration-v4.md) を優先してください。以下の各節は Phase 1 作業時の詳細な before/after 例を履歴として残しています。
+
 | 削除 API | 移行先 |
 | --- | --- |
 | `destroy$()` | `dispose$()` |
@@ -159,7 +161,7 @@ export type SerialSessionState =
 
 v3.0.0 では typed `SerialError.context` を導入しました。cause 系 error code では **`context.cause`** が原因エラーの canonical source です。
 
-後方互換のため `SerialError.originalError` と constructor の legacy 第 3 引数は v3.x で残っていますが、**非推奨**です。次回 major version で削除予定です。
+後方互換のため `SerialError.originalError` と constructor の legacy 第 3 引数は **v4** にも残っていますが、**非推奨**です。将来の major（**v5 以降**）で削除予定です。
 
 ### v2 / 旧パターン（非推奨）
 
@@ -188,11 +190,12 @@ session.errors$.subscribe((error) => {
 - [ ] 独自に `new SerialError(code, message, cause)` としていた場合は `new SerialError(code, message, undefined, { cause })` に変更する。
 - [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
 
-### v3.x での互換性
+### v4 での互換性（引き続き非推奨）
 
-- `originalError` は v3.x では引き続き利用可能です。
+- `originalError` は **v4** でも引き続き利用可能です（v3 以降 deprecated）。
 - `context.cause` が `Error` インスタンスの場合、`originalError` も同期して設定されます（legacy 利用者向け）。
 - `context.cause` の型は `unknown` です（JavaScript では `Error` 以外も throw 可能なため）。
+- 削除は将来の major（**v5 以降**）に延期されています。
 
 ---
 
@@ -398,24 +401,24 @@ session.state$.subscribe((state) => {
 
 ## 8. `SerialErrorCode` runtime emission 監査
 
-public API contract として定義されている `SerialErrorCode` のうち、一部は v3.x の runtime implementation から emit されていませんでした。到達不能な error handling を防ぐため、全 19 code の emission coverage を監査し（[#438](https://github.com/gurezo/web-serial-rxjs/issues/438)）、結果を本セクションと [概念と設計メモ](./concepts.md#serialerror--serialerrorcode) に反映しました。
+public API contract として定義されている `SerialErrorCode` のうち、一部は v3.x の runtime implementation から emit されていませんでした（**v4** でも未 emit のままです）。到達不能な error handling を防ぐため、全 19 code の emission coverage を監査し（[#438](https://github.com/gurezo/web-serial-rxjs/issues/438)）、結果を本セクションと [概念と設計メモ](./concepts.md#serialerror--serialerrorcode) に反映しました。
 
 ### 分類
 
 | 分類 | 件数 | 説明 |
 | --- | --- | --- |
 | **Implemented** | 15 | v3.x / v4 で runtime から emit される（または factory 時に throw される） |
-| **Reserved** | 2 | public API に存在するが emit されない。次回 major version で削除予定 |
+| **Reserved** | 2 | public API に存在するが emit されない。v4 でも deprecated。削除は将来の major（**v5 以降**） |
 | **v4 Phase 2 で削除** | 2 | `receiveReplay$` / `receiveReplay` と共に削除された receive-replay コード |
 
-### Reserved code（v3.x では emit されない）
+### Reserved code（v4 では emit されない）
 
 | Code | 理由 | 代替 |
 | --- | --- | --- |
 | `PORT_NOT_AVAILABLE` | 現行実装は `navigator.serial.requestPort` のみ使用。`getPorts` 系 API 未実装のため emit 経路がない | ポート取得失敗は `PORT_OPEN_FAILED` または `OPERATION_CANCELLED` を参照 |
 | `OPERATION_TIMEOUT` | timeout / prompt detection / transaction API が未実装 | 該当なし（将来 API 追加時に再評価） |
 
-v3.x では `@deprecated` 注記のみ付与し、runtime 値と export は維持します。削除は次回 major version に集約します。
+v3 で `@deprecated` 注記のみ付与し、**v4** でも runtime 値と export は維持しています。削除は将来の major（**v5 以降**）に延期されています。
 
 ### Implemented code 一覧
 
@@ -450,7 +453,7 @@ fatal / non-fatal の判定は `reportError` 経由の `ERROR_SEVERITY` に従�
 
 ### 移行チェックリスト
 
-- [ ] `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` 向けの error handling を削除する（v3.x では到達しない）。
+- [ ] `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` 向けの error handling を削除する（v4 では到達しない）。
 - [ ] ポート取得失敗は `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` で処理する。
 - [ ] 全 code の emit 条件は [概念と設計メモ – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode) を参照する。
 
@@ -477,7 +480,7 @@ validation error（`INVALID_*`）への structured context 追加は [#439](http
 
 `assertNever` は内部実装用 utility であり、canonical public API ではありません。`SerialSessionState` の exhaustive handling は `switch (state.status)` + `SerialSessionStatus`、または `isConnectedSessionState` による narrowing が推奨パターンです。
 
-v3.x では `@deprecated` 注記のみ付与し、public export は維持します。削除は次回 major version に集約します。
+v3 で `@deprecated` 注記のみ付与し、**v4** でも public export は維持しています。削除は将来の major（**v5 以降**）に延期されています。
 
 ### v2 / 旧パターン（非推奨）
 
@@ -535,9 +538,9 @@ session.state$.subscribe((state: SerialSessionState) => {
 - [ ] `SerialSessionState` の分岐は `switch (state.status)` + `SerialSessionStatus` を優先する。
 - [ ] TypeScript の `@deprecated` 警告が出たら、上記パターンへ移行する。
 
-### v3.x での互換性
+### v4 での互換性（引き続き非推奨）
 
-`assertNever` は v3.x では引き続き public export から利用可能です。次回 major version で削除予定です。
+`assertNever` は **v4** でも引き続き public export から利用可能です。将来の major（**v5 以降**）で削除予定です。
 
 ---
 
@@ -572,7 +575,7 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 
 詳細は [概念と設計メモ – SerialSessionOptions](./concepts.md#serialsessionoptions) を参照してください。境界値の意味（バッファ上限のみ `0` = 無制限、接続フィールドは `> 0` 必須）も同ページに記載しています（[#488](https://github.com/gurezo/web-serial-rxjs/issues/488)）。
 
-### v3.x での互換性
+### v4 までの互換性
 
 `createSerialSession(options?)` のシグネチャと、接続・バッファ系の既存 options オブジェクトリテラルは **変更不要** です。`SerialSessionFeatureOptions` は新規 public export として追加されます。`receiveReplay` は v4 で削除されるため、[v4 への移行](./migration-v4.md) に従ってください。
 
