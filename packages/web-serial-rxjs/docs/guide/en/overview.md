@@ -132,6 +132,7 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, teardown cancel, bounded retry. |
 | **[Troubleshooting](./troubleshooting.md)** | Common Web Serial / session problems and self-help checks. |
 | **[API Reference (TypeDoc)](modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
+| **[v3 → v4 Migration Guide](./migration-v4.md)** ([日本語](../ja/migration-v4.md)) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |
 | **[v2 → v3 Migration Guide](./migration-v3.md)** ([日本語](../ja/migration-v3.md)) | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](./migration-v2.md)** ([日本語](../ja/migration-v2.md)) | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
 | **[Phase 5 archive (legacy v1 doc)](./archive/migration-phase5.md)** | Historical v1 context only. |
