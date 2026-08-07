@@ -6,7 +6,7 @@ import * as publicApi from '../../src/index';
 
 /**
  * Regression guard for the assertNever public export audit (Issue #440).
- * Keep in sync with MIGRATION_V3 §9 and API_REFERENCE.
+ * Keep in sync with MIGRATION_V3 §9 and concepts.md Deprecated exports.
  */
 const CANONICAL_PUBLIC_EXPORTS = [
   'createSerialSession',
@@ -27,7 +27,7 @@ const assertNeverSource = readFileSync(
 );
 
 describe('assertNever public export audit (#440)', () => {
-  it('retains assertNever on the public barrel for v3.x backward compatibility', () => {
+  it('retains assertNever on the public barrel as a v4 deprecated export', () => {
     expect(publicApi.assertNever).toBeTypeOf('function');
   });
 
