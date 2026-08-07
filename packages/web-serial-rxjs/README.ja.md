@@ -103,11 +103,16 @@ pnpm add rxjs
 - **API の全体像**（機能一覧、`SerialSession` 早見表、`SerialSessionState`、最小サンプル）: [SerialSession の概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md)（[English](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md)）
 - 最短でポートを開く手順: [クイックスタート](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/quick-start.md)
 - よくある問題と自己解決: [トラブルシューティング](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md)
+- 公開ドキュメントサイト: [web-serial-rxjs Documentation](https://gurezo.net/web-serial-rxjs/)
+- API Reference（TypeDoc）: [web-serial-rxjs API Documentation](https://gurezo.net/web-serial-rxjs/api/)
 
 ## ドキュメント
 
 | ドキュメント | 用途 |
 | --- | --- |
+| [ドキュメントホーム](https://gurezo.net/web-serial-rxjs/) | Guide（ja/en）と API Reference へのサイトランディング |
+| [日本語 Guide（公開サイト）](https://gurezo.net/web-serial-rxjs/guide/ja/README.html) | Getting Started の読み順と一覧（公開サイト） |
+| [API Reference（公開サイト）](https://gurezo.net/web-serial-rxjs/api/index.html) | 英語 TypeDoc API Reference |
 | [日本語 Guide 索引](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/README.md) | Getting Started の読み順と一覧 |
 | [English Guide 索引](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/README.md) | Getting Started reading order and full index |
 | [全体像](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md) | 機能と `SerialSession` / `SerialSessionState` の対応表 |
