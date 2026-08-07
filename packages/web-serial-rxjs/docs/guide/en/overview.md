@@ -67,7 +67,8 @@ This library is framework-agnostic and can be used with:
 | `disconnect$()` | **Close** the port and stop the pump. The session stays reusable (`idle`). |
 | `dispose$()` | **Permanently tear down** the session: close any active connection, complete all observables, and prevent reuse. |
 | `send$(string \| Uint8Array)` | **Enqueue** outgoing data; writes are **FIFO-ordered** when multiple `send$` run concurrently. |
-| `isWebSerialSupported()` | Synchronous `boolean` for Web Serial availability before `connect$`. |
+
+**Top-level (not a `SerialSession` member):** `isWebSerialSupported()` — synchronous `boolean` for Web Serial availability before creating a session or calling `connect$`.
 
 ### SerialSessionStatus (quick reference)
 
