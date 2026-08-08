@@ -15,8 +15,9 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 7. **[Request / Response](./request-response.md)** — wait for replies on `lines$` / `receive$`, serialize commands
 8. **[Timeout / cancel / retry](./timeout-cancel-retry.md)** — deadlines, teardown cancel, bounded retry (no core auto-retry)
 9. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
-10. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
-11. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
+10. **[Binary receive API — design decision](./binary-receive-design.md)** — go / no-go for a future `receiveBytes$` (not implemented)
+11. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
+12. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
 
 When migrating existing code:
 
@@ -37,6 +38,7 @@ When migrating existing code:
 | **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$` (no core `request$`) |
 | **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, cancel on teardown, limited retry (no core auto-retry) |
 | **[API concepts and design notes](./concepts.md)** | Options, error codes, type tables, swappable `SerialSession` contract, [supported data](./concepts.md#supported-data-text--binary--charset) |
+| **[Binary receive API — design decision](./binary-receive-design.md)** | Design review: defer `receiveBytes$`; go / no-go criteria |
 | **[Hardware-free testing](./testing.md)** | Controllable Fake `SerialSession`, Vitest / Angular / React examples (npm: not bundled) |
 | **[Troubleshooting](./troubleshooting.md)** | Common problems, check steps, and what to report |
 | **[v3 → v4 Migration](./migration-v4.md)** | Unified Phase 1+2 public API cleanup |

@@ -13,7 +13,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | Handle decoder chunks as they arrive | `receive$` |
 | Handle display control that uses `\r` | `receive$` or `terminalText$` |
 | Bind terminal-style text to a UI | `terminalText$` |
-| Receive raw `Uint8Array` (wire bytes) | **Not supported** — see [Supported data](./concepts.md#supported-data-text-binary--charset) and [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) |
+| Receive raw `Uint8Array` (wire bytes) | **Not supported** — see [Supported data](./concepts.md#supported-data-text-binary--charset), [Binary receive design](./binary-receive-design.md), and [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) |
 
 ## Responsibilities at a glance
 
@@ -75,7 +75,7 @@ There is **no** `receiveBytes$` or public `Uint8Array` receive stream. The read 
 - **Binary send** is supported via `send$(Uint8Array)`.
 - **Binary receive** is not — send/receive are asymmetric for binary payloads.
 
-Current limits and design notes: [Supported data](./concepts.md#supported-data-text-binary--charset). Future binary receive design: [#545](https://github.com/gurezo/web-serial-rxjs/issues/545).
+Current limits and design notes: [Supported data](./concepts.md#supported-data-text-binary--charset). Design decision (defer for now): [Binary receive API — design decision](./binary-receive-design.md) ([#545](https://github.com/gurezo/web-serial-rxjs/issues/545)).
 
 ## Related guides
 
@@ -86,3 +86,4 @@ Current limits and design notes: [Supported data](./concepts.md#supported-data-t
 - [Request / Response recipes](./request-response.md) — wait on `lines$` or `receive$`, then send
 - [Timeout / cancel / retry](./timeout-cancel-retry.md) — deadlines around waits
 - [API concepts – Supported data](./concepts.md#supported-data-text-binary--charset) — text / binary / charset scope
+- [Binary receive API — design decision](./binary-receive-design.md) — go / no-go for a future byte stream

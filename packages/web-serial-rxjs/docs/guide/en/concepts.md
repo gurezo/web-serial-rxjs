@@ -30,15 +30,16 @@ In docs and JSDoc, **raw** means **unframed decoded text chunks** (not line-spli
 
 ### Future binary receive (design notes only)
 
-A possible future API (for example `receiveBytes$`) is **not** implemented in this release. If revisited, design should address at least:
+A possible future API (for example `receiveBytes$`) is **not** implemented in this release. The design review recommends **deferring** addition until concrete demand justifies the complexity.
 
-- Chunk boundaries vs Web Serial `ReadableStream` read sizes
-- Backpressure / unread buffer growth when subscribers are slow
-- Relationship to existing `receive$` / `lines$` / `terminalText$` (parallel stream vs replacement)
-- Whether introducing bytes is a breaking change or an additive opt-in
-- Invalid UTF-8 / binary protocols that must not pass through `TextDecoder` first
+Summary:
 
-Track follow-up design work under [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) (parent [#535](https://github.com/gurezo/web-serial-rxjs/issues/535)); documentation of current limits is [#540](https://github.com/gurezo/web-serial-rxjs/issues/540).
+- Prefer an **additive** `receiveBytes$: Observable<Uint8Array>` (parallel to text streams), not a replacement for `receive$`
+- Fan out wire bytes from the same read loop **before** `TextDecoder`
+- Chunk boundaries are not protocol frames; no unbounded backpressure promise for slow subscribers
+- Re-encoding decoded text does **not** restore original wire bytes
+
+Full go / no-go criteria and sketch: [Binary receive API — design decision](./binary-receive-design.md) ([#545](https://github.com/gurezo/web-serial-rxjs/issues/545), parent [#555](https://github.com/gurezo/web-serial-rxjs/issues/555)). Current limits were documented in [#540](https://github.com/gurezo/web-serial-rxjs/issues/540).
 
 ## Public exports
 

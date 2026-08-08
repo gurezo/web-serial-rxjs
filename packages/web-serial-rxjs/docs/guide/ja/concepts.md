@@ -30,15 +30,16 @@
 
 ### 将来のバイナリ受信（設計論点のみ）
 
-将来の API（例: `receiveBytes$`）は**本リリースでは実装しません**。再検討する場合は少なくとも次を整理する必要があります。
+将来の API（例: `receiveBytes$`）は**本リリースでは実装しません**。設計検討の推奨は、具体的な需要が複雑性に見合うまで**追加を見送る（defer）**ことです。
 
-- Web Serial `ReadableStream` の read サイズとチャンク境界
-- 購読が遅い場合のバックプレッシャー / 未読バッファ増大
-- 既存の `receive$` / `lines$` / `terminalText$` との関係（並列ストリームか置換か）
-- バイト列 API 追加が破壊的変更か、加算的な opt-in か
-- 不正な UTF-8 / バイナリプロトコルを先に `TextDecoder` へ通してはいけない点
+要約:
 
-後続の設計検討は [#545](https://github.com/gurezo/web-serial-rxjs/issues/545)（親 Issue [#535](https://github.com/gurezo/web-serial-rxjs/issues/535)）で追跡し、現行の対応範囲の明文化は [#540](https://github.com/gurezo/web-serial-rxjs/issues/540) です。
+- `receive$` の置換ではなく、テキストと並列の**加算的** `receiveBytes$: Observable<Uint8Array>` を preferred とする
+- 同一 read loop から、`TextDecoder` **より前**にワイヤバイトを fan-out する
+- チャンク境界はプロトコルフレームではない。遅い購読者への無制限バックプレッシャーは約束しない
+- デコード済みテキストの再エンコードでは元のワイヤバイトを復元できない
+
+go / no-go 条件とスケッチの全文: [バイナリ受信 API — 設計判断](./binary-receive-design.md)（[#545](https://github.com/gurezo/web-serial-rxjs/issues/545)、親 [#555](https://github.com/gurezo/web-serial-rxjs/issues/555)）。現行の対応範囲の明文化は [#540](https://github.com/gurezo/web-serial-rxjs/issues/540) です。
 
 ## 公開 export
 
