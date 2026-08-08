@@ -2,7 +2,7 @@
 
 This page explains what `@gurezo/web-serial-rxjs` verifies in CI, what Framework Examples demonstrate, and the **minimum import requirements** adopters should rely on. It is for **build / tooling decisions**. It does **not** publish a maintained matrix of every bundler as “supported” or “unsupported.”
 
-Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#564](https://github.com/gurezo/web-serial-rxjs/issues/564) · Related: [Browser support](./browser-support.md) · [Version support](./version-support.md)
+Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#564](https://github.com/gurezo/web-serial-rxjs/issues/564) · Related: [Browser support](./browser-support.md) · [Version support](./version-support.md) · [Bundle size](./bundle-size.md)
 
 ## Terminology
 
@@ -70,5 +70,6 @@ If ESM resolution and the RxJS peer requirement are met, most modern bundlers th
 - [Quick Start – Installation and peer dependency](./quick-start.md#installation)
 - [Browser support and support policy](./browser-support.md)
 - [Version support and release policy](./version-support.md)
+- [Bundle size and tree-shaking](./bundle-size.md)
 - Repository [README – Examples](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md#examples)
 - Package [`package.json` exports and peers](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/package.json)
