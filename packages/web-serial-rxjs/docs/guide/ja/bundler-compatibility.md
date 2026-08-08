@@ -2,7 +2,7 @@
 
 このページは、`@gurezo/web-serial-rxjs` が CI で何を検証しているか、Framework Examples が示す範囲、採用者が依拠すべき **最低限の import 条件**をまとめます。**ビルド／ツール選定**のための文書です。全 bundler を「対応」「非対応」として常時維持する matrix は**公開しません**。
 
-Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#564](https://github.com/gurezo/web-serial-rxjs/issues/564) · Related: [ブラウザサポート](./browser-support.md) · [バージョンサポート](./version-support.md)
+Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#564](https://github.com/gurezo/web-serial-rxjs/issues/564) · Related: [ブラウザサポート](./browser-support.md) · [バージョンサポート](./version-support.md) · [Bundle size](./bundle-size.md)
 
 ## 用語
 
@@ -70,5 +70,6 @@ ESM の解決と RxJS peer 要件を満たせば、`package.json` の `exports` 
 - [クイックスタート – インストールと peer dependency](./quick-start.md#インストール)
 - [ブラウザサポートと公式サポート方針](./browser-support.md)
 - [バージョンサポートとリリース方針](./version-support.md)
+- [Bundle size と tree-shaking](./bundle-size.md)
 - リポジトリ [README – サンプル](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md#サンプル)
 - パッケージ [`package.json` の exports と peers](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/package.json)

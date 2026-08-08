@@ -11,15 +11,16 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 3. **[ブラウザサポートと公式サポート方針](./browser-support.md)** — Web Serial API 実装状況と公式サポートの分離
 4. **[バージョンサポートとリリース方針](./version-support.md)** — SemVer、非推奨、サポート範囲（LTS なし）
 5. **[Bundler / framework 互換性の検証方針](./bundler-compatibility.md)** — CI と Example build の区別、ESM / RxJS / 型の最低要件（全 matrix なし）
-6. **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** — 用途から受信ストリームを選ぶ
-7. **[通信パターン別 Recipes](./recipes.md)** — 通信目的から Guide / Recipe を探す（行プロトコル、コマンド／応答、タイムアウトなど）
-8. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、派生ストリーム、リカバリ
-9. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
-10. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
-11. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
-12. **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** — 将来の `receiveBytes$` の go / no-go（未実装）
-13. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
-14. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
+6. **[Bundle size と tree-shaking](./bundle-size.md)** — 再現可能な library-only サイズのスナップショットと測定手順
+7. **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** — 用途から受信ストリームを選ぶ
+8. **[通信パターン別 Recipes](./recipes.md)** — 通信目的から Guide / Recipe を探す（行プロトコル、コマンド／応答、タイムアウトなど）
+9. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、派生ストリーム、リカバリ
+10. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
+11. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
+12. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
+13. **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** — 将来の `receiveBytes$` の go / no-go（未実装）
+14. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
+15. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
 
 既存コードから移行する場合:
 
@@ -36,6 +37,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[ブラウザサポートと公式サポート方針](./browser-support.md)** | API 実装状況と公式サポート / 未検証の区別 |
 | **[バージョンサポートとリリース方針](./version-support.md)** | SemVer、非推奨、サポート範囲（LTS なし） |
 | **[Bundler / framework 互換性の検証方針](./bundler-compatibility.md)** | CI と Examples の区別、ESM / RxJS / 型（全 bundler matrix なし） |
+| **[Bundle size と tree-shaking](./bundle-size.md)** | library-only サイズのスナップショットと再現可能な測定 |
 | **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 3 系統の受信ストリームの判断ガイド |
 | **[通信パターン別 Recipes](./recipes.md)** | パターン → Guide / Recipe 索引（デバイス互換の保証ではない） |
 | **[高度な使用方法](./advanced-usage.md)** | 応用パターンと RxJS レシピ |
