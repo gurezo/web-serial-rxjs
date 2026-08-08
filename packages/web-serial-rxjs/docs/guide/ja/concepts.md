@@ -20,6 +20,8 @@
 | UTF-8 以外の文字コード（例: Shift_JIS） | **非対応** |
 | 特定プロトコル（Modbus RTU / COBS / SLIP / 独自バイナリフレーム） | **利用側で実装** — デコード済みテキスト上で組み立てるか、本ライブラリ外で扱う |
 
+用途から `receive$` / `lines$` / `terminalText$` を選ぶ手順は [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) を参照してください。
+
 ### `receive$` における「raw」の意味
 
 ドキュメントや JSDoc で言う **raw** は、**行未分割のデコード済みテキストチャンク**（`\r` などの制御文字を保持）を指します。ワイヤ上の生バイトや `Uint8Array` ストリームではありません。

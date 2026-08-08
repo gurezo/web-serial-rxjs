@@ -4,7 +4,7 @@
   <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose between `receive$` and `lines$`. **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference (TypeDoc)](modules.html).
+This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose among `receive$`, `lines$`, and `terminalText$` (see [stream selection](./stream-selection.md)). **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference (TypeDoc)](modules.html).
 
 ## Table of Contents
 
@@ -84,11 +84,9 @@ Each `state$` emission has a `status` field. Prefer the **const object** (e.g. `
 | `SerialSessionStatus.Error` | `'error'` | Fatal failure (`error` included). |
 | `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`. |
 
-**`receive$` vs `lines$`:** use **`receive$`** when the UI must preserve **unframed UTF-8 decoder chunks** from the device text stream (e.g. interactive shells, `ls` progress, any stream using `\r` to redraw a line). This is decoded text with control characters intact — **not** raw wire bytes. Use **`lines$`** for **newline-oriented** consumers—logs, one-line replies, parsers. Feeding **`lines$`** into a terminal widget can drop or split on `\r` and break redraw semantics. For custom delimiters beyond the built-in line buffer, compose on **`receive$`** ([Advanced Usage](./advanced-usage.md#line-framing)). See [Supported data](./concepts.md#supported-data-text--binary--charset).
+**`receive$` / `lines$` / `terminalText$`:** pick by use case — newline logs and parsers → **`lines$`**; unframed decoder chunks and custom framing → **`receive$`**; terminal-style UI binding → **`terminalText$`**. Full decision table: [Choosing receive$ / lines$ / terminalText$](./stream-selection.md). Supported data scope: [Supported data](./concepts.md#supported-data-text--binary--charset).
 
 **Connected boolean for UI** — when you only need a flag, derive it from `state$` (see [Advanced Usage](./advanced-usage.md#connected-boolean-ui-narrowing)) or narrow on `state.status === SerialSessionStatus.Connected`. Removed convenience APIs are documented in [Migrating to v4 – Phase 1 API removals](./migration-v4.md#phase-1-api-removals).
-
-**`lines$` (newline framing)** — built-in line splitting; for non-line protocols or terminal mirrors, subscribe to **`receive$`** instead (recipes in [Advanced Usage](./advanced-usage.md#line-framing)).
 
 ### Minimal example
 
@@ -127,6 +125,7 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | **[日本語 Guide 索引](../ja/README.md)** | Getting Started の読み順と一覧。 |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
 | **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
+| **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** | Pick the receive stream by use case. |
 | **[Advanced Usage](./advanced-usage.md)** | Line framing, derived streams, and recovery. |
 | **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$`. |
 | **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, teardown cancel, bounded retry. |

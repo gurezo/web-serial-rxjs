@@ -2,7 +2,7 @@
 
 `connect$()`, `send$()`, and response waits often need **timeouts**, **cancellation**, and **bounded retries**. This recipe shows how to place those policies in **application code** with plain RxJS — **without** a core auto-reconnect or auto-retry API.
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) · Related: [Request / Response](./request-response.md) · [Hardware-free testing](./testing.md)
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) · Related: [Request / Response](./request-response.md) · [Choosing receive$ / lines$ / terminalText$](./stream-selection.md) · [Hardware-free testing](./testing.md)
 
 ## Scope decision
 
