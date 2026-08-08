@@ -10,13 +10,13 @@ Web Serial および `@gurezo/web-serial-rxjs` でよくある問題の確認手
 
 1. **`connect$()`** を **ユーザー操作**（ボタンクリックなど）から呼び出しているか。そうでないとブラウザはダイアログを開きません — [クイックスタート – 利用条件](./quick-start.md#利用条件)。
 2. ページが [セキュアコンテキスト](#セキュアコンテキストhttps--localhost)（HTTPS または localhost）か。
-3. Web Serial が使えるか — [Web Serial 非対応](#web-serial-非対応)。
+3. Web Serial が使えるか — [Web Serial API が利用できない](#web-serial-api-が利用できない)。
 4. 別の USB ケーブル / ポートを試し、Arduino IDE・screen・minicom・別タブなどポートを掴んでいるアプリを閉じる。
 5. OS 上でデバイスが見え、ドライバが入っているか。
 
 **対処:** クリックハンドラから接続し、セキュアコンテキスト / ブラウザ対応を直し、ポートを解放してから再度 `connect$()` を購読してください。
 
-## Web Serial 非対応
+## Web Serial API が利用できない
 
 **症状:** `state$` が `unsupported` のまま、または `connect$` が `SerialErrorCode.BROWSER_NOT_SUPPORTED` で失敗する。
 
@@ -30,7 +30,7 @@ if (!isWebSerialSupported()) {
 }
 ```
 
-**対処:** Web Serial 対応のデスクトップブラウザ（Chrome 89+、Edge 89+、Opera 75+、Firefox 151+）を使ってください。Safari およびモバイルブラウザは非対応です。[Examples の利用条件](https://gurezo.net/web-serial-rxjs/examples/) とリポジトリ README のブラウザ対応も参照してください。
+**対処:** 公式サポート対象のデスクトップブラウザ（Chrome 89+、Edge 89+、Opera 75+、Firefox 151+）を使ってください。**Safari** は現時点で Web Serial API を**実装していません**。**モバイル**ブラウザは未検証・公式サポート対象外であり、多くの環境では API 自体が無く `isWebSerialSupported()` が `false` になります。[ブラウザサポートと公式サポート方針](./browser-support.md)、[Examples の利用条件](https://gurezo.net/web-serial-rxjs/examples/)、リポジトリ README も参照してください。
 
 ## セキュアコンテキスト（HTTPS / localhost）
 
@@ -130,6 +130,7 @@ session.errors$.subscribe((error) => {
 
 ## 関連リンク
 
+- [ブラウザサポートと公式サポート方針](./browser-support.md) — API 実装状況と公式サポートの区別
 - [通信パターン別 Recipes](./recipes.md) — 行プロトコル、コマンド／応答、タイムアウトなどの索引
 - [クイックスタート](./quick-start.md)
 - [概念と設計メモ](./concepts.md)

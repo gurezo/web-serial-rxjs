@@ -125,6 +125,7 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | **[日本語 Guide 索引](../ja/README.md)** | Getting Started の読み順と一覧。 |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
 | **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
+| **[Browser support and support policy](./browser-support.md)** | Web Serial API availability vs official support / untested. |
 | **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** | Pick the receive stream by use case. |
 | **[Communication pattern Recipes](./recipes.md)** | Pattern → Guide / Recipe index (not device compatibility). |
 | **[Advanced Usage](./advanced-usage.md)** | Line framing, derived streams, and recovery. |

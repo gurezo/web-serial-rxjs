@@ -33,7 +33,7 @@ npm install rxjs
 pnpm add rxjs
 ```
 
-モノレポ全体のブラウザサポートやサンプルアプリの索引は [リポジトリ README.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md) を参照してください。
+ブラウザの **API 実装状況**と本プロジェクトの **公式サポート**（および未検証のモバイル）の区別は [ブラウザサポートと公式サポート方針](./browser-support.md) を参照してください。モノレポ [README.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md) にもブラウザサポートの要約とサンプルアプリ索引があります。
 
 ## 接続・受信・送信
 

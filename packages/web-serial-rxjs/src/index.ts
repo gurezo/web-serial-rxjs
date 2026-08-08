@@ -33,20 +33,28 @@
  *
  * ## Browser Support
  *
- * The Web Serial API is supported on **desktop** browsers only. Smartphones and
- * other mobile browsers are not supported.
+ * Separates **Web Serial API availability** (what the browser implements) from
+ * this project's **official support policy** (what we test and guarantee).
  *
- * Supported desktop browsers:
+ * ### Web Serial API availability
  *
- * - Chrome 89+
- * - Edge 89+
- * - Opera 75+
- * - Firefox 151+
+ * Where `navigator.serial` exists, this library can use the Web Serial API.
+ * Typical desktop availability: Chrome 89+, Edge 89+, Opera 75+, Firefox 151+.
+ * **Safari** does not currently implement the Web Serial API. Many mobile
+ * browsers also lack `navigator.serial`; when missing,
+ * {@link isWebSerialSupported} returns `false`.
  *
- * **Safari** does not currently support the Web Serial API.
+ * ### Project support policy
  *
- * Use {@link isWebSerialSupported} for a synchronous feature
- * check before calling {@link SerialSession.connect$}.
+ * **Official support** covers the desktop browsers listed above. **Mobile**
+ * browsers are **untested** and **out of official support**. Untested does
+ * **not** mean the library rejects them — behavior is not guaranteed.
+ *
+ * ### {@link isWebSerialSupported}
+ *
+ * Synchronous **feature detection** (`navigator.serial` present) before
+ * {@link SerialSession.connect$}. It is **not** a compatibility or
+ * official-support guarantee. Secure context is a separate requirement.
  *
  * @example
  * ```typescript

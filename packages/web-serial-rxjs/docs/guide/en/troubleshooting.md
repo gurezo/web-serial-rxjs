@@ -10,13 +10,13 @@ Common Web Serial and `@gurezo/web-serial-rxjs` problems, with check steps and f
 
 1. Call `connect$()` from a **user gesture** (button click). The browser blocks the picker otherwise — see [Quick Start – Requirements](./quick-start.md#requirements).
 2. Confirm the page is a [secure context](#secure-context-https--localhost) (HTTPS or localhost).
-3. Confirm Web Serial is available — see [Web Serial not supported](#web-serial-not-supported).
+3. Confirm Web Serial is available — see [Web Serial API not available](#web-serial-api-not-available).
 4. Try another USB cable / port, and close other apps that might hold the serial device (Arduino IDE, screen, minicom, another browser tab).
 5. On the OS, confirm the device appears and drivers are installed.
 
 **Fix:** Wire Connect to a click handler, fix secure context / browser support, free the port, then call `connect$()` again and subscribe.
 
-## Web Serial not supported
+## Web Serial API not available
 
 **Symptoms:** `state$` stays at `unsupported`, or `connect$` fails with `SerialErrorCode.BROWSER_NOT_SUPPORTED`.
 
@@ -30,7 +30,7 @@ if (!isWebSerialSupported()) {
 }
 ```
 
-**Fix:** Use a desktop Chromium-based browser or Firefox with Web Serial (Chrome 89+, Edge 89+, Opera 75+, Firefox 151+). Safari and mobile browsers are not supported. See the [Examples requirements](https://gurezo.net/web-serial-rxjs/examples/) and repository README browser support notes.
+**Fix:** Use an officially supported desktop browser with Web Serial (Chrome 89+, Edge 89+, Opera 75+, Firefox 151+). **Safari** does not currently implement the Web Serial API. **Mobile** browsers are untested and out of official support — many also lack the API (so `isWebSerialSupported()` is `false`). See [Browser support and support policy](./browser-support.md), the [Examples requirements](https://gurezo.net/web-serial-rxjs/examples/), and the repository README.
 
 ## Secure context (HTTPS / localhost)
 
@@ -130,6 +130,7 @@ Please include:
 
 ## Related links
 
+- [Browser support and support policy](./browser-support.md) — API availability vs official support
 - [Communication pattern Recipes](./recipes.md) — pattern → Guide index for line protocols, request/response, timeout
 - [Quick Start](./quick-start.md)
 - [API concepts and design notes](./concepts.md)

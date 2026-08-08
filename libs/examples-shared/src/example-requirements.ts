@@ -33,7 +33,7 @@ const CANCEL_MESSAGE =
   'ポート選択がキャンセルされました。再度『接続』を押してポートを選んでください。';
 
 const RECOMMENDED_BROWSERS =
-  'Chrome、Edge、Opera、Firefox などの対応ブラウザ（デスクトップ）をご使用ください。Safari およびモバイルブラウザは非対応です。';
+  '公式サポート対象のデスクトップブラウザ（Chrome 89+、Edge 89+、Opera 75+、Firefox 151+）をご使用ください。Safari は Web Serial API 未実装です。モバイルは未検証・公式サポート対象外です。';
 
 /**
  * Static copy for the Example “利用条件” panel (Japanese UI).
@@ -44,7 +44,7 @@ export function getExampleRequirementsCopy(): ExampleRequirementsCopy {
     items: [
       'ページは HTTPS または localhost（セキュアコンテキスト）で開いてください。',
       '「接続」はユーザー操作（ボタンクリック）から実行してください。そうでないとポート選択ダイアログが開きません。',
-      'Web Serial はデスクトップブラウザのみ対応です（Chrome 89+、Edge 89+、Opera 75+、Firefox 151+）。実機のシリアルデバイス（または互換アダプタ）が必要です。',
+      'Web Serial の公式サポート対象はデスクトップブラウザです（Chrome 89+、Edge 89+、Opera 75+、Firefox 151+）。モバイルは未検証です。実機のシリアルデバイス（または互換アダプタ）が必要です。',
     ],
   };
 }

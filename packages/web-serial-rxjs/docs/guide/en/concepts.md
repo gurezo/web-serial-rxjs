@@ -297,7 +297,9 @@ createSerialUi(session);
 
 ### `isWebSerialSupported(): boolean`
 
-Synchronous feature check. Returns `true` when `navigator.serial` is available. Prefer this **before** creating a session. After the session exists, drive unsupported UI from `state$` with `SerialSessionStatus.Unsupported`. See [Migrating to v4 – browser support](./migration-v4.md#browser-support-detection).
+Synchronous **feature detection**. Returns `true` when `navigator.serial` is available. Prefer this **before** creating a session. After the session exists, drive unsupported UI from `state$` with `SerialSessionStatus.Unsupported`.
+
+This check is **not** a compatibility or official-support guarantee — see [Browser support and support policy](./browser-support.md). Secure context is a separate requirement. Migration notes: [Migrating to v4 – browser support](./migration-v4.md#browser-support-detection).
 
 ### `connect$(): Observable<void>`
 
