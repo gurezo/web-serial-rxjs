@@ -44,5 +44,6 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 - リポジトリ [README – ブラウザサポート](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md#ブラウザサポート)
 - パッケージ [README – ブラウザサポート](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/README.ja.md#ブラウザサポート)
+- [Verified environment 掲載基準](./verified-environment.md) — 実機結果は「対応デバイス一覧」ではない
 - [トラブルシューティング](./troubleshooting.md)
 - [クイックスタート](./quick-start.md)
