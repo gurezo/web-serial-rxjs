@@ -44,5 +44,6 @@ After a session exists, drive unsupported UI from `state$` with `SerialSessionSt
 
 - Repository [README – Browser Support](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md#browser-support)
 - Package [README – Browser support](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/README.md#browser-support)
+- [Verified environment listing criteria](./verified-environment.md) — hardware results are not a “supported device” list
 - [Troubleshooting](./troubleshooting.md)
 - [Quick Start](./quick-start.md)
