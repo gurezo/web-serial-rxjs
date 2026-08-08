@@ -344,6 +344,7 @@ it('reads connected state from Fake', async () => {
 ## Related
 
 - [Communication pattern Recipes](./recipes.md) — pattern → Guide index
+- [API concepts – SerialSession](./concepts.md#serialsession) — public surface under test
 - [Swappable public contract](./concepts.md#swappable-public-contract-decision-536)
 - [Advanced Usage](./advanced-usage.md) — compose RxJS on top of `receive$` / `send$`
 - [Request / Response recipes](./request-response.md) — command + matching reply (#538)

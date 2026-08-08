@@ -344,6 +344,7 @@ it('reads connected state from Fake', async () => {
 ## 関連
 
 - [通信パターン別 Recipes](./recipes.md) — パターン → Guide 索引
+- [概念 – SerialSession](./concepts.md#serialsession) — テスト対象の公開面
 - [差し替え可能な公開契約](./concepts.md#差し替え可能な公開契約decision-536)
 - [高度な使用方法](./advanced-usage.md) — `receive$` / `send$` 上の RxJS 組み立て
 - [Request / Response レシピ](./request-response.md) — コマンド送信後の応答待ち（#538）
