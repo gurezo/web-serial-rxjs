@@ -2,7 +2,7 @@
 
 シリアル機器では、**コマンド送信後に条件に合う応答を待つ**流れがよくあります。本 Recipe は、コア API に `request$()` を追加せず、`SerialSession` 上の RxJS 組み合わせでその流れを組み立てる方法を示します。
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · 関連: [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) · [実機なしテスト](./testing.md) · [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · 関連: [通信パターン別 Recipes](./recipes.md) · [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) · [実機なしテスト](./testing.md) · [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)
 
 ## スコープの判断
 

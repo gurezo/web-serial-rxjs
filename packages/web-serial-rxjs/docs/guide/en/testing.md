@@ -2,7 +2,7 @@
 
 USB serial hardware is inconvenient for automated tests: CI cannot attach devices, and failures such as permission denial, late receive, or sudden unplug are hard to reproduce on demand. This recipe shows how to test **application** code that depends on `SerialSession` without calling the Web Serial API.
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#537](https://github.com/gurezo/web-serial-rxjs/issues/537) · Contract: [Swappable public contract (Decision #536)](./concepts.md#swappable-public-contract-decision-536)
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#537](https://github.com/gurezo/web-serial-rxjs/issues/537) · Related: [Communication pattern Recipes](./recipes.md) · Contract: [Swappable public contract (Decision #536)](./concepts.md#swappable-public-contract-decision-536)
 
 ## Scope and packaging decision
 
@@ -343,6 +343,7 @@ it('reads connected state from Fake', async () => {
 
 ## Related
 
+- [Communication pattern Recipes](./recipes.md) — pattern → Guide index
 - [Swappable public contract](./concepts.md#swappable-public-contract-decision-536)
 - [Advanced Usage](./advanced-usage.md) — compose RxJS on top of `receive$` / `send$`
 - [Request / Response recipes](./request-response.md) — command + matching reply (#538)

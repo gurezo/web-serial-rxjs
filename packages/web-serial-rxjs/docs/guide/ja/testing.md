@@ -2,7 +2,7 @@
 
 USB シリアル実機は自動テストに向きません。CI にデバイスを付けられず、権限拒否・遅延受信・突然の切断といった失敗も再現しづらいためです。本 Recipe では、Web Serial API を呼ばずに **`SerialSession` に依存するアプリケーションコード** をテストする方法を示します。
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#537](https://github.com/gurezo/web-serial-rxjs/issues/537) · 契約: [差し替え可能な公開契約（Decision #536）](./concepts.md#差し替え可能な公開契約decision-536)
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#537](https://github.com/gurezo/web-serial-rxjs/issues/537) · 関連: [通信パターン別 Recipes](./recipes.md) · 契約: [差し替え可能な公開契約（Decision #536）](./concepts.md#差し替え可能な公開契約decision-536)
 
 ## スコープと npm 同梱の判断
 
@@ -343,6 +343,7 @@ it('reads connected state from Fake', async () => {
 
 ## 関連
 
+- [通信パターン別 Recipes](./recipes.md) — パターン → Guide 索引
 - [差し替え可能な公開契約](./concepts.md#差し替え可能な公開契約decision-536)
 - [高度な使用方法](./advanced-usage.md) — `receive$` / `send$` 上の RxJS 組み立て
 - [Request / Response レシピ](./request-response.md) — コマンド送信後の応答待ち（#538）
