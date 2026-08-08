@@ -2,7 +2,7 @@
 
 `connect$()`、`send$()`、応答待ちには、しばしば **タイムアウト**、**キャンセル**、**回数制限付き再試行** が必要です。本 Recipe は、コアの自動再接続・自動再試行 API を追加せず、利用側で plain RxJS によって方針を置く方法を示します。
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) · 関連: [Request / Response](./request-response.md) · [実機なしテスト](./testing.md)
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#539](https://github.com/gurezo/web-serial-rxjs/issues/539) · 関連: [Request / Response](./request-response.md) · [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) · [実機なしテスト](./testing.md)
 
 ## スコープの判断
 

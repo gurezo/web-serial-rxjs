@@ -20,6 +20,8 @@ This library is **UTF-8 text–first**. The internal read pump always decodes wi
 | Non-UTF-8 charsets (e.g. Shift_JIS) | **Not supported** |
 | Protocol framing (Modbus RTU, COBS, SLIP, custom binary frames) | **Application-side** — compose on decoded text or handle outside this library |
 
+To choose among `receive$`, `lines$`, and `terminalText$` by use case, see [Choosing receive$ / lines$ / terminalText$](./stream-selection.md).
+
 ### What “raw” means on `receive$`
 
 In docs and JSDoc, **raw** means **unframed decoded text chunks** (not line-split; `\r` and other control characters preserved). It does **not** mean raw wire bytes or a `Uint8Array` stream.

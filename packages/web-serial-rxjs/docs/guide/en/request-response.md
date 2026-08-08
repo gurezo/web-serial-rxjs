@@ -2,7 +2,7 @@
 
 Serial devices often expect a **command**, then a **matching reply** (a line, a prompt, or a terminator). This recipe shows how to build that flow with plain RxJS on top of `SerialSession` — **without** adding a core `request$()` API.
 
-Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · Related: [Hardware-free testing](./testing.md) · [Timeout / cancel / retry](./timeout-cancel-retry.md)
+Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [#538](https://github.com/gurezo/web-serial-rxjs/issues/538) · Related: [Choosing receive$ / lines$ / terminalText$](./stream-selection.md) · [Hardware-free testing](./testing.md) · [Timeout / cancel / retry](./timeout-cancel-retry.md)
 
 ## Scope decision
 
@@ -16,6 +16,8 @@ Parent: [#535](https://github.com/gurezo/web-serial-rxjs/issues/535) · Issue: [
 RxJS composition is enough for common command/reply protocols. A future core helper would only be justified if many apps need the same correlation / framing rules.
 
 ## Choose `lines$` or `receive$`
+
+For the full three-stream decision table (including `terminalText$`), see [Choosing receive$ / lines$ / terminalText$](./stream-selection.md).
 
 | Stream | Use when |
 | --- | --- |

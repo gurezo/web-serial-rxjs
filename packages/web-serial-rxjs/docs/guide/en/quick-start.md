@@ -4,6 +4,8 @@ This is the **shortest path** to opening a serial port, receiving **newline-deli
 
 Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the unframed UTF-8 decoder chunk stream (decoded text, not wire bytes) when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** run when you subscribe.
 
+Choosing among `receive$`, `lines$`, and `terminalText$`: see [Choosing receive$ / lines$ / terminalText$](./stream-selection.md).
+
 ## Requirements
 
 - Serve the page over **HTTPS** or **localhost** (a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts)). Web Serial is unavailable on plain `http://` hosts other than localhost.

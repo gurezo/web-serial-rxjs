@@ -4,7 +4,7 @@
   <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` と `lines$` の使い分け。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](../../api/modules.html) を参照してください。
+このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` / `lines$` / `terminalText$` の使い分け（[選び方](./stream-selection.md)）。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](../../api/modules.html) を参照してください。
 
 ## 目次
 
@@ -78,11 +78,9 @@
 | `SerialSessionStatus.Error` | `'error'` | 接続まわりの致命エラー。`error` 付き。 |
 | `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
 
-**`receive$` と `lines$`:** 機器から来た **UTF-8 デコード済みチャンク**を行分割せず画面に反映する（シェル、`ls` のプログレス、`\r` で行を描き直す出力など）ときは **`receive$`** を使います。制御文字は保持されますが、**ワイヤ上の生バイトではありません**。**改行区切りのログ**や**1 行ずつ処理するプロトコル**では **`lines$`** が適しています。ターミナル表示に **`lines$`** を繋ぐと、内部で `\r` を行境界として扱うため **上書き表示が壊れる**ことがあります。独自区切りは **`receive$` 上で RxJS を合成**します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。詳細は [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+**`receive$` / `lines$` / `terminalText$`:** 用途で選んでください — 改行ログ・パーサ → **`lines$`**、未フレーミングのデコードチャンクやカスタムフレーミング → **`receive$`**、ターミナル風 UI へのバインド → **`terminalText$`**。比較表は [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)。対応範囲: [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード)。
 
 **UI 用の接続 boolean** — フラグだけ必要な場合は `state$` から derive するか（[高度な使用方法](./advanced-usage.md#接続中フラグ（-narrowing）)）、`state.status === SerialSessionStatus.Connected` で narrowing してください。削除された convenience API は [v4 への移行 – Phase 1 API 削除](./migration-v4.md#phase-1-api-削除) を参照してください。
-
-**`lines$`（行区切り）** — 組み込みの行分割。ターミナルのミラーや `\r` を保持したいときは **`receive$`** を購読します（[高度な使用方法 — 行単位のフレーミング](./advanced-usage.md)）。
 
 ### 最小サンプル
 
@@ -121,6 +119,7 @@ session.send$('hello\r\n').subscribe();
 | **[English Guide 索引](../en/README.md)** | Getting Started reading order and full index. |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
 | **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
+| **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 用途から受信ストリームを選ぶ。 |
 | **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、派生ストリーム、リカバリ。 |
 | **[Request / Response](./request-response.md)** | `lines$` / `receive$` でのコマンド送信後の応答待ち。 |
 | **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** | タイムアウト、破棄時キャンセル、回数制限付き再試行。 |
