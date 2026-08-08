@@ -10,7 +10,7 @@ Web Serial および `@gurezo/web-serial-rxjs` でよくある問題の確認手
 
 1. **`connect$()`** を **ユーザー操作**（ボタンクリックなど）から呼び出しているか。そうでないとブラウザはダイアログを開きません — [クイックスタート – 利用条件](./quick-start.md#利用条件)。
 2. ページが [セキュアコンテキスト](#セキュアコンテキストhttps--localhost)（HTTPS または localhost）か。
-3. Web Serial が使えるか — [Web Serial 非対応](#web-serial-非対応)。
+3. Web Serial が使えるか — [Web Serial API が利用できない](#web-serial-api-が利用できない)。
 4. 別の USB ケーブル / ポートを試し、Arduino IDE・screen・minicom・別タブなどポートを掴んでいるアプリを閉じる。
 5. OS 上でデバイスが見え、ドライバが入っているか。
 

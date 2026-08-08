@@ -10,7 +10,7 @@ Common Web Serial and `@gurezo/web-serial-rxjs` problems, with check steps and f
 
 1. Call `connect$()` from a **user gesture** (button click). The browser blocks the picker otherwise — see [Quick Start – Requirements](./quick-start.md#requirements).
 2. Confirm the page is a [secure context](#secure-context-https--localhost) (HTTPS or localhost).
-3. Confirm Web Serial is available — see [Web Serial not supported](#web-serial-not-supported).
+3. Confirm Web Serial is available — see [Web Serial API not available](#web-serial-api-not-available).
 4. Try another USB cable / port, and close other apps that might hold the serial device (Arduino IDE, screen, minicom, another browser tab).
 5. On the OS, confirm the device appears and drivers are installed.
 
