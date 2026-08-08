@@ -71,7 +71,7 @@ session.lines$.subscribe((line) => console.log(line));
 </section>
 <section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
 <h2 style="margin:0 0 0.5rem;font-size:1.15rem;">Examples</h2>
-<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Interactive Angular, React, Svelte, Vue, and Vanilla JS/TS examples using SerialSession.</p>
+<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Interactive framework wiring demos for SerialSession (start with Vanilla TS). Not a supported-device catalog — use Recipes for communication patterns.</p>
 <a href="examples/"><strong>Open Examples</strong></a>
 </section>
 <section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">

@@ -120,14 +120,18 @@ Documentation is split into **Guide** (how to use; Japanese and English hand-wri
 
 ## Examples
 
-Examples are available for the following environments:
+Framework examples demonstrate **how to wire `SerialSession`** in each stack. They are **not** a supported-device catalog. For communication patterns (line protocol, command/reply, timeout, and so on), see the [Recipes index](packages/web-serial-rxjs/docs/guide/en/recipes.md) instead.
 
-- **[Angular](apps/example-angular/)** - Angular example using a Service
-- **[React](apps/example-react/)** - React example with custom hook (`useSerialSession`)
-- **[Svelte](apps/example-svelte/)** - Svelte example using Svelte Store
-- **[Vanilla JavaScript](apps/example-vanilla-js/)** - Basic usage with vanilla JavaScript
-- **[Vanilla TypeScript](apps/example-vanilla-ts/)** - TypeScript example with RxJS
-- **[Vue](apps/example-vue/)** - Vue 3 example using Composition API
+**Start here:** [Vanilla TypeScript](apps/example-vanilla-ts/) (Recommended / まずはこちら) — try the library API with TypeScript and RxJS, with no UI framework.
+
+- **[Vanilla TypeScript](apps/example-vanilla-ts/)** — Recommended starting point (TypeScript + RxJS, no framework)
+- **[Vanilla JavaScript](apps/example-vanilla-js/)** — Same connect flow without TypeScript or a UI framework
+- **[Angular](apps/example-angular/)** — Wire SerialSession through an injectable Service
+- **[React](apps/example-react/)** — Custom hook (`useSerialSession`)
+- **[Vue](apps/example-vue/)** — Vue 3 Composition API (composable)
+- **[Svelte](apps/example-svelte/)** — Svelte Store
+
+Interactive demos: [https://gurezo.net/web-serial-rxjs/examples/](https://gurezo.net/web-serial-rxjs/examples/).
 
 Each sample is a **minimal smoke test** for **connect**, **receive** (terminal-style append via **`receive$`** so `\r` redraws stay intact), **send**, and **disconnect**. Use **`lines$`** only when you want newline-delimited logging or parsing—not for mirroring interactive terminal output; deeper patterns live in [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/advanced-usage.md).
 
