@@ -10,18 +10,28 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 
 ## Browser support
 
-The Web Serial API is supported on **desktop** browsers only. Smartphones and other mobile browsers are not supported.
+This section separates **Web Serial API availability** (what the browser implements) from this project's **official support policy** (what we test and guarantee).
 
-Supported desktop browsers:
+### Web Serial API availability
+
+Where `navigator.serial` exists, this library can talk to the Web Serial API. Typical desktop availability:
 
 - **Chrome** 89+
 - **Edge** 89+
 - **Opera** 75+
 - **Firefox** 151+
 
-**Safari** does not currently support the Web Serial API.
+**Safari** does not currently implement the Web Serial API. Many **mobile** browsers also lack `navigator.serial`; when the API is missing, `isWebSerialSupported()` returns `false`.
 
-`isWebSerialSupported()` returns a synchronous `boolean` for feature detection before `connect$`.
+### Project support policy
+
+**Official support** covers the desktop browsers listed above (Chrome 89+, Edge 89+, Opera 75+, Firefox 151+).
+
+**Mobile** browsers are **untested** and **out of official support**. Untested does **not** mean the library rejects them — if a mobile browser exposes Web Serial and the page is in a secure context, feature detection may succeed, but we do not guarantee behavior.
+
+### `isWebSerialSupported()`
+
+`isWebSerialSupported()` returns a synchronous `boolean` for **feature detection** (`navigator.serial` present) before `connect$`. It is **not** a compatibility or official-support guarantee. Secure context (HTTPS or localhost) is a separate requirement.
 
 ## Connection state (lifecycle UI)
 

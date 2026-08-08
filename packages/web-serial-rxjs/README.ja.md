@@ -10,18 +10,28 @@ Web Serial API を最小限の Session 指向 RxJS 表面でラップする Type
 
 ## ブラウザサポート
 
-Web Serial API は**デスクトップ**ブラウザでのみサポートされています。スマートフォンなどのモバイルブラウザには対応していません。
+この節では、**Web Serial API の実装状況**（ブラウザが提供するもの）と、本プロジェクトの**公式サポート方針**（動作確認・保証の範囲）を分けて記載します。
 
-対応しているデスクトップブラウザ：
+### Web Serial API の実装状況
+
+`navigator.serial` が存在する環境では、本ライブラリは Web Serial API を利用できます。デスクトップでの典型的な対応は次のとおりです。
 
 - **Chrome** 89+
 - **Edge** 89+
 - **Opera** 75+
 - **Firefox** 151+
 
-**Safari** は現時点で Web Serial API をサポートしていません。
+**Safari** は現時点で Web Serial API を**実装していません**。多くの**モバイル**ブラウザにも `navigator.serial` がなく、API が無い場合は `isWebSerialSupported()` が `false` を返します。
 
-`connect$` の前の feature detection には `isWebSerialSupported()`（同期的に `boolean`）を使います。
+### プロジェクトの公式サポート方針
+
+**公式サポート**の対象は、上記のデスクトップブラウザ（Chrome 89+、Edge 89+、Opera 75+、Firefox 151+）です。
+
+**モバイル**ブラウザは**未検証**であり、**公式サポート対象外**です。未検証は「ライブラリが拒否する」ことと同一ではありません。モバイルで Web Serial が公開され、セキュアコンテキストであれば feature detection が成功する場合もありますが、動作は保証しません。
+
+### `isWebSerialSupported()`
+
+`connect$` の前の **feature detection**（`navigator.serial` の有無）には `isWebSerialSupported()`（同期的に `boolean`）を使います。これは**互換性や公式サポートの保証ではありません**。セキュアコンテキスト（HTTPS または localhost）は別条件です。
 
 ## 接続状態（ライフサイクル UI）
 
