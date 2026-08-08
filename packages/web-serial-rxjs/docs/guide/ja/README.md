@@ -9,15 +9,16 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 1. **[概要](./overview.md)** — `SerialSession` の公開面、`state$` / `errors$` の位置付け、最小サンプル
 2. **[クイックスタート](./quick-start.md)** — インストール、接続、受信・送信、切断・破棄、エラーハンドリング
 3. **[ブラウザサポートと公式サポート方針](./browser-support.md)** — Web Serial API 実装状況と公式サポートの分離
-4. **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** — 用途から受信ストリームを選ぶ
-5. **[通信パターン別 Recipes](./recipes.md)** — 通信目的から Guide / Recipe を探す（行プロトコル、コマンド／応答、タイムアウトなど）
-6. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、派生ストリーム、リカバリ
-7. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
-8. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
-9. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
-10. **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** — 将来の `receiveBytes$` の go / no-go（未実装）
-11. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
-12. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
+4. **[バージョンサポートとリリース方針](./version-support.md)** — SemVer、非推奨、サポート範囲（LTS なし）
+5. **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** — 用途から受信ストリームを選ぶ
+6. **[通信パターン別 Recipes](./recipes.md)** — 通信目的から Guide / Recipe を探す（行プロトコル、コマンド／応答、タイムアウトなど）
+7. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、派生ストリーム、リカバリ
+8. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
+9. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
+10. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
+11. **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** — 将来の `receiveBytes$` の go / no-go（未実装）
+12. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
+13. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
 
 既存コードから移行する場合:
 
@@ -32,6 +33,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[概要](./overview.md)** | 公開面の早見表、機能概要、最小サンプル |
 | **[クイックスタート](./quick-start.md)** | インストールから切断までの基本フロー |
 | **[ブラウザサポートと公式サポート方針](./browser-support.md)** | API 実装状況と公式サポート / 未検証の区別 |
+| **[バージョンサポートとリリース方針](./version-support.md)** | SemVer、非推奨、サポート範囲（LTS なし） |
 | **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 3 系統の受信ストリームの判断ガイド |
 | **[通信パターン別 Recipes](./recipes.md)** | パターン → Guide / Recipe 索引（デバイス互換の保証ではない） |
 | **[高度な使用方法](./advanced-usage.md)** | 応用パターンと RxJS レシピ |
