@@ -9,12 +9,13 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 1. **[Overview](./overview.md)** — `SerialSession` public surface, role of `state$` / `errors$`, minimal sample
 2. **[Quick Start](./quick-start.md)** — installation, connect, receive/send, disconnect/dispose, error handling
 3. **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** — pick the receive stream by use case
-4. **[Advanced Usage](./advanced-usage.md)** — line framing, derived streams, recovery
-5. **[Request / Response](./request-response.md)** — wait for replies on `lines$` / `receive$`, serialize commands
-6. **[Timeout / cancel / retry](./timeout-cancel-retry.md)** — deadlines, teardown cancel, bounded retry (no core auto-retry)
-7. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
-8. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
-9. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
+4. **[Communication pattern Recipes](./recipes.md)** — find Guide pages by serial goal (line protocol, command/reply, timeout, …)
+5. **[Advanced Usage](./advanced-usage.md)** — line framing, derived streams, recovery
+6. **[Request / Response](./request-response.md)** — wait for replies on `lines$` / `receive$`, serialize commands
+7. **[Timeout / cancel / retry](./timeout-cancel-retry.md)** — deadlines, teardown cancel, bounded retry (no core auto-retry)
+8. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
+9. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
+10. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
 
 When migrating existing code:
 
@@ -29,6 +30,7 @@ When migrating existing code:
 | **[Overview](./overview.md)** | Public surface quick reference, feature summary, minimal sample |
 | **[Quick Start](./quick-start.md)** | Basic flow from installation through disconnect |
 | **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** | Decision guide for the three receive streams |
+| **[Communication pattern Recipes](./recipes.md)** | Pattern → Guide / Recipe index (not device compatibility) |
 | **[Advanced Usage](./advanced-usage.md)** | Application patterns and RxJS recipes |
 | **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$` (no core `request$`) |
 | **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, cancel on teardown, limited retry (no core auto-retry) |

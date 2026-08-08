@@ -2,7 +2,7 @@
 
 `SerialSession` exposes three receive-side text streams. Pick by **what you want to do**, not by which name sounds “raw.” This page is the decision guide; for option tables and formal contracts, see [API concepts](./concepts.md) and the [TypeDoc API Reference](modules.html).
 
-Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#559](https://github.com/gurezo/web-serial-rxjs/issues/559)
+Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#559](https://github.com/gurezo/web-serial-rxjs/issues/559) · Related: [Communication pattern Recipes](./recipes.md)
 
 ## Quick comparison
 
@@ -79,6 +79,7 @@ Current limits and design notes: [Supported data](./concepts.md#supported-data-t
 
 ## Related guides
 
+- [Communication pattern Recipes](./recipes.md) — pattern → Guide index
 - [SerialSession overview](./overview.md#serialsession-at-a-glance) — public surface map
 - [Quick Start](./quick-start.md) — shortest path with `lines$`
 - [Advanced Usage](./advanced-usage.md) — custom framing on `receive$`

@@ -9,12 +9,13 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 1. **[概要](./overview.md)** — `SerialSession` の公開面、`state$` / `errors$` の位置付け、最小サンプル
 2. **[クイックスタート](./quick-start.md)** — インストール、接続、受信・送信、切断・破棄、エラーハンドリング
 3. **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** — 用途から受信ストリームを選ぶ
-4. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、派生ストリーム、リカバリ
-5. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
-6. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
-7. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
-8. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
-9. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
+4. **[通信パターン別 Recipes](./recipes.md)** — 通信目的から Guide / Recipe を探す（行プロトコル、コマンド／応答、タイムアウトなど）
+5. **[高度な使用方法](./advanced-usage.md)** — 行フレーミング、派生ストリーム、リカバリ
+6. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
+7. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
+8. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
+9. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
+10. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
 
 既存コードから移行する場合:
 
@@ -29,6 +30,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[概要](./overview.md)** | 公開面の早見表、機能概要、最小サンプル |
 | **[クイックスタート](./quick-start.md)** | インストールから切断までの基本フロー |
 | **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 3 系統の受信ストリームの判断ガイド |
+| **[通信パターン別 Recipes](./recipes.md)** | パターン → Guide / Recipe 索引（デバイス互換の保証ではない） |
 | **[高度な使用方法](./advanced-usage.md)** | 応用パターンと RxJS レシピ |
 | **[Request / Response](./request-response.md)** | コマンド送信後の応答待ち（コア `request$` なし） |
 | **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** | タイムアウト、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし） |

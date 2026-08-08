@@ -2,7 +2,7 @@
 
 `SerialSession` は受信側に 3 系統のテキストストリームを公開します。「raw っぽい名前」ではなく、**やりたいこと**から選んでください。本ページは判断用ガイドです。オプション表や正式な契約は [API の概念](./concepts.md) と [TypeDoc API Reference](../../api/modules.html) を参照してください。
 
-Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#559](https://github.com/gurezo/web-serial-rxjs/issues/559)
+Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [#559](https://github.com/gurezo/web-serial-rxjs/issues/559) · 関連: [通信パターン別 Recipes](./recipes.md)
 
 ## 早見比較表
 
@@ -79,6 +79,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 ## 関連ガイド
 
+- [通信パターン別 Recipes](./recipes.md) — パターン → Guide 索引
 - [SerialSession の概要](./overview.md#serialsession-の全体像) — 公開面の地図
 - [クイックスタート](./quick-start.md) — `lines$` での最短経路
 - [高度な使用方法](./advanced-usage.md) — `receive$` 上のカスタムフレーミング

@@ -75,6 +75,11 @@ session.lines$.subscribe((line) => console.log(line));
 <a href="examples/"><strong>Open Examples</strong></a>
 </section>
 <section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
+<h2 style="margin:0 0 0.5rem;font-size:1.15rem;">Recipes</h2>
+<p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Find Guide pages by communication pattern (line protocol, command/reply, timeout, testing, binary send) — not by device brand.</p>
+<p style="margin:0;"><a href="guide/en/recipes.html"><strong>English Recipes</strong></a> · <a href="guide/ja/recipes.html"><strong>日本語 Recipes</strong></a></p>
+</section>
+<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;">
 <h2 style="margin:0 0 0.5rem;font-size:1.15rem;">API Reference (English / TypeDoc)</h2>
 <p style="margin:0 0 0.75rem;color:var(--color-text-secondary);">Exported classes, interfaces, types, methods, and API contracts from TypeScript JSDoc.</p>
 <a href="${assetBase}index.html"><strong>Open API Reference</strong></a>
