@@ -33,6 +33,8 @@ Where `navigator.serial` exists, this library can talk to the Web Serial API. Ty
 
 `isWebSerialSupported()` returns a synchronous `boolean` for **feature detection** (`navigator.serial` present) before `connect$`. It is **not** a compatibility or official-support guarantee. Secure context (HTTPS or localhost) is a separate requirement.
 
+Guide detail: [Browser support and support policy](docs/guide/en/browser-support.md).
+
 ## Connection state (lifecycle UI)
 
 Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. Session teardown uses **`dispose$()`** (subscribe to run it). See [Migrating to v4](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v4.md).

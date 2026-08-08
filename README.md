@@ -71,6 +71,8 @@ Where `navigator.serial` exists, this library can talk to the Web Serial API. Ty
 
 `isWebSerialSupported()` returns a synchronous boolean for **feature detection** (`navigator.serial` present) before calling `connect$`. It is **not** a compatibility or official-support guarantee. Secure context (HTTPS or localhost) is a separate requirement.
 
+Guide detail: [Browser support and support policy](packages/web-serial-rxjs/docs/guide/en/browser-support.md).
+
 ## Installation
 
 Install the package using npm or pnpm:

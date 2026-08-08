@@ -71,6 +71,8 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 
 `connect$` を呼ぶ前の **feature detection**（`navigator.serial` の有無）には `isWebSerialSupported()` が使えます（同期的に `boolean` を返します）。これは**互換性や公式サポートの保証ではありません**。セキュアコンテキスト（HTTPS または localhost）は別条件です。
 
+Guide の詳細: [ブラウザサポートと公式サポート方針](packages/web-serial-rxjs/docs/guide/ja/browser-support.md)。
+
 ## インストール
 
 npm または pnpm を使用してパッケージをインストールします：

@@ -119,6 +119,7 @@ session.send$('hello\r\n').subscribe();
 | **[English Guide 索引](../en/README.md)** | Getting Started reading order and full index. |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
 | **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
+| **[ブラウザサポートと公式サポート方針](./browser-support.md)** | Web Serial API 実装状況と公式サポート / 未検証の区別。 |
 | **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 用途から受信ストリームを選ぶ。 |
 | **[通信パターン別 Recipes](./recipes.md)** | パターン → Guide / Recipe 索引（デバイス互換の保証ではない）。 |
 | **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、派生ストリーム、リカバリ。 |

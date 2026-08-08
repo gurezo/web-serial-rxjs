@@ -33,6 +33,8 @@ Web Serial API を最小限の Session 指向 RxJS 表面でラップする Type
 
 `connect$` の前の **feature detection**（`navigator.serial` の有無）には `isWebSerialSupported()`（同期的に `boolean`）を使います。これは**互換性や公式サポートの保証ではありません**。セキュアコンテキスト（HTTPS または localhost）は別条件です。
 
+Guide の詳細: [ブラウザサポートと公式サポート方針](docs/guide/ja/browser-support.md)。
+
 ## 接続状態（ライフサイクル UI）
 
 ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v4 への移行](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) を参照してください。
