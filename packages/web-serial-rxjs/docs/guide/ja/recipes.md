@@ -128,6 +128,8 @@ await firstValueFrom(session.send$(payload));
 ## 関連
 
 - [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) — 迷ったら先に受信ストリームを選ぶ
+- [実機なしのテスト](./testing.md) — fake session と契約テスト
 - [トラブルシューティング](./troubleshooting.md) — ポート選択、改行、再接続の症状
+- [API Reference（TypeDoc）](../../api/modules.html) — オプション、型、正式なシグネチャ
 - [Examples](../../examples/) — Angular / React / Vue / Svelte / Vanilla
 - [English Recipes](../en/recipes.md)

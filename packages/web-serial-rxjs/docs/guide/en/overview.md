@@ -126,9 +126,11 @@ In real apps, handle `connect$().subscribe({ next, error })` and `send$().subscr
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
 | **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
 | **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** | Pick the receive stream by use case. |
+| **[Communication pattern Recipes](./recipes.md)** | Pattern → Guide / Recipe index (not device compatibility). |
 | **[Advanced Usage](./advanced-usage.md)** | Line framing, derived streams, and recovery. |
 | **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$`. |
 | **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, teardown cancel, bounded retry. |
+| **[Hardware-free testing](./testing.md)** | Controllable Fake `SerialSession` without a port. |
 | **[Troubleshooting](./troubleshooting.md)** | Common Web Serial / session problems and self-help checks. |
 | **[API Reference (TypeDoc)](modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
 | **[v3 → v4 Migration Guide](./migration-v4.md)** ([日本語](../ja/migration-v4.md)) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |

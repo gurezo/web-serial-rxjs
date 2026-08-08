@@ -128,6 +128,8 @@ await firstValueFrom(session.send$(payload));
 ## Related
 
 - [Choosing receive$ / lines$ / terminalText$](./stream-selection.md) — pick the receive stream first when unsure
+- [Hardware-free testing](./testing.md) — fake session and contract tests without a port
 - [Troubleshooting](./troubleshooting.md) — port picker, line endings, reconnect symptoms
+- [API Reference (TypeDoc)](modules.html) — options, types, and formal signatures
 - [Examples](../../examples/) — Angular / React / Vue / Svelte / Vanilla apps
 - [日本語 Recipes](../ja/recipes.md)

@@ -130,6 +130,7 @@ Please include:
 
 ## Related links
 
+- [Communication pattern Recipes](./recipes.md) — pattern → Guide index for line protocols, request/response, timeout
 - [Quick Start](./quick-start.md)
 - [API concepts and design notes](./concepts.md)
 - [Advanced Usage](./advanced-usage.md)

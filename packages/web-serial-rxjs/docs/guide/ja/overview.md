@@ -120,9 +120,11 @@ session.send$('hello\r\n').subscribe();
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
 | **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 用途から受信ストリームを選ぶ。 |
+| **[通信パターン別 Recipes](./recipes.md)** | パターン → Guide / Recipe 索引（デバイス互換の保証ではない）。 |
 | **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、派生ストリーム、リカバリ。 |
 | **[Request / Response](./request-response.md)** | `lines$` / `receive$` でのコマンド送信後の応答待ち。 |
 | **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** | タイムアウト、破棄時キャンセル、回数制限付き再試行。 |
+| **[実機なしのテスト](./testing.md)** | ポートなしで使える Fake `SerialSession`。 |
 | **[トラブルシューティング](./troubleshooting.md)** | Web Serial / セッションのよくある問題と自己解決手順。 |
 | **[API Reference（TypeDoc）](../../api/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
 | **[v3 → v4 マイグレーション](./migration-v4.md)**（[English](../en/migration-v4.md)） | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |

@@ -130,6 +130,7 @@ session.errors$.subscribe((error) => {
 
 ## 関連リンク
 
+- [通信パターン別 Recipes](./recipes.md) — 行プロトコル、コマンド／応答、タイムアウトなどの索引
 - [クイックスタート](./quick-start.md)
 - [概念と設計メモ](./concepts.md)
 - [高度な使用方法](./advanced-usage.md)
