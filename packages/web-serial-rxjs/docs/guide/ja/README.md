@@ -15,8 +15,9 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 7. **[Request / Response](./request-response.md)** — `lines$` / `receive$` で応答待ち、コマンドの直列化
 8. **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** — 期限、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし）
 9. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
-10. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
-11. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
+10. **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** — 将来の `receiveBytes$` の go / no-go（未実装）
+11. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
+12. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
 
 既存コードから移行する場合:
 
@@ -37,6 +38,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[Request / Response](./request-response.md)** | コマンド送信後の応答待ち（コア `request$` なし） |
 | **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** | タイムアウト、破棄時キャンセル、回数制限付き再試行（コア自動再試行なし） |
 | **[API の概念と設計メモ](./concepts.md)** | オプション・エラーコード・型の表形式補足、差し替え可能な `SerialSession` 契約、[対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) |
+| **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** | 設計検討: `receiveBytes$` は当面追加しない。go / no-go 条件 |
 | **[実機なしテスト](./testing.md)** | 制御可能な Fake `SerialSession`、Vitest / Angular / React 例（npm 非同梱） |
 | **[トラブルシューティング](./troubleshooting.md)** | よくある問題の確認手順と報告時の情報 |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |

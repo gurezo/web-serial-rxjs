@@ -13,7 +13,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | 受信チャンクをそのまま扱う | `receive$` |
 | `\r` を含む表示制御を扱う | `receive$` または `terminalText$` |
 | ターミナル風テキストを画面へ表示する | `terminalText$` |
-| raw `Uint8Array`（ワイヤ生バイト）を受信する | **未対応** — [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）) と [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) を参照 |
+| raw `Uint8Array`（ワイヤ生バイト）を受信する | **未対応** — [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）)、[バイナリ受信の設計判断](./binary-receive-design.md)、[#545](https://github.com/gurezo/web-serial-rxjs/issues/545) を参照 |
 
 ## 責務の要約
 
@@ -75,7 +75,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 - **バイナリ送信**は `send$(Uint8Array)` で対応
 - **バイナリ受信**は未対応 — バイナリについては送受信が非対称
 
-現行の制限と設計メモ: [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）)。将来のバイナリ受信設計: [#545](https://github.com/gurezo/web-serial-rxjs/issues/545)。
+現行の制限と設計メモ: [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）)。設計判断（当面は追加しない）: [バイナリ受信 API — 設計判断](./binary-receive-design.md)（[#545](https://github.com/gurezo/web-serial-rxjs/issues/545)）。
 
 ## 関連ガイド
 
@@ -86,3 +86,4 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 - [Request / Response レシピ](./request-response.md) — `lines$` / `receive$` で待ってから送信
 - [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) — 待ちの期限
 - [API の概念 — 対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）) — テキスト / バイナリ / 文字コードの範囲
+- [バイナリ受信 API — 設計判断](./binary-receive-design.md) — 将来のバイトストリームの go / no-go
