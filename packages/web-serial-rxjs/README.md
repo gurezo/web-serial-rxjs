@@ -108,6 +108,8 @@ npm install rxjs
 pnpm add rxjs
 ```
 
+The package is **ESM-only** (`import` via `package.json` `exports`).
+
 ## Where to go next
 
 - Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md))

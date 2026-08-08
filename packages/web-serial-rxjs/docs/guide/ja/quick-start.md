@@ -33,6 +33,8 @@ npm install rxjs
 pnpm add rxjs
 ```
 
+パッケージは **ESM のみ**です。CI で検証していること、Examples と互換性の関係、TypeScript の扱いは [Bundler / framework 互換性の検証方針](./bundler-compatibility.md) を参照してください。
+
 ブラウザの **API 実装状況**と本プロジェクトの **公式サポート**（および未検証のモバイル）の区別は [ブラウザサポートと公式サポート方針](./browser-support.md) を参照してください。モノレポ [README.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md) にもブラウザサポートの要約とサンプルアプリ索引があります。
 
 ## 接続・受信・送信

@@ -108,6 +108,8 @@ npm install rxjs
 pnpm add rxjs
 ```
 
+パッケージは **ESM のみ**です（`package.json` の `exports` 経由の `import`）。
+
 ## 次に読むもの
 
 - **API の全体像**（機能一覧、`SerialSession` 早見表、`SerialSessionState`、最小サンプル）: [SerialSession の概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md)（[English](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md)）

@@ -33,6 +33,8 @@ npm install rxjs
 pnpm add rxjs
 ```
 
+The package is **ESM-only**. For what CI verifies, how Examples relate to compatibility, and TypeScript notes, see [Bundler and framework compatibility](./bundler-compatibility.md).
+
 For browser **API availability** vs this project's **official support** (and untested mobile), see [Browser support and support policy](./browser-support.md). The monorepo [README.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md) also summarizes browser support and lists example apps.
 
 ## Connect, receive, and send
