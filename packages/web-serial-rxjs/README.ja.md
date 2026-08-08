@@ -108,6 +108,8 @@ npm install rxjs
 pnpm add rxjs
 ```
 
+パッケージは **ESM のみ**です（`package.json` の `exports` 経由の `import`）。CI の検証範囲と Example build の意味、TypeScript の扱いは [Bundler / framework 互換性の検証方針](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/bundler-compatibility.md) を参照してください。
+
 ## 次に読むもの
 
 - **API の全体像**（機能一覧、`SerialSession` 早見表、`SerialSessionState`、最小サンプル）: [SerialSession の概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md)（[English](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md)）

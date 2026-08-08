@@ -126,6 +126,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 | **[高度な使用方法](packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
 | **[トラブルシューティング](packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md)** | Web Serial / セッションのよくある問題と自己解決手順。 |
 | **[バージョンサポートとリリース方針](packages/web-serial-rxjs/docs/guide/ja/version-support.md)** | SemVer、非推奨、サポート範囲（LTS なし）。 |
+| **[Bundler / framework 互換性の検証方針](packages/web-serial-rxjs/docs/guide/ja/bundler-compatibility.md)** | CI と Example build の区別、ESM / RxJS / 型（全 matrix なし）。 |
 | **[API の概念と設計メモ](packages/web-serial-rxjs/docs/guide/ja/concepts.md)** | オプション、`SerialSessionState`、`SerialError` の表形式補足。 |
 | **[v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)** | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |
 | **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
@@ -133,7 +134,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 ## サンプル
 
-Framework Examples は各スタックでの **`SerialSession` の配線方法**を示すデモです。**対応デバイス一覧ではありません**。通信パターン（行プロトコル、コマンド／応答、タイムアウトなど）を探す場合は [Recipes 索引](packages/web-serial-rxjs/docs/guide/ja/recipes.md) を使ってください。
+Framework Examples は各スタックでの **`SerialSession` の配線方法**を示すデモです。**対応デバイス一覧ではありません**。Example が build できることは、**全 bundler / framework の互換性保証でもありません**。通信パターン（行プロトコル、コマンド／応答、タイムアウトなど）を探す場合は [Recipes 索引](packages/web-serial-rxjs/docs/guide/ja/recipes.md) を使ってください。CI で検証している範囲と ESM / RxJS の最低要件は [Bundler / framework 互換性の検証方針](packages/web-serial-rxjs/docs/guide/ja/bundler-compatibility.md) を参照してください。
 
 **まずはこちら:** [Vanilla TypeScript](apps/example-vanilla-ts/)（Recommended / まずはこちら）— UI フレームワークなしで、TypeScript と RxJS からライブラリ API を試せます。
 
@@ -194,6 +195,7 @@ English: see the same sections in [CONTRIBUTING.md](CONTRIBUTING.md).
 - 貢献の詳細: [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md)
 - リリース手順: [RELEASING.ja.md](RELEASING.ja.md)
 - バージョンサポート / リリース方針（Guide）: [日本語](packages/web-serial-rxjs/docs/guide/ja/version-support.md) · [English](packages/web-serial-rxjs/docs/guide/en/version-support.md)
+- Bundler / framework 互換性の検証方針（Guide）: [日本語](packages/web-serial-rxjs/docs/guide/ja/bundler-compatibility.md) · [English](packages/web-serial-rxjs/docs/guide/en/bundler-compatibility.md)
 
 ## プロジェクトアイコンについて
 
