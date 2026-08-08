@@ -120,14 +120,18 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 
 ## サンプル
 
-以下の環境向けのサンプルを用意しています。
+Framework Examples は各スタックでの **`SerialSession` の配線方法**を示すデモです。**対応デバイス一覧ではありません**。通信パターン（行プロトコル、コマンド／応答、タイムアウトなど）を探す場合は [Recipes 索引](packages/web-serial-rxjs/docs/guide/ja/recipes.md) を使ってください。
 
-- **[Angular](apps/example-angular/)** - Service を使用した Angular の例
-- **[React](apps/example-react/)** - カスタムフック（`useSerialSession`）を使用した React の例
-- **[Svelte](apps/example-svelte/)** - Svelte Store を使用した Svelte の例
-- **[Vanilla JavaScript](apps/example-vanilla-js/)** - バニラ JavaScript での基本的な使用方法
-- **[Vanilla TypeScript](apps/example-vanilla-ts/)** - RxJS を使用した TypeScript の例
-- **[Vue](apps/example-vue/)** - Composition API を使用した Vue 3 の例
+**まずはこちら:** [Vanilla TypeScript](apps/example-vanilla-ts/)（Recommended / まずはこちら）— UI フレームワークなしで、TypeScript と RxJS からライブラリ API を試せます。
+
+- **[Vanilla TypeScript](apps/example-vanilla-ts/)** — 推奨の開始地点（TypeScript + RxJS、フレームワークなし）
+- **[Vanilla JavaScript](apps/example-vanilla-js/)** — TypeScript / UI フレームワークなしで同じ接続フローを確認
+- **[Angular](apps/example-angular/)** — Service 経由で SerialSession を配線
+- **[React](apps/example-react/)** — カスタムフック（`useSerialSession`）
+- **[Vue](apps/example-vue/)** — Vue 3 Composition API（composable）
+- **[Svelte](apps/example-svelte/)** — Svelte Store
+
+対話デモ: [https://gurezo.net/web-serial-rxjs/examples/](https://gurezo.net/web-serial-rxjs/examples/)。
 
 各サンプルは **connect・受信（ターミナル表示は `\r` を保持するため `receive$` で連結）・send・disconnect** の最小動作確認用です。**`lines$`** は改行区切りログや解析向けであり、対話的シェル出力のミラーには **`receive$`** を使ってください。行フレーミングや応用パターンの詳細は [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md) に集約しています。
 
