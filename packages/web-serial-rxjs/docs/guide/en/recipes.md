@@ -11,21 +11,21 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | Axis | **Communication patterns**, not device brands |
 | Device names | Do **not** treat product names as a compatibility guarantee |
 | New long pages | Prefer **links** to existing Guide / Recipe pages |
-| Binary receive | **Not supported** — see [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) and [Supported data](./concepts.md#supported-data-text--binary--charset) |
+| Binary receive | **Not supported** — see [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) and [Supported data](./concepts.md#supported-data-text-binary--charset) |
 
 ## Catalog
 
 | Pattern | Primary APIs | Details |
 | --- | --- | --- |
 | [Basic text send / receive](#basic-text-send--receive) | `connect$`, `lines$`, `send$`, `disconnect$` / `dispose$` | [Quick Start](./quick-start.md) |
-| [Line-oriented protocol](#line-oriented-protocol) | `lines$`, optionally `receive$` | [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-lines-vs-custom-framing-on-receive) · [Stream selection](./stream-selection.md) |
+| [Line-oriented protocol](#line-oriented-protocol) | `lines$`, optionally `receive$` | [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-vs-custom-framing-on-) · [Stream selection](./stream-selection.md) |
 | [Terminal / carriage-return handling](#terminal--carriage-return-handling) | `terminalText$`, `receive$` | [Stream selection](./stream-selection.md) · [Advanced Usage](./advanced-usage.md) |
 | [Command / Response](#command--response) | `lines$` / `receive$`, `send$` | [Request / Response](./request-response.md) |
 | [Timeout](#timeout) | RxJS `timeout` on `connect$` / waits | [Timeout / cancel / retry – Connect timeout](./timeout-cancel-retry.md#connect-timeout) |
-| [Cancellation](#cancellation) | `takeUntil`, unsubscribe, teardown | [Timeout / cancel / retry – Cancel](./timeout-cancel-retry.md#cancel-with-takeuntil) |
-| [Reconnect policy](#reconnect-policy) | `state$`, `connect$`, new session after `dispose$` | [Timeout / cancel / retry – disposed](./timeout-cancel-retry.md#do-not-reconnect-after-disposed) · [Advanced Usage – Reconnect](./advanced-usage.md#reconnect-on-fatal-error) |
+| [Cancellation](#cancellation) | `takeUntil`, unsubscribe, teardown | [Timeout / cancel / retry – Cancel](./timeout-cancel-retry.md#cancel-with) |
+| [Reconnect policy](#reconnect-policy) | `state$`, `connect$`, new session after `dispose$` | [Timeout / cancel / retry – disposed](./timeout-cancel-retry.md#do-not-reconnect-after) · [Advanced Usage – Reconnect](./advanced-usage.md#reconnect-on-fatal-error) |
 | [Fake SerialSession testing](#fake-serialsession-testing) | Fake implementing `SerialSession` | [Hardware-free testing](./testing.md) |
-| [Binary send with `Uint8Array`](#binary-send-with-uint8array) | `send$(Uint8Array)` | [Supported data](./concepts.md#supported-data-text--binary--charset) |
+| [Binary send with `Uint8Array`](#binary-send-with-uint8array) | `send$(Uint8Array)` | [Supported data](./concepts.md#supported-data-text-binary--charset) |
 
 ---
 
@@ -45,7 +45,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **APIs** | `lines$` (default); `receive$` + RxJS when built-in framing is not enough |
 | **Good for** | Newline-delimited logs, JSON Lines, one-line status replies |
 | **Not for** | Prompts without a newline, `\r` redraw terminals (prefer `receive$` / `terminalText$`) |
-| **Details** | [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-lines-vs-custom-framing-on-receive) · [Stream selection](./stream-selection.md) |
+| **Details** | [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-vs-custom-framing-on-) · [Stream selection](./stream-selection.md) |
 
 ### Terminal / carriage-return handling
 
@@ -54,7 +54,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **APIs** | `terminalText$`, `receive$` (and `SerialSessionOptions.terminalBuffer`) |
 | **Good for** | Binding a terminal-like viewport; folding `\r` redraws; optional ANSI strip |
 | **Not for** | Strict line parsers (use `lines$`); expecting wire `Uint8Array` receive |
-| **Details** | [Stream selection](./stream-selection.md) · [Advanced Usage](./advanced-usage.md) · [TerminalBufferOptions](./concepts.md#terminalbufferoptions) |
+| **Details** | [Stream selection](./stream-selection.md) · [Advanced Usage](./advanced-usage.md) · [`createTerminalBuffer`](./concepts.md#createterminalbufferreceive-options) |
 
 ### Command / Response
 
@@ -81,7 +81,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **APIs** | `takeUntil`, unsubscribe, component / hook teardown |
 | **Good for** | Stopping work when the UI tears down; distinguishing user cancel from device failure |
 | **Not for** | Auto-reopening the port picker after `OPERATION_CANCELLED` |
-| **Details** | [Cancel with `takeUntil`](./timeout-cancel-retry.md#cancel-with-takeuntil) · [Cancel on teardown](./timeout-cancel-retry.md#cancel-on-component--hook-teardown) |
+| **Details** | [Cancel with `takeUntil`](./timeout-cancel-retry.md#cancel-with) · [Cancel on teardown](./timeout-cancel-retry.md#cancel-on-component-hook-teardown) |
 
 ### Reconnect policy
 
@@ -90,7 +90,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **APIs** | `state$`, `connect$`, `errors$`; **new** `SerialSession` after `dispose$` |
 | **Good for** | App-owned limited retry / manual reconnect after recoverable failures |
 | **Not for** | Core auto-reconnect; reconnecting a disposed session; infinite retry loops |
-| **Details** | [Do not reconnect after `disposed`](./timeout-cancel-retry.md#do-not-reconnect-after-disposed) · [Reconnect on fatal error](./advanced-usage.md#reconnect-on-fatal-error) · [What to retry](./timeout-cancel-retry.md#what-to-retry--and-what-to-avoid) |
+| **Details** | [Do not reconnect after `disposed`](./timeout-cancel-retry.md#do-not-reconnect-after) · [Reconnect on fatal error](./advanced-usage.md#reconnect-on-fatal-error) · [What to retry](./timeout-cancel-retry.md#what-to-retry-and-what-to-avoid) |
 
 ### Fake `SerialSession` testing
 
@@ -108,7 +108,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **APIs** | `send$(Uint8Array)` — bytes written as-is |
 | **Good for** | Sending opaque binary payloads the peer already understands |
 | **Not for** | Binary **receive** (no `receiveBytes$` / `Uint8Array` receive stream); Modbus RTU / COBS / SLIP as a library feature |
-| **Details** | [Supported data](./concepts.md#supported-data-text--binary--charset) · design notes [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) |
+| **Details** | [Supported data](./concepts.md#supported-data-text-binary--charset) · design notes [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) |
 
 Short example (send only; receive remains UTF-8 text):
 
