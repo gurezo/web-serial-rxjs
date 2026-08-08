@@ -108,7 +108,7 @@ npm install rxjs
 pnpm add rxjs
 ```
 
-The package is **ESM-only** (`import` via `package.json` `exports`). For CI coverage vs Example builds, and TypeScript typing notes, see [Bundler and framework compatibility](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/bundler-compatibility.md).
+The package is **ESM-only** (`import` via `package.json` `exports`).
 
 ## Where to go next
 

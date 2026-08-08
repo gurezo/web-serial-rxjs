@@ -108,7 +108,7 @@ npm install rxjs
 pnpm add rxjs
 ```
 
-パッケージは **ESM のみ**です（`package.json` の `exports` 経由の `import`）。CI の検証範囲と Example build の意味、TypeScript の扱いは [Bundler / framework 互換性の検証方針](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/bundler-compatibility.md) を参照してください。
+パッケージは **ESM のみ**です（`package.json` の `exports` 経由の `import`）。
 
 ## 次に読むもの
 
