@@ -13,7 +13,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | 受信チャンクをそのまま扱う | `receive$` |
 | `\r` を含む表示制御を扱う | `receive$` または `terminalText$` |
 | ターミナル風テキストを画面へ表示する | `terminalText$` |
-| raw `Uint8Array`（ワイヤ生バイト）を受信する | **未対応** — [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) と [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) を参照 |
+| raw `Uint8Array`（ワイヤ生バイト）を受信する | **未対応** — [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）) と [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) を参照 |
 
 ## 責務の要約
 
@@ -33,7 +33,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 - 1 つの `receive$` チャンクに、複数の完成行が含まれることがある（完成行は `lines$` にも流れる）
 - 「1 チャンク == 1 コマンド応答」とみなさない。必要なら `receive$` 上で独自フレーミングを組む
 
-組み込み行バッファ以外の区切りが必要なときは `receive$` 上で合成してください — [高度な使用方法 — 行単位のフレーミング](./advanced-usage.md#行単位のフレーミング組み込み-lines-と-receive-上のカスタム分割)。
+組み込み行バッファ以外の区切りが必要なときは `receive$` 上で合成してください — [高度な使用方法 — 行単位のフレーミング](./advanced-usage.md#行単位のフレーミング（組み込み-と--上のカスタム分割）)。
 
 ## `lines$` を使うとき
 
@@ -56,7 +56,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 - ピアが送った `\r` などをそのまま観察する
 - 独自のターミナルパイプラインを組む（または自分で `createTerminalBuffer` に渡す）
 
-ドキュメントや JSDoc で言う **`receive$` の「raw」は、未フレーミングのデコード済みテキストチャンク**を指します。ワイヤ上の生バイトでも、`Uint8Array` ストリームでもありません。[`receive$` における「raw」の意味](./concepts.md#receive-におけるrawの意味) を参照してください。
+ドキュメントや JSDoc で言う **`receive$` の「raw」は、未フレーミングのデコード済みテキストチャンク**を指します。ワイヤ上の生バイトでも、`Uint8Array` ストリームでもありません。[`receive$` における「raw」の意味](./concepts.md#における「raw」の意味) を参照してください。
 
 ## `terminalText$` を使うとき
 
@@ -75,13 +75,13 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 - **バイナリ送信**は `send$(Uint8Array)` で対応
 - **バイナリ受信**は未対応 — バイナリについては送受信が非対称
 
-現行の制限と設計メモ: [対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード)。将来のバイナリ受信設計: [#545](https://github.com/gurezo/web-serial-rxjs/issues/545)。
+現行の制限と設計メモ: [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）)。将来のバイナリ受信設計: [#545](https://github.com/gurezo/web-serial-rxjs/issues/545)。
 
 ## 関連ガイド
 
-- [SerialSession の概要](./overview.md#serialsessionの全体像) — 公開面の地図
+- [SerialSession の概要](./overview.md#serialsession-の全体像) — 公開面の地図
 - [クイックスタート](./quick-start.md) — `lines$` での最短経路
 - [高度な使用方法](./advanced-usage.md) — `receive$` 上のカスタムフレーミング
 - [Request / Response レシピ](./request-response.md) — `lines$` / `receive$` で待ってから送信
 - [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) — 待ちの期限
-- [API の概念 — 対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) — テキスト / バイナリ / 文字コードの範囲
+- [API の概念 — 対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）) — テキスト / バイナリ / 文字コードの範囲
