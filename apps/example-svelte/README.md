@@ -36,7 +36,7 @@ This is a minimal Svelte example for the `SerialSession` API. `useSerialSession`
 
 ## Requirements
 
-- Modern browser with Web Serial API support (Chrome, Edge, Opera, etc.)
+- Officially supported desktop browser with Web Serial API (Chrome 89+, Edge 89+, Opera 75+, Firefox 151+)
 - Node.js and pnpm
 - Nx workspace
 
@@ -118,13 +118,21 @@ The example uses `createSerialSession` directly through `useSerialSession`:
 
 ## Browser Compatibility
 
-This example requires a browser that supports the Web Serial API on **desktop** only. Smartphones and other mobile browsers are not supported.
+This section separates **Web Serial API availability** from this project's **official support**.
 
-Supported desktop browsers:
+### Web Serial API availability
+
+Typical desktop availability:
 
 - Chrome 89+
 - Edge 89+
 - Opera 75+
 - Firefox 151+
 
-Safari does not currently support the Web Serial API.
+**Safari** does not currently implement the Web Serial API. Many **mobile** browsers also lack `navigator.serial`.
+
+### Project support policy
+
+**Official support** covers the desktop browsers listed above. **Mobile** browsers are **untested** and **out of official support** (untested ≠ rejected by the library).
+
+`isWebSerialSupported()` is feature detection only — not a compatibility guarantee. See the Guide [Browser support and support policy](../../packages/web-serial-rxjs/docs/guide/en/browser-support.md).
