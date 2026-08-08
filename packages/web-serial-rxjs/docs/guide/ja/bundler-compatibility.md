@@ -67,7 +67,7 @@ ESM の解決と RxJS peer 要件を満たせば、`package.json` の `exports` 
 
 ## 関連
 
-- [クイックスタート – インストールと peer dependency](./quick-start.md#installation)
+- [クイックスタート – インストールと peer dependency](./quick-start.md#インストール)
 - [ブラウザサポートと公式サポート方針](./browser-support.md)
 - [バージョンサポートとリリース方針](./version-support.md)
 - リポジトリ [README – サンプル](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md#サンプル)
