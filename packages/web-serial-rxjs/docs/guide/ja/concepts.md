@@ -297,7 +297,9 @@ createSerialUi(session);
 
 ### `isWebSerialSupported(): boolean`
 
-同期的な feature detection。`navigator.serial` が存在すれば `true` を返します。セッション生成**前**に使ってください。生成後の unsupported UI は `state$` の `SerialSessionStatus.Unsupported` を推奨します。詳細は [v4 への移行 – ブラウザー対応判定](./migration-v4.md#ブラウザー対応判定) を参照してください。
+同期的な **feature detection**。`navigator.serial` が存在すれば `true` を返します。セッション生成**前**に使ってください。生成後の unsupported UI は `state$` の `SerialSessionStatus.Unsupported` を推奨します。
+
+これは**互換性や公式サポートの保証ではありません** — [ブラウザサポートと公式サポート方針](./browser-support.md) を参照してください。セキュアコンテキストは別条件です。移行メモ: [v4 への移行 – ブラウザー対応判定](./migration-v4.md#ブラウザー対応判定)。
 
 ### `connect$(): Observable<void>`
 
