@@ -127,6 +127,7 @@ Documentation is split into **Guide** (how to use; Japanese and English hand-wri
 | **[Troubleshooting](packages/web-serial-rxjs/docs/guide/en/troubleshooting.md)** | Common Web Serial / session problems and self-help checks. |
 | **[Version support and release policy](packages/web-serial-rxjs/docs/guide/en/version-support.md)** | SemVer, deprecations, support window (no LTS). |
 | **[Bundler and framework compatibility](packages/web-serial-rxjs/docs/guide/en/bundler-compatibility.md)** | CI vs Example builds; ESM / RxJS / types (no full matrix). |
+| **[Bundle size and tree-shaking](packages/web-serial-rxjs/docs/guide/en/bundle-size.md)** | Library-only size snapshot and reproducible measurement. |
 | **[API concepts and design notes](packages/web-serial-rxjs/docs/guide/en/concepts.md)** | Options, `SerialSessionState`, and `SerialError` details. |
 | **[v3 → v4 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v4.md)** | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |
 | **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
@@ -196,6 +197,7 @@ This project follows **trunk-based development**: `main` stays release-ready; wo
 - Release instructions: [RELEASING.md](RELEASING.md)
 - Version support / release policy (Guide): [English](packages/web-serial-rxjs/docs/guide/en/version-support.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/version-support.md)
 - Bundler / framework compatibility (Guide): [English](packages/web-serial-rxjs/docs/guide/en/bundler-compatibility.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/bundler-compatibility.md)
+- Bundle size / tree-shaking (Guide): [English](packages/web-serial-rxjs/docs/guide/en/bundle-size.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/bundle-size.md)
 
 ## Project Icon
 
