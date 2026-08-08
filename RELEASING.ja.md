@@ -25,6 +25,7 @@
    - **MAJOR** (例: `1.0.0` → `2.0.0`): 破壊的変更
    - **MINOR** (例: `1.0.0` → `1.1.0`): 新機能（後方互換性あり）
    - **PATCH** (例: `1.0.0` → `1.0.1`): バグ修正（後方互換性あり）
+   - 利用者向けの要約（サポート範囲、非推奨、GitHub Release と CHANGELOG）: [バージョンサポートとリリース方針](packages/web-serial-rxjs/docs/guide/ja/version-support.md)
 6. **package.json のバージョン**: `packages/web-serial-rxjs/package.json` のバージョンをタグと一致させる
 7. **ドキュメント**: メンテナンスされている場合は `CHANGELOG.md` を更新（任意）
 

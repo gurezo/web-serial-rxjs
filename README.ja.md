@@ -125,6 +125,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 | **[クイックスタート](packages/web-serial-rxjs/docs/guide/ja/quick-start.md)** | 最短でポートを開いて購読するところまで。 |
 | **[高度な使用方法](packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md)** | 行フレーミング、擬似リクエスト／レスポンス、リカバリ。 |
 | **[トラブルシューティング](packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md)** | Web Serial / セッションのよくある問題と自己解決手順。 |
+| **[バージョンサポートとリリース方針](packages/web-serial-rxjs/docs/guide/ja/version-support.md)** | SemVer、非推奨、サポート範囲（LTS なし）。 |
 | **[API の概念と設計メモ](packages/web-serial-rxjs/docs/guide/ja/concepts.md)** | オプション、`SerialSessionState`、`SerialError` の表形式補足。 |
 | **[v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)** | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |
 | **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
@@ -192,6 +193,7 @@ English: see the same sections in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - 貢献の詳細: [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md)
 - リリース手順: [RELEASING.ja.md](RELEASING.ja.md)
+- バージョンサポート / リリース方針（Guide）: [日本語](packages/web-serial-rxjs/docs/guide/ja/version-support.md) · [English](packages/web-serial-rxjs/docs/guide/en/version-support.md)
 
 ## プロジェクトアイコンについて
 
