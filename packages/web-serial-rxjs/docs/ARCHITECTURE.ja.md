@@ -30,7 +30,7 @@ Documentation
 | read / write | 送受信 |
 | 高度な使用方法 | 行フレーミング、擬似リクエスト／レスポンス、リカバリ |
 | トラブルシューティング | Web Serial / セッションのよくある問題と自己解決手順 |
-| マイグレーション | v2 → v3、v1 → v2 への導線 |
+| マイグレーション | v3 → v4、v2 → v3、v1 → v2 への導線 |
 | 概念補足 | 表や図による補足（旧 `API_REFERENCE.md`） |
 
 Guide は**手書き Markdown** の日英二言語で、ライブラリの*使い方*を説明する。
@@ -90,6 +90,8 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | `MIGRATION_V2.ja.md` | `guide/ja/migration-v2.md` | |
 | `MIGRATION_V3.md` | `guide/en/migration-v3.md` | |
 | `MIGRATION_V3.ja.md` | `guide/ja/migration-v3.md` | |
+| `MIGRATION_V4.md` | `guide/en/migration-v4.md` | v4 で追加。legacy flat ファイル名なし |
+| `MIGRATION_V4.ja.md` | `guide/ja/migration-v4.md` | v4 で追加。legacy flat ファイル名なし |
 | `API_REFERENCE.md` | `guide/en/concepts.md` | リネーム。Guide 補足 |
 | `API_REFERENCE.ja.md` | `guide/ja/concepts.md` | リネーム。Guide 補足 |
 | `archive/` | `guide/en/archive/` / `guide/ja/archive/` | 現状維持 |

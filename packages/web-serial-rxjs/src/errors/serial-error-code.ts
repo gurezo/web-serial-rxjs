@@ -39,15 +39,15 @@ export const SerialErrorCode = {
   /**
    * Serial port is not available.
    *
-   * **Reserved — not emitted in v3.x.** The current implementation uses only
-   * `navigator.serial.requestPort`; there is no `getPorts` API path. Scheduled
-   * for removal in the next major version.
+   * **Reserved — not emitted in v4.** The current implementation uses only
+   * `navigator.serial.requestPort`; there is no `getPorts` API path. Still
+   * present in v4 (deprecated); scheduled for removal in a future major (v5+).
    *
    * **Suggested action**: Handle port acquisition failures with
    * {@link SerialErrorCode.PORT_OPEN_FAILED} or
    * {@link SerialErrorCode.OPERATION_CANCELLED} instead.
    *
-   * @deprecated Not emitted at runtime in v3.x. Will be removed in the next major version.
+   * @deprecated Not emitted at runtime in v4. Will be removed in a future major (v5+).
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
    */
   PORT_NOT_AVAILABLE: 'PORT_NOT_AVAILABLE',
@@ -136,11 +136,11 @@ export const SerialErrorCode = {
   /**
    * Operation timed out before completion.
    *
-   * **Reserved — not emitted in v3.x.** No timeout / prompt detection /
-   * transaction API exists yet. Scheduled for removal in the next major version
-   * unless a future API adopts this code.
+   * **Reserved — not emitted in v4.** No timeout / prompt detection /
+   * transaction API exists yet. Still present in v4 (deprecated); scheduled for
+   * removal in a future major (v5+) unless a future API adopts this code.
    *
-   * @deprecated Not emitted at runtime in v3.x. Will be removed in the next major version.
+   * @deprecated Not emitted at runtime in v4. Will be removed in a future major (v5+).
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
    */
   OPERATION_TIMEOUT: 'OPERATION_TIMEOUT',

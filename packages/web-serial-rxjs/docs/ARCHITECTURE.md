@@ -30,7 +30,7 @@ Documentation
 | Read / write | Sending and receiving data |
 | Advanced usage | Line framing, request/response-style flows, recovery |
 | Troubleshooting | Common Web Serial / session problems and self-help checks |
-| Migration | Links to v2 → v3 and v1 → v2 migration guides |
+| Migration | Links to v3 → v4, v2 → v3, and v1 → v2 migration guides |
 | Concepts | Supplemental tables and diagrams (formerly `API_REFERENCE.md`) |
 
 Guide content is **hand-written Markdown** in two languages. It explains *how to use* the library.
@@ -90,6 +90,8 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | `MIGRATION_V2.ja.md` | `guide/ja/migration-v2.md` | |
 | `MIGRATION_V3.md` | `guide/en/migration-v3.md` | |
 | `MIGRATION_V3.ja.md` | `guide/ja/migration-v3.md` | |
+| `MIGRATION_V4.md` | `guide/en/migration-v4.md` | Added with v4; no legacy flat filename |
+| `MIGRATION_V4.ja.md` | `guide/ja/migration-v4.md` | Added with v4; no legacy flat filename |
 | `API_REFERENCE.md` | `guide/en/concepts.md` | Renamed; Guide supplement |
 | `API_REFERENCE.ja.md` | `guide/ja/concepts.md` | Renamed; Guide supplement |
 | `archive/` | `guide/en/archive/` / `guide/ja/archive/` | Preserved |

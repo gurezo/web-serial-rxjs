@@ -60,14 +60,14 @@ import {
 
 ## Deprecated exports
 
-以下は v3.x で引き続き public export から利用できますが、canonical API ではありません。次回 major version で削除予定です。詳細は [v3 への移行 – §9 `assertNever` public export 監査](./migration-v3.md#9-public-export-監査) を参照してください。
+以下は **v4** でも引き続き public export から利用できますが、canonical API ではありません。**非推奨**であり、将来の major（**v5 以降**）で削除予定です。監査の経緯は [v3 への移行 – §9 `assertNever` public export 監査](./migration-v3.md#9-public-export-監査) を参照してください。v4 で既に削除された API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()` など）は [v4 への移行](./migration-v4.md) を参照してください。
 
 | Export | 状態 | 移行先 |
 | --- | --- | --- |
-| `assertNever` | v3.x で `@deprecated` | アプリケーション側でローカル helper を定義するか、`switch (state.status)` + `SerialSessionStatus` を使用する |
+| `assertNever` | v4 で `@deprecated` | アプリケーション側でローカル helper を定義するか、`switch (state.status)` + `SerialSessionStatus` を使用する |
 
 ```typescript
-// 非推奨（v3.x では動作するが警告が出る）
+// 非推奨（v4 でも利用可能だが警告が出る）
 import { assertNever } from '@gurezo/web-serial-rxjs';
 
 // 推奨: ローカル helper
@@ -339,7 +339,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 `SerialError` は `Error` を継承し、`code: SerialErrorCode` と code 別の構造化メタデータ `context` を持ちます。`is(code)` は `code` と `context` を literal 型に narrow します。
 
-cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの canonical source です。`originalError` は後方互換のため v3.x に残っていますが **非推奨** で、次回 major version で削除予定です。詳細は [v3 移行ガイド – originalError の非推奨化](./migration-v3.md#3-originalerror-の非推奨化) を参照してください。
+cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの canonical source です。`originalError` は後方互換のため **v4** にも残っていますが **非推奨** で、将来の major（**v5 以降**）で削除予定です。詳細は [v3 移行ガイド – originalError の非推奨化](./migration-v3.md#3-originalerror-の非推奨化) を参照してください。
 
 ```typescript
 session.errors$.subscribe((error) => {
@@ -370,7 +370,7 @@ try {
 
 `ValidationErrorContext` は `{ field: string; value: unknown; constraint: ValidationErrorConstraint; filterIndex?: number }` です。`message` は人間向け、`context` はプログラム向けの metadata として利用してください。
 
-### Implemented（v3.x で emit される）
+### Implemented（v4 で emit される）
 
 | Code                     | emit されるタイミング                                              |
 | ------------------------ | ------------------------------------------------------------------ |
@@ -389,7 +389,7 @@ try {
 | `SESSION_DISPOSED`       | `dispose$` 後に `connect$` または `send$` を呼んだ                 |
 | `UNKNOWN`                | dispose / disconnect の分類不能 fallback。`context.cause` を確認     |
 
-### Reserved（v3.x では emit されない・次回 major で削除予定）
+### Reserved（v4 では emit されない・将来の major / v5 以降で削除予定）
 
 | Code                     | 備考                                                               |
 | ------------------------ | ------------------------------------------------------------------ |

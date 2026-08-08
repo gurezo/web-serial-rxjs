@@ -3,7 +3,7 @@ import { SerialErrorCode } from '../../src/errors/serial-error-code';
 
 /**
  * Regression guard for the SerialErrorCode emission audit (Issue #438).
- * Keep in sync with MIGRATION_V3 §8 and API_REFERENCE.
+ * Keep in sync with MIGRATION_V3 §8 and concepts.md SerialError / SerialErrorCode.
  */
 const IMPLEMENTED_CODES = [
   SerialErrorCode.BROWSER_NOT_SUPPORTED,
@@ -44,7 +44,7 @@ describe('SerialErrorCode emission audit (#438)', () => {
     }
   });
 
-  it('marks reserved codes as not implemented at runtime in v3.x', () => {
+  it('marks reserved codes as not emitted at runtime in v4', () => {
     expect(RESERVED_CODES).toEqual([
       SerialErrorCode.PORT_NOT_AVAILABLE,
       SerialErrorCode.OPERATION_TIMEOUT,

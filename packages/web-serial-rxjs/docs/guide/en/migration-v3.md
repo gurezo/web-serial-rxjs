@@ -41,6 +41,8 @@ session.errors$.subscribe((error) => {
 
 Phase 1 of [#472](https://github.com/gurezo/web-serial-rxjs/issues/472) removed duplicate / escape-hatch APIs so `state$` and `dispose$()` are the only public sources for lifecycle and teardown. See [#478](https://github.com/gurezo/web-serial-rxjs/issues/478) for the documentation pass.
 
+**These removals shipped in v4.** For a unified Phase 1+2 upgrade path, prefer [Migrating to v4](./migration-v4.md). The sections below retain the detailed before/after examples from the Phase 1 work.
+
 | Removed API | Replacement |
 | --- | --- |
 | `destroy$()` | `dispose$()` |
@@ -159,7 +161,7 @@ export type SerialSessionState =
 
 v3.0.0 introduced typed `SerialError.context`. For cause-bearing error codes, **`context.cause`** is the canonical source for the underlying failure.
 
-`SerialError.originalError` and the legacy constructor third argument remain in v3.x for backward compatibility but are **deprecated** and scheduled for removal in the next major version.
+`SerialError.originalError` and the legacy constructor third argument remain in **v4** for backward compatibility but are **deprecated** and scheduled for removal in a future major (**v5+**).
 
 ### v2 / legacy pattern (deprecated)
 
@@ -188,11 +190,12 @@ session.errors$.subscribe((error) => {
 - [ ] If you construct errors with `new SerialError(code, message, cause)`, switch to `new SerialError(code, message, undefined, { cause })`.
 - [ ] Address TypeScript `@deprecated` warnings by migrating to the patterns above.
 
-### Compatibility in v3.x
+### Compatibility in v4 (still deprecated)
 
-- `originalError` remains available in v3.x.
+- `originalError` remains available in v4 (deprecated since v3).
 - When `context.cause` is an `Error` instance, `originalError` is kept in sync for legacy callers.
 - `context.cause` is typed as `unknown` because JavaScript allows throwing non-`Error` values.
+- Removal is deferred to a future major (**v5+**).
 
 ---
 
@@ -398,24 +401,24 @@ Operations such as `getSignals()` / `setSignals()` that previously required a ra
 
 ## 8. `SerialErrorCode` runtime emission audit
 
-Some members of the public `SerialErrorCode` contract were not emitted by the v3.x runtime. To prevent unreachable error-handling branches, all 19 codes were audited ([#438](https://github.com/gurezo/web-serial-rxjs/issues/438)) and the results are recorded here and in the [API Reference](./concepts.md#serialerror--serialerrorcode).
+Some members of the public `SerialErrorCode` contract were not emitted by the v3.x runtime (and remain unemitted in **v4**). To prevent unreachable error-handling branches, all 19 codes were audited ([#438](https://github.com/gurezo/web-serial-rxjs/issues/438)) and the results are recorded here and in the [API Reference](./concepts.md#serialerror--serialerrorcode).
 
 ### Classification
 
 | Category | Count | Description |
 | --- | --- | --- |
 | **Implemented** | 15 | Emitted at runtime in v3.x / v4 (or thrown at factory time) |
-| **Reserved** | 2 | Present in the public API but not emitted; scheduled for removal in the next major version |
+| **Reserved** | 2 | Present in the public API but not emitted; still deprecated in v4; removal deferred to a future major (**v5+**) |
 | **Removed in v4 Phase 2** | 2 | Receive-replay codes deleted with `receiveReplay$` / `receiveReplay` |
 
-### Reserved codes (not emitted in v3.x)
+### Reserved codes (not emitted in v4)
 
 | Code | Reason | Alternative |
 | --- | --- | --- |
 | `PORT_NOT_AVAILABLE` | Current implementation uses only `navigator.serial.requestPort`; no `getPorts` API path exists | Use `PORT_OPEN_FAILED` or `OPERATION_CANCELLED` for port acquisition failures |
 | `OPERATION_TIMEOUT` | No timeout / prompt detection / transaction API yet | None (revisit when a future API is added) |
 
-v3.x adds `@deprecated` annotations only; runtime values and exports are unchanged. Removal is deferred to the next major version.
+v3 added `@deprecated` annotations only; **v4** still retains the runtime values and exports. Removal is deferred to a future major (**v5+**).
 
 ### Implemented codes
 
@@ -450,7 +453,7 @@ Fatal vs non-fatal follows `ERROR_SEVERITY` inside `reportError`. Factory-thrown
 
 ### Migration checklist
 
-- [ ] Remove error handling for `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` (unreachable in v3.x).
+- [ ] Remove error handling for `PORT_NOT_AVAILABLE` / `OPERATION_TIMEOUT` (unreachable in v4).
 - [ ] Handle port acquisition failures with `PORT_OPEN_FAILED` / `OPERATION_CANCELLED`.
 - [ ] See [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode) for per-code emit conditions.
 
@@ -477,7 +480,7 @@ Structured context for validation errors (`INVALID_*`) was added in [#439](https
 
 `assertNever` is an internal implementation utility, not a canonical public API. For exhaustive handling of `SerialSessionState`, prefer `switch (state.status)` with `SerialSessionStatus`, or narrowing with `isConnectedSessionState`.
 
-v3.x adds `@deprecated` annotations only; the public export is retained. Removal is deferred to the next major version.
+v3 added `@deprecated` annotations only; **v4** still retains the public export. Removal is deferred to a future major (**v5+**).
 
 ### Legacy pattern (deprecated)
 
@@ -535,9 +538,9 @@ session.state$.subscribe((state: SerialSessionState) => {
 - [ ] Prefer `switch (state.status)` with `SerialSessionStatus` for `SerialSessionState` branches.
 - [ ] Migrate when TypeScript shows `@deprecated` warnings.
 
-### v3.x compatibility
+### Compatibility in v4 (still deprecated)
 
-`assertNever` remains available from the public export in v3.x. It is scheduled for removal in the next major version.
+`assertNever` remains available from the public export in **v4**. It is scheduled for removal in a future major (**v5+**).
 
 ---
 
@@ -572,7 +575,7 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 
 See [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions) for details. Boundary semantics (`0` = unlimited for buffer limits only; connection fields require `> 0`) are documented there ([#488](https://github.com/gurezo/web-serial-rxjs/issues/488)).
 
-### v3.x compatibility
+### Compatibility through v4
 
 The `createSerialSession(options?)` signature and existing options object literals remain **unchanged** for connection / buffer fields. `SerialSessionFeatureOptions` is added as a new public export. `receiveReplay` is removed in v4 — migrate via [Migrating to v4](./migration-v4.md).
 

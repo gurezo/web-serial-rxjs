@@ -78,9 +78,9 @@ export class SerialError<
    * This property contains the underlying error (e.g., DOMException, TypeError)
    * that was wrapped in this SerialError. It may be undefined if no original error exists.
    *
-   * @deprecated Prefer {@link context} for cause-bearing codes. This property is
-   *   retained for backward compatibility and is kept in sync when a cause is
-   *   provided.
+   * @deprecated Prefer {@link context} for cause-bearing codes. Still present in
+   *   v4 for backward compatibility and kept in sync when a cause is provided.
+   *   Removal is deferred to a future major (v5+).
    */
   public readonly originalError?: Error;
 
@@ -90,9 +90,9 @@ export class SerialError<
    * @param code - The error code identifying the type of error
    * @param message - A human-readable error message
    * @param originalError - The original error that caused this SerialError, if any.
-   *   @deprecated Prefer passing `{ cause }` via {@link context}. When omitted,
-   *   cause-bearing codes derive `{ cause }` from this argument for backward
-   *   compatibility.
+   *   @deprecated Prefer passing `{ cause }` via {@link context}. Still accepted
+   *   in v4 for backward compatibility; when omitted, cause-bearing codes derive
+   *   `{ cause }` from this argument. Removal is deferred to a future major (v5+).
    * @param context - Structured metadata for the error code. For cause-bearing
    *   codes, pass `{ cause }` here. When omitted, cause-bearing codes derive
    *   `{ cause }` from the legacy {@link originalError} argument.
