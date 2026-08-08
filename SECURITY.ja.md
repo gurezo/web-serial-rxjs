@@ -13,6 +13,8 @@ English: [SECURITY.md](SECURITY.md)
 
 古いメジャーバージョン（`3.x`、`2.x`、`1.x`）はセキュリティ更新の対象外です。可能な場合は最新の `4.x` へアップグレードしてください。
 
+SemVer の上げ方、非推奨方針、LTS なしのサポート範囲は Guide の [バージョンサポートとリリース方針](packages/web-serial-rxjs/docs/guide/ja/version-support.md)（[English](packages/web-serial-rxjs/docs/guide/en/version-support.md)）を参照してください。
+
 ## 脆弱性の報告
 
 脆弱性の詳細を **公開の GitHub Issue や Discussion に投稿しないでください**。

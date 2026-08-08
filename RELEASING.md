@@ -25,6 +25,7 @@ Before releasing, ensure the following:
    - **MAJOR** (e.g., `1.0.0` → `2.0.0`): Breaking changes
    - **MINOR** (e.g., `1.0.0` → `1.1.0`): New features (backward compatible)
    - **PATCH** (e.g., `1.0.0` → `1.0.1`): Bug fixes (backward compatible)
+   - Adopter-facing summary (support window, deprecations, GitHub Release vs CHANGELOG): [Version support and release policy](packages/web-serial-rxjs/docs/guide/en/version-support.md)
 6. **package.json version**: Update the version in `packages/web-serial-rxjs/package.json` to match the tag
 7. **Documentation**: Update `CHANGELOG.md` if maintained (optional)
 

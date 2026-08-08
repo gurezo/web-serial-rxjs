@@ -13,6 +13,8 @@ Security fixes are considered only for the latest major release line.
 
 Older major versions (`3.x`, `2.x`, `1.x`) are not supported for security updates. Please upgrade to the latest `4.x` release when possible.
 
+For SemVer bumps, deprecation policy, and the non-LTS support window, see the Guide: [Version support and release policy](packages/web-serial-rxjs/docs/guide/en/version-support.md) ([日本語](packages/web-serial-rxjs/docs/guide/ja/version-support.md)).
+
 ## Reporting a Vulnerability
 
 **Do not** open a public GitHub Issue or Discussion with vulnerability details.
