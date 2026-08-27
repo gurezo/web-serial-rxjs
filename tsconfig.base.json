@@ -17,7 +17,10 @@
     "paths": {
       "@gurezo/web-serial-rxjs": ["./packages/web-serial-rxjs/src/index.ts"],
       "@gurezo/examples-shared": ["./libs/examples-shared/src/index.ts"]
-    }
+    },
+    "strict": false,
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"]
   },
   "exclude": ["node_modules", "tmp"]
 }
