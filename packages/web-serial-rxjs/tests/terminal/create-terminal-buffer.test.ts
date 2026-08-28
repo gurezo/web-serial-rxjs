@@ -252,4 +252,78 @@ describe('createTerminalBuffer', () => {
     expect(() => createTerminalBuffer(receive$, { maxLines: -1 })).toThrow();
     expect(() => createTerminalBuffer(receive$, { maxChars: Infinity })).toThrow();
   });
+
+  describe('issue #590: terminal parser lifecycle', () => {
+    it('folds partial line split across chunks', () => {
+      const receive$ = new Subject<string>();
+      const { text$ } = createTerminalBuffer(receive$);
+      let last = '';
+      text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('part');
+      receive$.next('ial\n');
+      expect(last).toBe('partial\n');
+    });
+
+    it('folds crlf split across chunks', () => {
+      const receive$ = new Subject<string>();
+      const { text$ } = createTerminalBuffer(receive$);
+      let last = '';
+      text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('line1\nhel');
+      receive$.next('lo\n');
+      expect(last).toBe('line1\nhello\n');
+    });
+
+    it('strips ansi sequence split across chunks', () => {
+      const receive$ = new Subject<string>();
+      const { text$ } = createTerminalBuffer(receive$);
+      let last = '';
+      text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('hello\u001b[');
+      receive$.next('01;34mworld\n');
+      expect(last).toBe('helloworld\n');
+    });
+
+    it('resets parser state when all subscribers unsubscribe', () => {
+      const receive$ = new Subject<string>();
+      const { text$ } = createTerminalBuffer(receive$);
+      let last = '';
+      const sub = text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('part');
+      expect(last).toBe('part');
+      sub.unsubscribe();
+
+      text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('ial\n');
+      expect(last).toBe('ial\n');
+    });
+
+    it('resets ansi stripper pending on resubscribe', () => {
+      const receive$ = new Subject<string>();
+      const { text$ } = createTerminalBuffer(receive$);
+      let last = '';
+      const sub = text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('hello\u001b[');
+      expect(last).toBe('hello');
+      sub.unsubscribe();
+
+      text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('plain\n');
+      expect(last).toBe('plain\n');
+    });
+  });
 });
