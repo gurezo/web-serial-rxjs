@@ -308,32 +308,30 @@ export function createSessionLifecycle(
         return;
       }
 
-      const portToClose = getRuntimePort(runtime);
-      const pumpToStop = getRuntimePump(runtime);
-      controller.transition(createDisconnectingRuntime(portToClose));
-      sendQueue.clear();
+      const resources = captureResources(runtime);
+      controller.transition(createDisconnectingRuntime(resources.port));
 
       const run = async (): Promise<void> => {
         try {
-          await teardownPump(pumpToStop);
-          if (portToClose) {
-            try {
-              await portToClose.close();
-            } catch (error) {
-              const serialError = reportError(error, {
+          await teardownResources(resources, {
+            closeMode: 'report',
+            onCloseError: (error) => {
+              throw reportError(error, {
                 fallbackCode: SerialErrorCode.CONNECTION_LOST,
                 messagePrefix: 'Failed to close port',
               });
-              subscriber.error(serialError);
-              return;
-            }
-          }
+            },
+          });
           if (!isDisposed()) {
             controller.transition(createIdleRuntime());
           }
           subscriber.next();
           subscriber.complete();
         } catch (error) {
+          if (error instanceof SerialError) {
+            subscriber.error(error);
+            return;
+          }
           const serialError = reportError(error, {
             fallbackCode: SerialErrorCode.UNKNOWN,
             messagePrefix: 'Unexpected disconnect failure',
