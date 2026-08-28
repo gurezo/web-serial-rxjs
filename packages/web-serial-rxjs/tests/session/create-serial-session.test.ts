@@ -52,6 +52,43 @@ const makeStream = (): StreamHandle => {
   return { stream, controller: captured };
 };
 
+type ReaderSpies = {
+  cancel: ReturnType<typeof vi.fn>;
+  releaseLock: ReturnType<typeof vi.fn>;
+};
+
+type StreamWithReaderSpy = StreamHandle & {
+  readerSpies: ReaderSpies[];
+};
+
+const makeStreamWithReaderSpy = (): StreamWithReaderSpy => {
+  const readerSpies: ReaderSpies[] = [];
+  let captured!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      captured = controller;
+    },
+  });
+
+  vi.spyOn(stream, 'getReader').mockImplementation(function (
+    this: ReadableStream<Uint8Array>,
+  ) {
+    const reader = ReadableStream.prototype.getReader.call(this);
+    const originalCancel = reader.cancel.bind(reader);
+    const cancelSpy = vi.fn((reason?: unknown) => originalCancel(reason));
+    reader.cancel = cancelSpy;
+
+    const originalReleaseLock = reader.releaseLock.bind(reader);
+    const releaseLockSpy = vi.fn(() => originalReleaseLock());
+    reader.releaseLock = releaseLockSpy;
+
+    readerSpies.push({ cancel: cancelSpy, releaseLock: releaseLockSpy });
+    return reader;
+  });
+
+  return { stream, controller: captured, readerSpies };
+};
+
 const makeMockPort = (
   stream: ReadableStream<Uint8Array>,
   close: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(undefined),
@@ -526,6 +563,55 @@ describe('createSerialSession', () => {
         { status: S.Idle },
       ]);
       expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it('cancels and releases the reader lock on disconnect$', async () => {
+      const { stream, readerSpies } = makeStreamWithReaderSpy();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      expect(readerSpies).toHaveLength(1);
+
+      await firstValueFrom(session.disconnect$());
+
+      expect(readerSpies[0]?.cancel).toHaveBeenCalledTimes(1);
+      expect(readerSpies[0]?.releaseLock).toHaveBeenCalledTimes(1);
+    });
+
+    it('allows connect$ again after disconnect$ and receives on the new pump', async () => {
+      const first = makeStream();
+      const second = makeStream();
+      const firstPort = makeMockPort(first.stream);
+      const secondPort = makeMockPort(second.stream);
+      const requestPort = vi
+        .fn()
+        .mockResolvedValueOnce(firstPort)
+        .mockResolvedValueOnce(secondPort);
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: { serial: { requestPort, getPorts: vi.fn() } },
+      });
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+      await firstValueFrom(session.disconnect$());
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+
+      const chunks: string[] = [];
+      const subscription = session.receive$.subscribe((text) =>
+        chunks.push(text),
+      );
+
+      await firstValueFrom(session.connect$());
+      second.controller.enqueue(new TextEncoder().encode('reconnected'));
+      await flushMicrotasks();
+
+      expect(chunks).toEqual(['reconnected']);
+      subscription.unsubscribe();
     });
   });
 
