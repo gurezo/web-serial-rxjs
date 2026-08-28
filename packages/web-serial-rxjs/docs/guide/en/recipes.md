@@ -17,7 +17,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 | Pattern | Primary APIs | Details |
 | --- | --- | --- |
-| [Basic text send / receive](#basic-text-send--receive) | `connect$`, `lines$`, `send$`, `disconnect$` / `dispose$` | [Quick Start](./quick-start.md) |
+| [Basic text send / receive](#basic-text-send--receive) | `connect$`, `lines$`, `send$`, `disconnect$` / `dispose$` | [Quick Start](./quick-start.md) · [Framework session lifecycle](./framework-session-lifecycle.md) |
 | [Line-oriented protocol](#line-oriented-protocol) | `lines$`, optionally `receive$` | [Advanced Usage – Line framing](./advanced-usage.md#line-framing-built-in-vs-custom-framing-on-) · [Stream selection](./stream-selection.md) |
 | [Terminal / carriage-return handling](#terminal--carriage-return-handling) | `terminalText$`, `receive$` | [Stream selection](./stream-selection.md) · [Advanced Usage](./advanced-usage.md) |
 | [Command / Response](#command--response) | `lines$` / `receive$`, `send$` | [Request / Response](./request-response.md) |

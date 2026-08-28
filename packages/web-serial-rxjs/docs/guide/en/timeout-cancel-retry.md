@@ -108,6 +108,8 @@ Cancellation should **complete** the pipeline (or unsubscribe), not feed into an
 
 Framework-agnostic pattern: own a `destroy$` Subject and complete it in cleanup.
 
+> **Subscription cleanup ≠ session dispose.** Stopping UI delivery with `takeUntil` or `unsubscribe()` does not tear down the serial port or read pump. When the session owner is destroyed, also call `dispose$().subscribe()` — see [Framework session lifecycle](./framework-session-lifecycle.md).
+
 **React**
 
 ```typescript

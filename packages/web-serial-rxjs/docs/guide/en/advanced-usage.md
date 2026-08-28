@@ -245,10 +245,6 @@ session.state$
 
 ## Framework Integration
 
-Each example application in this repository demonstrates one idiomatic integration:
+Each example application in this repository demonstrates one idiomatic integration. For **when to call `disconnect$()` vs `dispose$()`** and **where to unsubscribe** in Angular, React, Vue, Svelte, and Vanilla TS, see [Framework session lifecycle](./framework-session-lifecycle.md).
 
-- Angular: thin service that exposes `state$` / `receive$` / `errors$` through `switchMap` over a `ReplaySubject<SerialSession>`
-- Vue 3: composable that mirrors the same streams into `ref`s
-- React: hook that stores the session in a `ref` and mirrors the streams into `useState`
-- Svelte: store that wraps the session with `derived` stores
-- Vanilla JS/TS: direct subscriptions
+Live apps: [Examples](../../examples/).

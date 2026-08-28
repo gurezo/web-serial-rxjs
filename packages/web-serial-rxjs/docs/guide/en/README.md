@@ -8,20 +8,21 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 
 1. **[Overview](./overview.md)** — `SerialSession` public surface, role of `state$` / `errors$`, minimal sample
 2. **[Quick Start](./quick-start.md)** — installation, connect, receive/send, disconnect/dispose, error handling
-3. **[Browser support and support policy](./browser-support.md)** — Web Serial API availability vs official support
-4. **[Version support and release policy](./version-support.md)** — SemVer, deprecations, support window (no LTS)
-5. **[Bundler and framework compatibility](./bundler-compatibility.md)** — CI checks vs Example builds; ESM / RxJS / types baseline (no full matrix)
-6. **[Bundle size and tree-shaking](./bundle-size.md)** — reproducible library-only size snapshot; measurement procedure
-7. **[Verified environment listing criteria](./verified-environment.md)** — minimum fields if hardware results are published (not a device catalog)
-8. **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** — pick the receive stream by use case
-9. **[Communication pattern Recipes](./recipes.md)** — find Guide pages by serial goal (line protocol, command/reply, timeout, …)
-10. **[Advanced Usage](./advanced-usage.md)** — line framing, derived streams, recovery
-11. **[Request / Response](./request-response.md)** — wait for replies on `lines$` / `receive$`, serialize commands
-12. **[Timeout / cancel / retry](./timeout-cancel-retry.md)** — deadlines, teardown cancel, bounded retry (no core auto-retry)
-13. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
-14. **[Binary receive API — design decision](./binary-receive-design.md)** — go / no-go for a future `receiveBytes$` (not implemented)
-15. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
-16. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
+3. **[Framework session lifecycle](./framework-session-lifecycle.md)** — when to `disconnect$` / `dispose$` and where to unsubscribe (Angular, React, Vue, Svelte, Vanilla TS)
+4. **[Browser support and support policy](./browser-support.md)** — Web Serial API availability vs official support
+5. **[Version support and release policy](./version-support.md)** — SemVer, deprecations, support window (no LTS)
+6. **[Bundler and framework compatibility](./bundler-compatibility.md)** — CI checks vs Example builds; ESM / RxJS / types baseline (no full matrix)
+7. **[Bundle size and tree-shaking](./bundle-size.md)** — reproducible library-only size snapshot; measurement procedure
+8. **[Verified environment listing criteria](./verified-environment.md)** — minimum fields if hardware results are published (not a device catalog)
+9. **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** — pick the receive stream by use case
+10. **[Communication pattern Recipes](./recipes.md)** — find Guide pages by serial goal (line protocol, command/reply, timeout, …)
+11. **[Advanced Usage](./advanced-usage.md)** — line framing, derived streams, recovery
+12. **[Request / Response](./request-response.md)** — wait for replies on `lines$` / `receive$`, serialize commands
+13. **[Timeout / cancel / retry](./timeout-cancel-retry.md)** — deadlines, teardown cancel, bounded retry (no core auto-retry)
+14. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
+15. **[Binary receive API — design decision](./binary-receive-design.md)** — go / no-go for a future `receiveBytes$` (not implemented)
+16. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
+17. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
 
 When migrating existing code:
 
@@ -35,6 +36,7 @@ When migrating existing code:
 | --- | --- |
 | **[Overview](./overview.md)** | Public surface quick reference, feature summary, minimal sample |
 | **[Quick Start](./quick-start.md)** | Basic flow from installation through disconnect |
+| **[Framework session lifecycle](./framework-session-lifecycle.md)** | `disconnect$` / `dispose$` timing and subscription cleanup by framework |
 | **[Browser support and support policy](./browser-support.md)** | API availability vs official support / untested |
 | **[Version support and release policy](./version-support.md)** | SemVer, deprecations, support window (no LTS) |
 | **[Bundler and framework compatibility](./bundler-compatibility.md)** | CI vs Examples; ESM / RxJS / types (no full bundler matrix) |

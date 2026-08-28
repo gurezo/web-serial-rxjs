@@ -88,7 +88,7 @@ session.connect$().subscribe({
 2. After **`dispose$`**, the session is permanent. Create a **new** `createSerialSession()` — do not reuse the disposed instance.
 3. Do not call `connect$` while already `'connecting'` or `'connected'` (`PORT_ALREADY_OPEN`).
 
-**Fix:** Drive UI from `state$`. For baud-rate changes or full teardown, `dispose$` then create a new session. See [Quick Start – Disconnect / Dispose](./quick-start.md#disconnect) and [Advanced Usage – recovery](./advanced-usage.md).
+**Fix:** Drive UI from `state$`. For baud-rate changes or full teardown, `dispose$` then create a new session. See [Quick Start – Disconnect / Dispose](./quick-start.md#disconnect), [Framework session lifecycle](./framework-session-lifecycle.md), and [Advanced Usage – recovery](./advanced-usage.md).
 
 ## Inspecting SerialError
 

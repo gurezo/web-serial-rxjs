@@ -88,7 +88,7 @@ session.connect$().subscribe({
 2. **`dispose$`** 後はセッションは永久破棄です。**新しい** `createSerialSession()` を作り、破棄済みインスタンスは使わない。
 3. すでに `'connecting'` / `'connected'` のときに `connect$` を呼ぶと `PORT_ALREADY_OPEN` になります。
 
-**対処:** UI は `state$` から駆動する。baud rate 変更や完全破棄では `dispose$` のあと新規 session を作る。[クイックスタート – 切断 / 破棄](./quick-start.md) と [高度な使用方法](./advanced-usage.md) を参照。
+**対処:** UI は `state$` から駆動する。baud rate 変更や完全破棄では `dispose$` のあと新規 session を作る。[クイックスタート – 切断 / 破棄](./quick-start.md#切断する)、[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)、[高度な使用方法](./advanced-usage.md) を参照。
 
 ## SerialError の確認
 

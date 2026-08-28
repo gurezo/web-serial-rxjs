@@ -219,6 +219,8 @@ session.dispose$().subscribe({
 
 破棄後は古いインスタンスを再利用せず、新しい `createSerialSession()` を作成してください。
 
+Angular の `ngOnDestroy`、React の `useEffect` cleanup、Vue の `onUnmounted`、Svelte の `onDestroy`、Vanilla TS の明示 teardown など、framework 別の cleanup hook については [Framework 別 session ライフサイクル](./framework-session-lifecycle.md) を参照してください。
+
 ## 次のステップ
 
 - 公開メソッドとストリームの一覧は [概念と設計メモ](./concepts.md) を参照してください。
