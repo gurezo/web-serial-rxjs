@@ -1,10 +1,19 @@
 import { bench, describe } from 'vitest';
-import {
-  countCompletedLines,
-  trimCompletedByMaxLines,
-} from '../../src/terminal/create-terminal-buffer';
 
 /** Pre-#589 implementation kept for benchmark comparison. */
+function countCompletedLines(completed: string): number {
+  if (completed.length === 0) {
+    return 0;
+  }
+  let count = 0;
+  for (let i = 0; i < completed.length; i++) {
+    if (completed.charAt(i) === '\n') {
+      count++;
+    }
+  }
+  return count;
+}
+
 function trimCompletedByMaxLinesLegacy(
   completed: string,
   maxLines: number,
@@ -65,9 +74,5 @@ describe('trimCompletedByMaxLines bulk drop', () => {
 
   bench('optimized single-slice', () => {
     trimCompletedByMaxLinesOptimized(LARGE_COMPLETED, MAX_LINES);
-  });
-
-  bench('current export', () => {
-    trimCompletedByMaxLines(LARGE_COMPLETED, MAX_LINES);
   });
 });

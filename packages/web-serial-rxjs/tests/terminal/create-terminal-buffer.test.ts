@@ -1,120 +1,128 @@
 import { describe, expect, it } from 'vitest';
 import { Subject, firstValueFrom } from 'rxjs';
-import {
-  applyTerminalChunk,
-  createTerminalBuffer,
-  terminalDisplayText,
-  trimCompletedByMaxLines,
-  trimTerminalState,
-  type TerminalBufferState,
-} from '../../src/terminal/create-terminal-buffer';
+import { createTerminalBuffer } from '../../src/terminal/create-terminal-buffer';
 
-const empty: TerminalBufferState = { completed: '', currentLine: '' };
+function subscribeTerminalText(
+  receive$: Subject<string>,
+  options?: Parameters<typeof createTerminalBuffer>[1],
+): () => string {
+  const { text$ } = createTerminalBuffer(receive$, options);
+  let last = '';
+  text$.subscribe((t) => {
+    last = t;
+  });
+  return () => last;
+}
 
 /** Issue #290: terminal 表示の再発防止用テストケース群 */
-describe('applyTerminalChunk', () => {
+describe('createTerminalBuffer carriage-return folding', () => {
   it('issue #290: A\\rB を分割チャンクでも B に畳み込む', () => {
-    let s = applyTerminalChunk(empty, 'A');
-    expect(terminalDisplayText(s)).toBe('A');
-    s = applyTerminalChunk(s, '\rB');
-    expect(terminalDisplayText(s)).toBe('B');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$);
+    receive$.next('A');
+    expect(getLast()).toBe('A');
+    receive$.next('\rB');
+    expect(getLast()).toBe('B');
   });
 });
 
-describe('trimTerminalState', () => {
+describe('createTerminalBuffer memory limits', () => {
   it('drops oldest completed lines when maxLines is exceeded', () => {
-    const state: TerminalBufferState = {
-      completed: 'line1\nline2\nline3\n',
-      currentLine: 'line4',
-    };
-    const trimmed = trimTerminalState(state, { maxLines: 2, maxChars: 0 });
-    expect(terminalDisplayText(trimmed)).toBe('line2\nline3\nline4');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 0 });
+    receive$.next('line1\nline2\nline3\nline4');
+    expect(getLast()).toBe('line2\nline3\nline4');
   });
 
   it('drops leading chars from completed when maxChars is exceeded', () => {
-    const state: TerminalBufferState = {
-      completed: 'abcdef\n',
-      currentLine: 'ghij',
-    };
-    const trimmed = trimTerminalState(state, { maxLines: 0, maxChars: 6 });
-    expect(terminalDisplayText(trimmed)).toBe('f\nghij');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 0, maxChars: 6 });
+    receive$.next('abcdef\nghij');
+    expect(getLast()).toBe('f\nghij');
   });
 
   it('trims currentLine when maxChars exceeds completed length', () => {
-    const state: TerminalBufferState = {
-      completed: '',
-      currentLine: 'abcdefghij',
-    };
-    const trimmed = trimTerminalState(state, { maxLines: 0, maxChars: 4 });
-    expect(terminalDisplayText(trimmed)).toBe('ghij');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 0, maxChars: 4 });
+    receive$.next('abcdefghij');
+    expect(getLast()).toBe('ghij');
   });
 
-  it('leaves state unchanged when limits are zero (unlimited)', () => {
-    const state: TerminalBufferState = {
-      completed: 'a\nb\n',
-      currentLine: 'c',
-    };
-    expect(trimTerminalState(state, { maxLines: 0, maxChars: 0 })).toEqual(
-      state,
-    );
+  it('keeps unlimited growth when maxLines and maxChars are zero', () => {
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, {
+      maxLines: 0,
+      maxChars: 0,
+    });
+    receive$.next('a\nb\n');
+    receive$.next('c');
+    expect(getLast()).toBe('a\nb\nc');
   });
 
   it('preserves carriage-return redraw after trimming', () => {
-    let state = applyTerminalChunk(empty, 'old\n');
-    state = applyTerminalChunk(state, 'new\r');
-    state = applyTerminalChunk(state, 'final\n');
-    const trimmed = trimTerminalState(state, { maxLines: 1, maxChars: 0 });
-    expect(terminalDisplayText(trimmed)).toBe('final\n');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 1, maxChars: 0 });
+    receive$.next('old\n');
+    receive$.next('new\r');
+    receive$.next('final\n');
+    expect(getLast()).toBe('final\n');
   });
 
   it('applies maxLines before maxChars when both limits are set', () => {
-    const state: TerminalBufferState = {
-      completed: 'line1\nline2\nline3\n',
-      currentLine: 'line4',
-    };
-    const trimmed = trimTerminalState(state, { maxLines: 2, maxChars: 10 });
-    expect(terminalDisplayText(trimmed)).toBe('ine3\nline4');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 10 });
+    receive$.next('line1\nline2\nline3\nline4');
+    expect(getLast()).toBe('ine3\nline4');
   });
 
   it('preserves lf-normalized completed lines after crlf input', () => {
-    let state = applyTerminalChunk(empty, 'first\r\n');
-    state = applyTerminalChunk(state, 'second\r\n');
-    state = applyTerminalChunk(state, 'third\r\n');
-    const trimmed = trimTerminalState(state, { maxLines: 2, maxChars: 0 });
-    expect(trimmed.completed).toBe('second\nthird\n');
-    expect(trimmed.completed).not.toContain('\r');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 0 });
+    receive$.next('first\r\n');
+    receive$.next('second\r\n');
+    receive$.next('third\r\n');
+    const last = getLast();
+    expect(last).toBe('second\nthird\n');
+    expect(last).not.toContain('\r');
   });
-});
 
-describe('trimCompletedByMaxLines', () => {
   it('returns completed unchanged when within maxLines', () => {
-    expect(trimCompletedByMaxLines('a\nb\n', 3)).toBe('a\nb\n');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 3, maxChars: 0 });
+    receive$.next('a\nb\n');
+    expect(getLast()).toBe('a\nb\n');
   });
 
   it('returns completed unchanged when maxLines is zero (unlimited)', () => {
-    const completed = 'line1\nline2\nline3\n';
-    expect(trimCompletedByMaxLines(completed, 0)).toBe(completed);
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 0, maxChars: 0 });
+    receive$.next('line1\nline2\nline3\n');
+    expect(getLast()).toBe('line1\nline2\nline3\n');
   });
 
   it('returns completed unchanged when exactly at maxLines', () => {
-    expect(trimCompletedByMaxLines('line1\nline2\n', 2)).toBe('line1\nline2\n');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 0 });
+    receive$.next('line1\nline2\n');
+    expect(getLast()).toBe('line1\nline2\n');
   });
 
   it('drops oldest line when one line over maxLines', () => {
-    expect(trimCompletedByMaxLines('line1\nline2\nline3\n', 2)).toBe(
-      'line2\nline3\n',
-    );
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 0 });
+    receive$.next('line1\nline2\nline3\n');
+    expect(getLast()).toBe('line2\nline3\n');
   });
 
   it('drops many oldest lines when far over maxLines', () => {
-    const lines = Array.from({ length: 120 }, (_, i) => `line${i + 1}`).join(
-      '\n',
-    );
-    const completed = `${lines}\n`;
-    const trimmed = trimCompletedByMaxLines(completed, 2);
-    expect(trimmed).toBe('line119\nline120\n');
-    expect(trimmed).not.toContain('line1\n');
-    expect(trimmed).not.toContain('line118\n');
+    const receive$ = new Subject<string>();
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 0 });
+    const lines = Array.from({ length: 120 }, (_, i) => `line${i + 1}`).join('\n');
+    receive$.next(`${lines}\n`);
+    const last = getLast();
+    expect(last).toBe('line119\nline120\n');
+    expect(last).not.toContain('line1\n');
+    expect(last).not.toContain('line118\n');
   });
 });
 
@@ -122,32 +130,24 @@ describe('createTerminalBuffer', () => {
   // #290: ls -la 形式
   it('issue #290: ls -la 形式の同一行 redraw で古い行を残さない', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$);
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$);
     receive$.next('-rw-r--r--  1 alice  staff  123 ./foo\r');
     receive$.next('-rw-r--r--  1 bob    staff  123 ./foo\n');
-    expect(last).toBe('-rw-r--r--  1 bob    staff  123 ./foo\n');
-    expect(last).not.toContain('alice');
+    expect(getLast()).toBe('-rw-r--r--  1 bob    staff  123 ./foo\n');
+    expect(getLast()).not.toContain('alice');
   });
 
   // #290: prompt 表示
   it('issue #290: carriage-return redraw 後に shell prompt を正しく表示する', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$);
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$);
     receive$.next('login: user\r');
     receive$.next('$ ');
-    expect(last).toBe('$ ');
+    expect(getLast()).toBe('$ ');
     receive$.next('whoami\r\n');
     receive$.next('user\r\n');
     receive$.next('# ');
-    expect(last.endsWith('# ')).toBe(true);
+    expect(getLast().endsWith('# ')).toBe(true);
   });
 
   it('shares replayed text$ across subscribers', async () => {
@@ -163,61 +163,41 @@ describe('createTerminalBuffer', () => {
 
   it('drops oldest lines when maxLines option is set', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$, { maxLines: 2, maxChars: 0 });
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$, { maxLines: 2, maxChars: 0 });
     receive$.next('line1\nline2\nline3\nline4');
-    expect(last).toBe('line2\nline3\nline4');
+    expect(getLast()).toBe('line2\nline3\nline4');
   });
 
   it('drops leading chars when maxChars option is set', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$, { maxLines: 0, maxChars: 6 });
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$, { maxLines: 0, maxChars: 6 });
     receive$.next('abcdef\nghij');
-    expect(last).toBe('f\nghij');
+    expect(getLast()).toBe('f\nghij');
   });
 
   it('keeps unlimited growth when maxLines and maxChars are zero', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$, {
+    const getLast = subscribeTerminalText(receive$, {
       maxLines: 0,
       maxChars: 0,
     });
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
     receive$.next('line1\nline2\nline3\n');
-    expect(last).toBe('line1\nline2\nline3\n');
+    expect(getLast()).toBe('line1\nline2\nline3\n');
   });
 
   it('issue #290: preserves redraw after maxLines trim', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$, { maxLines: 1, maxChars: 0 });
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$, { maxLines: 1, maxChars: 0 });
     receive$.next('old\n');
     receive$.next('-rw-r--r--  1 alice  staff  123 ./foo\r');
     receive$.next('-rw-r--r--  1 bob    staff  123 ./foo\n');
-    expect(last).toBe('-rw-r--r--  1 bob    staff  123 ./foo\n');
-    expect(last).not.toContain('alice');
+    expect(getLast()).toBe('-rw-r--r--  1 bob    staff  123 ./foo\n');
+    expect(getLast()).not.toContain('alice');
   });
 
   it('issue #428: strips ansi color codes from ls -la output by default', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$);
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$);
 
     receive$.next('pi@raspberrypi:~$ ls -la\n');
     receive$.next('合計 36\n');
@@ -228,6 +208,7 @@ describe('createTerminalBuffer', () => {
       'lrwxrwxrwx 1 pi   pi     18  6月  4 13:19 \u001b[01;36mnode_modules\u001b[0m -> \u001b[01;34mmyApp/node_modules\u001b[0m\n',
     );
 
+    const last = getLast();
     expect(last).toContain('合計 36');
     expect(last).toContain('node_modules -> myApp/node_modules');
     expect(last).not.toContain('[0m');
@@ -237,14 +218,10 @@ describe('createTerminalBuffer', () => {
 
   it('issue #428: preserves ansi sequences when stripAnsi is false', () => {
     const receive$ = new Subject<string>();
-    const { text$ } = createTerminalBuffer(receive$, { stripAnsi: false });
-    let last = '';
-    text$.subscribe((t) => {
-      last = t;
-    });
+    const getLast = subscribeTerminalText(receive$, { stripAnsi: false });
 
     receive$.next('prompt\u001b[?2004h');
-    expect(last).toContain('[?2004h');
+    expect(getLast()).toContain('[?2004h');
   });
 
   it('issue #488: rejects invalid terminal buffer limits at creation', () => {
@@ -254,40 +231,62 @@ describe('createTerminalBuffer', () => {
   });
 
   describe('issue #590: terminal parser lifecycle', () => {
-    it('folds partial line split across chunks', () => {
+    it('feeds chunks with a persistent tokenizer', () => {
+      const receive$ = new Subject<string>();
+      const getLast = subscribeTerminalText(receive$);
+      receive$.next('part');
+      receive$.next('ial\n');
+      expect(getLast()).toBe('partial\n');
+    });
+
+    it('reset clears completed, pending line, and ansi state on resubscribe', () => {
       const receive$ = new Subject<string>();
       const { text$ } = createTerminalBuffer(receive$);
       let last = '';
+      const sub = text$.subscribe((t) => {
+        last = t;
+      });
+      receive$.next('hello\u001b[');
+      expect(last).toBe('hello');
+      sub.unsubscribe();
+
       text$.subscribe((t) => {
         last = t;
       });
+      receive$.next('plain\n');
+      expect(last).toBe('plain\n');
+    });
+
+    it('restoreState rehydrates parser for pure chunk application', () => {
+      const receive$ = new Subject<string>();
+      const getLast = subscribeTerminalText(receive$);
+      receive$.next('done\npending');
+      receive$.next('\n');
+      expect(getLast()).toBe('done\npending\n');
+    });
+
+    it('folds partial line split across chunks', () => {
+      const receive$ = new Subject<string>();
+      const getLast = subscribeTerminalText(receive$);
       receive$.next('part');
       receive$.next('ial\n');
-      expect(last).toBe('partial\n');
+      expect(getLast()).toBe('partial\n');
     });
 
     it('folds crlf split across chunks', () => {
       const receive$ = new Subject<string>();
-      const { text$ } = createTerminalBuffer(receive$);
-      let last = '';
-      text$.subscribe((t) => {
-        last = t;
-      });
+      const getLast = subscribeTerminalText(receive$);
       receive$.next('line1\nhel');
       receive$.next('lo\n');
-      expect(last).toBe('line1\nhello\n');
+      expect(getLast()).toBe('line1\nhello\n');
     });
 
     it('strips ansi sequence split across chunks', () => {
       const receive$ = new Subject<string>();
-      const { text$ } = createTerminalBuffer(receive$);
-      let last = '';
-      text$.subscribe((t) => {
-        last = t;
-      });
+      const getLast = subscribeTerminalText(receive$);
       receive$.next('hello\u001b[');
       receive$.next('01;34mworld\n');
-      expect(last).toBe('helloworld\n');
+      expect(getLast()).toBe('helloworld\n');
     });
 
     it('resets parser state when all subscribers unsubscribe', () => {

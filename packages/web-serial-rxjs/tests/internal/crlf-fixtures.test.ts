@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { Subject } from 'rxjs';
 import { createLineBuffer } from '../../src/session/internal/line-buffer';
-import {
-  applyTerminalChunk,
-  terminalDisplayText,
-  type TerminalBufferState,
-} from '../../src/terminal/create-terminal-buffer';
+import { createTerminalBuffer } from '../../src/terminal/create-terminal-buffer';
 import { CRLF_FIXTURES } from './crlf-fixtures';
-
-const emptyTerminal: TerminalBufferState = { completed: '', currentLine: '' };
 
 describe('CRLF fixtures (line buffer)', () => {
   it.each(CRLF_FIXTURES)('$id', ({ chunks, line }) => {
@@ -23,12 +18,17 @@ describe('CRLF fixtures (line buffer)', () => {
 
 describe('CRLF fixtures (terminal buffer)', () => {
   it.each(CRLF_FIXTURES)('$id', ({ chunks, terminal }) => {
-    let state = emptyTerminal;
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$);
+    let last = '';
+    text$.subscribe((t) => {
+      last = t;
+    });
 
     for (const chunk of chunks) {
-      state = applyTerminalChunk(state, chunk);
+      receive$.next(chunk);
     }
 
-    expect(terminalDisplayText(state)).toBe(terminal);
+    expect(last).toBe(terminal);
   });
 });
