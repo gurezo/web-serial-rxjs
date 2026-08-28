@@ -1,4 +1,4 @@
-import { type Observable, map, scan, shareReplay } from 'rxjs';
+import { type Observable, finalize, map, scan, shareReplay } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import {
@@ -268,7 +268,10 @@ export function createTerminalBuffer(
       return trimmed;
     }, emptyTerminalState),
     map(terminalDisplayText),
-    shareReplay({ bufferSize: 1, refCount: true }),
+    finalize(() => {
+      parser.reset();
+    }),
+    shareReplay({ bufferSize: 1, refCount: true, resetOnRefCountZero: true }),
   );
 
   return { text$ };
