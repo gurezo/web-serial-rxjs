@@ -2,7 +2,7 @@
 
 Each example app in this repository connects to a serial port, but **when to disconnect**, **when to dispose**, and **where to unsubscribe** depends on your framework's component lifecycle. Getting this wrong leaves read pumps or UI subscriptions running after navigation — a common source of resource leaks and confusing reconnect behaviour.
 
-Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#593](https://github.com/gurezo/web-serial-rxjs/issues/593) · Related: [Quick Start – Disconnect / Dispose](./quick-start.md#dispose-resource-cleanup) · [Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables) · [API concepts – SerialSession](./concepts.md#serialsession) · [Timeout / cancel / retry – Component teardown](./timeout-cancel-retry.md#cancel-on-component--hook-teardown) · [Examples](../../examples/)
+Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#593](https://github.com/gurezo/web-serial-rxjs/issues/593) · Related: [Quick Start – Disconnect / Dispose](./quick-start.md#dispose-resource-cleanup) · [Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables) · [API concepts – SerialSession](./concepts.md#serialsession) · [Timeout / cancel / retry – Component teardown](./timeout-cancel-retry.md#cancel-on-component-hook-teardown) · [Examples](../../examples/)
 
 ## disconnect$() vs dispose$()
 
@@ -64,7 +64,7 @@ One-shot subscriptions to `connect$()`, `send$()`, or `disconnect$()` from butto
 
 ## Subscription cleanup vs session dispose
 
-[Timeout / cancel / retry – Cancel on Component / Hook teardown](./timeout-cancel-retry.md#cancel-on-component--hook-teardown) shows `takeUntil(destroy$)` and `takeUntilDestroyed()` to stop **delivering events** to your UI.
+[Timeout / cancel / retry – Cancel on Component / Hook teardown](./timeout-cancel-retry.md#cancel-on-component-hook-teardown) shows `takeUntil(destroy$)` and `takeUntilDestroyed()` to stop **delivering events** to your UI.
 
 That is **not** a substitute for `dispose$()`:
 
@@ -125,7 +125,7 @@ handleDisconnect(): void {
 **Notes:**
 
 - With `providedIn: 'root'`, `ngOnDestroy` runs when the Angular application is torn down (for example in tests), not when a single routed component unmounts. For per-route serial access, provide the service at the component level (`providers: [SerialClientService]`) so `ngOnDestroy` runs when that component is destroyed.
-- Prefer `toSignal()` or `takeUntilDestroyed()` for stream subscriptions in components — see [Timeout / cancel / retry – Angular](./timeout-cancel-retry.md#cancel-on-component--hook-teardown).
+- Prefer `toSignal()` or `takeUntilDestroyed()` for stream subscriptions in components — see [Timeout / cancel / retry – Angular](./timeout-cancel-retry.md#cancel-on-component-hook-teardown).
 
 **Live example:** [Angular example app](../../examples/angular/)
 

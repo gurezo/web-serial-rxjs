@@ -2,11 +2,11 @@
 
 このリポジトリの Example アプリはシリアルポートに接続しますが、**いつ disconnect するか**、**いつ dispose するか**、**subscription をどこで解除するか**は framework のコンポーネントライフサイクルに依存します。ここを誤ると、画面遷移後も read pump や UI 向け subscription が残り、リソースリークや再接続の不具合につながります。
 
-Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#593](https://github.com/gurezo/web-serial-rxjs/issues/593) · Related: [クイックスタート – 切断 / 破棄](./quick-start.md#破棄するリソース解放) · [命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行cold-observable) · [API の概念 – SerialSession](./concepts.md#serialsession) · [タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component--hook-破棄時のキャンセル) · [Examples](../../examples/)
+Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#593](https://github.com/gurezo/web-serial-rxjs/issues/593) · Related: [クイックスタート – 切断 / 破棄](./quick-start.md#破棄する（リソース解放）) · [命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行（cold-observable）) · [API の概念 – SerialSession](./concepts.md#serialsession) · [タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component-hook-破棄時のキャンセル) · [Examples](../../examples/)
 
 ## disconnect$() と dispose$() の使い分け
 
-どちらも **cold Observable** です — 購読したときだけ実行されます。[クイックスタート – 命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行cold-observable) を参照してください。
+どちらも **cold Observable** です — 購読したときだけ実行されます。[クイックスタート – 命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行（cold-observable）) を参照してください。
 
 | メソッド | ポート / read pump | セッション再利用 | 全 Observable | 典型的なトリガー |
 | --- | --- | --- | --- | --- |
@@ -64,7 +64,7 @@ function teardownSession(session: SerialSession, uiSub: Subscription): void {
 
 ## subscription 解除と session dispose の違い
 
-[タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component--hook-破棄時のキャンセル) では `takeUntil(destroy$)` や `takeUntilDestroyed()` で UI への **イベント配信を止める**方法を示しています。
+[タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component-hook-破棄時のキャンセル) では `takeUntil(destroy$)` や `takeUntilDestroyed()` で UI への **イベント配信を止める**方法を示しています。
 
 これは `dispose$()` の **代替ではありません**:
 
@@ -125,7 +125,7 @@ handleDisconnect(): void {
 **注意:**
 
 - `providedIn: 'root'` では `ngOnDestroy` は Angular アプリ終了時（テスト teardown など）に実行され、単一の routed component アンマウント時ではありません。ルート単位で serial を使う場合は component レベルで provider を指定（`providers: [SerialClientService]`）し、その component 破棄時に `ngOnDestroy` が走るようにします。
-- component 内の stream 購読には `toSignal()` や `takeUntilDestroyed()` を優先 — [タイムアウト・キャンセル・再試行 – Angular](./timeout-cancel-retry.md#component--hook-破棄時のキャンセル) を参照。
+- component 内の stream 購読には `toSignal()` や `takeUntilDestroyed()` を優先 — [タイムアウト・キャンセル・再試行 – Angular](./timeout-cancel-retry.md#component-hook-破棄時のキャンセル) を参照。
 
 **Live example:** [Angular example app](../../examples/angular/)
 
