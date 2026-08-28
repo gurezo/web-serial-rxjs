@@ -131,7 +131,7 @@ export function runtimeToPublicState(runtime: SessionRuntime): SerialSessionStat
     case S.Disposed:
       return { status: S.Disposed };
     default:
-      return assertNeverRuntime(runtime);
+      return assertNever(runtime);
   }
 }
 
@@ -288,13 +288,4 @@ export function createSessionRuntimeController(
       subject.complete();
     },
   };
-}
-
-/**
- * Exhaustiveness helper for switch statements over {@link SessionRuntime}.
- *
- * @internal
- */
-export function assertNeverRuntime(value: never): never {
-  return assertNever(value);
 }

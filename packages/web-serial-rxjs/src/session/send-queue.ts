@@ -7,7 +7,7 @@ import { Observable, defer } from 'rxjs';
  *
  * @internal
  */
-export type SendQueueOperation<T> = () => Promise<T>;
+type SendQueueOperation<T> = () => Promise<T>;
 
 /**
  * Internal helper returned by {@link createSendQueue}.

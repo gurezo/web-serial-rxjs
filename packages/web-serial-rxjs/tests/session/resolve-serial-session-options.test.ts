@@ -5,11 +5,12 @@ import {
   DEFAULT_LINE_BUFFER_OPTIONS,
 } from '../../src/session/internal/line-buffer';
 import {
-  DEFAULT_SERIAL_SESSION_OPTIONS,
   resolveSerialSessionOptions,
   type SerialSessionOptions,
 } from '../../src/session/serial-session-options';
 import { DEFAULT_TERMINAL_BUFFER_OPTIONS } from '../../src/terminal/create-terminal-buffer';
+
+const DEFAULT_SERIAL_SESSION_OPTIONS = resolveSerialSessionOptions();
 
 describe('resolveSerialSessionOptions', () => {
   it('returns defaults when options are omitted', () => {

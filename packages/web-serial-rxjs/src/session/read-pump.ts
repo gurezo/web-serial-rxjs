@@ -11,7 +11,7 @@ import { normalizeSerialError } from './normalize-serial-error';
  *
  * @internal
  */
-export type ReadPumpChunkHandler = (text: string) => void;
+type ReadPumpChunkHandler = (text: string) => void;
 
 /**
  * Callback invoked when the read pump cannot continue.
@@ -22,7 +22,7 @@ export type ReadPumpChunkHandler = (text: string) => void;
  *
  * @internal
  */
-export type ReadPumpErrorHandler = (error: SerialError) => void;
+type ReadPumpErrorHandler = (error: SerialError) => void;
 
 /**
  * Callback invoked when the read loop ends naturally (`reader.read()`
@@ -30,7 +30,7 @@ export type ReadPumpErrorHandler = (error: SerialError) => void;
  *
  * @internal
  */
-export type ReadPumpDoneHandler = () => void;
+type ReadPumpDoneHandler = () => void;
 
 /**
  * Options accepted by {@link createReadPump}.
