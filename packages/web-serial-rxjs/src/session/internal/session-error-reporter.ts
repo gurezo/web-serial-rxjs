@@ -6,14 +6,15 @@ import {
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
 } from '../normalize-serial-error';
-import type { ReadPump } from '../read-pump';
-import type { SendQueue } from '../send-queue';
 import {
   createErrorRuntime,
-  getRuntimePort,
-  getRuntimePump,
+  type SessionRuntime,
   type SessionRuntimeController,
 } from '../session-runtime';
+import type {
+  SessionResources,
+  TeardownResourcesOptions,
+} from './port-teardown';
 
 /**
  * Dependencies for {@link createSessionErrorReporter}.
@@ -23,10 +24,12 @@ import {
 export interface SessionErrorReporterDeps {
   controller: SessionRuntimeController;
   errorsSubject: Subject<SerialError>;
-  sendQueue: SendQueue;
   isDisposed: () => boolean;
-  teardownPump: (pump: ReadPump | null) => Promise<void>;
-  closePortSafely: (port: SerialPort | null) => Promise<void>;
+  captureResources: (runtime: SessionRuntime) => SessionResources;
+  teardownResources: (
+    resources: SessionResources,
+    options?: TeardownResourcesOptions,
+  ) => Promise<void>;
 }
 
 /**
@@ -46,10 +49,9 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
   const {
     controller,
     errorsSubject,
-    sendQueue,
     isDisposed,
-    teardownPump,
-    closePortSafely,
+    captureResources,
+    teardownResources,
   } = deps;
 
   const createDisposedError = (): SerialError =>
@@ -86,12 +88,12 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
     }
     errorsSubject.next(serialError);
     if (resolveErrorSeverity(serialError.code) === 'fatal') {
-      const runtime = controller.runtime;
-      const portToClose = getRuntimePort(runtime);
-      const pump = getRuntimePump(runtime);
+      const resources = captureResources(controller.runtime);
       controller.transition(createErrorRuntime(serialError));
-      sendQueue.clear();
-      void teardownPump(pump).then(() => closePortSafely(portToClose));
+      void teardownResources(resources, {
+        closeMode: 'safe',
+        cancelInFlightConnect: false,
+      });
     }
     return serialError;
   };

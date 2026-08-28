@@ -88,17 +88,22 @@ export function createSerialSession(
 
   const receivePipeline = createReceivePipeline({ resolvedOptions });
 
-  const { teardownPump, closePortSafely } = createPortTeardown({
+  const {
+    teardownPump,
+    closePortSafely,
+    captureResources,
+    teardownResources,
+  } = createPortTeardown({
     receivePipeline,
+    sendQueue,
   });
 
   const { reportError, createDisposedError } = createSessionErrorReporter({
     controller,
     errorsSubject,
-    sendQueue,
     isDisposed,
-    teardownPump,
-    closePortSafely,
+    captureResources,
+    teardownResources,
   });
 
   // Route receive-side buffer overflows through the single reportError entry
@@ -116,6 +121,8 @@ export function createSerialSession(
     isDisposed,
     teardownPump,
     closePortSafely,
+    captureResources,
+    teardownResources,
     reportError,
     createDisposedError,
   });
