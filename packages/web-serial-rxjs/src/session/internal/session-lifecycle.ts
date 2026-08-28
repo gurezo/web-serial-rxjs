@@ -322,13 +322,13 @@ export function createSessionLifecycle(
       }
 
       const portToClose = getRuntimePort(runtime);
+      const pumpToStop = getRuntimePump(runtime);
       controller.transition(createDisconnectingRuntime(portToClose));
       sendQueue.clear();
 
       const run = async (): Promise<void> => {
         try {
-          const pump = getRuntimePump(controller.runtime);
-          await teardownPump(pump);
+          await teardownPump(pumpToStop);
           if (portToClose) {
             try {
               await portToClose.close();
