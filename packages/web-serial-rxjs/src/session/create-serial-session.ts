@@ -88,8 +88,14 @@ export function createSerialSession(
 
   const receivePipeline = createReceivePipeline({ resolvedOptions });
 
-  const { teardownPump, closePortSafely } = createPortTeardown({
+  const {
+    teardownPump,
+    closePortSafely,
+    captureResources,
+    teardownResources,
+  } = createPortTeardown({
     receivePipeline,
+    sendQueue,
   });
 
   const { reportError, createDisposedError } = createSessionErrorReporter({
