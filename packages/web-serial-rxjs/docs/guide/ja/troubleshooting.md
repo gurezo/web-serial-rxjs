@@ -56,7 +56,7 @@ session.connect$().subscribe({
 });
 ```
 
-**対処:** 必ず購読してください（Promise 化する場合も購読が発生する形にする）。`send$` / `disconnect$` / `dispose$` も同様です。[クイックスタート](./quick-start.md) を参照。
+**対処:** 必ず購読してください（Promise 化する場合も購読が発生する形にする）。`send$` / `disconnect$` / `dispose$` も同様です。[クイックスタート – 命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行cold-observable) を参照。
 
 ## 改行コード不一致
 
