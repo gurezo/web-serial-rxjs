@@ -56,7 +56,7 @@ session.connect$().subscribe({
 });
 ```
 
-**Fix:** Always subscribe (or use an operator that subscribes, such as converting to a Promise carefully). The same rule applies to `send$`, `disconnect$`, and `dispose$`. See [Quick Start](./quick-start.md).
+**Fix:** Always subscribe (or use an operator that subscribes, such as converting to a Promise carefully). The same rule applies to `send$`, `disconnect$`, and `dispose$`. See [Quick Start – Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables).
 
 ## Line ending mismatch
 

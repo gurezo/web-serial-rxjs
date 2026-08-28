@@ -2,7 +2,7 @@
 
 This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `errors$`, `receive$`, `lines$`, and the imperative methods, read [SerialSession overview](./overview.md#serialsession-at-a-glance) first.
 
-Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the unframed UTF-8 decoder chunk stream (decoded text, not wire bytes) when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** run when you subscribe.
+Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the unframed UTF-8 decoder chunk stream (decoded text, not wire bytes) when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. For **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`**, see [Running imperative methods (cold Observables)](#running-imperative-methods-cold-observables) — they run only when subscribed.
 
 Choosing among `receive$`, `lines$`, and `terminalText$`: see [Choosing receive$ / lines$ / terminalText$](./stream-selection.md).
 
@@ -36,6 +36,87 @@ pnpm add rxjs
 The package is **ESM-only**. For what CI verifies, how Examples relate to compatibility, and TypeScript notes, see [Bundler and framework compatibility](./bundler-compatibility.md).
 
 For browser **API availability** vs this project's **official support** (and untested mobile), see [Browser support and support policy](./browser-support.md). The monorepo [README.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md) also summarizes browser support and lists example apps.
+
+## Running imperative methods (cold Observables)
+
+**`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** return **cold** Observables. Calling them only builds the Observable — **nothing runs until you subscribe** (or use an operator that subscribes for you).
+
+This is different from **`state$`**, **`lines$`**, **`errors$`**, and other session streams: subscribe to those as early as you need their emissions, then trigger imperative work through the methods below.
+
+### What not to do
+
+```typescript
+// NG: no dialog, no send, no teardown — these lines do nothing by themselves
+session.connect$();
+session.send$('AT\r\n');
+session.disconnect$();
+session.dispose$();
+```
+
+### Pattern 1 — subscribe (fire-and-forget)
+
+Use `.subscribe()` from a button handler or other call site. Always handle `error` in production apps.
+
+```typescript
+document.getElementById('connect')?.addEventListener('click', () => {
+  session.connect$().subscribe({
+    error: (e) => console.error('Connection error:', e),
+  });
+});
+
+document.getElementById('disconnect')?.addEventListener('click', () => {
+  session.disconnect$().subscribe({
+    error: (e) => console.error('Disconnect error:', e),
+  });
+});
+```
+
+### Pattern 2 — `firstValueFrom()` with async/await
+
+Convert a one-shot Observable to a Promise when you prefer sequential `async`/`await` code.
+
+```typescript
+import { firstValueFrom } from 'rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
+
+const session = createSerialSession({ baudRate: 115200 });
+
+async function runOnce(): Promise<void> {
+  try {
+    await firstValueFrom(session.connect$());
+    await firstValueFrom(session.send$('AT\r\n'));
+    await firstValueFrom(session.disconnect$());
+  } catch (e) {
+    console.error('Serial operation failed:', e);
+  }
+}
+```
+
+`firstValueFrom` completes after the first emission (or throws on error). The same rule applies to every imperative method.
+
+### Pattern 3 — inside an RxJS pipeline
+
+Chain imperative steps with operators such as `switchMap` or `concatMap` so subscription happens in one place.
+
+```typescript
+import { concatMap, from, of } from 'rxjs';
+
+from(['AT\r\n', 'ATI\r\n']).pipe(
+  concatMap((cmd) => session.send$(cmd)),
+).subscribe({
+  error: (e) => console.error('Send error:', e),
+});
+
+// Connect, then send once the port is open
+of(undefined).pipe(
+  concatMap(() => session.connect$()),
+  concatMap(() => session.send$('hello\r\n')),
+).subscribe({
+  error: (e) => console.error('Pipeline error:', e),
+});
+```
+
+For richer pipelines (request/response, timeouts, retry), see [Advanced Usage](./advanced-usage.md) and [Request / Response](./request-response.md).
 
 ## Connect, receive, and send
 

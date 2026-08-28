@@ -2,7 +2,7 @@
 
 **最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./overview.md#serialsessionの全体像)を参照してください。
 
-標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す**未フレーミングの UTF-8 チャンク**（デコード済みテキスト。ワイヤ上の生バイトではない）です。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** は購読により実行されます。
+標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す**未フレーミングの UTF-8 チャンク**（デコード済みテキスト。ワイヤ上の生バイトではない）です。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** の実行タイミングは [命令メソッドの実行（cold Observable）](#命令メソッドの実行cold-observable) を参照してください — 購読したときだけ実行されます。
 
 `receive$` / `lines$` / `terminalText$` の選び方は [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) を参照してください。
 
@@ -36,6 +36,87 @@ pnpm add rxjs
 パッケージは **ESM のみ**です。CI で検証していること、Examples と互換性の関係、TypeScript の扱いは [Bundler / framework 互換性の検証方針](./bundler-compatibility.md) を参照してください。
 
 ブラウザの **API 実装状況**と本プロジェクトの **公式サポート**（および未検証のモバイル）の区別は [ブラウザサポートと公式サポート方針](./browser-support.md) を参照してください。モノレポ [README.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md) にもブラウザサポートの要約とサンプルアプリ索引があります。
+
+## 命令メソッドの実行（cold Observable）
+
+**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** は **cold** な Observable を返します。呼び出すだけでは Observable が組み立てられるだけで、**subscribe されるまで処理は開始されません**（subscribe を伴うオペレータを使う場合も同様です）。
+
+**`state$`**、**`lines$`**、**`errors$`** などのセッションストリームとは異なります。それらは必要なタイミングで早めに購読し、命令的な操作は以下のメソッド経由で実行してください。
+
+### やってはいけない例
+
+```typescript
+// NG: ダイアログも送信も破棄も起きない — この行だけでは何も実行されない
+session.connect$();
+session.send$('AT\r\n');
+session.disconnect$();
+session.dispose$();
+```
+
+### パターン 1 — subscribe（fire-and-forget）
+
+ボタンハンドラなどから `.subscribe()` します。本番では必ず `error` を処理してください。
+
+```typescript
+document.getElementById('connect')?.addEventListener('click', () => {
+  session.connect$().subscribe({
+    error: (e) => console.error('接続エラー:', e),
+  });
+});
+
+document.getElementById('disconnect')?.addEventListener('click', () => {
+  session.disconnect$().subscribe({
+    error: (e) => console.error('切断エラー:', e),
+  });
+});
+```
+
+### パターン 2 — `firstValueFrom()` と async/await
+
+1 回きりの Observable を Promise に変換し、`async`/`await` で直列に書く場合に使います。
+
+```typescript
+import { firstValueFrom } from 'rxjs';
+import { createSerialSession } from '@gurezo/web-serial-rxjs';
+
+const session = createSerialSession({ baudRate: 115200 });
+
+async function runOnce(): Promise<void> {
+  try {
+    await firstValueFrom(session.connect$());
+    await firstValueFrom(session.send$('AT\r\n'));
+    await firstValueFrom(session.disconnect$());
+  } catch (e) {
+    console.error('シリアル操作失敗:', e);
+  }
+}
+```
+
+`firstValueFrom` は最初の emission で完了します（エラー時は throw）。すべての命令メソッドに同じルールが適用されます。
+
+### パターン 3 — RxJS パイプライン内
+
+`switchMap` や `concatMap` などで命令ステップをチェーンし、購読を 1 か所にまとめます。
+
+```typescript
+import { concatMap, from, of } from 'rxjs';
+
+from(['AT\r\n', 'ATI\r\n']).pipe(
+  concatMap((cmd) => session.send$(cmd)),
+).subscribe({
+  error: (e) => console.error('送信エラー:', e),
+});
+
+// 接続してから 1 回送信
+of(undefined).pipe(
+  concatMap(() => session.connect$()),
+  concatMap(() => session.send$('hello\r\n')),
+).subscribe({
+  error: (e) => console.error('パイプラインエラー:', e),
+});
+```
+
+より複雑なパイプライン（要求/応答、タイムアウト、リトライ）は [高度な使用方法](./advanced-usage.md) と [要求 / 応答](./request-response.md) を参照してください。
 
 ## 接続・受信・送信
 
