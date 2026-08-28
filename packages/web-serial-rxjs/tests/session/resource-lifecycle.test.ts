@@ -1,5 +1,7 @@
 import { firstValueFrom, lastValueFrom, take, toArray } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SerialError } from '../../src/errors/serial-error';
+import { SerialErrorCode } from '../../src/errors/serial-error-code';
 import { createSerialSession } from '../../src/session/create-serial-session';
 import { SerialSessionStatus } from '../../src/session/serial-session-state';
 import {
@@ -121,6 +123,60 @@ describe('SerialSession resource lifecycle (#587)', () => {
       await expect(states).resolves.toEqual(
         expect.arrayContaining([{ status: S.Disposed }]),
       );
+    });
+  });
+
+  describe('fatal error paths', () => {
+    it('releases reader and port after read error', async () => {
+      const streamWithSpy = makeStreamWithReaderSpy();
+      const port = makeMockPort(streamWithSpy.stream);
+      installNavigator(port);
+      const tracker = createResourceTracker(streamWithSpy, port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errorPromise = firstValueFrom(session.errors$);
+      streamWithSpy.controller.error(new Error('device unplugged'));
+      const received = await errorPromise;
+      await flushMicrotasks();
+
+      expect(received).toBeInstanceOf(SerialError);
+      expect(received.code).toBe(SerialErrorCode.READ_FAILED);
+      assertResourceReleased(tracker, {
+        readerCount: 1,
+        portCloseCount: 1,
+      });
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: received,
+      });
+    });
+
+    it('releases reader and port after connection lost', async () => {
+      const streamWithSpy = makeStreamWithReaderSpy();
+      const port = makeMockPort(streamWithSpy.stream);
+      installNavigator(port);
+      const tracker = createResourceTracker(streamWithSpy, port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errorPromise = firstValueFrom(session.errors$);
+      streamWithSpy.controller.close();
+      const received = await errorPromise;
+      await flushMicrotasks();
+
+      expect(received).toBeInstanceOf(SerialError);
+      expect(received.code).toBe(SerialErrorCode.CONNECTION_LOST);
+      assertResourceReleased(tracker, {
+        readerCount: 1,
+        portCloseCount: 1,
+      });
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: received,
+      });
     });
   });
 });
