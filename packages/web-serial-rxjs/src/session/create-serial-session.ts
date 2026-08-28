@@ -101,10 +101,9 @@ export function createSerialSession(
   const { reportError, createDisposedError } = createSessionErrorReporter({
     controller,
     errorsSubject,
-    sendQueue,
     isDisposed,
-    teardownPump,
-    closePortSafely,
+    captureResources,
+    teardownResources,
   });
 
   // Route receive-side buffer overflows through the single reportError entry
