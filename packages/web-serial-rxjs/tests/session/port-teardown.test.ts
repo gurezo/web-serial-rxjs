@@ -208,4 +208,20 @@ describe('session resource snapshots (#588)', () => {
     ).rejects.toBe(closeError);
     expect(onCloseError).toHaveBeenCalledWith(closeError);
   });
+
+  it('skips cancelConnect when cancelInFlightConnect is false', async () => {
+    const calls: string[] = [];
+    const { teardownResources } = createPortTeardownHarness(calls);
+    const cancelConnect = vi.fn(() => {
+      calls.push('cancelConnect');
+    });
+
+    await teardownResources(
+      { port: null, pump: null, cancelConnect },
+      { cancelInFlightConnect: false },
+    );
+
+    expect(cancelConnect).not.toHaveBeenCalled();
+    expect(calls).toEqual(['clearSendQueue', 'clearLineBuffer']);
+  });
 });

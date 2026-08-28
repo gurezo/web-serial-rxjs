@@ -90,7 +90,10 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
     if (resolveErrorSeverity(serialError.code) === 'fatal') {
       const resources = captureResources(controller.runtime);
       controller.transition(createErrorRuntime(serialError));
-      void teardownResources(resources, { closeMode: 'safe' });
+      void teardownResources(resources, {
+        closeMode: 'safe',
+        cancelInFlightConnect: false,
+      });
     }
     return serialError;
   };

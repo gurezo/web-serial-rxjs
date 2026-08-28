@@ -41,6 +41,11 @@ export type TeardownCloseMode = 'safe' | 'report';
 export interface TeardownResourcesOptions {
   closeMode?: TeardownCloseMode;
   /**
+   * When `false`, skip {@link SessionResources.cancelConnect} even if captured.
+   * Fatal error teardown uses this to avoid reverting `error` back to `idle`.
+   */
+  cancelInFlightConnect?: boolean;
+  /**
    * Called when `closeMode` is `report` and `port.close()` rejects.
    * Should throw the normalised error to abort the teardown caller.
    */
@@ -136,8 +141,11 @@ export function createPortTeardown(deps: PortTeardownDeps): PortTeardown {
     options: TeardownResourcesOptions = {},
   ): Promise<void> => {
     const closeMode = options.closeMode ?? 'safe';
+    const cancelInFlightConnect = options.cancelInFlightConnect ?? true;
 
-    resources.cancelConnect?.();
+    if (cancelInFlightConnect) {
+      resources.cancelConnect?.();
+    }
     sendQueue.clear();
     await teardownPump(resources.pump);
 
