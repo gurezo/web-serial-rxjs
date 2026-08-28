@@ -122,6 +122,8 @@ export function createSerialSession(
     isDisposed,
     teardownPump,
     closePortSafely,
+    captureResources,
+    teardownResources,
     reportError,
     createDisposedError,
   });

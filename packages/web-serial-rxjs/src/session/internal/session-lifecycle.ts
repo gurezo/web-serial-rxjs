@@ -4,6 +4,10 @@ import { SerialErrorCode } from '../../errors/serial-error-code';
 import { buildRequestOptions } from './build-request-options';
 import { isWebSerialSupported } from './has-web-serial-support';
 import type { ReceivePipeline } from './receive-pipeline';
+import type {
+  SessionResources,
+  TeardownResourcesOptions,
+} from './port-teardown';
 import {
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
@@ -18,8 +22,6 @@ import {
   createDisconnectingRuntime,
   createDisposedRuntime,
   createIdleRuntime,
-  getRuntimePort,
-  getRuntimePump,
   type SessionRuntime,
   type SessionRuntimeController,
 } from '../session-runtime';
@@ -38,6 +40,11 @@ export interface SessionLifecycleDeps {
   isDisposed: () => boolean;
   teardownPump: (pump: ReadPump | null) => Promise<void>;
   closePortSafely: (port: SerialPort | null) => Promise<void>;
+  captureResources: (runtime: SessionRuntime) => SessionResources;
+  teardownResources: (
+    resources: SessionResources,
+    options?: TeardownResourcesOptions,
+  ) => Promise<void>;
   reportError: (
     error: unknown,
     options: NormalizeSerialErrorOptions,
@@ -73,32 +80,11 @@ export function createSessionLifecycle(
     isDisposed,
     teardownPump,
     closePortSafely,
+    captureResources,
+    teardownResources,
     reportError,
     createDisposedError,
   } = deps;
-
-  const teardownFromSnapshot = async (
-    snapshot: SessionRuntime,
-  ): Promise<void> => {
-    if (snapshot.status === SerialSessionStatus.Connecting) {
-      snapshot.cancel();
-    }
-
-    sendQueue.clear();
-
-    if (
-      snapshot.status === SerialSessionStatus.Connected ||
-      snapshot.status === SerialSessionStatus.Disconnecting ||
-      snapshot.status === SerialSessionStatus.Error
-    ) {
-      const portToClose = getRuntimePort(snapshot);
-      const pump = getRuntimePump(snapshot);
-      await teardownPump(pump);
-      await closePortSafely(portToClose);
-    }
-
-    receivePipeline.clearLineBuffer();
-  };
 
   const completeSubjects = (): void => {
     controller.complete();
@@ -115,11 +101,12 @@ export function createSessionLifecycle(
       }
 
       const snapshot = controller.runtime;
+      const resources = captureResources(snapshot);
       controller.transition(createDisposedRuntime());
 
       const run = async (): Promise<void> => {
         try {
-          await teardownFromSnapshot(snapshot);
+          await teardownResources(resources, { closeMode: 'safe' });
           completeSubjects();
           subscriber.next();
           subscriber.complete();
