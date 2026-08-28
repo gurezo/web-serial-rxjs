@@ -74,6 +74,9 @@ export function countCompletedLines(completed: string): number {
 /**
  * Drops oldest completed lines when `maxLines` is exceeded.
  *
+ * Uses at most two linear scans and a single `slice()` so bulk line drops
+ * stay O(n) instead of rescanning the full string per removed line.
+ *
  * @internal Exported for unit tests.
  */
 export function trimCompletedByMaxLines(
@@ -84,15 +87,22 @@ export function trimCompletedByMaxLines(
     return completed;
   }
 
-  let trimmed = completed;
-  while (countCompletedLines(trimmed) > maxLines) {
-    const firstNewline = trimmed.indexOf('\n');
-    if (firstNewline < 0) {
-      break;
-    }
-    trimmed = trimmed.slice(firstNewline + 1);
+  const lineCount = countCompletedLines(completed);
+  if (lineCount <= maxLines) {
+    return completed;
   }
-  return trimmed;
+
+  const linesToDrop = lineCount - maxLines;
+  let dropped = 0;
+  for (let i = 0; i < completed.length; i++) {
+    if (completed.charAt(i) === '\n') {
+      dropped++;
+      if (dropped === linesToDrop) {
+        return completed.slice(i + 1);
+      }
+    }
+  }
+  return completed;
 }
 
 /**
