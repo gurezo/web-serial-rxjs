@@ -66,11 +66,55 @@ describe('trimTerminalState', () => {
     const trimmed = trimTerminalState(state, { maxLines: 1, maxChars: 0 });
     expect(terminalDisplayText(trimmed)).toBe('final\n');
   });
+
+  it('applies maxLines before maxChars when both limits are set', () => {
+    const state: TerminalBufferState = {
+      completed: 'line1\nline2\nline3\n',
+      currentLine: 'line4',
+    };
+    const trimmed = trimTerminalState(state, { maxLines: 2, maxChars: 10 });
+    expect(terminalDisplayText(trimmed)).toBe('ine3\nline4');
+  });
+
+  it('preserves lf-normalized completed lines after crlf input', () => {
+    let state = applyTerminalChunk(empty, 'first\r\n');
+    state = applyTerminalChunk(state, 'second\r\n');
+    state = applyTerminalChunk(state, 'third\r\n');
+    const trimmed = trimTerminalState(state, { maxLines: 2, maxChars: 0 });
+    expect(trimmed.completed).toBe('second\nthird\n');
+    expect(trimmed.completed).not.toContain('\r');
+  });
 });
 
 describe('trimCompletedByMaxLines', () => {
   it('returns completed unchanged when within maxLines', () => {
     expect(trimCompletedByMaxLines('a\nb\n', 3)).toBe('a\nb\n');
+  });
+
+  it('returns completed unchanged when maxLines is zero (unlimited)', () => {
+    const completed = 'line1\nline2\nline3\n';
+    expect(trimCompletedByMaxLines(completed, 0)).toBe(completed);
+  });
+
+  it('returns completed unchanged when exactly at maxLines', () => {
+    expect(trimCompletedByMaxLines('line1\nline2\n', 2)).toBe('line1\nline2\n');
+  });
+
+  it('drops oldest line when one line over maxLines', () => {
+    expect(trimCompletedByMaxLines('line1\nline2\nline3\n', 2)).toBe(
+      'line2\nline3\n',
+    );
+  });
+
+  it('drops many oldest lines when far over maxLines', () => {
+    const lines = Array.from({ length: 120 }, (_, i) => `line${i + 1}`).join(
+      '\n',
+    );
+    const completed = `${lines}\n`;
+    const trimmed = trimCompletedByMaxLines(completed, 2);
+    expect(trimmed).toBe('line119\nline120\n');
+    expect(trimmed).not.toContain('line1\n');
+    expect(trimmed).not.toContain('line118\n');
   });
 });
 
