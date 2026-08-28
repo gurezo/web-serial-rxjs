@@ -14,45 +14,94 @@ import {
   type MaxChars,
   type MaxLines,
 } from '../internal/branded-numbers';
+import { createNewlineTokenizer } from '../internal/newline-tokenizer';
 import {
-  createTerminalParser,
-  emptyTerminalState,
-  type TerminalBufferState,
-} from './create-terminal-parser';
+  createAnsiStripper,
+  type AnsiStripper,
+} from '../internal/strip-ansi-sequences';
 
-export type { TerminalBufferState };
-
-/**
- * Applies one raw decoder chunk to terminal display state.
- * Handles `\r\n` and lone `\n` as line endings, and lone `\r` as
- * carriage return (clear current line for redraw). When
- * {@link TerminalBufferOptions.stripAnsi} is enabled (default), ANSI escape
- * sequences are removed before line folding.
- *
- * @internal Exported for unit tests.
- */
-export function applyTerminalChunk(
-  state: TerminalBufferState,
-  chunk: string,
-): TerminalBufferState {
-  const parser = createTerminalParser({ stripAnsi: false });
-  parser.restoreState(state);
-  return parser.feed(chunk);
+interface TerminalBufferState {
+  completed: string;
+  currentLine: string;
 }
 
-/** @internal */
-export function terminalDisplayText(state: TerminalBufferState): string {
+interface TerminalParserOptions {
+  stripAnsi?: boolean;
+}
+
+interface TerminalParser {
+  feed(chunk: string): TerminalBufferState;
+  reset(): void;
+  getState(): TerminalBufferState;
+  restoreState(state: TerminalBufferState): void;
+}
+
+const emptyTerminalState: TerminalBufferState = {
+  completed: '',
+  currentLine: '',
+};
+
+function createTerminalParser(
+  options: TerminalParserOptions = {},
+): TerminalParser {
+  const stripAnsi = options.stripAnsi ?? false;
+  const tokenizer = createNewlineTokenizer('terminal');
+  let ansiStripper: AnsiStripper | null = stripAnsi ? createAnsiStripper() : null;
+  let completed = '';
+
+  const resetAnsiStripper = (): void => {
+    ansiStripper = stripAnsi ? createAnsiStripper() : null;
+  };
+
+  const getState = (): TerminalBufferState => ({
+    completed,
+    currentLine: tokenizer.getPendingText(),
+  });
+
+  const restoreState = (state: TerminalBufferState): void => {
+    completed = state.completed;
+    tokenizer.restorePending(state.currentLine);
+  };
+
+  const reset = (): void => {
+    completed = '';
+    tokenizer.clear();
+    resetAnsiStripper();
+  };
+
+  const feed = (chunk: string): TerminalBufferState => {
+    const normalized =
+      ansiStripper !== null ? ansiStripper.feed(chunk) : chunk;
+    const events = tokenizer.feed(normalized);
+
+    for (const event of events) {
+      if (event.type === 'line') {
+        completed += event.content + '\n';
+      }
+    }
+
+    return getState();
+  };
+
+  return {
+    feed,
+    reset,
+    getState,
+    restoreState,
+  };
+}
+
+function terminalDisplayText(state: TerminalBufferState): string {
   return state.completed + state.currentLine;
 }
 
 /** Resolved limits for {@link trimTerminalState}. `0` means unlimited. */
-export interface TerminalBufferLimits {
+interface TerminalBufferLimits {
   maxLines: MaxLines;
   maxChars: MaxChars;
 }
 
-/** @internal Count newline-terminated rows in `completed`. */
-export function countCompletedLines(completed: string): number {
+function countCompletedLines(completed: string): number {
   if (completed.length === 0) {
     return 0;
   }
@@ -70,10 +119,8 @@ export function countCompletedLines(completed: string): number {
  *
  * Uses at most two linear scans and a single `slice()` so bulk line drops
  * stay O(n) instead of rescanning the full string per removed line.
- *
- * @internal Exported for unit tests.
  */
-export function trimCompletedByMaxLines(
+function trimCompletedByMaxLines(
   completed: string,
   maxLines: number,
 ): string {
@@ -103,10 +150,8 @@ export function trimCompletedByMaxLines(
  * Trims {@link TerminalBufferState} to respect memory limits. Oldest
  * `completed` content is removed first; `currentLine` is trimmed only when
  * the display text still exceeds `maxChars` after `completed` is empty.
- *
- * @internal Exported for unit tests.
  */
-export function trimTerminalState(
+function trimTerminalState(
   state: TerminalBufferState,
   limits: TerminalBufferLimits,
 ): TerminalBufferState {

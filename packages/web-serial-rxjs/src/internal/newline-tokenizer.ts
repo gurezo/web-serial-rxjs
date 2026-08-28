@@ -1,6 +1,6 @@
 /**
  * Shared CR/LF/CRLF scanner for {@link createLineBuffer} and
- * {@link applyTerminalChunk}. Mode controls intentional semantic differences
+ * Used by {@link createTerminalParser} and line-buffer feeding. Mode controls intentional semantic differences
  * between line-delimited output and terminal display redraw.
  *
  * @internal

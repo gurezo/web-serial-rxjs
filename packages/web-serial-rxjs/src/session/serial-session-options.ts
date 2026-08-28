@@ -164,7 +164,7 @@ export type ResolvedSerialSessionOptions = Required<
  *
  * @internal
  */
-export const DEFAULT_SERIAL_SESSION_OPTIONS = {
+const DEFAULT_SERIAL_SESSION_OPTIONS = {
   baudRate: brandBaudRate(9600),
   dataBits: 8,
   stopBits: 1,
@@ -176,7 +176,7 @@ export const DEFAULT_SERIAL_SESSION_OPTIONS = {
 } satisfies ResolvedSerialSessionOptions;
 
 /** Resolved W3C connection fields for {@link ResolvedSerialSessionOptions}. */
-export type ResolvedSerialSessionConnectionOptions = Required<
+type ResolvedSerialSessionConnectionOptions = Required<
   Omit<SerialConnectionOptions, 'baudRate' | 'bufferSize'>
 > & {
   baudRate: BaudRate;
@@ -189,7 +189,7 @@ export type ResolvedSerialSessionConnectionOptions = Required<
  * @throws {@link SerialError} with {@link SerialErrorCode.INVALID_CONNECTION_OPTIONS}
  *         when `baudRate` or `bufferSize` are out of range.
  */
-export function resolveConnectionOptions(
+function resolveConnectionOptions(
   options?: Partial<SerialConnectionOptions>,
 ): ResolvedSerialSessionConnectionOptions {
   const merged = {
