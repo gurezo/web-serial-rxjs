@@ -1,4 +1,11 @@
-import { type Observable, map, scan, shareReplay } from 'rxjs';
+import {
+  type Observable,
+  ReplaySubject,
+  finalize,
+  map,
+  scan,
+  share,
+} from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import {
@@ -7,14 +14,13 @@ import {
   type MaxChars,
   type MaxLines,
 } from '../internal/branded-numbers';
-import { createNewlineTokenizer } from '../internal/newline-tokenizer';
-import { createAnsiStripper } from '../internal/strip-ansi-sequences';
+import {
+  createTerminalParser,
+  emptyTerminalState,
+  type TerminalBufferState,
+} from './create-terminal-parser';
 
-/** @internal Folded state between {@link createTerminalBuffer} emissions. */
-export interface TerminalBufferState {
-  completed: string;
-  currentLine: string;
-}
+export type { TerminalBufferState };
 
 /**
  * Applies one raw decoder chunk to terminal display state.
@@ -29,21 +35,9 @@ export function applyTerminalChunk(
   state: TerminalBufferState,
   chunk: string,
 ): TerminalBufferState {
-  const tokenizer = createNewlineTokenizer('terminal');
-  tokenizer.restorePending(state.currentLine);
-  const events = tokenizer.feed(chunk);
-
-  let { completed } = state;
-  for (const event of events) {
-    if (event.type === 'line') {
-      completed += event.content + '\n';
-    }
-  }
-
-  return {
-    completed,
-    currentLine: tokenizer.getPendingText(),
-  };
+  const parser = createTerminalParser({ stripAnsi: false });
+  parser.restoreState(state);
+  return parser.feed(chunk);
 }
 
 /** @internal */
@@ -250,11 +244,6 @@ export function resolveTerminalBufferOptions(
   };
 }
 
-const initialTerminalState: TerminalBufferState = {
-  completed: '',
-  currentLine: '',
-};
-
 /**
  * Builds a terminal-oriented text stream from {@link SerialSession.receive$} (or any
  * `Observable<string>` of decoded chunks). Uses internal buffering so callers need not
@@ -276,17 +265,23 @@ export function createTerminalBuffer(
     maxLines: resolved.maxLines,
     maxChars: resolved.maxChars,
   };
-  const ansiStripper = resolved.stripAnsi ? createAnsiStripper() : null;
+  const parser = createTerminalParser({ stripAnsi: resolved.stripAnsi });
 
   const text$ = receive$.pipe(
-    scan((state, chunk: string) => {
-      const normalized =
-        ansiStripper !== null ? ansiStripper.feed(chunk) : chunk;
-      const next = applyTerminalChunk(state, normalized);
-      return trimTerminalState(next, limits);
-    }, initialTerminalState),
+    scan((_state, chunk: string) => {
+      parser.feed(chunk);
+      const trimmed = trimTerminalState(parser.getState(), limits);
+      parser.restoreState(trimmed);
+      return trimmed;
+    }, emptyTerminalState),
     map(terminalDisplayText),
-    shareReplay({ bufferSize: 1, refCount: true }),
+    finalize(() => {
+      parser.reset();
+    }),
+    share({
+      connector: () => new ReplaySubject<string>(1),
+      resetOnRefCountZero: true,
+    }),
   );
 
   return { text$ };
