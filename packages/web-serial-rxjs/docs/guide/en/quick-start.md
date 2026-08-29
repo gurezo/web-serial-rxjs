@@ -219,6 +219,8 @@ session.dispose$().subscribe({
 
 After disposal, create a new `createSerialSession()` instance instead of reusing the old one.
 
+For framework-specific cleanup hooks (Angular `ngOnDestroy`, React `useEffect`, Vue `onUnmounted`, Svelte `onDestroy`, Vanilla TS explicit teardown), see [Framework session lifecycle](./framework-session-lifecycle.md).
+
 ## Next steps
 
 - See [API concepts and design notes](./concepts.md) for the full list of streams and methods.

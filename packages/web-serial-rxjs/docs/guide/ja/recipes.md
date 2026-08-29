@@ -17,7 +17,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 | パターン | 主な API | 詳細 |
 | --- | --- | --- |
-| [基本のテキスト送受信](#基本のテキスト送受信) | `connect$`, `lines$`, `send$`, `disconnect$` / `dispose$` | [クイックスタート](./quick-start.md) |
+| [基本のテキスト送受信](#基本のテキスト送受信) | `connect$`, `lines$`, `send$`, `disconnect$` / `dispose$` | [クイックスタート](./quick-start.md) · [Framework 別 session ライフサイクル](./framework-session-lifecycle.md) |
 | [行指向プロトコル](#行指向プロトコル) | `lines$`、必要に応じて `receive$` | [高度な使用方法 – 行フレーミング](./advanced-usage.md#行単位のフレーミング（組み込み-と--上のカスタム分割）) · [ストリームの選び方](./stream-selection.md) |
 | [ターミナル / CR 処理](#ターミナル--cr-処理) | `terminalText$`, `receive$` | [ストリームの選び方](./stream-selection.md) · [高度な使用方法](./advanced-usage.md) |
 | [Command / Response](#command--response) | `lines$` / `receive$`, `send$` | [Request / Response](./request-response.md) |

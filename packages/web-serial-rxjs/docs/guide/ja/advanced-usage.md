@@ -243,10 +243,6 @@ session.state$
 
 ## フレームワーク統合
 
-各 example は典型的な統合例を示しています。
+各 example は典型的な統合例を示しています。**`disconnect$()` と `dispose$()` をいつ呼ぶか**、**subscription をどこで解除するか**（Angular / React / Vue / Svelte / Vanilla TS）は [Framework 別 session ライフサイクル](./framework-session-lifecycle.md) を参照してください。
 
-- Angular: `ReplaySubject<SerialSession>` を `switchMap` で展開し、`state$` / `receive$` / `errors$` を service から公開
-- Vue 3: 同じストリームを `ref` にミラーする composable
-- React: session を `ref` に保持しつつ、ストリームを `useState` にミラーする hook
-- Svelte: `derived` store でセッションをラップ
-- Vanilla JS/TS: そのまま subscribe
+Live apps: [Examples](../../examples/)。

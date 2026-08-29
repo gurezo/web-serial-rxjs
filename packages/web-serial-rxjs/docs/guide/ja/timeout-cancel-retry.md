@@ -108,6 +108,8 @@ destroy$.complete();
 
 フレームワーク非依存の型: `destroy$` Subject を持ち、cleanup で complete します。
 
+> **subscription 解除 ≠ session dispose。** `takeUntil` や `unsubscribe()` で UI への配信を止めても、serial port や read pump は teardown されません。session 所有者の破棄時には `dispose$().subscribe()` も呼んでください — [Framework 別 session ライフサイクル](./framework-session-lifecycle.md) を参照。
+
 **React**
 
 ```typescript
