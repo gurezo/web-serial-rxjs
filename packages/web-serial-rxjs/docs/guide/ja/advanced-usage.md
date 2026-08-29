@@ -224,7 +224,7 @@ session.errors$.subscribe((error) => {
 
 ## 致命的エラー時の再接続
 
-致命的エラーは `state$` を `{ status: 'error', error }` に遷移させるので、再接続ポリシーは素直に書けます。**回数制限**を付け、`dispose$` 後は再接続しない方針を優先してください — [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) を参照。以下は最小スケッチです。`retry({ count })`、`OPERATION_CANCELLED` の除外、`status === 'disposed'` での停止を加えてください。
+致命的エラーは `state$` を `{ status: 'error', error }` に遷移させるので、再接続ポリシーは素直に書けます。**回数制限**を付け、`dispose$` 後は再接続しない方針を優先してください — [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) を参照。`SerialErrorCode` ごとの判断は [エラー Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix) を使ってください。以下は最小スケッチです。`retry({ count })`、`OPERATION_CANCELLED` の除外、`status === 'disposed'` での停止を加えてください。
 
 ```typescript
 import { filter, concatMap } from 'rxjs';

@@ -329,4 +329,4 @@ export class App {
 | Svelte | [examples/svelte/](../../examples/svelte/) |
 | Vanilla TS | [examples/vanilla-ts/](../../examples/vanilla-ts/) |
 
-For reconnect and error recovery after disconnect (not dispose), see [Troubleshooting – Reconnect fails](./troubleshooting.md#reconnect-fails) and [Advanced Usage – Reconnect On Fatal Error](./advanced-usage.md#reconnect-on-fatal-error).
+For reconnect and error recovery after disconnect (not dispose), see [Troubleshooting – Reconnect fails](./troubleshooting.md#reconnect-fails), [Troubleshooting – Error Recovery Matrix](./troubleshooting.md#error-recovery-matrix), and [Advanced Usage – Reconnect On Fatal Error](./advanced-usage.md#reconnect-on-fatal-error).

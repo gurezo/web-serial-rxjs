@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common Web Serial and `@gurezo/web-serial-rxjs` problems, with check steps and fixes. Start with [Quick Start](./quick-start.md) requirements if you have not connected yet. For error code tables, see [API concepts and design notes](./concepts.md#serialerror-serialerrorcode).
+Common Web Serial and `@gurezo/web-serial-rxjs` problems, with check steps and fixes. Start with [Quick Start](./quick-start.md) requirements if you have not connected yet. For error code tables, see [API concepts and design notes](./concepts.md#serialerror-serialerrorcode). For recommended next actions after an error, see the [Error Recovery Matrix](#error-recovery-matrix).
 
 ## Port picker does not open / device missing
 
@@ -114,7 +114,73 @@ session.errors$.subscribe((error) => {
 
 Also handle `error` on `connect$().subscribe({ error })` and `send$().subscribe({ error })` — the same `SerialError` is multiplexed on `errors$`.
 
-**Fix:** Branch on codes; full tables live in [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode).
+**Fix:** Branch on codes; full tables live in [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode). Use the [Error Recovery Matrix](#error-recovery-matrix) below to decide the next action.
+
+## Error Recovery Matrix
+
+Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#594](https://github.com/gurezo/web-serial-rxjs/issues/594) · Related: [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode) · [Timeout, cancel, and retry](./timeout-cancel-retry.md) · [Advanced Usage – Reconnect on fatal error](./advanced-usage.md#reconnect-on-fatal-error) · [Framework session lifecycle](./framework-session-lifecycle.md)
+
+`errors$` (and `subscribe({ error })` on cold methods) tells you **what** failed. This matrix tells you **what to do next**: stay connected, reconnect the same session, or dispose and create a new one.
+
+The library does **not** auto-reconnect. App-side retry policies belong in your RxJS composition — see [Timeout, cancel, and retry](./timeout-cancel-retry.md).
+
+### How to decide
+
+1. Narrow with `error.is(SerialErrorCode.*)` (or catch factory throws for `INVALID_*`).
+2. Check **Severity**: fatal errors move `state$` to `'error'` and tear down the port / read pump; non-fatal errors leave the session connected.
+3. Follow **Reconnect** / **Dispose** columns — do not call `connect$` on a disposed instance.
+
+```mermaid
+flowchart TD
+  err["errors$ or subscribe error"]
+  check{"error.is(code)"}
+  fatal["fatal: state is error"]
+  nonFatal["non-fatal: stay connected"]
+  thrown["factory throw"]
+  reconnect["disconnect$ then connect$"]
+  disposeNew["dispose$ then new session"]
+  appFix["fix options or UI state"]
+  browser["change browser"]
+  err --> check
+  check -->|"PORT_OPEN_FAILED / CONNECTION_LOST / READ_FAILED"| fatal
+  check -->|"WRITE_FAILED / LINE_BUFFER_OVERFLOW / PORT_*"| nonFatal
+  check -->|"INVALID_*"| thrown
+  check -->|BROWSER_NOT_SUPPORTED| browser
+  check -->|SESSION_DISPOSED| disposeNew
+  fatal --> reconnect
+  nonFatal --> appFix
+  thrown --> appFix
+```
+
+### Matrix
+
+| Error | Severity | Recoverable | Recommended action | Reconnect (same session) | Dispose + new session |
+| --- | --- | --- | --- | --- | --- |
+| `BROWSER_NOT_SUPPORTED` | non-fatal | no | Switch to a supported Chromium / Firefox desktop browser. | no | optional (UI teardown) |
+| `PORT_OPEN_FAILED` | fatal | yes | Free the port (other apps/tabs), check cable / permissions, then connect again. | yes | only if you abandon this session |
+| `PORT_ALREADY_OPEN` | non-fatal | yes | Wait for `'idle'` / `'error'`, or `disconnect$` first, then `connect$`. | after disconnect | no |
+| `PORT_NOT_OPEN` | non-fatal | yes | Call `connect$` before `send$` / `disconnect$`. | n/a (connect first) | no |
+| `READ_FAILED` | fatal | yes | Check cable / device / drivers, then reconnect. | yes | if reconnect keeps failing |
+| `WRITE_FAILED` | non-fatal | yes | Inspect `state$` and `context.cause`; resend if still `'connected'`. | only if connection also drops | no |
+| `CONNECTION_LOST` | fatal | yes | Check cable / device, then reconnect. | yes | if you change baud rate or abandon session |
+| `OPERATION_CANCELLED` | fatal | yes (manual) | User closed the picker — optional: offer Connect again. Do not auto-retry. | yes (user gesture) | no |
+| `LINE_BUFFER_OVERFLOW` | non-fatal | yes | Raise `lineBuffer.maxChars`, ensure device line endings, or parse on `receive$`. Session stays connected. | no (not needed) | no |
+| `SESSION_DISPOSED` | fatal | no | Instance is dead — create a new `createSerialSession()`. | no | already disposed; create new |
+| `UNKNOWN` | fatal | maybe | Inspect `context.cause`. Prefer reconnect; if unclear, dispose and create a new session. | try first | if cause is unclear |
+| `INVALID_FILTER_OPTIONS` | throw (factory) | yes | Fix `filters` and call `createSerialSession()` again. | n/a | recreate with fixed options |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | throw (factory) | yes | Fix `terminalBuffer` and recreate the session. | n/a | recreate with fixed options |
+| `INVALID_LINE_BUFFER_OPTIONS` | throw (factory) | yes | Fix `lineBuffer` and recreate the session. | n/a | recreate with fixed options |
+| `INVALID_CONNECTION_OPTIONS` | throw (factory) | yes | Fix connection options (e.g. `baudRate`) and recreate the session. | n/a | recreate with fixed options |
+| `PORT_NOT_AVAILABLE` | reserved | n/a | **Not emitted in v4.** Handle acquisition failures as `PORT_OPEN_FAILED` / `OPERATION_CANCELLED`. | — | — |
+| `OPERATION_TIMEOUT` | reserved | n/a | **Not emitted in v4.** No core timeout API yet; compose timeouts in the app. | — | — |
+
+### Column notes
+
+- **Severity `fatal`**: session reports via `reportError`, moves toward `'error'`, and tears down the live port / read pump. Recover with `disconnect$` (if needed) then `connect$` on the **same** instance unless Dispose says otherwise.
+- **Severity `non-fatal`**: multiplexed on `errors$` only; connection continues unless you choose to disconnect.
+- **Severity `throw (factory)`**: raised synchronously from `createSerialSession()` — not delivered on `errors$`.
+- **Severity `reserved`**: still present on the `SerialErrorCode` object but unreachable at runtime in v4.
+- After **`dispose$`**, never reuse the instance — always create a new session ([Framework session lifecycle](./framework-session-lifecycle.md)).
 
 ## What to include when reporting
 
@@ -134,6 +200,7 @@ Please include:
 - [Communication pattern Recipes](./recipes.md) — pattern → Guide index for line protocols, request/response, timeout
 - [Quick Start](./quick-start.md)
 - [API concepts and design notes](./concepts.md)
+- [Error Recovery Matrix](#error-recovery-matrix) — per-code reconnect / dispose guidance
 - [Advanced Usage](./advanced-usage.md)
 - [English Guide index](./README.md) · [日本語 Guide 索引](../ja/README.md)
 - [Documentation home](https://gurezo.net/web-serial-rxjs/)

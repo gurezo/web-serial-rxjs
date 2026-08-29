@@ -344,6 +344,8 @@ Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a
 
 `SerialError` extends `Error` with a `code: SerialErrorCode` and structured per-code metadata on `context`. `is(code)` narrows both `code` and `context` to the literal types for that code.
 
+For recommended next actions after each code (reconnect vs dispose), see [Troubleshooting – Error Recovery Matrix](./troubleshooting.md#error-recovery-matrix).
+
 For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in **v4** for backward compatibility but is **deprecated** and scheduled for removal in a future major (**v5+**). See [Migrating to v3 – originalError deprecation](./migration-v3.md#3-originalerror-deprecation).
 
 ```typescript

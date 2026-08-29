@@ -145,6 +145,8 @@ session.lines$
 
 ## What to retry — and what to avoid
 
+Per-code reconnect / dispose guidance: [Troubleshooting – Error Recovery Matrix](./troubleshooting.md#error-recovery-matrix).
+
 | Safe to consider with a **limit** | Avoid automatic retry |
 | --- | --- |
 | Transient `PORT_OPEN_FAILED` after a previous disconnect | `OPERATION_CANCELLED` (user closed the picker) |
@@ -275,4 +277,4 @@ Drive failures with the Fake from [Hardware-free testing](./testing.md) (`failNe
 - [Request / Response](./request-response.md) — wait-then-send, send vs timeout errors
 - [Advanced Usage](./advanced-usage.md) — recovery / reconnect (prefer **limited** retry from this page)
 - [Hardware-free testing](./testing.md) — Fake `SerialSession`
-- [Troubleshooting](./troubleshooting.md) — port picker cancel and common failures
+- [Troubleshooting](./troubleshooting.md) — port picker cancel, common failures, and [Error Recovery Matrix](./troubleshooting.md#error-recovery-matrix)

@@ -344,6 +344,8 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 `SerialError` は `Error` を継承し、`code: SerialErrorCode` と code 別の構造化メタデータ `context` を持ちます。`is(code)` は `code` と `context` を literal 型に narrow します。
 
+各 code の推奨次アクション（再接続 vs dispose）は [トラブルシューティング – エラー Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix) を参照してください。
+
 cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの canonical source です。`originalError` は後方互換のため **v4** にも残っていますが **非推奨** で、将来の major（**v5 以降**）で削除予定です。詳細は [v3 移行ガイド – originalError の非推奨化](./migration-v3.md#3-originalerror-の非推奨化) を参照してください。
 
 ```typescript

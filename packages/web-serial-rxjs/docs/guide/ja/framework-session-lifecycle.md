@@ -329,4 +329,4 @@ export class App {
 | Svelte | [examples/svelte/](../../examples/svelte/) |
 | Vanilla TS | [examples/vanilla-ts/](../../examples/vanilla-ts/) |
 
-disconnect 後（dispose ではない）の再接続とエラー復旧は [トラブルシューティング – 再接続に失敗する](./troubleshooting.md#再接続に失敗する) と [高度な使用方法 – 致命的エラー時の再接続](./advanced-usage.md#致命的エラー時の再接続) を参照してください。
+disconnect 後（dispose ではない）の再接続とエラー復旧は [トラブルシューティング – 再接続に失敗する](./troubleshooting.md#再接続に失敗する)、[トラブルシューティング – エラー Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix)、[高度な使用方法 – 致命的エラー時の再接続](./advanced-usage.md#致命的エラー時の再接続) を参照してください。

@@ -22,7 +22,7 @@ The canonical documentation layout is defined in [ARCHITECTURE.md](https://githu
 14. **[API concepts and design notes](./concepts.md)** — options tables, `SerialError`, type supplements, swappable `SerialSession` contract, [supported data (text / binary / charset)](./concepts.md#supported-data-text--binary--charset) (not a TypeDoc substitute)
 15. **[Binary receive API — design decision](./binary-receive-design.md)** — go / no-go for a future `receiveBytes$` (not implemented)
 16. **[Hardware-free testing](./testing.md)** — Fake `SerialSession`, Vitest examples, DI injection (not published on npm)
-17. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems and self-help checks
+17. **[Troubleshooting](./troubleshooting.md)** — common Web Serial / session problems, self-help checks, and Error Recovery Matrix
 
 When migrating existing code:
 
@@ -50,7 +50,7 @@ When migrating existing code:
 | **[API concepts and design notes](./concepts.md)** | Options, error codes, type tables, swappable `SerialSession` contract, [supported data](./concepts.md#supported-data-text--binary--charset) |
 | **[Binary receive API — design decision](./binary-receive-design.md)** | Design review: defer `receiveBytes$`; go / no-go criteria |
 | **[Hardware-free testing](./testing.md)** | Controllable Fake `SerialSession`, Vitest / Angular / React examples (npm: not bundled) |
-| **[Troubleshooting](./troubleshooting.md)** | Common problems, check steps, and what to report |
+| **[Troubleshooting](./troubleshooting.md)** | Common problems, check steps, Recovery Matrix, and what to report |
 | **[v3 → v4 Migration](./migration-v4.md)** | Unified Phase 1+2 public API cleanup |
 | **[v2 → v3 Migration](./migration-v3.md)** | Steps to adopt v3 canonical API |
 | **[v1 → v2 Migration](./migration-v2.md)** | Replacements for removed v1 APIs |

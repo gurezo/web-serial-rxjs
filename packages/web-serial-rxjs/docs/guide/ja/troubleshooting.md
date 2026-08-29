@@ -1,6 +1,6 @@
 # トラブルシューティング
 
-Web Serial および `@gurezo/web-serial-rxjs` でよくある問題の確認手順と対処です。まだ接続できていない場合は先に [クイックスタート](./quick-start.md) の利用条件を確認してください。エラーコード一覧は [概念と設計メモ](./concepts.md#serialerror-serialerrorcode) を参照してください。
+Web Serial および `@gurezo/web-serial-rxjs` でよくある問題の確認手順と対処です。まだ接続できていない場合は先に [クイックスタート](./quick-start.md) の利用条件を確認してください。エラーコード一覧は [概念と設計メモ](./concepts.md#serialerror-serialerrorcode) を参照してください。エラー発生後の推奨操作は [エラー Recovery Matrix](#エラー-recovery-matrix) を参照してください。
 
 ## ポート選択ダイアログが開かない / デバイスが表示されない
 
@@ -114,7 +114,73 @@ session.errors$.subscribe((error) => {
 
 `connect$().subscribe({ error })` や `send$().subscribe({ error })` の `error` も扱い、同じ `SerialError` が `errors$` に多重配信されます。
 
-**対処:** コードで分岐する。一覧は [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode)。
+**対処:** コードで分岐する。一覧は [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode)。次の操作は下記 [エラー Recovery Matrix](#エラー-recovery-matrix) を参照してください。
+
+## エラー Recovery Matrix
+
+Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#594](https://github.com/gurezo/web-serial-rxjs/issues/594) · Related: [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode) · [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) · [高度な使用方法 – 致命的エラー時の再接続](./advanced-usage.md#致命的エラー時の再接続) · [Framework 別 session ライフサイクル](./framework-session-lifecycle.md)
+
+`errors$`（および cold メソッドの `subscribe({ error })`）は**何が**失敗したかを示します。この Matrix は**次に何をすべきか**（接続維持 / 同一 session で再接続 / dispose して新規作成）を示します。
+
+ライブラリは**自動再接続しません**。アプリ側の再試行ポリシーは RxJS の合成で実装してください — [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) を参照。
+
+### 判断の進め方
+
+1. `error.is(SerialErrorCode.*)` で narrow する（`INVALID_*` は factory の throw を catch）。
+2. **Severity** を確認する: fatal は `state$` を `'error'` にし port / read pump を teardown する。non-fatal は接続を維持する。
+3. **Reconnect** / **Dispose** 列に従う — dispose 済みインスタンスで `connect$` を呼ばない。
+
+```mermaid
+flowchart TD
+  err["errors$ or subscribe error"]
+  check{"error.is(code)"}
+  fatal["fatal: state is error"]
+  nonFatal["non-fatal: stay connected"]
+  thrown["factory throw"]
+  reconnect["disconnect$ then connect$"]
+  disposeNew["dispose$ then new session"]
+  appFix["fix options or UI state"]
+  browser["change browser"]
+  err --> check
+  check -->|"PORT_OPEN_FAILED / CONNECTION_LOST / READ_FAILED"| fatal
+  check -->|"WRITE_FAILED / LINE_BUFFER_OVERFLOW / PORT_*"| nonFatal
+  check -->|"INVALID_*"| thrown
+  check -->|BROWSER_NOT_SUPPORTED| browser
+  check -->|SESSION_DISPOSED| disposeNew
+  fatal --> reconnect
+  nonFatal --> appFix
+  thrown --> appFix
+```
+
+### Matrix
+
+| Error | Severity | Recoverable | 推奨対応 | Reconnect（同一 session） | Dispose + 新規 session |
+| --- | --- | --- | --- | --- | --- |
+| `BROWSER_NOT_SUPPORTED` | non-fatal | no | 対応デスクトップブラウザ（Chromium / Firefox）へ変更する | no | 任意（UI teardown） |
+| `PORT_OPEN_FAILED` | fatal | yes | 他アプリ／タブを閉じ、ケーブル／権限を確認して再接続する | yes | この session を捨てる場合のみ |
+| `PORT_ALREADY_OPEN` | non-fatal | yes | `'idle'` / `'error'` を待つか、先に `disconnect$` してから `connect$` | disconnect 後 | no |
+| `PORT_NOT_OPEN` | non-fatal | yes | `send$` / `disconnect$` の前に `connect$` する | n/a（先に connect） | no |
+| `READ_FAILED` | fatal | yes | ケーブル／デバイス／ドライバを確認して再接続する | yes | 再接続が続けて失敗する場合 |
+| `WRITE_FAILED` | non-fatal | yes | `state$` と `context.cause` を確認し、`'connected'` なら再送可否を判断する | 接続も落ちた場合のみ | no |
+| `CONNECTION_LOST` | fatal | yes | ケーブル／デバイスを確認して再接続する | yes | baud 変更や session 放棄時 |
+| `OPERATION_CANCELLED` | fatal | yes（手動） | ユーザーが picker を閉じた — 任意で再度 Connect。自動 retry しない | yes（ユーザー操作） | no |
+| `LINE_BUFFER_OVERFLOW` | non-fatal | yes | `lineBuffer.maxChars` を上げる、改行を確認する、または `receive$` で扱う。切断不要 | no（不要） | no |
+| `SESSION_DISPOSED` | fatal | no | インスタンスは終端 — 新しい `createSerialSession()` を作る | no | 既に dispose 済み。新規作成 |
+| `UNKNOWN` | fatal | maybe | `context.cause` を確認。まず再接続を試し、不明なら dispose + 新規 session | まず試す | 原因不明のとき |
+| `INVALID_FILTER_OPTIONS` | throw（factory） | yes | `filters` を直して `createSerialSession()` し直す | n/a | 修正後に再生成 |
+| `INVALID_TERMINAL_BUFFER_OPTIONS` | throw（factory） | yes | `terminalBuffer` を直して session を再生成する | n/a | 修正後に再生成 |
+| `INVALID_LINE_BUFFER_OPTIONS` | throw（factory） | yes | `lineBuffer` を直して session を再生成する | n/a | 修正後に再生成 |
+| `INVALID_CONNECTION_OPTIONS` | throw（factory） | yes | 接続オプション（例: `baudRate`）を直して再生成する | n/a | 修正後に再生成 |
+| `PORT_NOT_AVAILABLE` | reserved | n/a | **v4 では emit されない。** 取得失敗は `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` で扱う | — | — |
+| `OPERATION_TIMEOUT` | reserved | n/a | **v4 では emit されない。** コアの timeout API は未実装。アプリ側で合成する | — | — |
+
+### 列の注記
+
+- **Severity `fatal`**: `reportError` 経由で `'error'` 側へ進み、ライブな port / read pump を teardown する。Dispose 列で別指定がなければ、**同一**インスタンスで `disconnect$`（必要なら）→ `connect$` で回復する。
+- **Severity `non-fatal`**: `errors$` にのみ多重配信。切断しない限り接続は続く。
+- **Severity `throw（factory）`**: `createSerialSession()` から同期的に投げられる — `errors$` には流れない。
+- **Severity `reserved`**: `SerialErrorCode` オブジェクトには残るが、v4 実行時には到達しない。
+- **`dispose$` 後**はインスタンスを再利用しない — 必ず新規 session を作る（[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)）。
 
 ## 報告時に必要な情報
 
@@ -134,6 +200,7 @@ session.errors$.subscribe((error) => {
 - [通信パターン別 Recipes](./recipes.md) — 行プロトコル、コマンド／応答、タイムアウトなどの索引
 - [クイックスタート](./quick-start.md)
 - [概念と設計メモ](./concepts.md)
+- [エラー Recovery Matrix](#エラー-recovery-matrix) — コード別の再接続 / dispose 指針
 - [高度な使用方法](./advanced-usage.md)
 - [日本語 Guide 索引](./README.md) · [English Guide index](../en/README.md)
 - [ドキュメントホーム](https://gurezo.net/web-serial-rxjs/)
