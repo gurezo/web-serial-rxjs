@@ -22,7 +22,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 14. **[API の概念と設計メモ](./concepts.md)** — オプション表、`SerialError`、型の補足、差し替え可能な `SerialSession` 契約、[対応範囲（テキスト / バイナリ / 文字コード）](./concepts.md#対応範囲テキスト--バイナリ--文字コード)（TypeDoc の代替ではありません）
 15. **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** — 将来の `receiveBytes$` の go / no-go（未実装）
 16. **[実機なしテスト](./testing.md)** — Fake `SerialSession`、Vitest 例、DI 注入（npm 非同梱）
-17. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題と自己解決手順
+17. **[トラブルシューティング](./troubleshooting.md)** — Web Serial / セッションのよくある問題、自己解決手順、エラー Recovery Matrix
 
 既存コードから移行する場合:
 
@@ -50,7 +50,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[API の概念と設計メモ](./concepts.md)** | オプション・エラーコード・型の表形式補足、差し替え可能な `SerialSession` 契約、[対応範囲](./concepts.md#対応範囲テキスト--バイナリ--文字コード) |
 | **[バイナリ受信 API — 設計判断](./binary-receive-design.md)** | 設計検討: `receiveBytes$` は当面追加しない。go / no-go 条件 |
 | **[実機なしテスト](./testing.md)** | 制御可能な Fake `SerialSession`、Vitest / Angular / React 例（npm 非同梱） |
-| **[トラブルシューティング](./troubleshooting.md)** | よくある問題の確認手順と報告時の情報 |
+| **[トラブルシューティング](./troubleshooting.md)** | よくある問題の確認手順、Recovery Matrix、報告時の情報 |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |
 | **[v1 → v2 マイグレーション](./migration-v2.md)** | v1 廃止 API の置き換え |

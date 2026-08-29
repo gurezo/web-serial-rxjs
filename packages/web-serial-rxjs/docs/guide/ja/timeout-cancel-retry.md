@@ -145,6 +145,8 @@ session.lines$
 
 ## `retry()` してよい処理 / 避けるべき処理
 
+コード別の再接続 / dispose 指針: [トラブルシューティング – エラー Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix)。
+
 | **回数制限付き**で検討してよい例 | 自動再試行を避ける例 |
 | --- | --- |
 | 切断後の一時的な `PORT_OPEN_FAILED` | `OPERATION_CANCELLED`（ユーザーがダイアログを閉じた） |
@@ -275,4 +277,4 @@ pnpm --filter @gurezo/web-serial-rxjs exec vitest run tests/session/timeout-canc
 - [Request / Response](./request-response.md) — 待ち→送信、送信エラーとタイムアウトの区別
 - [高度な使用方法](./advanced-usage.md) — リカバリ／再接続（本ページの **制限付き**再試行を優先）
 - [実機なしテスト](./testing.md) — Fake `SerialSession`
-- [トラブルシューティング](./troubleshooting.md) — ポート選択キャンセルとよくある失敗
+- [トラブルシューティング](./troubleshooting.md) — ポート選択キャンセル、よくある失敗、[エラー Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix)

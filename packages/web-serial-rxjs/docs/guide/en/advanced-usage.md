@@ -226,7 +226,7 @@ session.errors$.subscribe((error) => {
 
 ## Reconnect On Fatal Error
 
-Because fatal failures drive `state$` to `{ status: 'error', error }`, a reconnect policy is straightforward. Prefer a **limited** retry and never reconnect after `dispose$` — see [Timeout / cancel / retry](./timeout-cancel-retry.md). The snippet below is a minimal sketch; add `retry({ count })`, skip `OPERATION_CANCELLED`, and stop when `status === 'disposed'`.
+Because fatal failures drive `state$` to `{ status: 'error', error }`, a reconnect policy is straightforward. Prefer a **limited** retry and never reconnect after `dispose$` — see [Timeout / cancel / retry](./timeout-cancel-retry.md). Decide per `SerialErrorCode` with the [Error Recovery Matrix](./troubleshooting.md#error-recovery-matrix). The snippet below is a minimal sketch; add `retry({ count })`, skip `OPERATION_CANCELLED`, and stop when `status === 'disposed'`.
 
 ```typescript
 import { filter, concatMap } from 'rxjs';
