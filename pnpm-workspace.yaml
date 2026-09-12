@@ -13,6 +13,7 @@ minimumReleaseAgeExclude:
   # Allow recently published deps from toolchain migrations until they mature (7 days)
   - '@angular/*'
   - '@angular-devkit/*'
+  - '@angular-eslint/*'
   - '@commitlint/*'
   - '@esbuild/*'
   - '@eslint/*'
@@ -28,6 +29,7 @@ minimumReleaseAgeExclude:
   - '@vitejs/*'
   - '@vitest/*'
   - '@vue/*'
+  - angular-eslint
   - esbuild
   - eslint
   - eslint-plugin-*
@@ -38,6 +40,7 @@ minimumReleaseAgeExclude:
   - prettier
   - react
   - react-dom
+  - scheduler
   - svelte*
   - tinyglobby
   - tmp
