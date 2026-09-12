@@ -92,7 +92,7 @@
     "jsonc-eslint-parser": "^3.3.0",
     "nx": "23.2.1",
     "prettier": "^3.9.6",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "react-dom": "19.2.8",
     "svelte": "5.57.0",
     "svelte-check": "4.7.6",
