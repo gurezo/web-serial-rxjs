@@ -79,7 +79,7 @@
     "@vitejs/plugin-vue": "6.0.8",
     "@vitest/coverage-v8": "^4.1.11",
     "@vitest/ui": "^4.1.11",
-    "@vue/test-utils": "2.4.11",
+    "@vue/test-utils": "2.5.0",
     "angular-eslint": "22.1.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
