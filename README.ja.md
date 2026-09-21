@@ -1,5 +1,7 @@
 # web-serial-rxjs
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/gurezo/web-serial-rxjs)
+
 <p align="center">
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
