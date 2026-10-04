@@ -14,7 +14,9 @@ minimumReleaseAgeExclude:
   - '@angular/*'
   - '@angular-devkit/*'
   - '@angular-eslint/*'
+  - '@asamuzakjp/*'
   - '@commitlint/*'
+  - '@csstools/*'
   - '@esbuild/*'
   - '@eslint/*'
   - '@inquirer/*'
@@ -30,10 +32,12 @@ minimumReleaseAgeExclude:
   - '@vitest/*'
   - '@vue/*'
   - angular-eslint
+  - data-urls
   - esbuild
   - eslint
   - eslint-plugin-*
   - esrap
+  - jsdom
   - linkify-it
   - nx
   - playwright*
@@ -44,11 +48,13 @@ minimumReleaseAgeExclude:
   - svelte*
   - tinyglobby
   - tmp
+  - tr46
   - typedoc
   - typescript-eslint
   - vite
   - vitest
   - vue*
+  - whatwg-url
 
 # Malicious releases are often detected and removed within a week.
 # config = 7 day x 24h x 60 min
