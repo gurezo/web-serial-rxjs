@@ -42,6 +42,7 @@ minimumReleaseAgeExclude:
   - linkify-it
   - nx
   - playwright*
+  - postcss
   - prettier
   - react
   - react-dom
