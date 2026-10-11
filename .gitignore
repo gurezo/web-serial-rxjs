@@ -77,3 +77,4 @@ __screenshots__/
 .nx/polygraph
 .nx/self-healing
 .nx/migrate-runs
+.vitest
