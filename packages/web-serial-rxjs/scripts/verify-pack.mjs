@@ -56,6 +56,17 @@ const MAJOR_LINK_HOST_ALLOWLIST = [
   'wicg.github.io',
 ];
 
+/**
+ * Same-repo blob links are checked against the checkout. GitHub Actions
+ * runners intermittently receive HTTP 503 for github.com blob pages.
+ */
+const REPO_BLOB_MAIN_PREFIX =
+  'https://github.com/gurezo/web-serial-rxjs/blob/main/';
+
+const TRANSIENT_HTTP_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+const HEAD_GET_FALLBACK_STATUSES = new Set([403, 405]);
+const LINK_FETCH_ATTEMPTS = 3;
+
 function fail(message) {
   console.error(message);
   process.exit(1);
@@ -289,6 +300,79 @@ function assertRelativeLinksResolve(packageDir, readmeName, links) {
   }
 }
 
+function repositoryPathForBlobMain(href) {
+  if (!href.startsWith(REPO_BLOB_MAIN_PREFIX)) {
+    return null;
+  }
+
+  let repoPath = href.slice(REPO_BLOB_MAIN_PREFIX.length);
+  try {
+    repoPath = decodeURIComponent(repoPath);
+  } catch {
+    return null;
+  }
+
+  if (!repoPath || repoPath.split('/').includes('..')) {
+    return null;
+  }
+
+  return repoPath;
+}
+
+function delay(ms) {
+  return new Promise((resolveDelay) => {
+    setTimeout(resolveDelay, ms);
+  });
+}
+
+async function releaseResponse(response) {
+  try {
+    await response.body?.cancel();
+  } catch {
+    // Ignore cancellation failures.
+  }
+}
+
+function retryDelayMs(response, attempt) {
+  const retryAfter = Number(response.headers.get('retry-after'));
+  if (Number.isFinite(retryAfter) && retryAfter > 0) {
+    return Math.min(retryAfter * 1000, 10_000);
+  }
+  return 400 * attempt;
+}
+
+async function fetchMajorLink(href) {
+  let lastResponse = null;
+
+  for (const method of ['HEAD', 'GET']) {
+    for (let attempt = 1; attempt <= LINK_FETCH_ATTEMPTS; attempt++) {
+      const response = await fetch(href, { method, redirect: 'follow' });
+      lastResponse = response;
+      if (response.ok) {
+        await releaseResponse(response);
+        return response;
+      }
+
+      const fallbackToGet =
+        method === 'HEAD' && HEAD_GET_FALLBACK_STATUSES.has(response.status);
+      const transient = TRANSIENT_HTTP_STATUSES.has(response.status);
+      await releaseResponse(response);
+
+      if (fallbackToGet) {
+        break;
+      }
+      if (!transient) {
+        return response;
+      }
+      if (attempt < LINK_FETCH_ATTEMPTS) {
+        await delay(retryDelayMs(response, attempt));
+      }
+    }
+  }
+
+  return lastResponse;
+}
+
 async function assertMajorHttpsLinks(links) {
   const unique = [
     ...new Set(
@@ -317,14 +401,27 @@ async function assertMajorHttpsLinks(links) {
   });
 
   const failures = [];
+  const remote = [];
+  let repositoryBlobLinks = 0;
+
   for (const href of major) {
+    const repoPath = repositoryPathForBlobMain(href);
+    if (!repoPath) {
+      remote.push(href);
+      continue;
+    }
+
+    repositoryBlobLinks += 1;
+    if (!existsSync(join(workspaceRoot, repoPath))) {
+      failures.push(`${href} → missing in repository (${repoPath})`);
+    }
+  }
+
+  for (const href of remote) {
     try {
-      let response = await fetch(href, { method: 'HEAD', redirect: 'follow' });
-      if (response.status === 405 || response.status === 403) {
-        response = await fetch(href, { method: 'GET', redirect: 'follow' });
-      }
-      if (!response.ok) {
-        failures.push(`${href} → HTTP ${response.status}`);
+      const response = await fetchMajorLink(href);
+      if (!response?.ok) {
+        failures.push(`${href} → HTTP ${response?.status ?? 'no response'}`);
       }
     } catch (error) {
       failures.push(`${href} → ${error.message}`);
@@ -339,7 +436,12 @@ async function assertMajorHttpsLinks(links) {
     );
   }
 
-  console.log(`Verified ${major.length} major https link(s) respond successfully.`);
+  console.log(
+    `Verified ${repositoryBlobLinks} repository blob link(s) against the checkout.`,
+  );
+  console.log(
+    `Verified ${remote.length} major https link(s) respond successfully.`,
+  );
 }
 
 async function assertReadmeLinks(packageDir) {
