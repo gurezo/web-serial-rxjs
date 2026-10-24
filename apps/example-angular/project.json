@@ -8,9 +8,8 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/example-angular",
         "browser": "apps/example-angular/src/main.ts",
@@ -22,9 +21,7 @@
             "input": "apps/example-angular/public"
           }
         ],
-        "styles": [
-          "apps/example-angular/src/styles.scss"
-        ]
+        "styles": ["apps/example-angular/src/styles.scss"]
       },
       "configurations": {
         "production": {
@@ -63,12 +60,12 @@
           "extractLicenses": false,
           "sourceMap": true
         }
-      },
-      "defaultConfiguration": "production"
+      }
     },
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
       "configurations": {
         "production": {
           "buildTarget": "example-angular:build:production"
@@ -76,20 +73,12 @@
         "development": {
           "buildTarget": "example-angular:build:development"
         }
-      },
-      "defaultConfiguration": "development"
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint"
+      }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": [
-        "{workspaceRoot}/coverage/apps/example-angular"
-      ],
       "options": {
         "passWithNoTests": true,
-        "reportsDirectory": "{projectRoot}/../../../coverage/apps/example-angular"
+        "coverage.reportsDirectory": "../../coverage/apps/example-angular"
       }
     },
     "serve-static": {
@@ -100,7 +89,11 @@
         "port": 4200,
         "staticFilePath": "dist/apps/example-angular/browser",
         "spa": true
-      }
+      },
+      "readyWhen": {
+        "signal": true
+      },
+      "dependsOn": ["build"]
     }
   }
 }

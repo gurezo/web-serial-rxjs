@@ -26,6 +26,14 @@
       }
     },
     {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        }
+      }
+    },
+    {
       "plugin": "@nx/vite/plugin",
       "options": {
         "buildTargetName": "vite:build",
@@ -55,6 +63,39 @@
       "options": {
         "targetName": "eslint:lint"
       }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "devTargetName": "dev",
+        "typecheckTargetName": "typecheck",
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static"
+      },
+      "include": [
+        "apps/example-react/**/*",
+        "apps/example-svelte/**/*",
+        "apps/example-vanilla-js/**/*",
+        "apps/example-vanilla-ts/**/*",
+        "apps/example-vue/**/*"
+      ]
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      },
+      "include": [
+        "apps/example-angular/**/*",
+        "apps/example-react/**/*",
+        "apps/example-svelte/**/*",
+        "apps/example-vanilla-js/**/*",
+        "apps/example-vanilla-ts/**/*",
+        "apps/example-vue/**/*",
+        "packages/web-serial-rxjs/**/*"
+      ]
     }
   ],
   "generators": {
@@ -80,5 +121,9 @@
       "unitTestRunner": "vitest-angular"
     }
   },
-  "analytics": false
+  "analytics": false,
+  "nxCloudId": "6adc79a081d3a8657ac8bfed",
+  "affected": {
+    "legacy": true
+  }
 }
