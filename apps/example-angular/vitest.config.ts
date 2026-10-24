@@ -1,5 +1,4 @@
 /// <reference types='vitest' />
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
@@ -9,9 +8,12 @@ const __dirname = dirname(__filename);
 const workspaceRoot = resolve(__dirname, '../../../');
 
 export default defineConfig(() => ({
+  resolve: {
+    tsconfigPaths: true,
+  },
   root: __dirname,
   cacheDir: '../../../node_modules/.vite/apps/example-angular',
-  plugins: [nxViteTsPaths()],
+  plugins: [],
   test: {
     name: 'example-angular',
     watch: false,

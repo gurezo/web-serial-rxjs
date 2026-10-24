@@ -1,18 +1,37 @@
 /// <reference types='vitest' />
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
+
+// These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+const configValues = {
+  default: {},
+  development: {},
+  production: {},
+  portal: {},
+};
+
+// Determine the correct configValue to use based on the configuration
+const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+
+const options = {
+  ...configValues.default,
+  ...(configValues[nxConfiguration] ?? {}),
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const workspaceRoot = resolve(__dirname, '../../../');
 
 export default defineConfig(({ mode }) => ({
+  resolve: {
+    tsconfigPaths: true,
+  },
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/apps/example-vanilla-ts',
   base: mode === 'portal' ? '/web-serial-rxjs/examples/vanilla-ts/' : '/',
-  plugins: [nxViteTsPaths()],
+  plugins: [nxReadySignal()],
   server: {
     port: 4240,
     host: true,

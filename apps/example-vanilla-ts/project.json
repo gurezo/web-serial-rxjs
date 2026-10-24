@@ -3,21 +3,17 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/example-vanilla-ts/src",
   "projectType": "application",
-  "tags": [
-    "type:app",
-    "scope:examples"
-  ],
+  "tags": ["type:app", "scope:examples"],
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
       "outputs": [
-        "{options.outputPath}"
+        "{projectRoot}/{options.outDir}",
+        "dist/apps/example-vanilla-ts"
       ],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/example-vanilla-ts",
-        "configFile": "apps/example-vanilla-ts/vite.config.ts",
-        "skipTypeCheck": true
+        "config": "./vite.config.ts",
+        "outDir": "../../dist/apps/example-vanilla-ts"
       },
       "configurations": {
         "development": {
@@ -32,49 +28,23 @@
       }
     },
     "serve": {
-      "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "example-vanilla-ts:build"
-      },
       "configurations": {
-        "development": {
-          "buildTarget": "example-vanilla-ts:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "example-vanilla-ts:build:production",
-          "hmr": false
-        }
+        "development": {},
+        "production": {}
       }
     },
     "preview": {
-      "executor": "@nx/vite:preview-server",
       "defaultConfiguration": "production",
-      "options": {
-        "buildTarget": "example-vanilla-ts:build:production"
-      },
       "configurations": {
-        "production": {
-          "buildTarget": "example-vanilla-ts:build:production"
-        }
+        "production": {}
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": [
-        "{workspaceRoot}/coverage/apps/example-vanilla-ts"
-      ],
       "options": {
         "passWithNoTests": true,
-        "reportsDirectory": "{projectRoot}/../../../coverage/apps/example-vanilla-ts"
+        "coverage.reportsDirectory": "../../../../coverage/apps/example-vanilla-ts"
       }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
     }
   }
 }
