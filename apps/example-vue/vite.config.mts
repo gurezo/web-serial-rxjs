@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => ({
     host: 'localhost',
   },
   build: {
-    outDir: '../../../dist/apps/example-vue',
+    outDir: '../../dist/apps/example-vue',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => ({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../../../coverage/apps/example-vue',
+      reportsDirectory: '../../coverage/apps/example-vue',
       provider: 'v8' as const,
     },
     setupFiles: ['./src/test-setup.ts'],

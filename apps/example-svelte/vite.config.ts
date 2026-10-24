@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => ({
     host: 'localhost',
   },
   build: {
-    outDir: '../../../dist/apps/example-svelte',
+    outDir: '../../dist/apps/example-svelte',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => ({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx,svelte}'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../../../coverage/apps/example-svelte',
+      reportsDirectory: '../../coverage/apps/example-svelte',
       provider: 'v8' as const,
     },
     setupFiles: ['./src/test-setup.ts'],

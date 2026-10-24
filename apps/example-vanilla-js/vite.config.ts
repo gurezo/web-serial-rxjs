@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => ({
     host: 'localhost',
   },
   build: {
-    outDir: '../../../dist/apps/example-vanilla-js',
+    outDir: '../../dist/apps/example-vanilla-js',
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => ({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../../../coverage/apps/example-vanilla-js',
+      reportsDirectory: '../../coverage/apps/example-vanilla-js',
       provider: 'v8' as const,
     },
   },

@@ -6,10 +6,7 @@
   "tags": ["type:app", "scope:examples"],
   "targets": {
     "build": {
-      "outputs": [
-        "{projectRoot}/{options.outDir}",
-        "dist/apps/example-vanilla-ts"
-      ],
+      "outputs": ["{workspaceRoot}/dist/apps/example-vanilla-ts"],
       "defaultConfiguration": "production",
       "options": {
         "config": "./vite.config.ts",
@@ -43,7 +40,7 @@
     "test": {
       "options": {
         "passWithNoTests": true,
-        "coverage.reportsDirectory": "../../../../coverage/apps/example-vanilla-ts"
+        "coverage.reportsDirectory": "../../coverage/apps/example-vanilla-ts"
       }
     }
   }

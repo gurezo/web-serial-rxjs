@@ -6,7 +6,7 @@
   "tags": ["type:app", "scope:examples"],
   "targets": {
     "build": {
-      "outputs": ["{projectRoot}/{options.outDir}", "dist/apps/example-svelte"],
+      "outputs": ["{workspaceRoot}/dist/apps/example-svelte"],
       "defaultConfiguration": "production",
       "options": {
         "config": "./vite.config.ts",
@@ -40,7 +40,7 @@
     "test": {
       "options": {
         "passWithNoTests": true,
-        "coverage.reportsDirectory": "../../../../coverage/apps/example-svelte"
+        "coverage.reportsDirectory": "../../coverage/apps/example-svelte"
       }
     }
   }
