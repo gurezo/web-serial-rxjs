@@ -90,7 +90,7 @@ import {
   isConnectedSessionState,
   isWebSerialSupported,
 } from '@gurezo/web-serial-rxjs';
-import { filter } from 'rxjs';
+import { concatMap, filter } from 'rxjs';
 
 const session = createSerialSession({ baudRate: 115200 });
 
@@ -105,11 +105,13 @@ session.state$
   .subscribe((state) => {
     console.log(state.portInfo);
   });
-session.connect$().subscribe();
-session.send$('hello\r\n').subscribe();
+session
+  .connect$()
+  .pipe(concatMap(() => session.send$('hello\r\n')))
+  .subscribe({ error: console.error });
 ```
 
-実アプリでは `connect$` / `send$` の `subscribe` で `error` も扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](./quick-start.md) を参照してください。
+`connect$()` が完了する前に `send$()` すると `PORT_NOT_OPEN` になります。`connect$()` はクリックなどのユーザー操作から開始してください。そうでないとブラウザはポート選択ダイアログを開きません。実アプリではこの購読の `error` を扱ってください（`errors$` にも流れます）。手順の全体は [クイックスタート](./quick-start.md) を参照してください。
 
 ## ドキュメント索引
 
