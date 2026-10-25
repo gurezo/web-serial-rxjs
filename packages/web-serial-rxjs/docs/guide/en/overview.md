@@ -22,6 +22,7 @@ Start here:
 - [Advanced Usage](./advanced-usage.md)
 - [API concepts and design notes](./concepts.md)
 - [Troubleshooting](./troubleshooting.md)
+- [v3 to v4 Migration Guide](./migration-v4.md)
 - [v2 to v3 Migration Guide](./migration-v3.md)
 - [v1 to v2 Migration Guide](./migration-v2.md)
 
@@ -47,6 +48,7 @@ This library is framework-agnostic and can be used with:
 
 - Angular
 - React
+- Vue
 - Svelte
 - Vanilla JavaScript / TypeScript
 
