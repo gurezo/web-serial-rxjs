@@ -110,6 +110,8 @@ Framework-agnostic pattern: own a `destroy$` Subject and complete it in cleanup.
 
 > **Subscription cleanup ≠ session dispose.** Stopping UI delivery with `takeUntil` or `unsubscribe()` does not tear down the serial port or read pump. When the session owner is destroyed, also call `dispose$().subscribe()` — see [Framework session lifecycle](./framework-session-lifecycle.md).
 
+Unsubscribing from `connect$()` while it is `'connecting'` abandons that attempt. A port it already opened is closed, and the next `connect$()` does not race with it. Unsubscribing from `receive$` after the session is connected still does not close the port.
+
 **React**
 
 ```typescript

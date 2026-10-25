@@ -66,6 +66,9 @@ export interface SerialSession {
    * Returns an Observable that completes when the port is fully opened and
    * the read pump is running. Subscribing to `receive$` before calling
    * `connect$` is safe: emissions simply start after the pump is active.
+   * Unsubscribing during `'connecting'` abandons that attempt. A port the
+   * abandoned attempt already opened is closed, and a later `connect$()`
+   * does not share its `requestPort` or `open`.
    *
    * @returns An Observable that completes on successful connection.
    */

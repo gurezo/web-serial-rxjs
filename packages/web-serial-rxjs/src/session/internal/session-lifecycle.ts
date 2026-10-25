@@ -147,6 +147,13 @@ export function createSessionLifecycle(
     }
   };
 
+  // A connect attempt can outlive unsubscribe while `requestPort` is still
+  // pending. The generation drops that attempt's results. The next attempt
+  // waits only while a previous one is still releasing its port, so a fresh
+  // connect keeps the same microtask timing as a single `requestPort`.
+  let connectGeneration = 0;
+  let connectInFlight: Promise<void> | null = null;
+
   const connect$ = (): Observable<void> =>
     new Observable<void>((subscriber) => {
       if (isDisposed()) {
@@ -182,10 +189,23 @@ export function createSessionLifecycle(
         return;
       }
 
+      const generation = ++connectGeneration;
       let cancelled = false;
+      let settlePrevious = (): void => undefined;
+      const finished = new Promise<void>((resolve) => {
+        settlePrevious = resolve;
+      });
+      const waitForPrevious = connectInFlight;
+      connectInFlight = finished;
+      const isCurrentAttempt = (): boolean =>
+        !cancelled && generation === connectGeneration && !isDisposed();
+
       const cancelInFlightConnect = (): void => {
         cancelled = true;
-        if (controller.status === SerialSessionStatus.Connecting) {
+        if (
+          generation === connectGeneration &&
+          controller.status === SerialSessionStatus.Connecting
+        ) {
           controller.transition(createIdleRuntime());
         }
       };
@@ -203,132 +223,162 @@ export function createSessionLifecycle(
 
       const run = async (): Promise<void> => {
         let selectedPort: SerialPort | null = null;
+        let opened = false;
         try {
-          selectedPort = await navigator.serial.requestPort(
-            buildRequestOptions(resolvedOptions),
-          );
-          await selectedPort.open({
-            baudRate: resolvedOptions.baudRate,
-            dataBits: resolvedOptions.dataBits,
-            stopBits: resolvedOptions.stopBits,
-            parity: resolvedOptions.parity,
-            bufferSize: resolvedOptions.bufferSize,
-            flowControl: resolvedOptions.flowControl,
-          } satisfies SerialOptions);
-        } catch (error) {
-          const serialError = normalizeSerialError(error, {
-            fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
-            messagePrefix: 'Failed to open port',
-          });
-          // Picker cancel is NotFoundError before a port exists. reportError
-          // treats OPERATION_CANCELLED as fatal and would enter `error` plus
-          // teardown. Return to idle and keep the error on connect$ / errors$.
-          const userCancelledPicker =
-            !cancelled &&
-            selectedPort === null &&
-            serialError.code === SerialErrorCode.OPERATION_CANCELLED;
-
-          if (userCancelledPicker) {
-            if (!isDisposed()) {
-              errorsSubject.next(serialError);
-              if (controller.status === SerialSessionStatus.Connecting) {
-                controller.transition(createIdleRuntime());
-              }
-            }
-            subscriber.error(serialError);
+          if (waitForPrevious) {
+            await waitForPrevious;
+          }
+          if (!isCurrentAttempt()) {
             return;
           }
 
-          if (selectedPort) {
-            await closePortSafely(selectedPort);
+          try {
+            selectedPort = await navigator.serial.requestPort(
+              buildRequestOptions(resolvedOptions),
+            );
+            if (!isCurrentAttempt()) {
+              return;
+            }
+            await selectedPort.open({
+              baudRate: resolvedOptions.baudRate,
+              dataBits: resolvedOptions.dataBits,
+              stopBits: resolvedOptions.stopBits,
+              parity: resolvedOptions.parity,
+              bufferSize: resolvedOptions.bufferSize,
+              flowControl: resolvedOptions.flowControl,
+            } satisfies SerialOptions);
+            opened = true;
+          } catch (error) {
+            if (!isCurrentAttempt()) {
+              if (opened && selectedPort) {
+                await closePortSafely(selectedPort);
+              }
+              return;
+            }
+
+            const serialError = normalizeSerialError(error, {
+              fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
+              messagePrefix: 'Failed to open port',
+            });
+            // Picker cancel is NotFoundError before a port exists. reportError
+            // treats OPERATION_CANCELLED as fatal and would enter `error` plus
+            // teardown. Return to idle and keep the error on connect$ / errors$.
+            const userCancelledPicker =
+              selectedPort === null &&
+              serialError.code === SerialErrorCode.OPERATION_CANCELLED;
+
+            if (userCancelledPicker) {
+              if (!isDisposed()) {
+                errorsSubject.next(serialError);
+                if (controller.status === SerialSessionStatus.Connecting) {
+                  controller.transition(createIdleRuntime());
+                }
+              }
+              subscriber.error(serialError);
+              return;
+            }
+
+            if (selectedPort) {
+              await closePortSafely(selectedPort);
+            }
+            if (!isCurrentAttempt()) {
+              return;
+            }
+            const reported = reportError(serialError, {
+              fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
+              messagePrefix: 'Failed to open port',
+            });
+            if (isCurrentAttempt()) {
+              subscriber.error(reported);
+            }
+            return;
           }
-          const reported = reportError(serialError, {
-            fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
-            messagePrefix: 'Failed to open port',
-          });
-          if (!cancelled) {
+
+          if (!selectedPort || !isCurrentAttempt()) {
+            if (opened && selectedPort) {
+              await closePortSafely(selectedPort);
+            }
+            return;
+          }
+
+          let pump: ReadPump | null = null;
+          let startupError: SerialError | null = null;
+          let transitioned = false;
+          try {
+            receivePipeline.clearLineBuffer();
+            pump = createReadPump(selectedPort, {
+              onChunk: receivePipeline.handleChunk,
+              onError: (pumpError) => {
+                const reported = reportError(pumpError, {
+                  fallbackCode: SerialErrorCode.READ_FAILED,
+                  messagePrefix: 'Read pump failed',
+                });
+                // A synchronous failure inside start() happens before connected.
+                // Later read errors run after transitioned is set and must not
+                // be delivered again on connect$.
+                if (!transitioned) {
+                  startupError = reported;
+                }
+              },
+              onDone: () => {
+                if (controller.status !== SerialSessionStatus.Connected) {
+                  return;
+                }
+                reportError(
+                  new SerialError(
+                    SerialErrorCode.CONNECTION_LOST,
+                    'Read pump ended unexpectedly: stream closed while connected',
+                  ),
+                  {
+                    fallbackCode: SerialErrorCode.CONNECTION_LOST,
+                  },
+                );
+              },
+            });
+            pump.start();
+            if (startupError || !isCurrentAttempt()) {
+              await releaseOpenedPort(pump, selectedPort);
+              if (isCurrentAttempt() && startupError) {
+                subscriber.error(startupError);
+              }
+              return;
+            }
+
+            sendQueue.clear();
+            if (!isCurrentAttempt()) {
+              await releaseOpenedPort(pump, selectedPort);
+              return;
+            }
+
+            controller.transition(createConnectedRuntime(selectedPort, pump));
+            transitioned = true;
+            subscriber.next();
+            subscriber.complete();
+          } catch (error) {
+            if (!transitioned) {
+              await releaseOpenedPort(pump, selectedPort);
+            }
+            if (!isCurrentAttempt() || transitioned) {
+              return;
+            }
+            if (startupError) {
+              subscriber.error(startupError);
+              return;
+            }
+            const reported = reportError(error, {
+              fallbackCode: SerialErrorCode.UNKNOWN,
+              messagePrefix: 'Unexpected connect failure',
+            });
+            if (!isCurrentAttempt()) {
+              return;
+            }
             subscriber.error(reported);
           }
-          return;
-        }
-
-        if (!selectedPort || cancelled || isDisposed()) {
-          await closePortSafely(selectedPort);
-          return;
-        }
-
-        let pump: ReadPump | null = null;
-        let startupError: SerialError | null = null;
-        let transitioned = false;
-        try {
-          receivePipeline.clearLineBuffer();
-          pump = createReadPump(selectedPort, {
-            onChunk: receivePipeline.handleChunk,
-            onError: (pumpError) => {
-              const reported = reportError(pumpError, {
-                fallbackCode: SerialErrorCode.READ_FAILED,
-                messagePrefix: 'Read pump failed',
-              });
-              // A synchronous failure inside start() happens before connected.
-              // Later read errors run after transitioned is set and must not
-              // be delivered again on connect$.
-              if (!transitioned) {
-                startupError = reported;
-              }
-            },
-            onDone: () => {
-              if (controller.status !== SerialSessionStatus.Connected) {
-                return;
-              }
-              reportError(
-                new SerialError(
-                  SerialErrorCode.CONNECTION_LOST,
-                  'Read pump ended unexpectedly: stream closed while connected',
-                ),
-                {
-                  fallbackCode: SerialErrorCode.CONNECTION_LOST,
-                },
-              );
-            },
-          });
-          pump.start();
-          if (startupError || cancelled || isDisposed()) {
-            await releaseOpenedPort(pump, selectedPort);
-            if (!cancelled && !isDisposed() && startupError) {
-              subscriber.error(startupError);
-            }
-            return;
+        } finally {
+          settlePrevious();
+          if (connectInFlight === finished) {
+            connectInFlight = null;
           }
-
-          sendQueue.clear();
-          if (cancelled || isDisposed()) {
-            await releaseOpenedPort(pump, selectedPort);
-            return;
-          }
-
-          controller.transition(createConnectedRuntime(selectedPort, pump));
-          transitioned = true;
-          subscriber.next();
-          subscriber.complete();
-        } catch (error) {
-          if (!transitioned) {
-            await releaseOpenedPort(pump, selectedPort);
-          }
-          if (cancelled || isDisposed() || transitioned) {
-            return;
-          }
-          if (startupError) {
-            subscriber.error(startupError);
-            return;
-          }
-          const reported = reportError(error, {
-            fallbackCode: SerialErrorCode.UNKNOWN,
-            messagePrefix: 'Unexpected connect failure',
-          });
-          if (cancelled || isDisposed()) {
-            return;
-          }
-          subscriber.error(reported);
         }
       };
 
