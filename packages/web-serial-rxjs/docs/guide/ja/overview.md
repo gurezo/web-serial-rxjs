@@ -117,22 +117,10 @@ session
 
 ## ドキュメント索引
 
+全件索引は [日本語 Guide](./README.md) です。Getting Started、How-to、Reference、Project の4区分に分かれています。
+
 | ドキュメント | 用途 |
 | --- | --- |
-| **[日本語 Guide 索引](./README.md)** | Getting Started の読み順と一覧。 |
-| **[English Guide 索引](../en/README.md)** | Getting Started reading order and full index. |
+| **[日本語 Guide 索引](./README.md)** | 全件索引。Getting Started、How-to、Reference、Project。 |
+| **[English Guide 索引](../en/README.md)** | The same four sections, in English. |
 | **リポジトリ [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md)** | モノレポ全体の目次、サンプル索引、貢献の導線。 |
-| **[クイックスタート](./quick-start.md)** | 最短でポートを開いて購読するところまで。 |
-| **[ブラウザサポートと公式サポート方針](./browser-support.md)** | Web Serial API 実装状況と公式サポート / 未検証の区別。 |
-| **[receive$ / lines$ / terminalText$ の選び方](./stream-selection.md)** | 用途から受信ストリームを選ぶ。 |
-| **[通信パターン別 Recipes](./recipes.md)** | パターン → Guide / Recipe 索引（デバイス互換の保証ではない）。 |
-| **[高度な使用方法](./advanced-usage.md)** | 行フレーミング、派生ストリーム、リカバリ。 |
-| **[Request / Response](./request-response.md)** | `lines$` / `receive$` でのコマンド送信後の応答待ち。 |
-| **[タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md)** | タイムアウト、破棄時キャンセル、回数制限付き再試行。 |
-| **[実機なしのテスト](./testing.md)** | ポートなしで使える Fake `SerialSession`。 |
-| **[トラブルシューティング](./troubleshooting.md)** | Web Serial / セッションのよくある問題と自己解決手順。 |
-| **[API Reference（TypeDoc）](../../api/modules.html)** | オプション、`SerialSessionState`、`SerialError` の詳細。表・図は [概念と設計メモ](./concepts.md) も参照。 |
-| **[v3 → v4 マイグレーション](./migration-v4.md)**（[English](../en/migration-v4.md)） | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |
-| **[v2 → v3 マイグレーション](./migration-v3.md)**（[English](../en/migration-v3.md)） | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
-| **[v1 → v2 マイグレーション](./migration-v2.md)**（[English](../en/migration-v2.md)） | 削除された v1 API からの対応表。 |
-| **[Phase 5（アーカイブ）](./archive/migration-phase5.md)** | 旧 v1 ドキュメントの参照用。 |

@@ -123,22 +123,10 @@ session
 
 ## Documentation index
 
+The full page index is the [English Guide](./README.md), grouped into Getting Started, How-to, Reference, and Project.
+
 | Doc | Use it for |
 | --- | --- |
-| **[English Guide index](./README.md)** | Getting Started reading order and full index. |
-| **[日本語 Guide 索引](../ja/README.md)** | Getting Started の読み順と一覧。 |
+| **[English Guide index](./README.md)** | Full index: Getting Started, How-to, Reference, and Project. |
+| **[日本語 Guide 索引](../ja/README.md)** | 同じ4区分の日本語索引。 |
 | **Repository [README](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md)** | Monorepo overview, examples index, and contribution links. |
-| **[Quick Start](./quick-start.md)** | Shortest path to a working open port and subscriptions. |
-| **[Browser support and support policy](./browser-support.md)** | Web Serial API availability vs official support / untested. |
-| **[Choosing receive$ / lines$ / terminalText$](./stream-selection.md)** | Pick the receive stream by use case. |
-| **[Communication pattern Recipes](./recipes.md)** | Pattern → Guide / Recipe index (not device compatibility). |
-| **[Advanced Usage](./advanced-usage.md)** | Line framing, derived streams, and recovery. |
-| **[Request / Response](./request-response.md)** | Command + matching reply on `lines$` / `receive$`. |
-| **[Timeout / cancel / retry](./timeout-cancel-retry.md)** | Timeouts, teardown cancel, bounded retry. |
-| **[Hardware-free testing](./testing.md)** | Controllable Fake `SerialSession` without a port. |
-| **[Troubleshooting](./troubleshooting.md)** | Common Web Serial / session problems and self-help checks. |
-| **[API Reference (TypeDoc)](modules.html)** | Options, `SerialSessionState`, and `SerialError` details; narrative tables also in [concepts](./concepts.md). |
-| **[v3 → v4 Migration Guide](./migration-v4.md)** ([日本語](../ja/migration-v4.md)) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |
-| **[v2 → v3 Migration Guide](./migration-v3.md)** ([日本語](../ja/migration-v3.md)) | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
-| **[v1 → v2 Migration Guide](./migration-v2.md)** ([日本語](../ja/migration-v2.md)) | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
-| **[Phase 5 archive (legacy v1 doc)](./archive/migration-phase5.md)** | Historical v1 context only. |
