@@ -106,6 +106,8 @@ Cancellation should **complete** the pipeline (or unsubscribe), not feed into an
 
 Unsubscribing from a queued `send$` with `takeUntil`, `timeout`, or `unsubscribe()` skips that write. Once `writer.write()` has started, only subscriber notifications stop; the in-flight write is not aborted.
 
+`disconnect$`, `dispose$`, and a `connect$` that is about to become `'connected'` also drop a `send$` that has not started `writer.write()`. That subscriber errors with `PORT_NOT_OPEN`, and `errors$` does not emit it. The in-flight write is not aborted, and the next `send$` waits for it.
+
 ## Cancel on Component / Hook teardown
 
 Framework-agnostic pattern: own a `destroy$` Subject and complete it in cleanup.

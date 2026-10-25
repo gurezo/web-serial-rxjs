@@ -52,10 +52,12 @@ export interface SendQueue {
    */
   enqueue<T>(operation: SendQueueOperation<T>): Observable<T>;
   /**
-   * Reset the internal promise chain. Existing in-flight operations keep
-   * running because we do not cancel native promises, but no newly
-   * enqueued work will wait for them. Use this when the session is torn
-   * down so a fresh `connect$` starts with a clean chain.
+   * Drop operations that have not started and advance the generation.
+   * In-flight operations keep running. Work enqueued afterwards waits for
+   * that in-flight operation, not for the dropped ones. Subscribers of
+   * dropped operations receive {@link SendQueueClearedError}. Use this when
+   * the session is torn down or a fresh `connect$` is about to become
+   * current.
    */
   clear(): void;
 }
@@ -76,10 +78,14 @@ export interface SendQueue {
  *   `complete` / `error` for that subscriber. The in-flight promise is
  *   still awaited, so the underlying write is not aborted. Later
  *   operations continue to respect call order.
+ * - `clear()` drops operations that have not started and errors their
+ *   subscribers with {@link SendQueueClearedError}. Work enqueued after
+ *   `clear()` waits for the in-flight operation so writes do not overlap.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/628 | Issue #628}
  */
 export function createSendQueue(): SendQueue {
   let chain: Promise<void> = Promise.resolve();
