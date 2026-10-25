@@ -127,7 +127,7 @@ The library does **not** auto-reconnect. App-side retry policies belong in your 
 ### How to decide
 
 1. Narrow with `error.is(SerialErrorCode.*)` (or catch factory throws for `INVALID_*`).
-2. Check **Severity**: fatal errors move `state$` to `'error'` and tear down the port / read pump; non-fatal errors leave the session connected.
+2. Check **Severity**: fatal errors move `state$` to `'error'` and tear down the port / read pump; non-fatal errors leave the session connected. `OPERATION_CANCELLED` returns `state$` to `'idle'`.
 3. Follow **Reconnect** / **Dispose** columns — do not call `connect$` on a disposed instance.
 
 ```mermaid
@@ -163,7 +163,7 @@ flowchart TD
 | `READ_FAILED` | fatal | yes | Check cable / device / drivers, then reconnect. | yes | if reconnect keeps failing |
 | `WRITE_FAILED` | non-fatal | yes | Inspect `state$` and `context.cause`; resend if still `'connected'`. | only if connection also drops | no |
 | `CONNECTION_LOST` | fatal | yes | Check cable / device, then reconnect. | yes | if you change baud rate or abandon session |
-| `OPERATION_CANCELLED` | fatal | yes (manual) | User closed the picker — optional: offer Connect again. Do not auto-retry. | yes (user gesture) | no |
+| `OPERATION_CANCELLED` | non-fatal | yes (manual) | User closed the picker. Emitted on `errors$`; `state$` returns to `idle` (not `error`). Do not auto-retry. | yes (user gesture) | no |
 | `LINE_BUFFER_OVERFLOW` | non-fatal | yes | Raise `lineBuffer.maxChars`, ensure device line endings, or parse on `receive$`. Session stays connected. | no (not needed) | no |
 | `SESSION_DISPOSED` | fatal | no | Instance is dead — create a new `createSerialSession()`. | no | already disposed; create new |
 | `UNKNOWN` | fatal | maybe | Inspect `context.cause`. Prefer reconnect; if unclear, dispose and create a new session. | try first | if cause is unclear |
@@ -178,6 +178,7 @@ flowchart TD
 
 - **Severity `fatal`**: session reports via `reportError`, moves toward `'error'`, and tears down the live port / read pump. Recover with `disconnect$` (if needed) then `connect$` on the **same** instance unless Dispose says otherwise.
 - **Severity `non-fatal`**: multiplexed on `errors$` only; connection continues unless you choose to disconnect.
+- **`OPERATION_CANCELLED`**: port-picker cancel. Emitted once on `errors$`, and `connect$` errors. `state$` returns to `'idle'` and does not enter `'error'`. The port is not closed.
 - **Severity `throw (factory)`**: raised synchronously from `createSerialSession()` — not delivered on `errors$`.
 - **Severity `reserved`**: still present on the `SerialErrorCode` object but unreachable at runtime in v4.
 - After **`dispose$`**, never reuse the instance — always create a new session ([Framework session lifecycle](./framework-session-lifecycle.md)).

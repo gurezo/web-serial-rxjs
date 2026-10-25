@@ -196,6 +196,8 @@ v3 exposes **`SerialSessionStatus`** as lifecycle string constants (e.g. `Serial
 - `{ status: 'error', error }` — fatal failure; `error` is the same `SerialError` instance on `errors$`.
 - `{ status: 'disposed' }` — session permanently torn down via `dispose$`.
 
+Cancelling the port picker (`OPERATION_CANCELLED`) does not enter `'error'`; `state$` returns to `'idle'`. `connect$` errors, and the same `SerialError` is emitted once on `errors$`.
+
 Example:
 
 ```typescript

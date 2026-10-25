@@ -127,7 +127,7 @@ Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [
 ### 判断の進め方
 
 1. `error.is(SerialErrorCode.*)` で narrow する（`INVALID_*` は factory の throw を catch）。
-2. **Severity** を確認する: fatal は `state$` を `'error'` にし port / read pump を teardown する。non-fatal は接続を維持する。
+2. **Severity** を確認する: fatal は `state$` を `'error'` にし port / read pump を teardown する。non-fatal は接続を維持する。`OPERATION_CANCELLED` は `state$` を `'idle'` に戻す。
 3. **Reconnect** / **Dispose** 列に従う — dispose 済みインスタンスで `connect$` を呼ばない。
 
 ```mermaid
@@ -163,7 +163,7 @@ flowchart TD
 | `READ_FAILED` | fatal | yes | ケーブル／デバイス／ドライバを確認して再接続する | yes | 再接続が続けて失敗する場合 |
 | `WRITE_FAILED` | non-fatal | yes | `state$` と `context.cause` を確認し、`'connected'` なら再送可否を判断する | 接続も落ちた場合のみ | no |
 | `CONNECTION_LOST` | fatal | yes | ケーブル／デバイスを確認して再接続する | yes | baud 変更や session 放棄時 |
-| `OPERATION_CANCELLED` | fatal | yes（手動） | ユーザーが picker を閉じた — 任意で再度 Connect。自動 retry しない | yes（ユーザー操作） | no |
+| `OPERATION_CANCELLED` | non-fatal | yes（手動） | ユーザーが picker を閉じた。`errors$` に流れ、`state$` は `idle`（`error` ではない）。自動 retry しない | yes（ユーザー操作） | no |
 | `LINE_BUFFER_OVERFLOW` | non-fatal | yes | `lineBuffer.maxChars` を上げる、改行を確認する、または `receive$` で扱う。切断不要 | no（不要） | no |
 | `SESSION_DISPOSED` | fatal | no | インスタンスは終端 — 新しい `createSerialSession()` を作る | no | 既に dispose 済み。新規作成 |
 | `UNKNOWN` | fatal | maybe | `context.cause` を確認。まず再接続を試し、不明なら dispose + 新規 session | まず試す | 原因不明のとき |
@@ -178,6 +178,7 @@ flowchart TD
 
 - **Severity `fatal`**: `reportError` 経由で `'error'` 側へ進み、ライブな port / read pump を teardown する。Dispose 列で別指定がなければ、**同一**インスタンスで `disconnect$`（必要なら）→ `connect$` で回復する。
 - **Severity `non-fatal`**: `errors$` にのみ多重配信。切断しない限り接続は続く。
+- **`OPERATION_CANCELLED`**: ポート選択のキャンセル。`errors$` に 1 回流れ、`connect$` は error 終了する。`state$` は `'idle'` に戻り、`'error'` には入らない。ポートは close しない。
 - **Severity `throw（factory）`**: `createSerialSession()` から同期的に投げられる — `errors$` には流れない。
 - **Severity `reserved`**: `SerialErrorCode` オブジェクトには残るが、v4 実行時には到達しない。
 - **`dispose$` 後**はインスタンスを再利用しない — 必ず新規 session を作る（[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)）。

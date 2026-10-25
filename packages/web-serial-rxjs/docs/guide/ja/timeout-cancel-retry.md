@@ -216,7 +216,7 @@ const delayMs = baseDelayMs * 2 ** (retryCount - 1);
 
 ## ユーザーキャンセルは再試行しない
 
-ユーザーがポート選択を閉じると、Chromium の `DOMException` が `SerialErrorCode.OPERATION_CANCELLED` に正規化されます。一時障害ではなく、意図的な UI 操作として扱います。
+ユーザーがポート選択を閉じると、Chromium の `DOMException` が `SerialErrorCode.OPERATION_CANCELLED` に正規化されます。一時障害ではなく、意図的な UI 操作として扱います。`state$` は `'idle'` に戻り、`'error'` には入りません。`connect$` は `OPERATION_CANCELLED` で error 終了します。
 
 ```typescript
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
