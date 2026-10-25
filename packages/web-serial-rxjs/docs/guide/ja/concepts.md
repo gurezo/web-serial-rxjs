@@ -306,7 +306,7 @@ createSerialUi(session);
 
 ### `connect$(): Observable<void>`
 
-ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時は subscriber と `errors$` の両方にエラーを流します。状態遷移は `idle → connecting → connected`。**購読により実行されます。**
+ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時は subscriber と `errors$` の両方にエラーを流します。状態遷移は `idle → connecting → connected`。**購読により実行されます。** `'connecting'` 中にこの購読を解除すると、その試行は破棄されます。破棄された試行がすでにポートを開いていればそのポートは閉じ、次の `connect$()` とは `requestPort` も `open` も共有しません。
 
 ### `disconnect$(): Observable<void>`
 

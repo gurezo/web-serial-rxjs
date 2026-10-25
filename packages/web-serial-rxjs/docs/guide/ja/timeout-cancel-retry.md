@@ -110,6 +110,8 @@ destroy$.complete();
 
 > **subscription 解除 ≠ session dispose。** `takeUntil` や `unsubscribe()` で UI への配信を止めても、serial port や read pump は teardown されません。session 所有者の破棄時には `dispose$().subscribe()` も呼んでください — [Framework 別 session ライフサイクル](./framework-session-lifecycle.md) を参照。
 
+`connect$()` 自体を `'connecting'` 中に unsubscribe すると、その接続試行は破棄されます。開いてしまったポートは閉じ、次の `connect$()` とは競合しません。接続後の `receive$` などの unsubscribe は、上のとおりポートを閉じません。
+
 **React**
 
 ```typescript

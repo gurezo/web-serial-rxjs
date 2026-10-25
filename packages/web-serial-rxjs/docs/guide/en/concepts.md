@@ -306,7 +306,7 @@ This check is **not** a compatibility or official-support guarantee — see [Bro
 
 ### `connect$(): Observable<void>`
 
-Opens a user-selected serial port and starts the internal read pump. Completes on success; errors via `errors$` and the subscriber on failure. Transitions `idle → connecting → connected`. **Runs when subscribed.**
+Opens a user-selected serial port and starts the internal read pump. Completes on success; errors via `errors$` and the subscriber on failure. Transitions `idle → connecting → connected`. **Runs when subscribed.** Unsubscribing during `'connecting'` abandons that attempt. A port the abandoned attempt already opened is closed, and a later `connect$()` does not share its `requestPort` or `open`.
 
 ### `disconnect$(): Observable<void>`
 
