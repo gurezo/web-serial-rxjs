@@ -13,7 +13,7 @@ export const EXAMPLE_ENTRIES = [
     audience:
       'See how Angular apps wire SerialSession through an injectable Service.',
     highlights: [
-      'Angular Service wrapping createSerialSessionController',
+      'Angular Service wrapping createSerialSessionController (local helper, not on npm)',
       'connect$ / disconnect$ / dispose$ from a component',
       'terminalText$ for UI display; receive$ as raw stream',
       'send$ / state$ / errors$',
@@ -40,7 +40,7 @@ export const EXAMPLE_ENTRIES = [
     description: 'Svelte example app using SerialSession.',
     audience: 'See how Svelte apps expose SerialSession via a Svelte Store.',
     highlights: [
-      'Svelte Store wrapping createSerialSessionController',
+      'Svelte Store wrapping createSerialSessionController (local helper, not on npm)',
       'connect$ / disconnect$ / dispose$ from UI events',
       'terminalText$ for UI display; receive$ as raw stream',
       'send$ / state$ / errors$',
@@ -54,7 +54,7 @@ export const EXAMPLE_ENTRIES = [
     audience:
       'Minimal setup without TypeScript or a UI framework — same connect flow as Vanilla TS, in plain JavaScript.',
     highlights: [
-      'createSerialSessionController in plain JavaScript',
+      'createSerialSessionController in plain JavaScript (local helper, not on npm)',
       'connect$ / disconnect$ / dispose$',
       'terminalText$ for UI display; receive$ as raw stream',
       'send$ / state$ / errors$',
@@ -68,7 +68,7 @@ export const EXAMPLE_ENTRIES = [
     audience:
       'Best starting point: try the library API directly with TypeScript and RxJS (no UI framework).',
     highlights: [
-      'createSerialSessionController with TypeScript',
+      'createSerialSessionController with TypeScript (local helper, not on npm)',
       'connect$ / disconnect$ / dispose$',
       'terminalText$ for UI display; receive$ as raw stream',
       'send$ / state$ / errors$',
@@ -83,7 +83,7 @@ export const EXAMPLE_ENTRIES = [
     audience:
       'See how Vue 3 apps wire SerialSession with the Composition API (composable).',
     highlights: [
-      'Vue 3 composable wrapping createSerialSessionController',
+      'Vue 3 composable wrapping createSerialSessionController (local helper, not on npm)',
       'connect$ / disconnect$ / dispose$ from UI events',
       'terminalText$ for UI display; receive$ as raw stream',
       'send$ / state$ / errors$',
