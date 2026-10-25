@@ -438,7 +438,7 @@ v3 added `@deprecated` annotations only; **v4** still retains the runtime values
 | `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
 | `INVALID_CONNECTION_OPTIONS` | factory | throw | `ValidationErrorContext` | unit + integration |
 | `SESSION_DISPOSED` | `connect$` / `send$` after `dispose$` | fatal | `undefined` | integration |
-| `UNKNOWN` | unclassified dispose / disconnect fallback | fatal | `{ cause }` | unit |
+| `UNKNOWN` | unclassified dispose, disconnect, or post-open `connect$` failure | fatal | `{ cause }` | unit + integration |
 
 ### Removed in v4 Phase 2
 

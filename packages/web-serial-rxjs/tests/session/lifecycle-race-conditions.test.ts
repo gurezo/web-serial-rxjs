@@ -14,8 +14,10 @@ import {
   toArray,
 } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SerialError } from '../../src/errors/serial-error';
 import { SerialErrorCode } from '../../src/errors/serial-error-code';
 import { createSerialSession } from '../../src/session/create-serial-session';
+import * as readPumpModule from '../../src/session/read-pump';
 import {
   SerialSessionStatus,
   type SerialSessionState,
@@ -491,10 +493,10 @@ describe('lifecycle race conditions (#477)', () => {
       expect(okPort.close).not.toHaveBeenCalled();
     });
 
-    it('reports CONNECTION_LOST when readable is missing after open before pump starts', async () => {
+    it('rejects connect$ and closes the port when readable is missing after open', async () => {
       const { stream } = makeStream();
-      // After open succeeds, readable becomes unavailable so pump.start() fails
-      // before the session transitions to connected.
+      // After open succeeds, readable becomes unavailable so pump.start()
+      // reports CONNECTION_LOST before the session transitions to connected.
       const port: MockPort = {
         readable: stream,
         writable: null,
@@ -507,26 +509,28 @@ describe('lifecycle race conditions (#477)', () => {
       installNavigator(port);
 
       const session = createSerialSession();
-      const errors = firstValueFrom(session.errors$);
-      const connectSettled = firstValueFrom(session.connect$()).then(
-        () => 'next' as const,
-        () => 'error' as const,
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const connectResult = firstValueFrom(session.connect$()).then(
+        () => ({ kind: 'next' as const }),
+        (error: unknown) => ({ kind: 'error' as const, error }),
       );
 
-      const emitted = await errors;
-      expect(emitted.code).toBe(SerialErrorCode.CONNECTION_LOST);
+      const settled = await connectResult;
+      await flushMicrotasks();
 
-      // Expected current behavior (#477):
-      // - pump.start() reports CONNECTION_LOST while runtime is still Connecting,
-      //   so fatal teardown has no port reference and does not call close().
-      // - connect$ still attempts connected transition (ignored: error -> connected)
-      //   and completes its subscriber with next.
-      // - final state$ remains Error (not Connected).
-      expect(await connectSettled).toBe('next');
-      expect(await firstValueFrom(session.state$)).toEqual(
-        expect.objectContaining({ status: S.Error }),
-      );
-      expect(port.close).not.toHaveBeenCalled();
+      expect(emissions).toHaveLength(1);
+      const emitted = emissions[0];
+      expect(emitted?.code).toBe(SerialErrorCode.CONNECTION_LOST);
+      expect(settled).toEqual({ kind: 'error', error: emitted });
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: emitted,
+      });
+      expect(port.close).toHaveBeenCalledTimes(1);
+      errorsSub.unsubscribe();
     });
 
     it('rejects connect$ and send$ after dispose$ completes with SESSION_DISPOSED', async () => {
@@ -552,6 +556,234 @@ describe('lifecycle race conditions (#477)', () => {
       });
       // dispose must not start new port work afterward
       expect(port.close).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('connect$ failures after open (#625)', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    const trackUnhandled = (): {
+      unhandled: unknown[];
+      stop: () => void;
+    } => {
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown): void => {
+        unhandled.push(reason);
+      };
+      process.on('unhandledRejection', onUnhandled);
+      return {
+        unhandled,
+        stop: () => {
+          process.off('unhandledRejection', onUnhandled);
+        },
+      };
+    };
+
+    it('rejects connect$ once and closes the port when createReadPump throws', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+      vi.spyOn(readPumpModule, 'createReadPump').mockImplementation(() => {
+        throw new Error('createReadPump failed');
+      });
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const connectError = vi.fn();
+      const { unhandled, stop } = trackUnhandled();
+
+      try {
+        session.connect$().subscribe({ error: connectError });
+        await flushMicrotasks();
+
+        expect(unhandled).toEqual([]);
+        expect(connectError).toHaveBeenCalledTimes(1);
+        const reported = connectError.mock.calls[0]?.[0] as SerialError;
+        expect(reported).toBeInstanceOf(SerialError);
+        expect(reported.code).toBe(SerialErrorCode.UNKNOWN);
+        expect(emissions).toEqual([reported]);
+        expect(port.close).toHaveBeenCalledTimes(1);
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Error,
+          error: reported,
+        });
+      } finally {
+        stop();
+        errorsSub.unsubscribe();
+      }
+    });
+
+    it('stops the pump and closes the port when pump.start throws', async () => {
+      const { stream } = makeStream();
+      const order: string[] = [];
+      const port = makeMockPort(stream);
+      port.close.mockImplementation(async () => {
+        order.push('close');
+      });
+      installNavigator(port);
+
+      const stop = vi.fn(async () => {
+        order.push('stop');
+      });
+      vi.spyOn(readPumpModule, 'createReadPump').mockReturnValue({
+        start(): void {
+          throw new Error('pump start failed');
+        },
+        stop,
+        get isRunning() {
+          return false;
+        },
+      });
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const connectError = vi.fn();
+      const { unhandled, stop: stopTracking } = trackUnhandled();
+
+      try {
+        session.connect$().subscribe({ error: connectError });
+        await flushMicrotasks();
+
+        expect(unhandled).toEqual([]);
+        expect(connectError).toHaveBeenCalledTimes(1);
+        const reported = connectError.mock.calls[0]?.[0] as SerialError;
+        expect(reported).toBeInstanceOf(SerialError);
+        expect(reported.code).toBe(SerialErrorCode.UNKNOWN);
+        expect(emissions).toEqual([reported]);
+        expect(order).toEqual(['stop', 'close']);
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Error,
+          error: reported,
+        });
+      } finally {
+        stopTracking();
+        errorsSub.unsubscribe();
+      }
+    });
+
+    it('rejects connect$ and closes the port when getInfo throws during connect', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      port.getInfo.mockImplementation(() => {
+        throw new Error('getInfo failed');
+      });
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const connectError = vi.fn();
+      const { unhandled, stop } = trackUnhandled();
+
+      try {
+        session.connect$().subscribe({ error: connectError });
+        await flushMicrotasks();
+
+        expect(unhandled).toEqual([]);
+        expect(connectError).toHaveBeenCalledTimes(1);
+        const reported = connectError.mock.calls[0]?.[0] as SerialError;
+        expect(reported).toBeInstanceOf(SerialError);
+        expect(reported.code).toBe(SerialErrorCode.UNKNOWN);
+        expect(emissions).toEqual([reported]);
+        expect(port.close).toHaveBeenCalledTimes(1);
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Error,
+          error: reported,
+        });
+      } finally {
+        stop();
+        errorsSub.unsubscribe();
+      }
+    });
+
+    it('keeps idle and closes the port when connect$ is unsubscribed as createReadPump throws', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const connectNext = vi.fn();
+      const connectError = vi.fn();
+      let connectSub!: { unsubscribe: () => void };
+      vi.spyOn(readPumpModule, 'createReadPump').mockImplementation(() => {
+        connectSub.unsubscribe();
+        throw new Error('createReadPump failed');
+      });
+      const { unhandled, stop } = trackUnhandled();
+
+      try {
+        connectSub = session.connect$().subscribe({
+          next: connectNext,
+          error: connectError,
+        });
+        await flushMicrotasks();
+
+        expect(unhandled).toEqual([]);
+        expect(connectNext).not.toHaveBeenCalled();
+        expect(connectError).not.toHaveBeenCalled();
+        expect(emissions).toEqual([]);
+        expect(port.close).toHaveBeenCalledTimes(1);
+        expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+      } finally {
+        stop();
+        errorsSub.unsubscribe();
+      }
+    });
+
+    it('keeps disposed and closes the port when dispose$ runs as createReadPump throws', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const states: SerialSessionState[] = [];
+      const stateSub = session.state$.subscribe((state) => {
+        states.push(state);
+      });
+      const connectNext = vi.fn();
+      const connectError = vi.fn();
+      vi.spyOn(readPumpModule, 'createReadPump').mockImplementation(() => {
+        session.dispose$().subscribe({ error: () => undefined });
+        throw new Error('createReadPump failed');
+      });
+      const { unhandled, stop } = trackUnhandled();
+
+      try {
+        session.connect$().subscribe({
+          next: connectNext,
+          error: connectError,
+        });
+        await flushMicrotasks();
+
+        expect(unhandled).toEqual([]);
+        expect(connectNext).not.toHaveBeenCalled();
+        expect(connectError).not.toHaveBeenCalled();
+        expect(emissions).toEqual([]);
+        expect(port.close).toHaveBeenCalledTimes(1);
+        expect(states.at(-1)).toEqual({ status: S.Disposed });
+      } finally {
+        stop();
+        errorsSub.unsubscribe();
+        stateSub.unsubscribe();
+      }
     });
   });
 });

@@ -438,7 +438,7 @@ v3 で `@deprecated` 注記のみ付与し、**v4** でも runtime 値と export
 | `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 |
 | `INVALID_CONNECTION_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 + 統合 |
 | `SESSION_DISPOSED` | `dispose$` 後の `connect$` / `send$` | fatal | `undefined` | 統合 |
-| `UNKNOWN` | dispose / disconnect の分類不能 fallback | fatal | `{ cause }` | 単体 |
+| `UNKNOWN` | dispose / disconnect、および open 成功後の `connect$` の分類不能 fallback | fatal | `{ cause }` | 単体 + 統合 |
 
 ### v4 Phase 2 で削除
 

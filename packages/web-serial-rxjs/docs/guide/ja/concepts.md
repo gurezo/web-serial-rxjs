@@ -389,14 +389,14 @@ try {
 | `PORT_NOT_OPEN`          | 許可されない状態で `send$` または `disconnect$` を呼んだ           |
 | `READ_FAILED`            | 内部 read pump でエラーが発生                                      |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` が reject                      |
-| `CONNECTION_LOST`        | `port.close()` 失敗または接続中に切断                              |
+| `CONNECTION_LOST`        | `port.close()` 失敗、接続中の切断、または open 後 connected 前に `readable` が無い |
 | `INVALID_FILTER_OPTIONS` | `filters` に不正な値が含まれる（セッション生成時）                 | `ValidationErrorContext` |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` または `terminalBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
 | `SESSION_DISPOSED`       | `dispose$` 後に `connect$` または `send$` を呼んだ                 |
-| `UNKNOWN`                | dispose / disconnect の分類不能 fallback。`context.cause` を確認     |
+| `UNKNOWN`                | dispose / disconnect、および open 成功後の `connect$` の分類不能 fallback。`context.cause` を確認 |
 
 ### Reserved（v4 では emit されない・将来の major / v5 以降で削除予定）
 

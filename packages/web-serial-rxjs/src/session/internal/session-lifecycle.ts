@@ -191,6 +191,16 @@ export function createSessionLifecycle(
       };
       controller.transition(createConnectingRuntime(cancelInFlightConnect));
 
+      // Connecting runtime does not hold the port, so reportError's fatal
+      // teardown cannot close a port opened before the connected transition.
+      const releaseOpenedPort = async (
+        openedPump: ReadPump | null,
+        openedPort: SerialPort | null,
+      ): Promise<void> => {
+        await teardownPump(openedPump);
+        await closePortSafely(openedPort);
+      };
+
       const run = async (): Promise<void> => {
         let selectedPort: SerialPort | null = null;
         try {
@@ -242,44 +252,84 @@ export function createSessionLifecycle(
           return;
         }
 
-        if (cancelled || isDisposed()) {
+        if (!selectedPort || cancelled || isDisposed()) {
           await closePortSafely(selectedPort);
           return;
         }
 
-        receivePipeline.clearLineBuffer();
-        const pump = createReadPump(selectedPort, {
-          onChunk: receivePipeline.handleChunk,
-          onError: (pumpError) =>
-            reportError(pumpError, {
-              fallbackCode: SerialErrorCode.READ_FAILED,
-              messagePrefix: 'Read pump failed',
-            }),
-          onDone: () => {
-            if (controller.status !== SerialSessionStatus.Connected) {
-              return;
+        let pump: ReadPump | null = null;
+        let startupError: SerialError | null = null;
+        let transitioned = false;
+        try {
+          receivePipeline.clearLineBuffer();
+          pump = createReadPump(selectedPort, {
+            onChunk: receivePipeline.handleChunk,
+            onError: (pumpError) => {
+              const reported = reportError(pumpError, {
+                fallbackCode: SerialErrorCode.READ_FAILED,
+                messagePrefix: 'Read pump failed',
+              });
+              // A synchronous failure inside start() happens before connected.
+              // Later read errors run after transitioned is set and must not
+              // be delivered again on connect$.
+              if (!transitioned) {
+                startupError = reported;
+              }
+            },
+            onDone: () => {
+              if (controller.status !== SerialSessionStatus.Connected) {
+                return;
+              }
+              reportError(
+                new SerialError(
+                  SerialErrorCode.CONNECTION_LOST,
+                  'Read pump ended unexpectedly: stream closed while connected',
+                ),
+                {
+                  fallbackCode: SerialErrorCode.CONNECTION_LOST,
+                },
+              );
+            },
+          });
+          pump.start();
+          if (startupError || cancelled || isDisposed()) {
+            await releaseOpenedPort(pump, selectedPort);
+            if (!cancelled && !isDisposed() && startupError) {
+              subscriber.error(startupError);
             }
-            reportError(
-              new SerialError(
-                SerialErrorCode.CONNECTION_LOST,
-                'Read pump ended unexpectedly: stream closed while connected',
-              ),
-              {
-                fallbackCode: SerialErrorCode.CONNECTION_LOST,
-              },
-            );
-          },
-        });
-        pump.start();
-        sendQueue.clear();
-        if (isDisposed()) {
-          await teardownPump(pump);
-          await closePortSafely(selectedPort);
-          return;
+            return;
+          }
+
+          sendQueue.clear();
+          if (cancelled || isDisposed()) {
+            await releaseOpenedPort(pump, selectedPort);
+            return;
+          }
+
+          controller.transition(createConnectedRuntime(selectedPort, pump));
+          transitioned = true;
+          subscriber.next();
+          subscriber.complete();
+        } catch (error) {
+          if (!transitioned) {
+            await releaseOpenedPort(pump, selectedPort);
+          }
+          if (cancelled || isDisposed() || transitioned) {
+            return;
+          }
+          if (startupError) {
+            subscriber.error(startupError);
+            return;
+          }
+          const reported = reportError(error, {
+            fallbackCode: SerialErrorCode.UNKNOWN,
+            messagePrefix: 'Unexpected connect failure',
+          });
+          if (cancelled || isDisposed()) {
+            return;
+          }
+          subscriber.error(reported);
         }
-        controller.transition(createConnectedRuntime(selectedPort, pump));
-        subscriber.next();
-        subscriber.complete();
       };
 
       void run();

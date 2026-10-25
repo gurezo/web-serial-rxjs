@@ -389,14 +389,14 @@ Runtime emission coverage for the implemented codes is audited in [Migrating to 
 | `PORT_NOT_OPEN`          | `send$` or `disconnect$` called in an invalid session state.        |
 | `READ_FAILED`            | Internal read pump errored.                                         |
 | `WRITE_FAILED`           | `port.writable.getWriter().write()` rejected.                       |
-| `CONNECTION_LOST`        | `port.close()` failed or the port dropped mid-session.              |
+| `CONNECTION_LOST`        | `port.close()` failed, the port dropped mid-session, or `port.readable` is missing after open and before connected. |
 | `INVALID_FILTER_OPTIONS` | `filters` contained an invalid entry (at session creation).         | `ValidationErrorContext` |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | `terminalBuffer.maxLines` or `terminalBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. | `ValidationErrorContext` |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$`.                       |
-| `UNKNOWN`                | Unclassified dispose / disconnect fallback; see `context.cause`.    |
+| `UNKNOWN`                | Unclassified dispose, disconnect, or post-open `connect$` failure; see `context.cause`. |
 
 ### Reserved (not emitted in v4; scheduled for removal in a future major / v5+)
 
