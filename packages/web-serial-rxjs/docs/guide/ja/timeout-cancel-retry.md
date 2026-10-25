@@ -106,6 +106,8 @@ destroy$.complete();
 
 `send$` を待機中に `takeUntil` / `timeout` / unsubscribe すると、その送信はポートへ書かれません。すでに `writer.write()` が始まっている送信は、subscriber への通知だけが止まり、書き込み自体は中断されません。
 
+`disconnect$`、`dispose$`、および `'connected'` へ進む `connect$` も、まだ `writer.write()` が始まっていない `send$` を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、`errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待ちます。
+
 ## Component / Hook 破棄時のキャンセル
 
 フレームワーク非依存の型: `destroy$` Subject を持ち、cleanup で complete します。

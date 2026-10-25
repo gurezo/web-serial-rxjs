@@ -222,11 +222,19 @@ export interface SerialSession {
    * not aborted. `takeUntil` and `timeout` follow the same rule because
    * they unsubscribe.
    *
+   * `disconnect$`, `dispose$`, and a `connect$` that is about to become
+   * `'connected'` drop sends that have not started. Those subscribers error
+   * with {@link SerialErrorCode.PORT_NOT_OPEN}, and that failure is not
+   * emitted on {@link SerialSession.errors$}. The in-flight write is not
+   * aborted. The next `send$` waits until it settles, so the writes do not
+   * overlap.
+   *
    * @param data - Text (UTF-8 encoded) or raw bytes to send.
    * @returns An Observable that completes when the payload is written.
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/627 | Issue #627}
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/628 | Issue #628}
    */
   send$(data: SerialPayload): Observable<void>;
 }

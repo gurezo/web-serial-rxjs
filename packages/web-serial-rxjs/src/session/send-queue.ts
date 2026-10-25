@@ -10,6 +10,27 @@ import { Observable, defer } from 'rxjs';
 type SendQueueOperation<T> = () => Promise<T>;
 
 /**
+ * Raised when {@link SendQueue.clear} drops an operation that has not
+ * started. Session code maps this to a subscriber-only error so `errors$`
+ * does not observe a stale send.
+ *
+ * @internal
+ */
+export class SendQueueClearedError extends Error {
+  constructor() {
+    super('Send queue was cleared before the operation started');
+    this.name = 'SendQueueClearedError';
+  }
+}
+
+type PendingSend = {
+  generation: number;
+  cancelled: boolean;
+  failed: boolean;
+  fail: () => void;
+};
+
+/**
  * Internal helper returned by {@link createSendQueue}.
  *
  * The queue is intentionally not an RxJS operator because Issue #199 calls
@@ -31,10 +52,12 @@ export interface SendQueue {
    */
   enqueue<T>(operation: SendQueueOperation<T>): Observable<T>;
   /**
-   * Reset the internal promise chain. Existing in-flight operations keep
-   * running because we do not cancel native promises, but no newly
-   * enqueued work will wait for them. Use this when the session is torn
-   * down so a fresh `connect$` starts with a clean chain.
+   * Drop operations that have not started and advance the generation.
+   * In-flight operations keep running. Work enqueued afterwards waits for
+   * that in-flight operation, not for the dropped ones. Subscribers of
+   * dropped operations receive {@link SendQueueClearedError}. Use this when
+   * the session is torn down or a fresh `connect$` is about to become
+   * current.
    */
   clear(): void;
 }
@@ -55,36 +78,68 @@ export interface SendQueue {
  *   `complete` / `error` for that subscriber. The in-flight promise is
  *   still awaited, so the underlying write is not aborted. Later
  *   operations continue to respect call order.
+ * - `clear()` drops operations that have not started and errors their
+ *   subscribers with {@link SendQueueClearedError}. Work enqueued after
+ *   `clear()` waits for the in-flight operation so writes do not overlap.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/628 | Issue #628}
  */
 export function createSendQueue(): SendQueue {
   let chain: Promise<void> = Promise.resolve();
+  let epoch = 0;
+  // Settled promise for the operation that has already entered `operation()`.
+  // `clear()` waits on this so a new generation cannot overlap that write.
+  let inFlight: Promise<void> = Promise.resolve();
+  const pending = new Set<PendingSend>();
 
   return {
     enqueue<T>(operation: SendQueueOperation<T>): Observable<T> {
       return defer(
         () =>
           new Observable<T>((subscriber) => {
-            let cancelled = false;
+            const entry: PendingSend = {
+              generation: epoch,
+              cancelled: false,
+              failed: false,
+              fail: () => {
+                subscriber.error(new SendQueueClearedError());
+              },
+            };
+            pending.add(entry);
 
             const run = async (): Promise<void> => {
-              if (cancelled) {
+              pending.delete(entry);
+              if (
+                entry.cancelled ||
+                entry.failed ||
+                entry.generation !== epoch
+              ) {
                 return;
               }
-              try {
-                const value = await operation();
-                if (!cancelled) {
-                  subscriber.next(value);
-                  subscriber.complete();
+
+              const task = (async (): Promise<void> => {
+                try {
+                  const value = await operation();
+                  if (!entry.cancelled) {
+                    subscriber.next(value);
+                    subscriber.complete();
+                  }
+                } catch (error) {
+                  if (!entry.cancelled) {
+                    subscriber.error(error);
+                  }
                 }
-              } catch (error) {
-                if (!cancelled) {
-                  subscriber.error(error);
-                }
-              }
+              })();
+
+              const settled = task.then(
+                () => undefined,
+                () => undefined,
+              );
+              inFlight = settled;
+              await task;
             };
 
             const scheduled = chain.then(run, run);
@@ -94,13 +149,28 @@ export function createSendQueue(): SendQueue {
             );
 
             return () => {
-              cancelled = true;
+              entry.cancelled = true;
+              pending.delete(entry);
             };
           }),
       );
     },
     clear(): void {
-      chain = Promise.resolve();
+      epoch += 1;
+      chain = inFlight;
+      const stale = [...pending];
+      for (const entry of stale) {
+        pending.delete(entry);
+        if (entry.cancelled || entry.failed) {
+          continue;
+        }
+        entry.failed = true;
+        try {
+          entry.fail();
+        } catch {
+          // A subscriber that throws must not keep the rest of the queue.
+        }
+      }
     },
   };
 }

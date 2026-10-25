@@ -670,6 +670,96 @@ describe('lifecycle race conditions (#477)', () => {
       expect(writes2.map((buf) => new TextDecoder().decode(buf))).toEqual(['y']);
     });
 
+    it('drops a queued send on disconnect without overlapping the next session send', async () => {
+      const { stream } = makeStream();
+      const writeGate = createDeferred<void>();
+      let activeWrites = 0;
+      let maxActiveWrites = 0;
+      const trackWrite = async (waitFor?: Promise<void>): Promise<void> => {
+        activeWrites += 1;
+        maxActiveWrites = Math.max(maxActiveWrites, activeWrites);
+        try {
+          await waitFor;
+        } finally {
+          activeWrites -= 1;
+        }
+      };
+      const { stream: writable, writes } = makeRecordingWritable(() =>
+        trackWrite(writeGate.promise),
+      );
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const errors: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        errors.push(error);
+      });
+
+      const sendA = firstValueFrom(session.send$('a')).then(
+        () => undefined,
+        () => undefined,
+      );
+      await flushMicrotasks();
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual(['a']);
+
+      let queuedError: unknown;
+      let queuedErrored = false;
+      session.send$('b').subscribe({
+        error: (error: unknown) => {
+          queuedErrored = true;
+          queuedError = error;
+        },
+      });
+      await flushMicrotasks();
+
+      await expect(
+        firstValueFrom(session.disconnect$()),
+      ).resolves.toBeUndefined();
+      await flushMicrotasks();
+
+      expect(queuedErrored).toBe(true);
+      expect(queuedError).toBeInstanceOf(SerialError);
+      expect(queuedError).toMatchObject({
+        code: SerialErrorCode.PORT_NOT_OPEN,
+      });
+      expect(errors.map((error) => error.code)).not.toContain(
+        SerialErrorCode.PORT_NOT_OPEN,
+      );
+      expect(maxActiveWrites).toBe(1);
+
+      const { stream: stream2 } = makeStream();
+      const { stream: writable2, writes: writes2 } = makeRecordingWritable(() =>
+        trackWrite(),
+      );
+      const port2 = makeMockPort(stream2, undefined, writable2);
+      (
+        navigator.serial.requestPort as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(port2);
+
+      await firstValueFrom(session.connect$());
+      const sendC = firstValueFrom(session.send$('c'));
+      await flushMicrotasks();
+
+      expect(writes2).toHaveLength(0);
+      expect(maxActiveWrites).toBe(1);
+
+      writeGate.resolve();
+      await sendA;
+      await sendC;
+      await flushMicrotasks();
+
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual(['a']);
+      expect(writes2.map((buf) => new TextDecoder().decode(buf))).toEqual(['c']);
+      expect(maxActiveWrites).toBe(1);
+      expect(errors.map((error) => error.code)).not.toContain(
+        SerialErrorCode.PORT_NOT_OPEN,
+      );
+      errorsSub.unsubscribe();
+    });
+
     it('dispose$ during read-pump fatal error handling reaches disposed', async () => {
       const { stream, controller } = makeStream();
       const closeGate = createDeferred<void>();
