@@ -104,6 +104,8 @@ destroy$.complete();
 
 キャンセルはパイプラインを **完了**（または unsubscribe）させ、無限の `retry` に流し込まないでください。
 
+`send$` を待機中に `takeUntil` / `timeout` / unsubscribe すると、その送信はポートへ書かれません。すでに `writer.write()` が始まっている送信は、subscriber への通知だけが止まり、書き込み自体は中断されません。
+
 ## Component / Hook 破棄時のキャンセル
 
 フレームワーク非依存の型: `destroy$` Subject を持ち、cleanup で complete します。

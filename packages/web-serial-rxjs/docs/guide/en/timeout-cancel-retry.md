@@ -104,6 +104,8 @@ destroy$.complete();
 
 Cancellation should **complete** the pipeline (or unsubscribe), not feed into an infinite `retry`.
 
+Unsubscribing from a queued `send$` with `takeUntil`, `timeout`, or `unsubscribe()` skips that write. Once `writer.write()` has started, only subscriber notifications stop; the in-flight write is not aborted.
+
 ## Cancel on Component / Hook teardown
 
 Framework-agnostic pattern: own a `destroy$` Subject and complete it in cleanup.
