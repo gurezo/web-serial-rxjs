@@ -247,14 +247,10 @@ describe('createSerialSession', () => {
     });
 
     it('includes the same SerialError instance on error state and errors$', async () => {
-      const requestPort = vi
-        .fn()
-        .mockRejectedValue(new DOMException('user cancel', 'NotFoundError'));
-      Object.defineProperty(globalThis, 'navigator', {
-        configurable: true,
-        writable: true,
-        value: { serial: { requestPort, getPorts: vi.fn() } },
-      });
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      port.open.mockRejectedValueOnce(new Error('cannot open'));
+      installNavigator(port);
 
       const session = createSerialSession();
       const errorsPromise = firstValueFrom(session.errors$);
@@ -265,6 +261,7 @@ describe('createSerialSession', () => {
 
       const emitted = await errorsPromise;
       const state = await firstValueFrom(session.state$);
+      expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
       expect(state.status).toBe(S.Error);
       if (state.status === S.Error) {
         expect(state.error).toBe(emitted);
@@ -299,10 +296,13 @@ describe('createSerialSession', () => {
       );
     });
 
-    it('maps user-cancelled requestPort DOMException to OPERATION_CANCELLED and state -> error', async () => {
+    it('returns to idle when the user cancels the port picker', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
       const requestPort = vi
         .fn()
-        .mockRejectedValue(new DOMException('user cancel', 'NotFoundError'));
+        .mockRejectedValueOnce(new DOMException('user cancel', 'NotFoundError'))
+        .mockResolvedValueOnce(port);
       Object.defineProperty(globalThis, 'navigator', {
         configurable: true,
         writable: true,
@@ -310,19 +310,40 @@ describe('createSerialSession', () => {
       });
 
       const session = createSerialSession();
-      const errorsPromise = firstValueFrom(session.errors$);
-
-      await expect(firstValueFrom(session.connect$())).rejects.toBeInstanceOf(
-        SerialError,
+      const statesPromise = lastValueFrom(
+        session.state$.pipe(take(3), toArray()),
       );
-
-      const emitted = await errorsPromise;
-      expect(emitted).toBeInstanceOf(SerialError);
-      expect(emitted.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
-      expect(await firstValueFrom(session.state$)).toEqual({
-        status: S.Error,
-        error: emitted,
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
       });
+
+      let connectError: unknown;
+      try {
+        await firstValueFrom(session.connect$());
+      } catch (error) {
+        connectError = error;
+      }
+
+      const states = await statesPromise;
+      expect(states).toEqual([
+        { status: S.Idle },
+        { status: S.Connecting },
+        { status: S.Idle },
+      ]);
+      expect(connectError).toBeInstanceOf(SerialError);
+      expect(connectError).toMatchObject({
+        code: SerialErrorCode.OPERATION_CANCELLED,
+      });
+      expect(emissions).toEqual([connectError]);
+      expect(port.open).not.toHaveBeenCalled();
+      expect(port.close).not.toHaveBeenCalled();
+
+      await firstValueFrom(session.connect$());
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+      expect(port.open).toHaveBeenCalledTimes(1);
+      expect(port.close).not.toHaveBeenCalled();
+      subscription.unsubscribe();
     });
 
     it('maps generic port.open failure to PORT_OPEN_FAILED', async () => {
@@ -1281,6 +1302,9 @@ describe('createSerialSession', () => {
         if (emission) {
           expect(emission.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
         }
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Idle,
+        });
       } finally {
         subscription.unsubscribe();
       }
