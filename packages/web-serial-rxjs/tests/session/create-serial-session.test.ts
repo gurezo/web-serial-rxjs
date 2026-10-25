@@ -1173,6 +1173,45 @@ describe('createSerialSession', () => {
       ]);
     });
 
+    it('does not write a send$ unsubscribed while an earlier write is pending', async () => {
+      const { stream } = makeStream();
+      let releaseFirst!: () => void;
+      const firstPending = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+      let chunkIndex = 0;
+      const { stream: writable, writes } = makeRecordingWritable(async () => {
+        if (chunkIndex === 0) {
+          chunkIndex += 1;
+          await firstPending;
+        }
+      });
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const first = firstValueFrom(session.send$('a'));
+      await flushMicrotasks();
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual(['a']);
+
+      const queued = session.send$('b').subscribe();
+      queued.unsubscribe();
+
+      releaseFirst();
+      await first;
+      await flushMicrotasks();
+
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual(['a']);
+
+      await firstValueFrom(session.send$('c'));
+      expect(writes.map((buf) => new TextDecoder().decode(buf))).toEqual([
+        'a',
+        'c',
+      ]);
+    });
+
     it('maps writer failures to WRITE_FAILED and emits them on errors$', async () => {
       const { stream } = makeStream();
       const writable = new WritableStream<Uint8Array>({

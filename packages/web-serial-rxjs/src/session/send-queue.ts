@@ -49,9 +49,12 @@ export interface SendQueue {
  * - A failure in one operation does not poison the chain - the next
  *   operation still runs (the chain is advanced with a `.then(() => {},
  *   () => {})` safety tail).
- * - Unsubscribing before the operation resolves suppresses `next` /
- *   `complete` / `error` for that subscriber; the underlying promise is
- *   still awaited so later operations continue to respect call order.
+ * - Unsubscribing before `operation()` starts skips that operation. Later
+ *   operations still run in FIFO order.
+ * - Unsubscribing after `operation()` has started suppresses `next` /
+ *   `complete` / `error` for that subscriber. The in-flight promise is
+ *   still awaited, so the underlying write is not aborted. Later
+ *   operations continue to respect call order.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
@@ -68,6 +71,9 @@ export function createSendQueue(): SendQueue {
             let cancelled = false;
 
             const run = async (): Promise<void> => {
+              if (cancelled) {
+                return;
+              }
               try {
                 const value = await operation();
                 if (!cancelled) {

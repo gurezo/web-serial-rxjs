@@ -70,35 +70,82 @@ describe('createSendQueue', () => {
     await expect(succeeding).resolves.toBe('ok');
   });
 
-  it('suppresses next/complete when the subscriber unsubscribes before completion', async () => {
+  it('suppresses notifications when the subscriber unsubscribes after the operation starts', async () => {
     const queue = createSendQueue();
     const gate = createDeferred<void>();
+    const started = createDeferred<void>();
     let runCount = 0;
+    let finished = false;
     let nextFired = false;
     let completeFired = false;
+    let errorFired = false;
 
     const subscription = queue
       .enqueue(async () => {
         runCount += 1;
+        started.resolve();
         await gate.promise;
+        finished = true;
         return 'value';
       })
       .subscribe({
         next: () => {
           nextFired = true;
         },
+        error: () => {
+          errorFired = true;
+        },
         complete: () => {
           completeFired = true;
         },
       });
 
+    await started.promise;
+    expect(runCount).toBe(1);
     subscription.unsubscribe();
     gate.resolve();
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(runCount).toBe(1);
+    expect(finished).toBe(true);
     expect(nextFired).toBe(false);
     expect(completeFired).toBe(false);
+    expect(errorFired).toBe(false);
+  });
+
+  it('does not run a queued operation unsubscribed before it starts', async () => {
+    const queue = createSendQueue();
+    const gate = createDeferred<void>();
+    let queuedRan = false;
+    let laterRan = false;
+
+    const first = firstValueFrom(
+      queue.enqueue(async () => {
+        await gate.promise;
+      }),
+    );
+
+    await Promise.resolve();
+
+    const queued = queue
+      .enqueue(async () => {
+        queuedRan = true;
+      })
+      .subscribe();
+    queued.unsubscribe();
+
+    gate.resolve();
+    await first;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(queuedRan).toBe(false);
+
+    await firstValueFrom(
+      queue.enqueue(async () => {
+        laterRan = true;
+        return 'later';
+      }),
+    );
+    expect(laterRan).toBe(true);
   });
 
   it('clear() starts a fresh chain so later enqueues do not wait for prior pending work', async () => {

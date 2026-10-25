@@ -340,7 +340,7 @@ The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lo
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. `Uint8Array` values are written unchanged (binary **send** only — there is no matching binary receive API). Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.** See [Supported data](#supported-data-text--binary--charset).
+Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. `Uint8Array` values are written unchanged (binary **send** only — there is no matching binary receive API). Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. See [Supported data](#supported-data-text--binary--charset).
 
 ## SerialError / SerialErrorCode
 

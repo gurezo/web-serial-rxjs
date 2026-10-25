@@ -216,10 +216,17 @@ export interface SerialSession {
    * The returned Observable completes once the enqueued payload has been
    * flushed to the underlying writer.
    *
+   * Unsubscribing before that write starts skips the payload. Unsubscribing
+   * after `writer.write()` has started stops `next` / `error` / `complete`
+   * for that subscriber only. The in-flight write is still awaited and is
+   * not aborted. `takeUntil` and `timeout` follow the same rule because
+   * they unsubscribe.
+   *
    * @param data - Text (UTF-8 encoded) or raw bytes to send.
    * @returns An Observable that completes when the payload is written.
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/627 | Issue #627}
    */
   send$(data: SerialPayload): Observable<void>;
 }

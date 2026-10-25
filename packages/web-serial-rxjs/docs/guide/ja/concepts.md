@@ -340,7 +340,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。`Uint8Array` はそのまま書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。`Uint8Array` はそのまま書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ## SerialError / SerialErrorCode
 
