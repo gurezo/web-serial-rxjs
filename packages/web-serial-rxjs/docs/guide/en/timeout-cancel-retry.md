@@ -216,7 +216,7 @@ const delayMs = baseDelayMs * 2 ** (retryCount - 1);
 
 ## Do not retry user cancel
 
-When the user dismisses the port picker, Chromium surfaces a `DOMException` that this library maps to `SerialErrorCode.OPERATION_CANCELLED`. Treat it as intentional UI, not a flaky device:
+When the user dismisses the port picker, Chromium surfaces a `DOMException` that this library maps to `SerialErrorCode.OPERATION_CANCELLED`. Treat it as intentional UI, not a flaky device. `state$` returns to `'idle'` and does not enter `'error'`. `connect$` errors with `OPERATION_CANCELLED`.
 
 ```typescript
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';

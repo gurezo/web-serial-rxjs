@@ -206,15 +206,38 @@ export function createSessionLifecycle(
             flowControl: resolvedOptions.flowControl,
           } satisfies SerialOptions);
         } catch (error) {
+          const serialError = normalizeSerialError(error, {
+            fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
+            messagePrefix: 'Failed to open port',
+          });
+          // Picker cancel is NotFoundError before a port exists. reportError
+          // treats OPERATION_CANCELLED as fatal and would enter `error` plus
+          // teardown. Return to idle and keep the error on connect$ / errors$.
+          const userCancelledPicker =
+            !cancelled &&
+            selectedPort === null &&
+            serialError.code === SerialErrorCode.OPERATION_CANCELLED;
+
+          if (userCancelledPicker) {
+            if (!isDisposed()) {
+              errorsSubject.next(serialError);
+              if (controller.status === SerialSessionStatus.Connecting) {
+                controller.transition(createIdleRuntime());
+              }
+            }
+            subscriber.error(serialError);
+            return;
+          }
+
           if (selectedPort) {
             await closePortSafely(selectedPort);
           }
-          const serialError = reportError(error, {
+          const reported = reportError(serialError, {
             fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
             messagePrefix: 'Failed to open port',
           });
           if (!cancelled) {
-            subscriber.error(serialError);
+            subscriber.error(reported);
           }
           return;
         }

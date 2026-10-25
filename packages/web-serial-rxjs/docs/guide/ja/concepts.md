@@ -196,6 +196,8 @@ v3 では **`SerialSessionStatus`** が lifecycle 文字列定数（例: `Serial
 - `{ status: 'error', error }` — 致命的な失敗。`error` は `errors$` に流れた `SerialError` と同一インスタンス。
 - `{ status: 'disposed' }` — `dispose$` によりセッションが永久破棄された。
 
+ポート選択ダイアログのキャンセル（`OPERATION_CANCELLED`）は `'error'` に入らず、`'idle'` に戻ります。`connect$` は error 終了し、同じ `SerialError` が `errors$` に 1 回流れます。
+
 比較例:
 
 ```typescript
