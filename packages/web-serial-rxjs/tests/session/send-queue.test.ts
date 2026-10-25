@@ -101,6 +101,42 @@ describe('createSendQueue', () => {
     expect(completeFired).toBe(false);
   });
 
+  it('does not run a queued operation unsubscribed before it starts', async () => {
+    const queue = createSendQueue();
+    const gate = createDeferred<void>();
+    let queuedRan = false;
+    let laterRan = false;
+
+    const first = firstValueFrom(
+      queue.enqueue(async () => {
+        await gate.promise;
+      }),
+    );
+
+    await Promise.resolve();
+
+    const queued = queue
+      .enqueue(async () => {
+        queuedRan = true;
+      })
+      .subscribe();
+    queued.unsubscribe();
+
+    gate.resolve();
+    await first;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(queuedRan).toBe(false);
+
+    await firstValueFrom(
+      queue.enqueue(async () => {
+        laterRan = true;
+        return 'later';
+      }),
+    );
+    expect(laterRan).toBe(true);
+  });
+
   it('clear() starts a fresh chain so later enqueues do not wait for prior pending work', async () => {
     const queue = createSendQueue();
     const gate = createDeferred<void>();
