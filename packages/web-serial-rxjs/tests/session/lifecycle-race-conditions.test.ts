@@ -249,6 +249,248 @@ describe('lifecycle race conditions (#477)', () => {
       });
     });
 
+    it('does not apply a stale requestPort after unsubscribe and reconnect (#626)', async () => {
+      const { stream: staleStream } = makeStream();
+      const { stream: nextStream } = makeStream();
+      const stalePort = makeMockPort(staleStream);
+      const nextPort = makeMockPort(nextStream);
+      const staleGate = createDeferred<MockPort>();
+      const nextGate = createDeferred<MockPort>();
+      const requestPort = vi
+        .fn()
+        .mockReturnValueOnce(staleGate.promise)
+        .mockReturnValueOnce(nextGate.promise);
+      installNavigatorWithRequestPort(requestPort);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => {
+        unhandled.push(reason);
+      };
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        const staleNext = vi.fn();
+        const staleError = vi.fn();
+        const staleSub = session.connect$().subscribe({
+          next: staleNext,
+          error: staleError,
+        });
+        await firstValueFrom(
+          session.state$.pipe(
+            filter((s) => s.status === S.Connecting),
+            take(1),
+          ),
+        );
+
+        staleSub.unsubscribe();
+        expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+
+        const nextNext = vi.fn();
+        const nextError = vi.fn();
+        const nextSub = session.connect$().subscribe({
+          next: nextNext,
+          error: nextError,
+        });
+        await firstValueFrom(
+          session.state$.pipe(
+            filter((s) => s.status === S.Connecting),
+            take(1),
+          ),
+        );
+
+        expect(requestPort).toHaveBeenCalledTimes(1);
+
+        staleGate.resolve(stalePort);
+        await flushMicrotasks();
+
+        expect(stalePort.open).not.toHaveBeenCalled();
+        expect(stalePort.close).not.toHaveBeenCalled();
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Connecting,
+        });
+        expect(emissions).toEqual([]);
+        expect(staleNext).not.toHaveBeenCalled();
+        expect(staleError).not.toHaveBeenCalled();
+        expect(requestPort).toHaveBeenCalledTimes(2);
+
+        nextGate.resolve(nextPort);
+        await flushMicrotasks();
+
+        expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+        expect(nextPort.open).toHaveBeenCalledTimes(1);
+        expect(nextPort.close).not.toHaveBeenCalled();
+        expect(stalePort.open).not.toHaveBeenCalled();
+        expect(nextNext).toHaveBeenCalledTimes(1);
+        expect(nextError).not.toHaveBeenCalled();
+        expect(unhandled).toEqual([]);
+        nextSub.unsubscribe();
+      } finally {
+        process.off('unhandledRejection', onUnhandled);
+        errorsSub.unsubscribe();
+      }
+    });
+
+    it('ignores a stale requestPort rejection after reconnect (#626)', async () => {
+      const { stream } = makeStream();
+      const nextPort = makeMockPort(stream);
+      const staleGate = createDeferred<MockPort>();
+      const nextGate = createDeferred<MockPort>();
+      const requestPort = vi
+        .fn()
+        .mockReturnValueOnce(staleGate.promise)
+        .mockReturnValueOnce(nextGate.promise);
+      installNavigatorWithRequestPort(requestPort);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => {
+        unhandled.push(reason);
+      };
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        const staleSub = session.connect$().subscribe({
+          error: () => undefined,
+        });
+        await firstValueFrom(
+          session.state$.pipe(
+            filter((s) => s.status === S.Connecting),
+            take(1),
+          ),
+        );
+        staleSub.unsubscribe();
+
+        const nextNext = vi.fn();
+        const nextError = vi.fn();
+        const nextSub = session.connect$().subscribe({
+          next: nextNext,
+          error: nextError,
+        });
+        await firstValueFrom(
+          session.state$.pipe(
+            filter((s) => s.status === S.Connecting),
+            take(1),
+          ),
+        );
+
+        staleGate.reject(new Error('stale requestPort failed'));
+        await flushMicrotasks();
+
+        expect(emissions).toEqual([]);
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Connecting,
+        });
+        expect(nextError).not.toHaveBeenCalled();
+        expect(unhandled).toEqual([]);
+
+        nextGate.resolve(nextPort);
+        await flushMicrotasks();
+
+        expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+        expect(nextPort.open).toHaveBeenCalledTimes(1);
+        expect(nextNext).toHaveBeenCalledTimes(1);
+        expect(emissions).toEqual([]);
+        nextSub.unsubscribe();
+      } finally {
+        process.off('unhandledRejection', onUnhandled);
+        errorsSub.unsubscribe();
+      }
+    });
+
+    it('releases a port opened by a stale connect without overwriting the newer attempt (#626)', async () => {
+      const { stream: staleStream } = makeStream();
+      const { stream: nextStream } = makeStream();
+      const stalePort = makeMockPort(staleStream);
+      const nextPort = makeMockPort(nextStream);
+      const openGate = createDeferred<void>();
+      stalePort.open.mockReturnValue(openGate.promise);
+      const staleGate = createDeferred<MockPort>();
+      const nextGate = createDeferred<MockPort>();
+      const requestPort = vi
+        .fn()
+        .mockReturnValueOnce(staleGate.promise)
+        .mockReturnValueOnce(nextGate.promise);
+      installNavigatorWithRequestPort(requestPort);
+
+      const session = createSerialSession();
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => {
+        unhandled.push(reason);
+      };
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        const staleNext = vi.fn();
+        const staleSub = session.connect$().subscribe({
+          next: staleNext,
+          error: () => undefined,
+        });
+        await firstValueFrom(
+          session.state$.pipe(
+            filter((s) => s.status === S.Connecting),
+            take(1),
+          ),
+        );
+
+        staleGate.resolve(stalePort);
+        await flushMicrotasks();
+        expect(stalePort.open).toHaveBeenCalledTimes(1);
+
+        staleSub.unsubscribe();
+        expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+
+        const nextNext = vi.fn();
+        const nextSub = session.connect$().subscribe({
+          next: nextNext,
+          error: () => undefined,
+        });
+        await firstValueFrom(
+          session.state$.pipe(
+            filter((s) => s.status === S.Connecting),
+            take(1),
+          ),
+        );
+        expect(requestPort).toHaveBeenCalledTimes(1);
+
+        openGate.resolve();
+        await flushMicrotasks();
+
+        expect(stalePort.close).toHaveBeenCalledTimes(1);
+        expect(staleNext).not.toHaveBeenCalled();
+        expect(emissions).toEqual([]);
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Connecting,
+        });
+        expect(requestPort).toHaveBeenCalledTimes(2);
+        expect(unhandled).toEqual([]);
+
+        nextGate.resolve(nextPort);
+        await flushMicrotasks();
+
+        expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+        expect(nextPort.open).toHaveBeenCalledTimes(1);
+        expect(nextPort.close).not.toHaveBeenCalled();
+        expect(nextNext).toHaveBeenCalledTimes(1);
+        nextSub.unsubscribe();
+      } finally {
+        process.off('unhandledRejection', onUnhandled);
+        errorsSub.unsubscribe();
+      }
+    });
+
     it('completes concurrent disconnect$ calls while close is pending', async () => {
       const { stream } = makeStream();
       const closeGate = createDeferred<void>();
