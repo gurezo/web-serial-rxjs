@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { catchError, Observable, Subject, throwError } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
@@ -8,7 +8,7 @@ import { createPortTeardown } from './internal/port-teardown';
 import { createReceivePipeline } from './internal/receive-pipeline';
 import { createSessionErrorReporter } from './internal/session-error-reporter';
 import { createSessionLifecycle } from './internal/session-lifecycle';
-import { createSendQueue } from './send-queue';
+import { createSendQueue, SendQueueClearedError } from './send-queue';
 import type { SerialSession } from './serial-session';
 import {
   resolveSerialSessionOptions,
@@ -145,18 +145,33 @@ export function createSerialSession(
         });
       }
 
-      return sendQueue.enqueue(async () => {
-        const payload =
-          typeof data === 'string' ? textEncoder.encode(data) : data;
-        try {
-          await lifecycle.writeToPort(payload);
-        } catch (error) {
-          throw reportError(error, {
-            fallbackCode: SerialErrorCode.WRITE_FAILED,
-            messagePrefix: 'Failed to write data',
-          });
-        }
-      });
+      return sendQueue
+        .enqueue(async () => {
+          const payload =
+            typeof data === 'string' ? textEncoder.encode(data) : data;
+          try {
+            await lifecycle.writeToPort(payload);
+          } catch (error) {
+            throw reportError(error, {
+              fallbackCode: SerialErrorCode.WRITE_FAILED,
+              messagePrefix: 'Failed to write data',
+            });
+          }
+        })
+        .pipe(
+          catchError((error: unknown) => {
+            if (error instanceof SendQueueClearedError) {
+              return throwError(
+                () =>
+                  new SerialError(
+                    SerialErrorCode.PORT_NOT_OPEN,
+                    'Cannot send data while session is not connected',
+                  ),
+              );
+            }
+            return throwError(() => error);
+          }),
+        );
     },
     state$: controller.state$,
     errors$,
