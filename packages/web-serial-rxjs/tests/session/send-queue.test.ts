@@ -148,29 +148,114 @@ describe('createSendQueue', () => {
     expect(laterRan).toBe(true);
   });
 
-  it('clear() starts a fresh chain so later enqueues do not wait for prior pending work', async () => {
+  it('clear() rejects a queued operation immediately without running it', async () => {
     const queue = createSendQueue();
     const gate = createDeferred<void>();
-    let secondStartedAt: number | null = null;
-    let tick = 0;
+    let queuedRan = false;
+    let inFlightFinished = false;
+    let queuedErrored = false;
+    let queuedError: unknown;
 
-    queue.enqueue(async () => {
-      await gate.promise;
-    }).subscribe();
+    const first = firstValueFrom(
+      queue.enqueue(async () => {
+        await gate.promise;
+        inFlightFinished = true;
+      }),
+    );
 
+    await Promise.resolve();
+
+    queue
+      .enqueue(async () => {
+        queuedRan = true;
+      })
+      .subscribe({
+        error: (error: unknown) => {
+          queuedErrored = true;
+          queuedError = error;
+        },
+      });
+
+    await Promise.resolve();
+    queue.clear();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(queuedRan).toBe(false);
+    expect(inFlightFinished).toBe(false);
+    expect(queuedErrored).toBe(true);
+    expect(queuedError).toBeInstanceOf(Error);
+    expect((queuedError as Error).name).toBe('SendQueueClearedError');
+
+    gate.resolve();
+    await first;
+    expect(inFlightFinished).toBe(true);
+  });
+
+  it('clear() holds later enqueues until the in-flight operation settles', async () => {
+    const queue = createSendQueue();
+    const gate = createDeferred<void>();
+    let secondStarted = false;
+
+    const first = firstValueFrom(
+      queue.enqueue(async () => {
+        await gate.promise;
+        return 'first';
+      }),
+    );
+
+    await Promise.resolve();
     queue.clear();
 
     const second = firstValueFrom(
       queue.enqueue(async () => {
-        secondStartedAt = tick;
+        secondStarted = true;
         return 'second';
       }),
     );
 
-    tick = 1;
-    await second;
-    expect(secondStartedAt).toBe(1);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(secondStarted).toBe(false);
 
     gate.resolve();
+    await first;
+    await second;
+    expect(secondStarted).toBe(true);
+  });
+
+  it('does not error a queued operation unsubscribed before clear()', async () => {
+    const queue = createSendQueue();
+    const gate = createDeferred<void>();
+    let queuedRan = false;
+    let errorFired = false;
+
+    const first = firstValueFrom(
+      queue.enqueue(async () => {
+        await gate.promise;
+      }),
+    );
+
+    await Promise.resolve();
+
+    const queued = queue
+      .enqueue(async () => {
+        queuedRan = true;
+      })
+      .subscribe({
+        error: () => {
+          errorFired = true;
+        },
+      });
+    queued.unsubscribe();
+    queue.clear();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(queuedRan).toBe(false);
+    expect(errorFired).toBe(false);
+
+    gate.resolve();
+    await first;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(queuedRan).toBe(false);
+    expect(errorFired).toBe(false);
   });
 });
