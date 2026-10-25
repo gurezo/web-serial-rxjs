@@ -394,7 +394,8 @@ describe('createSerialSession', () => {
       await flushMicrotasks();
 
       expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
-      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(port.open).not.toHaveBeenCalled();
+      expect(port.close).not.toHaveBeenCalled();
     });
 
     it('returns to idle when disconnect$ is called before requestPort resolves', async () => {
@@ -427,7 +428,8 @@ describe('createSerialSession', () => {
       await flushMicrotasks();
 
       expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
-      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(port.open).not.toHaveBeenCalled();
+      expect(port.close).not.toHaveBeenCalled();
     });
 
     it('does not reach connected after disconnect$ while connect$ is still in flight', async () => {
@@ -464,7 +466,8 @@ describe('createSerialSession', () => {
 
       expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
       expect(connectComplete).not.toHaveBeenCalled();
-      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(port.open).not.toHaveBeenCalled();
+      expect(port.close).not.toHaveBeenCalled();
     });
 
     it('returns to idle when disconnect$ is called after open resolves but before connect completes', async () => {

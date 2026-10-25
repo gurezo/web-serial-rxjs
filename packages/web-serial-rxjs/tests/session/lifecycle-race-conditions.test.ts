@@ -197,10 +197,10 @@ describe('lifecycle race conditions (#477)', () => {
         requestPortGate.resolve(port);
         await flushMicrotasks();
 
-        // Expected: cancelled connect$ does not emit next; the Observable may
-        // remain open until unsubscribe (no late connected transition).
+        // Cancelled before open: do not open or close, and do not connect.
         expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
-        expect(port.close).toHaveBeenCalledTimes(1);
+        expect(port.open).not.toHaveBeenCalled();
+        expect(port.close).not.toHaveBeenCalled();
         expect(connectNext).not.toHaveBeenCalled();
         expect(connectError).not.toHaveBeenCalled();
         expect(unhandled).toEqual([]);
