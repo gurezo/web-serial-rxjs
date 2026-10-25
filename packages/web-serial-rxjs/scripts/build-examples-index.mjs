@@ -85,6 +85,12 @@ const mainContent = `<div class="col-content">
 <p style="margin:0.75rem 0 0;color:var(--color-text-secondary);">Stuck? See <a href="../guide/en/troubleshooting.html">Troubleshooting (English)</a> · <a href="../guide/ja/troubleshooting.html">トラブルシューティング（日本語）</a>.</p>
 </section>
 
+<section class="card" style="border:1px solid var(--color-border);border-radius:8px;padding:1.25rem;margin:1.25rem 0;background:var(--color-background-secondary, transparent);">
+<p style="margin:0 0 0.5rem;"><strong><code>createSerialSessionController</code> is not a public API</strong></p>
+<p style="margin:0 0 0.75rem;"><code>createSerialSessionController</code> is a helper inside <code>@gurezo/examples-shared</code>. It is <strong>not</strong> published on npm and is not part of <code>@gurezo/web-serial-rxjs</code>. See <a href="../guide/en/framework-session-lifecycle.html#framework-patterns">Framework session lifecycle</a>.</p>
+<p style="margin:0;"><code>createSerialSessionController</code>（<code>@gurezo/examples-shared</code> 内のヘルパー、npm 非公開）。<code>@gurezo/web-serial-rxjs</code> の公開 API ではありません。<a href="../guide/ja/framework-session-lifecycle.html">Framework 別 session ライフサイクル</a>を参照してください。</p>
+</section>
+
 <div class="cards" style="display:grid;gap:1rem;margin-top:2rem;">
 ${cards}
 </div>
