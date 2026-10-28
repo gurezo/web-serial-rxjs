@@ -794,6 +794,53 @@ describe('lifecycle race conditions (#477)', () => {
     });
   });
 
+  describe('fatal teardown before reconnect (#650)', () => {
+    it('does not open while fatal teardown close is still pending', async () => {
+      const { stream, controller } = makeStream();
+      const closeGate = createDeferred<void>();
+      const close = vi.fn().mockReturnValue(closeGate.promise);
+      const port = makeMockPort(stream, close);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+      expect(port.open).toHaveBeenCalledTimes(1);
+
+      const fatal = firstValueFrom(session.errors$);
+      controller.error(new Error('device unplugged'));
+      const emitted = await fatal;
+      expect(emitted.code).toBe(SerialErrorCode.READ_FAILED);
+      await flushMicrotasks();
+      expect(port.close).toHaveBeenCalledTimes(1);
+
+      let reconnectSettled = false;
+      const reconnect = firstValueFrom(session.connect$()).then(
+        () => {
+          reconnectSettled = true;
+        },
+        () => {
+          reconnectSettled = true;
+        },
+      );
+
+      try {
+        await flushMicrotasks();
+        expect(port.open).toHaveBeenCalledTimes(1);
+        const requestPort = navigator.serial.requestPort as ReturnType<
+          typeof vi.fn
+        >;
+        expect(requestPort).toHaveBeenCalledTimes(1);
+        expect(reconnectSettled).toBe(false);
+      } finally {
+        closeGate.resolve();
+      }
+
+      await reconnect;
+      expect(port.open).toHaveBeenCalledTimes(2);
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+    });
+  });
+
   describe('reconnect and post-dispose races', () => {
     it('allows connect$ again after a failed open', async () => {
       const { stream: stream1 } = makeStream();
