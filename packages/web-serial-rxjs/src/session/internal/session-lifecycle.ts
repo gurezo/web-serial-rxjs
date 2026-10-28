@@ -50,6 +50,11 @@ export interface SessionLifecycleDeps {
     options: NormalizeSerialErrorOptions,
   ) => SerialError;
   createDisposedError: () => SerialError;
+  /**
+   * In-flight fatal teardown, or `null` when the port is not being released.
+   * Awaited at the start of `connect$` so `open()` does not overlap `close()`.
+   */
+  whenFatalTeardownSettled: () => Promise<void> | null;
 }
 
 /**
@@ -84,6 +89,7 @@ export function createSessionLifecycle(
     teardownResources,
     reportError,
     createDisposedError,
+    whenFatalTeardownSettled,
   } = deps;
 
   const completeSubjects = (): void => {
@@ -149,8 +155,9 @@ export function createSessionLifecycle(
 
   // A connect attempt can outlive unsubscribe while `requestPort` is still
   // pending. The generation drops that attempt's results. The next attempt
-  // waits only while a previous one is still releasing its port, so a fresh
-  // connect keeps the same microtask timing as a single `requestPort`.
+  // waits while a previous connect is in flight, and while a fatal teardown
+  // is still closing the port. With neither pending, `requestPort` still
+  // starts in the subscribe turn.
   let connectGeneration = 0;
   let connectInFlight: Promise<void> | null = null;
 
@@ -225,6 +232,13 @@ export function createSessionLifecycle(
         let selectedPort: SerialPort | null = null;
         let opened = false;
         try {
+          const fatalTeardown = whenFatalTeardownSettled();
+          if (fatalTeardown) {
+            await fatalTeardown;
+            if (!isCurrentAttempt()) {
+              return;
+            }
+          }
           if (waitForPrevious) {
             await waitForPrevious;
           }

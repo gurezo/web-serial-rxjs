@@ -38,6 +38,7 @@ export interface SessionErrorReporterDeps {
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/401 | Issue #401}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/650 | Issue #650}
  */
 export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
   reportError: (
@@ -45,6 +46,15 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
     options: NormalizeSerialErrorOptions,
   ) => SerialError;
   createDisposedError: () => SerialError;
+  /**
+   * Fatal port teardown still running, or `null` when none is in flight.
+   *
+   * The promise always fulfills. A rejection is absorbed here so it does
+   * not become an unhandled rejection or another state transition.
+   * `null` lets `connect$` keep its current microtask timing when no
+   * teardown is pending.
+   */
+  whenFatalTeardownSettled: () => Promise<void> | null;
 } {
   const {
     controller,
@@ -60,6 +70,27 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
       'SerialSession has been disposed',
     );
 
+  // Consecutive fatals append to this chain instead of replacing it, so a
+  // later no-op teardown cannot drop the wait for an earlier `close()`.
+  // The slot is cleared only when that latest chain has settled.
+  let pendingTeardown: Promise<void> | null = null;
+
+  const trackFatalTeardown = (work: Promise<void>): void => {
+    const settled = work.then(
+      () => undefined,
+      () => undefined,
+    );
+    const chained = (pendingTeardown ?? Promise.resolve()).then(() => settled);
+    pendingTeardown = chained;
+    void chained.then(() => {
+      if (pendingTeardown === chained) {
+        pendingTeardown = null;
+      }
+    });
+  };
+
+  const whenFatalTeardownSettled = (): Promise<void> | null => pendingTeardown;
+
   /**
    * Single entry point for every error that should reach `errors$`.
    *
@@ -73,7 +104,8 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
    *    `error-severity.ts`).
    * 4. For fatal severities, drive `state$` to `'error'`, clear the send
    *    queue so pending writes fail fast, and tear down the live pump +
-   *    port off the hot path.
+   *    port. The teardown promise is retained so a later `connect$` waits
+   *    until `close()` settles. A rejection does not change state.
    *
    * Returning the normalised error keeps call sites terse: they can hand
    * the result straight to `subscriber.error(...)` without re-normalising.
@@ -90,13 +122,15 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
     if (resolveErrorSeverity(serialError.code) === 'fatal') {
       const resources = captureResources(controller.runtime);
       controller.transition(createErrorRuntime(serialError));
-      void teardownResources(resources, {
-        closeMode: 'safe',
-        cancelInFlightConnect: false,
-      });
+      trackFatalTeardown(
+        teardownResources(resources, {
+          closeMode: 'safe',
+          cancelInFlightConnect: false,
+        }),
+      );
     }
     return serialError;
   };
 
-  return { reportError, createDisposedError };
+  return { reportError, createDisposedError, whenFatalTeardownSettled };
 }
