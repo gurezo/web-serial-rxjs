@@ -470,11 +470,17 @@ describe('createSerialSession', () => {
       expect(port.close).not.toHaveBeenCalled();
     });
 
-    it('returns to idle when disconnect$ is called after open resolves but before connect completes', async () => {
+    it('completes disconnect$ after close when called while open is in flight (#651)', async () => {
       const { stream } = makeStream();
-      const port = makeMockPort(stream);
-
       let resolveOpen!: () => void;
+      let resolveClose!: () => void;
+      const close = vi.fn().mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveClose = resolve;
+          }),
+      );
+      const port = makeMockPort(stream, close);
       port.open.mockImplementation(
         () =>
           new Promise<void>((resolve) => {
@@ -493,14 +499,29 @@ describe('createSerialSession', () => {
         error: () => undefined,
       });
       await stateAfterConnecting;
+      await flushMicrotasks();
+      expect(port.open).toHaveBeenCalledTimes(1);
 
-      await firstValueFrom(session.disconnect$());
-      resolveOpen();
+      const disconnectNext = vi.fn();
+      session.disconnect$().subscribe({ next: disconnectNext });
       await flushMicrotasks();
 
       expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
-      expect(connectComplete).not.toHaveBeenCalled();
+      expect(disconnectNext).not.toHaveBeenCalled();
+      expect(port.close).not.toHaveBeenCalled();
+
+      resolveOpen();
+      await flushMicrotasks();
+
       expect(port.close).toHaveBeenCalledTimes(1);
+      expect(disconnectNext).not.toHaveBeenCalled();
+      expect(connectComplete).not.toHaveBeenCalled();
+
+      resolveClose();
+      await flushMicrotasks();
+
+      expect(disconnectNext).toHaveBeenCalledTimes(1);
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
     });
 
     it('completes immediately when disconnect$ is called while already disconnecting', async () => {

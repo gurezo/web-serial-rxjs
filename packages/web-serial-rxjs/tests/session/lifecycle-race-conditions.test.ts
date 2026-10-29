@@ -823,6 +823,128 @@ describe('lifecycle race conditions (#477)', () => {
     });
   });
 
+  describe('disconnect$ while connecting (#651)', () => {
+    it('completes disconnect$ after close and reconnects only after that close', async () => {
+      const { stream } = makeStream();
+      const openGate = createDeferred<void>();
+      const closeGate = createDeferred<void>();
+      const close = vi.fn().mockReturnValue(closeGate.promise);
+      const port = makeMockPort(stream, close);
+      port.open.mockReturnValue(openGate.promise);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const connectComplete = vi.fn();
+      const connectSub = session.connect$().subscribe({
+        next: connectComplete,
+        error: () => undefined,
+      });
+      await firstValueFrom(
+        session.state$.pipe(
+          filter((s) => s.status === S.Connecting),
+          take(1),
+        ),
+      );
+      await flushMicrotasks();
+      expect(port.open).toHaveBeenCalledTimes(1);
+
+      let disconnectSettled = false;
+      const disconnectDone = firstValueFrom(session.disconnect$()).then(() => {
+        disconnectSettled = true;
+      });
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+      expect(disconnectSettled).toBe(false);
+      expect(port.close).not.toHaveBeenCalled();
+
+      openGate.resolve();
+      await flushMicrotasks();
+      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(disconnectSettled).toBe(false);
+      expect(connectComplete).not.toHaveBeenCalled();
+
+      const requestPort = navigator.serial.requestPort as ReturnType<
+        typeof vi.fn
+      >;
+      expect(requestPort).toHaveBeenCalledTimes(1);
+
+      let reconnectSettled = false;
+      const reconnect = firstValueFrom(session.connect$()).then(
+        () => {
+          reconnectSettled = true;
+        },
+        () => {
+          reconnectSettled = true;
+        },
+      );
+      await flushMicrotasks();
+      expect(requestPort).toHaveBeenCalledTimes(1);
+      expect(port.open).toHaveBeenCalledTimes(1);
+      expect(reconnectSettled).toBe(false);
+      expect(disconnectSettled).toBe(false);
+
+      closeGate.resolve();
+      await disconnectDone;
+      expect(disconnectSettled).toBe(true);
+
+      await reconnect;
+      expect(requestPort).toHaveBeenCalledTimes(2);
+      expect(port.open).toHaveBeenCalledTimes(2);
+      expect(connectComplete).not.toHaveBeenCalled();
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+      connectSub.unsubscribe();
+    });
+
+    it('completes disconnect$ before requestPort resolves and opens the next port after', async () => {
+      const { stream: staleStream } = makeStream();
+      const { stream: nextStream } = makeStream();
+      const stalePort = makeMockPort(staleStream);
+      const nextPort = makeMockPort(nextStream);
+      const staleGate = createDeferred<MockPort>();
+      const nextGate = createDeferred<MockPort>();
+      const requestPort = vi
+        .fn()
+        .mockReturnValueOnce(staleGate.promise)
+        .mockReturnValueOnce(nextGate.promise);
+      installNavigatorWithRequestPort(requestPort);
+
+      const session = createSerialSession();
+      const staleSub = session.connect$().subscribe({
+        error: () => undefined,
+      });
+      await firstValueFrom(
+        session.state$.pipe(
+          filter((s) => s.status === S.Connecting),
+          take(1),
+        ),
+      );
+
+      await expect(firstValueFrom(session.disconnect$())).resolves.toBeUndefined();
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+      expect(requestPort).toHaveBeenCalledTimes(1);
+      expect(stalePort.open).not.toHaveBeenCalled();
+
+      const nextConnect = firstValueFrom(session.connect$());
+      await flushMicrotasks();
+      expect(requestPort).toHaveBeenCalledTimes(1);
+      expect(stalePort.open).not.toHaveBeenCalled();
+
+      staleGate.resolve(stalePort);
+      await flushMicrotasks();
+      expect(stalePort.open).not.toHaveBeenCalled();
+      expect(stalePort.close).not.toHaveBeenCalled();
+      expect(requestPort).toHaveBeenCalledTimes(2);
+
+      nextGate.resolve(nextPort);
+      await nextConnect;
+      expect(nextPort.open).toHaveBeenCalledTimes(1);
+      expect(stalePort.open).not.toHaveBeenCalled();
+      expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+      staleSub.unsubscribe();
+    });
+  });
+
   describe('fatal teardown before reconnect (#650)', () => {
     afterEach(() => {
       vi.restoreAllMocks();
