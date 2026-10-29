@@ -15,7 +15,7 @@
 | チャンク単位の文字列受信 | `receive$` — **デコード済みチャンク**（行未分割のテキスト。ワイヤ上の生バイトではない） |
 | 改行区切りの文字列受信 | `lines$` |
 | `\r` を含むターミナル表示 | `receive$` / `terminalText$` |
-| バイナリ送信 | `send$(Uint8Array)` — バイト列をそのまま送信 |
+| バイナリ送信 | `send$(Uint8Array)` — 購読時のバイト列を変換せず送信 |
 | バイナリ受信 | **非対応** — `receiveBytes$` や生 `Uint8Array` 受信ストリームなし |
 | UTF-8 以外の文字コード（例: Shift_JIS） | **非対応** |
 | 特定プロトコル（Modbus RTU / COBS / SLIP / 独自バイナリフレーム） | **利用側で実装** — デコード済みテキスト上で組み立てるか、本ライブラリ外で扱う |
@@ -26,7 +26,7 @@
 
 ドキュメントや JSDoc で言う **raw** は、**行未分割のデコード済みテキストチャンク**（`\r` などの制御文字を保持）を指します。ワイヤ上の生バイトや `Uint8Array` ストリームではありません。
 
-`send$(string)` は共有 `TextEncoder`（UTF-8）でエンコードします。`send$(Uint8Array)` はバイト列をそのまま書き込みます。受信は常に UTF-8 テキストのみのため、バイナリについては送受信が**非対称**です。
+`send$(string)` は購読時に共有 `TextEncoder`（UTF-8）でエンコードします。`send$(Uint8Array)` は購読時のバイト列をコピーし、変換せず書き込みます。購読後に呼び出し元バッファを書き換えても、キュー待ちの送信内容は変わりません。受信は常に UTF-8 テキストのみのため、バイナリについては送受信が**非対称**です。
 
 ### 将来のバイナリ受信（設計論点のみ）
 
@@ -340,7 +340,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-ペイロードを送信キューに投入します。文字列は共有 `TextEncoder` で UTF-8 エンコードされます。`Uint8Array` はそのまま書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。`disconnect$`、`dispose$`、および `'connected'` へ進む `connect$` は、まだ書き込みが始まっていない送信を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、この失敗は `errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待つため、書き込みは並行しません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+ペイロードを送信キューに投入します。送るバイト列は `send$()` を呼んだ時点ではなく、Observable を購読した時点で決まります。文字列はその時点で共有 `TextEncoder` により UTF-8 エンコードされます。`Uint8Array` は購読時にコピーされ、そのバイト列が変換されずに書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。購読後に呼び出し元バッファを書き換えても、キュー待ちの送信内容は変わりません。同じ Observable を複数購読した場合は、購読ごとにスナップショットします。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。`disconnect$`、`dispose$`、および `'connected'` へ進む `connect$` は、まだ書き込みが始まっていない送信を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、この失敗は `errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待つため、書き込みは並行しません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ## SerialError / SerialErrorCode
 

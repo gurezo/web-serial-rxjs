@@ -1,4 +1,4 @@
-import { catchError, Observable, Subject, throwError } from 'rxjs';
+import { catchError, defer, Observable, Subject, throwError } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
@@ -51,8 +51,9 @@ import {
  *   segments (`\n`, `\r\n`); a trailing line without a terminator is
  *   buffered. It is also not subscription-lazy relative to the pump.
  * - `send$` enqueues each payload on an internal FIFO queue so concurrent
- *   subscribers are written to the port in call order. String payloads are
- *   UTF-8 encoded through a shared `TextEncoder`.
+ *   subscribers are written to the port in call order. The bytes are fixed
+ *   when the Observable is subscribed: strings are UTF-8 encoded through a
+ *   shared `TextEncoder`, and `Uint8Array` values are copied.
  * - `errors$` multiplexes every {@link SerialError} produced by the
  *   session. Connect / read / close failures are treated as fatal and
  *   also drive `state$` to `'error'`; write failures are non-fatal and
@@ -147,10 +148,9 @@ export function createSerialSession(
         });
       }
 
-      return sendQueue
-        .enqueue(async () => {
-          const payload =
-            typeof data === 'string' ? textEncoder.encode(data) : data;
+      return defer(() => {
+        const payload = snapshotSerialPayload(data, textEncoder);
+        return sendQueue.enqueue(async () => {
           try {
             await lifecycle.writeToPort(payload);
           } catch (error) {
@@ -159,21 +159,21 @@ export function createSerialSession(
               messagePrefix: 'Failed to write data',
             });
           }
-        })
-        .pipe(
-          catchError((error: unknown) => {
-            if (error instanceof SendQueueClearedError) {
-              return throwError(
-                () =>
-                  new SerialError(
-                    SerialErrorCode.PORT_NOT_OPEN,
-                    'Cannot send data while session is not connected',
-                  ),
-              );
-            }
-            return throwError(() => error);
-          }),
-        );
+        });
+      }).pipe(
+        catchError((error: unknown) => {
+          if (error instanceof SendQueueClearedError) {
+            return throwError(
+              () =>
+                new SerialError(
+                  SerialErrorCode.PORT_NOT_OPEN,
+                  'Cannot send data while session is not connected',
+                ),
+            );
+          }
+          return throwError(() => error);
+        }),
+      );
     },
     state$: controller.state$,
     errors$,
@@ -181,4 +181,23 @@ export function createSerialSession(
     terminalText$,
     lines$,
   } satisfies SerialSession;
+}
+
+/**
+ * Freeze the bytes that {@link SerialSession.send$} will write.
+ *
+ * Runs when the cold Observable is subscribed, which is also when the send
+ * is enqueued. `Uint8Array` values are copied so a later mutation of the
+ * caller's buffer cannot change a queued write. Strings are immutable and
+ * are UTF-8 encoded at the same moment. `new Uint8Array(data)` copies the
+ * view (including `subarray`) into a new buffer. `Buffer#slice` is not used
+ * because it shares the underlying memory.
+ */
+function snapshotSerialPayload(
+  data: SerialPayload,
+  textEncoder: TextEncoder,
+): Uint8Array {
+  return typeof data === 'string'
+    ? textEncoder.encode(data)
+    : new Uint8Array(data);
 }

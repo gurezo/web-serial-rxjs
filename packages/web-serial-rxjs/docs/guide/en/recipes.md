@@ -105,7 +105,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 | | |
 | --- | --- |
-| **APIs** | `send$(Uint8Array)` — bytes written as-is |
+| **APIs** | `send$(Uint8Array)` — bytes copied at subscribe and written unchanged |
 | **Good for** | Sending opaque binary payloads the peer already understands |
 | **Not for** | Binary **receive** (no `receiveBytes$` / `Uint8Array` receive stream); Modbus RTU / COBS / SLIP as a library feature |
 | **Details** | [Supported data](./concepts.md#supported-data-text-binary--charset) · design notes [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) |
@@ -122,6 +122,8 @@ await firstValueFrom(session.connect$());
 const payload = new Uint8Array([0x01, 0x02, 0x03]);
 await firstValueFrom(session.send$(payload));
 ```
+
+The library copies the `Uint8Array` when `send$` is subscribed. Changing `payload` after that subscribe does not change the queued write. Changing it before subscribe does, because `send$` is cold.
 
 ---
 

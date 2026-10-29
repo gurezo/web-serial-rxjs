@@ -105,7 +105,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 | | |
 | --- | --- |
-| **対象 API** | `send$(Uint8Array)` — バイト列をそのまま書き込む |
+| **対象 API** | `send$(Uint8Array)` — 購読時のバイト列を変換せず書き込む |
 | **適している用途** | 対向が既に理解している不透明なバイナリペイロードの送信 |
 | **適していない用途** | バイナリ**受信**（`receiveBytes$` / `Uint8Array` 受信ストリームなし）；Modbus RTU / COBS / SLIP をライブラリ機能として期待すること |
 | **詳細** | [対応範囲](./concepts.md#対応範囲（テキスト-バイナリ--文字コード）) · 設計検討 [#545](https://github.com/gurezo/web-serial-rxjs/issues/545) |
@@ -122,6 +122,8 @@ await firstValueFrom(session.connect$());
 const payload = new Uint8Array([0x01, 0x02, 0x03]);
 await firstValueFrom(session.send$(payload));
 ```
+
+ライブラリは `send$` の購読時に `Uint8Array` をコピーします。その購読より後に `payload` を書き換えても、キュー待ちの送信内容は変わりません。購読前の書き換えは送られます。`send$` は cold です。
 
 ---
 

@@ -1,8 +1,10 @@
 /**
  * Payload accepted by {@link SerialSession.send$}.
  *
- * Strings are UTF-8 encoded via a shared `TextEncoder`; `Uint8Array` values
- * are passed through unchanged.
+ * Strings are UTF-8 encoded via a shared `TextEncoder` when `send$` is
+ * subscribed. `Uint8Array` values are copied at that same moment and written
+ * unchanged. Later mutation of the caller's buffer does not affect a queued
+ * write.
  */
 export type SerialPayload = string | Uint8Array;
 

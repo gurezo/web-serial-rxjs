@@ -144,6 +144,35 @@ const flushMicrotasks = async (): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, 0));
 };
 
+/**
+ * Connected session whose first `writer.write` stays pending until
+ * `releaseFirst`. Later `send$` subscriptions remain queued.
+ */
+const connectSessionWithHeldFirstWrite = async (): Promise<{
+  session: SerialSession;
+  writes: Uint8Array[];
+  releaseFirst: () => void;
+}> => {
+  const { stream } = makeStream();
+  let releaseFirst!: () => void;
+  const firstPending = new Promise<void>((resolve) => {
+    releaseFirst = resolve;
+  });
+  let chunkIndex = 0;
+  const { stream: writable, writes } = makeRecordingWritable(async () => {
+    if (chunkIndex === 0) {
+      chunkIndex += 1;
+      await firstPending;
+    }
+  });
+  const port = makeMockPort(stream, undefined, writable);
+  installNavigator(port);
+
+  const session = createSerialSession();
+  await firstValueFrom(session.connect$());
+  return { session, writes, releaseFirst };
+};
+
 describe('createSerialSession', () => {
   const originalNavigatorDescriptor = Object.getOwnPropertyDescriptor(
     globalThis,
@@ -1164,7 +1193,7 @@ describe('createSerialSession', () => {
       }
     });
 
-    it('passes raw Uint8Array payloads straight through to the writer', async () => {
+    it('writes a copy of the Uint8Array captured when send$ is subscribed', async () => {
       const { stream } = makeStream();
       const { stream: writable, writes } = makeRecordingWritable();
       const port = makeMockPort(stream, undefined, writable);
@@ -1180,7 +1209,126 @@ describe('createSerialSession', () => {
       const [write] = writes;
       expect(write).toBeDefined();
       if (write) {
+        expect(write).not.toBe(payload);
         expect(Array.from(write)).toEqual([0x01, 0x02, 0x03]);
+      }
+    });
+
+    it('keeps queued Uint8Array bytes from subscribe time when the caller mutates the buffer', async () => {
+      const { session, writes, releaseFirst } =
+        await connectSessionWithHeldFirstWrite();
+
+      const held = firstValueFrom(session.send$(new Uint8Array([0x0a])));
+      await flushMicrotasks();
+      expect(writes).toHaveLength(1);
+
+      const payload = new Uint8Array([0x01, 0x02, 0x03]);
+      const queued = firstValueFrom(session.send$(payload));
+      await flushMicrotasks();
+      expect(writes).toHaveLength(1);
+      payload[0] = 0xff;
+      payload[1] = 0xfe;
+      payload[2] = 0xfd;
+
+      releaseFirst();
+      await Promise.all([held, queued]);
+
+      expect(writes).toHaveLength(2);
+      const queuedWrite = writes[1];
+      expect(queuedWrite).toBeDefined();
+      if (queuedWrite) {
+        expect(queuedWrite).not.toBe(payload);
+        expect(Array.from(queuedWrite)).toEqual([0x01, 0x02, 0x03]);
+      }
+    });
+
+    it('snapshots each subscription of the same send$ Observable separately', async () => {
+      const { session, writes, releaseFirst } =
+        await connectSessionWithHeldFirstWrite();
+
+      const held = firstValueFrom(session.send$(new Uint8Array([0x0a])));
+      await flushMicrotasks();
+
+      const payload = new Uint8Array([0x01, 0x02, 0x03]);
+      const send = session.send$(payload);
+      const first = firstValueFrom(send);
+      await flushMicrotasks();
+      payload.set([0x09, 0x08, 0x07]);
+      const second = firstValueFrom(send);
+
+      releaseFirst();
+      await Promise.all([held, first, second]);
+
+      expect(writes.slice(1).map((buf) => Array.from(buf))).toEqual([
+        [0x01, 0x02, 0x03],
+        [0x09, 0x08, 0x07],
+      ]);
+    });
+
+    it('does not write a Uint8Array send$ unsubscribed while queued', async () => {
+      const { session, writes, releaseFirst } =
+        await connectSessionWithHeldFirstWrite();
+
+      const held = firstValueFrom(session.send$(new Uint8Array([0x0a])));
+      await flushMicrotasks();
+      expect(writes).toHaveLength(1);
+
+      const payload = new Uint8Array([0x01, 0x02, 0x03]);
+      const queued = session.send$(payload).subscribe();
+      await flushMicrotasks();
+      queued.unsubscribe();
+      payload.set([0xff, 0xfe, 0xfd]);
+
+      releaseFirst();
+      await held;
+      await flushMicrotasks();
+
+      expect(writes.map((buf) => Array.from(buf))).toEqual([[0x0a]]);
+    });
+
+    it('copies only the subarray range captured when send$ is subscribed', async () => {
+      const { session, writes, releaseFirst } =
+        await connectSessionWithHeldFirstWrite();
+
+      const held = firstValueFrom(session.send$(new Uint8Array([0x0a])));
+      await flushMicrotasks();
+
+      const raw = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+      const view = raw.subarray(1, 3);
+      const queued = firstValueFrom(session.send$(view));
+      await flushMicrotasks();
+      raw[1] = 0xaa;
+      raw[2] = 0xbb;
+
+      releaseFirst();
+      await Promise.all([held, queued]);
+
+      const queuedWrite = writes[1];
+      expect(queuedWrite).toBeDefined();
+      if (queuedWrite) {
+        expect(queuedWrite).not.toBe(view);
+        expect(Array.from(queuedWrite)).toEqual([0x01, 0x02]);
+      }
+    });
+
+    it('uses Uint8Array contents from subscribe time, not from the send$ call', async () => {
+      const { stream } = makeStream();
+      const { stream: writable, writes } = makeRecordingWritable();
+      const port = makeMockPort(stream, undefined, writable);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const payload = new Uint8Array([0x01, 0x02]);
+      const send = session.send$(payload);
+      payload[0] = 0x07;
+      await firstValueFrom(send);
+
+      const [write] = writes;
+      expect(write).toBeDefined();
+      if (write) {
+        expect(Array.from(write)).toEqual([0x07, 0x02]);
       }
     });
 
