@@ -310,7 +310,7 @@ Opens a user-selected serial port and starts the internal read pump. Completes o
 
 ### `disconnect$(): Observable<void>`
 
-Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` (closes any opened port) and returns to `'idle'` without reaching `'connected'`. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown. **Runs when subscribed.**
+Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` and returns to `'idle'` without reaching `'connected'`. If `open()` has started, it completes only after that port is released; `'idle'` may appear on `state$` first. If `open()` has not started, including while `requestPort()` is pending, it completes without waiting. The port picker is not dismissed by `disconnect$()`, and a port selected afterward is not opened. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown. **Runs when subscribed.**
 
 ### `dispose$(): Observable<void>`
 

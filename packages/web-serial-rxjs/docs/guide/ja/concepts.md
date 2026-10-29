@@ -310,7 +310,7 @@ createSerialUi(session);
 
 ### `disconnect$(): Observable<void>`
 
-read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose$` を使います。**購読により実行されます。**
+read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。`'connecting'` 中に呼ぶと、進行中の `connect$()` をキャンセルして `'connected'` にせず `'idle'` に戻します。`open()` 開始後は、そのポートの解放が終わってから complete します。`state$` の `'idle'` は complete より先に出ることがあります。`open()` 前（`requestPort()` 待ちを含む）は待たずに complete します。ポート選択ダイアログは `disconnect$()` では閉じず、その後に選ばれたポートは開きません。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose$` を使います。**購読により実行されます。**
 
 ### `dispose$(): Observable<void>`
 

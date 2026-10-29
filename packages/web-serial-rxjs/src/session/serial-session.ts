@@ -79,10 +79,17 @@ export interface SerialSession {
    *
    * Safe to call when already disconnected or while a disconnect is already
    * in progress. When called during `'connecting'`, cancels the in-flight
-   * `connect$()` (closes any opened port) and returns the session to
-   * `'idle'` without reaching `'connected'`.
+   * `connect$()` and returns the session to `'idle'` without reaching
+   * `'connected'`. If `open()` has already started, this Observable completes
+   * only after that attempt releases the port. `state$` may emit `'idle'`
+   * before that completion. If `open()` has not started, including while
+   * `requestPort()` is still pending, it completes without waiting.
+   * `requestPort()` cannot be aborted, so an open port picker stays up and a
+   * port chosen afterward is not opened.
    *
-   * @returns An Observable that completes when the port is fully closed.
+   * @returns An Observable that completes when an opened port is fully
+   *   closed. During `'connecting'`, before `open()` starts, it completes
+   *   once the attempt is cancelled.
    */
   disconnect$(): Observable<void>;
 

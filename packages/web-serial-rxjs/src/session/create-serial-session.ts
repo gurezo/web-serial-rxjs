@@ -38,7 +38,11 @@ import {
  *   and transitions `idle -> connecting -> connected`.
  * - `disconnect$()` stops the read pump, closes the port, and transitions
  *   `connected -> disconnecting -> idle`. When called during `connecting`,
- *   it cancels the in-flight `connect$()` and returns to `idle`.
+ *   it cancels the in-flight `connect$()` and returns to `idle`. If `open()`
+ *   has started, it completes after that port is released; `state$` may
+ *   already be `idle` before that completion. While `requestPort()` is still
+ *   pending it completes without waiting, because the picker cannot be
+ *   aborted and no port is held yet.
  * - `receive$` emits UTF-8 decoded text chunks pushed by the pump. It is
  *   **not** subscription-lazy - the pump is started by `connect$` and
  *   decoded text is multicast to all subscribers; late subscribers see only
