@@ -422,7 +422,7 @@ v3 added `@deprecated` annotations only; **v4** still retains the runtime values
 
 ### Implemented codes
 
-| Code | Emit location | fatal / non-fatal | `context` | Tests |
+| Code | Emit location | severity | `context` | Tests |
 | --- | --- | --- | --- | --- |
 | `BROWSER_NOT_SUPPORTED` | `connect$` (no `navigator.serial`) | non-fatal | `undefined` | integration |
 | `PORT_OPEN_FAILED` | `connect$` (`port.open()` reject) | fatal | `{ cause }` | integration |
@@ -432,7 +432,7 @@ v3 added `@deprecated` annotations only; **v4** still retains the runtime values
 | `WRITE_FAILED` | `send$` write failure | non-fatal | `{ cause }` | integration |
 | `CONNECTION_LOST` | `port.close()` failure / stream drop | fatal | `{ cause }` | integration |
 | `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `ValidationErrorContext` | unit + integration |
-| `OPERATION_CANCELLED` | `requestPort` dialog cancelled. `state$` returns to `idle` | non-fatal | `{ cause }` | integration |
+| `OPERATION_CANCELLED` | `requestPort` dialog cancelled. `state$` returns to `idle` | cancelled | `{ cause }` | integration |
 | `LINE_BUFFER_OVERFLOW` | `lines$` tail overflow | non-fatal | `{ maxChars }` | integration |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
 | `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | unit |
@@ -449,7 +449,7 @@ v3 added `@deprecated` annotations only; **v4** still retains the runtime values
 
 See [Migrating to v4 – Phase 2](./migration-v4.md#phase-2-api-removals).
 
-Fatal vs non-fatal follows `ERROR_SEVERITY` inside `reportError`. Factory-thrown `INVALID_*` codes bypass `reportError` and throw directly to the caller. Port-picker cancel (`OPERATION_CANCELLED`) also bypasses the fatal `reportError` transition: it is emitted on `errors$`, `connect$` errors, and `state$` returns to `idle`.
+Fatal, non-fatal, and cancelled severities follow `ERROR_SEVERITY` inside `reportError`. Factory-thrown `INVALID_*` codes bypass `reportError` and throw directly to the caller. Port-picker cancel (`OPERATION_CANCELLED`) uses severity `'cancelled'`: `reportError` emits it on `errors$`, `connect$` errors, and `state$` returns to `idle`. It does not enter `'error'`, and the port is not closed.
 
 ### Migration checklist
 

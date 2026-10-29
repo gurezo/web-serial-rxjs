@@ -10,7 +10,7 @@ describe('ERROR_SEVERITY', () => {
     [SerialErrorCode.READ_FAILED, 'fatal'],
     [SerialErrorCode.CONNECTION_LOST, 'fatal'],
     [SerialErrorCode.PORT_OPEN_FAILED, 'fatal'],
-    [SerialErrorCode.OPERATION_CANCELLED, 'fatal'],
+    [SerialErrorCode.OPERATION_CANCELLED, 'cancelled'],
     [SerialErrorCode.UNKNOWN, 'fatal'],
     [SerialErrorCode.LINE_BUFFER_OVERFLOW, 'non-fatal'],
     [SerialErrorCode.BROWSER_NOT_SUPPORTED, 'non-fatal'],

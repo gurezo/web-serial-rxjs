@@ -32,6 +32,16 @@ export interface NormalizeSerialErrorOptions {
    * message the caller has already chosen.
    */
   messagePrefix?: string;
+  /**
+   * When `true`, `DOMException('NotFoundError')` maps to
+   * {@link SerialErrorCode.OPERATION_CANCELLED}. Only the port-picker
+   * path sets this: `requestPort` rejected before a port exists.
+   *
+   * Defaults to `false`. `open` and read keep
+   * {@link NormalizeSerialErrorOptions.fallbackCode} so a `NotFoundError`
+   * outside the picker is not treated as a user cancel.
+   */
+  mapNotFoundError?: boolean;
 }
 
 const isDomExceptionWithName = (
@@ -41,6 +51,16 @@ const isDomExceptionWithName = (
   typeof DOMException !== 'undefined' &&
   error instanceof DOMException &&
   error.name === name;
+
+/**
+ * True when `error` is the `DOMException` Chromium raises for a dismissed
+ * port picker (`NotFoundError`).
+ *
+ * @internal
+ */
+export function isNotFoundDomException(error: unknown): error is DOMException {
+  return isDomExceptionWithName(error, 'NotFoundError');
+}
 
 /**
  * Normalize an arbitrary thrown value into a {@link SerialError}.
@@ -59,9 +79,12 @@ const isDomExceptionWithName = (
  *    already classified the failure (e.g. `PORT_NOT_OPEN` on a pre-open
  *    `send$`) is not rewrapped.
  * 2. `DOMException('NotFoundError')` is mapped to
- *    {@link SerialErrorCode.OPERATION_CANCELLED}. Chromium raises this
- *    when the user dismisses the `requestPort` dialog; it is a normal
- *    control-flow event, not a hard failure.
+ *    {@link SerialErrorCode.OPERATION_CANCELLED} only when
+ *    {@link NormalizeSerialErrorOptions.mapNotFoundError} is `true`.
+ *    Chromium raises this when the user dismisses the `requestPort`
+ *    dialog; that path is a normal control-flow event, not a hard failure.
+ *    Other phases leave the exception on
+ *    {@link NormalizeSerialErrorOptions.fallbackCode}.
  * 3. Any other value is wrapped as a {@link SerialError} with
  *    {@link NormalizeSerialErrorOptions.fallbackCode}, preserving the
  *    underlying failure on {@link SerialError.context | context.cause}.
@@ -69,6 +92,7 @@ const isDomExceptionWithName = (
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/199 | Issue #199}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/653 | Issue #653}
  */
 export function normalizeSerialError(
   error: unknown,
@@ -80,7 +104,7 @@ export function normalizeSerialError(
 
   const prefix = options.messagePrefix ?? DEFAULT_MESSAGE_PREFIX;
 
-  if (isDomExceptionWithName(error, 'NotFoundError')) {
+  if (options.mapNotFoundError === true && isNotFoundDomException(error)) {
     return new SerialError(
       SerialErrorCode.OPERATION_CANCELLED,
       'Port selection was cancelled by the user',

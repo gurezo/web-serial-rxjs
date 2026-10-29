@@ -2,14 +2,19 @@ import { SerialErrorCode } from '../../errors/serial-error-code';
 
 /**
  * Internal error classification used by the single `reportError` entry
- * point. `'fatal'` errors drive `state$` into `'error'` and tear down
- * the live session (pump stop + port close); `'non-fatal'` errors are
- * only multiplexed on `errors$` without mutating session state.
+ * point.
+ *
+ * - `'fatal'` drives `state$` into `'error'` and tears down the live
+ *   session (pump stop + port close).
+ * - `'non-fatal'` is multiplexed on `errors$` without mutating session state.
+ * - `'cancelled'` is multiplexed on `errors$` and, while `'connecting'`,
+ *   returns `state$` to `'idle'` without tearing down a port.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/399 | Issue #399}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/653 | Issue #653}
  */
-export type ReportErrorSeverity = 'fatal' | 'non-fatal';
+export type ReportErrorSeverity = 'fatal' | 'non-fatal' | 'cancelled';
 
 /**
  * Maps each {@link SerialErrorCode} that can surface through session
@@ -22,7 +27,7 @@ export const ERROR_SEVERITY = {
   [SerialErrorCode.READ_FAILED]: 'fatal',
   [SerialErrorCode.CONNECTION_LOST]: 'fatal',
   [SerialErrorCode.PORT_OPEN_FAILED]: 'fatal',
-  [SerialErrorCode.OPERATION_CANCELLED]: 'fatal',
+  [SerialErrorCode.OPERATION_CANCELLED]: 'cancelled',
   [SerialErrorCode.UNKNOWN]: 'fatal',
   [SerialErrorCode.LINE_BUFFER_OVERFLOW]: 'non-fatal',
   [SerialErrorCode.BROWSER_NOT_SUPPORTED]: 'non-fatal',

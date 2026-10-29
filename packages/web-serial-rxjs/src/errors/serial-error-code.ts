@@ -123,13 +123,15 @@ export const SerialErrorCode = {
   INVALID_FILTER_OPTIONS: 'INVALID_FILTER_OPTIONS',
 
   /**
-   * Operation was cancelled by the user.
+   * The user dismissed the port selection dialog.
    *
-   * This error occurs when the user cancels a port selection dialog or aborts
-   * an operation before it completes.
+   * Emitted when `requestPort()` rejects with `NotFoundError` before a port
+   * exists. `errors$` emits once, `connect$` errors, and `state$` returns to
+   * `'idle'` without entering `'error'`. Write failures and disconnect
+   * cancellation use other codes.
    *
    * **Suggested action**: This is a normal condition - no action required, but you may want
-   * to inform the user that the operation was cancelled.
+   * to inform the user that port selection was cancelled.
    */
   OPERATION_CANCELLED: 'OPERATION_CANCELLED',
 
