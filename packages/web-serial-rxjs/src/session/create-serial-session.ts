@@ -1,4 +1,4 @@
-import { catchError, Observable, Subject, throwError } from 'rxjs';
+import { catchError, defer, Observable, Subject, throwError } from 'rxjs';
 import { SerialError } from '../errors/serial-error';
 import { SerialErrorCode } from '../errors/serial-error-code';
 import { createTerminalBuffer } from '../terminal/create-terminal-buffer';
@@ -147,10 +147,9 @@ export function createSerialSession(
         });
       }
 
-      return sendQueue
-        .enqueue(async () => {
-          const payload =
-            typeof data === 'string' ? textEncoder.encode(data) : data;
+      return defer(() => {
+        const payload = snapshotSerialPayload(data, textEncoder);
+        return sendQueue.enqueue(async () => {
           try {
             await lifecycle.writeToPort(payload);
           } catch (error) {
@@ -159,21 +158,21 @@ export function createSerialSession(
               messagePrefix: 'Failed to write data',
             });
           }
-        })
-        .pipe(
-          catchError((error: unknown) => {
-            if (error instanceof SendQueueClearedError) {
-              return throwError(
-                () =>
-                  new SerialError(
-                    SerialErrorCode.PORT_NOT_OPEN,
-                    'Cannot send data while session is not connected',
-                  ),
-              );
-            }
-            return throwError(() => error);
-          }),
-        );
+        });
+      }).pipe(
+        catchError((error: unknown) => {
+          if (error instanceof SendQueueClearedError) {
+            return throwError(
+              () =>
+                new SerialError(
+                  SerialErrorCode.PORT_NOT_OPEN,
+                  'Cannot send data while session is not connected',
+                ),
+            );
+          }
+          return throwError(() => error);
+        }),
+      );
     },
     state$: controller.state$,
     errors$,
@@ -181,4 +180,23 @@ export function createSerialSession(
     terminalText$,
     lines$,
   } satisfies SerialSession;
+}
+
+/**
+ * Freeze the bytes that {@link SerialSession.send$} will write.
+ *
+ * Runs when the cold Observable is subscribed, which is also when the send
+ * is enqueued. `Uint8Array` values are copied so a later mutation of the
+ * caller's buffer cannot change a queued write. Strings are immutable and
+ * are UTF-8 encoded at the same moment. `new Uint8Array(data)` copies the
+ * view (including `subarray`) into a new buffer. `Buffer#slice` is not used
+ * because it shares the underlying memory.
+ */
+function snapshotSerialPayload(
+  data: SerialPayload,
+  textEncoder: TextEncoder,
+): Uint8Array {
+  return typeof data === 'string'
+    ? textEncoder.encode(data)
+    : new Uint8Array(data);
 }
