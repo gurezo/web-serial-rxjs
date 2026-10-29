@@ -104,7 +104,7 @@ git push origin v1.0.0
 | コマンド | 検証内容 |
 | --- | --- |
 | `pnpm exec nx run web-serial-rxjs:verify-dist` | ビルド直後の `dist/` 成果物と公開 API 表面 |
-| `pnpm exec nx run web-serial-rxjs:verify-pack` | npm tarball: 必須ファイル、禁止パス、`homepage` / `repository` / `bugs`、README の削除済み API 表記、主要リンク、ローカル消費者 import/型 smoke（`tools/package-smoke-test`） |
+| `pnpm exec nx run web-serial-rxjs:verify-pack` | npm tarball: 必須ファイル、禁止パス、`homepage` / `repository` / `bugs`、README の削除済み API 表記、主要リンク、ローカル消費者 import/型 smoke（`tools/package-smoke-test`）。smoke は `strict` かつ `skipLibCheck: false` で、`@types/w3c-web-serial` あり / なしの両方も検査します。 |
 
 npm レジストリへの公開**後**の自動 smoke は対象外です。各リリース後はステップ 5 の手動インストール確認を行ってください。
 

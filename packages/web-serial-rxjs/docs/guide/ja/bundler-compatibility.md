@@ -23,6 +23,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **Import** | パッケージの `exports` マップを解決できる環境で、`@gurezo/web-serial-rxjs` を ESM `import` してください。 |
 | **RxJS** | **peer dependency** として `rxjs` **`^7.8.0`** が必要です。アプリ側でインストールしてください（本パッケージには同梱しません）。 |
 | **TypeScript** | TypeScript は **peer dependency ではありません**。TypeScript 利用者向けに `.d.ts` を同梱します。製品として TypeScript の最低バージョンを保証はしません。公開宣言を消費できる TypeScript を使ってください。JavaScript 利用者は型を無視できます。 |
+| **Web Serial の型** | 公開宣言は `SerialPortInfo` や `SerialPortFilter` などのアンビエント名を使います。同梱していません。`skipLibCheck: false` のときは `@types/w3c-web-serial` をインストールし、コンパイルに含めてください。`compilerOptions.types` を指定している場合は、その配列に `w3c-web-serial` を追加します。これらの型の同梱は v5 で予定しています。 |
 
 ブラウザ / Web Serial の可否は別です — [ブラウザサポートと公式サポート方針](./browser-support.md) を参照してください。
 
