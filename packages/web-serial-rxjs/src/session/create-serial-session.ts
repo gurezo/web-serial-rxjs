@@ -88,23 +88,20 @@ export function createSerialSession(
 
   const receivePipeline = createReceivePipeline({ resolvedOptions });
 
-  const {
-    teardownPump,
-    closePortSafely,
-    captureResources,
-    teardownResources,
-  } = createPortTeardown({
-    receivePipeline,
-    sendQueue,
-  });
+  const { teardownPump, closePortSafely, captureResources, teardownResources } =
+    createPortTeardown({
+      receivePipeline,
+      sendQueue,
+    });
 
-  const { reportError, createDisposedError } = createSessionErrorReporter({
-    controller,
-    errorsSubject,
-    isDisposed,
-    captureResources,
-    teardownResources,
-  });
+  const { reportError, createDisposedError, whenFatalTeardownSettled } =
+    createSessionErrorReporter({
+      controller,
+      errorsSubject,
+      isDisposed,
+      captureResources,
+      teardownResources,
+    });
 
   // Route receive-side buffer overflows through the single reportError entry
   // point. The subscription completes when the pipeline completes on dispose.
@@ -125,6 +122,7 @@ export function createSerialSession(
     teardownResources,
     reportError,
     createDisposedError,
+    whenFatalTeardownSettled,
   });
 
   const { receive$, lines$ } = receivePipeline;
