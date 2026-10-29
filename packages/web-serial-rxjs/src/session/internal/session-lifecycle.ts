@@ -160,6 +160,11 @@ export function createSessionLifecycle(
   // starts in the subscribe turn.
   let connectGeneration = 0;
   let connectInFlight: Promise<void> | null = null;
+  // Set only in the turn that calls open(). disconnect$ waits on it so
+  // completion means the opened port has been released. requestPort() is
+  // excluded: it cannot be aborted and may never settle, and no port is
+  // held until open().
+  let pendingOpenRelease: Promise<void> | null = null;
 
   const connect$ = (): Observable<void> =>
     new Observable<void>((subscriber) => {
@@ -231,6 +236,8 @@ export function createSessionLifecycle(
       const run = async (): Promise<void> => {
         let selectedPort: SerialPort | null = null;
         let opened = false;
+        let openRelease: Promise<void> | undefined;
+        let resolveOpenRelease: (() => void) | undefined;
         try {
           const fatalTeardown = whenFatalTeardownSettled();
           if (fatalTeardown) {
@@ -253,6 +260,10 @@ export function createSessionLifecycle(
             if (!isCurrentAttempt()) {
               return;
             }
+            openRelease = new Promise<void>((resolve) => {
+              resolveOpenRelease = resolve;
+            });
+            pendingOpenRelease = openRelease;
             await selectedPort.open({
               baudRate: resolvedOptions.baudRate,
               dataBits: resolvedOptions.dataBits,
@@ -389,6 +400,10 @@ export function createSessionLifecycle(
             subscriber.error(reported);
           }
         } finally {
+          resolveOpenRelease?.();
+          if (openRelease && pendingOpenRelease === openRelease) {
+            pendingOpenRelease = null;
+          }
           settlePrevious();
           if (connectInFlight === finished) {
             connectInFlight = null;
@@ -424,9 +439,20 @@ export function createSessionLifecycle(
       }
 
       if (runtime.status === SerialSessionStatus.Connecting) {
+        const release = pendingOpenRelease;
         runtime.cancel();
-        subscriber.next();
-        subscriber.complete();
+        if (!release) {
+          subscriber.next();
+          subscriber.complete();
+          return;
+        }
+
+        const waitForRelease = async (): Promise<void> => {
+          await release;
+          subscriber.next();
+          subscriber.complete();
+        };
+        void waitForRelease();
         return;
       }
 
