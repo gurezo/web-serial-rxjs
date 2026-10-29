@@ -110,6 +110,10 @@ pnpm add rxjs
 
 The package is **ESM-only** (`import` via `package.json` `exports`).
 
+### Web Serial types
+
+Published `.d.ts` files refer to Web Serial globals such as `SerialPortInfo` and `SerialPortFilter`. Those types are not bundled. TypeScript projects that check dependencies with `skipLibCheck: false` must install `@types/w3c-web-serial` and include it in the compilation. If `compilerOptions.types` is set, add `w3c-web-serial` to that list. Bundling these types with the package is planned for v5.
+
 ## Where to go next
 
 - Full **API map** (features, `SerialSession` table, `SerialSessionState`, minimal example): [SerialSession overview](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md) ([日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md))

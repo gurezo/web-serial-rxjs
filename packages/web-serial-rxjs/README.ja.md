@@ -110,6 +110,10 @@ pnpm add rxjs
 
 パッケージは **ESM のみ**です（`package.json` の `exports` 経由の `import`）。
 
+### Web Serial の型
+
+公開 `.d.ts` は `SerialPortInfo` や `SerialPortFilter` などの Web Serial グローバル型を参照します。これらの型は同梱していません。`skipLibCheck: false` で依存の型を検査する TypeScript プロジェクトでは、`@types/w3c-web-serial` をインストールし、コンパイルに含めてください。`compilerOptions.types` を指定している場合は、その配列に `w3c-web-serial` を追加します。これらの型をパッケージへ同梱するのは v5 で予定しています。
+
 ## 次に読むもの
 
 - **API の全体像**（機能一覧、`SerialSession` 早見表、`SerialSessionState`、最小サンプル）: [SerialSession の概要](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/overview.md)（[English](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/overview.md)）
