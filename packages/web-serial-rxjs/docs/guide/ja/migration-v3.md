@@ -422,7 +422,7 @@ v3 で `@deprecated` 注記のみ付与し、**v4** でも runtime 値と export
 
 ### Implemented code 一覧
 
-| Code | emit 箇所 | fatal / non-fatal | `context` | テスト |
+| Code | emit 箇所 | severity | `context` | テスト |
 | --- | --- | --- | --- | --- |
 | `BROWSER_NOT_SUPPORTED` | `connect$`（`navigator.serial` なし） | non-fatal | `undefined` | 統合 |
 | `PORT_OPEN_FAILED` | `connect$`（`port.open()` reject） | fatal | `{ cause }` | 統合 |
@@ -432,7 +432,7 @@ v3 で `@deprecated` 注記のみ付与し、**v4** でも runtime 値と export
 | `WRITE_FAILED` | `send$` 書き込み失敗 | non-fatal | `{ cause }` | 統合 |
 | `CONNECTION_LOST` | `port.close()` 失敗 / ストリーム切断 | fatal | `{ cause }` | 統合 |
 | `INVALID_FILTER_OPTIONS` | `createSerialSession` factory | throw | `ValidationErrorContext` | 単体 + 統合 |
-| `OPERATION_CANCELLED` | `requestPort` ダイアログキャンセル。`state$` は `idle` | non-fatal | `{ cause }` | 統合 |
+| `OPERATION_CANCELLED` | `requestPort` ダイアログキャンセル。`state$` は `idle` | cancelled | `{ cause }` | 統合 |
 | `LINE_BUFFER_OVERFLOW` | `lines$` tail 超過 | non-fatal | `{ maxChars }` | 統合 |
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 |
 | `INVALID_LINE_BUFFER_OPTIONS` | factory | throw | `ValidationErrorContext` | 単体 |
@@ -449,7 +449,7 @@ v3 で `@deprecated` 注記のみ付与し、**v4** でも runtime 値と export
 
 詳細は [v4 への移行 – Phase 2](./migration-v4.md#phase-2-api-削除) を参照してください。
 
-fatal / non-fatal の判定は `reportError` 経由の `ERROR_SEVERITY` に従います。factory throw の `INVALID_*` code は `reportError` を通らず、呼び出し元に直接 throw されます。ポート選択キャンセル（`OPERATION_CANCELLED`）は `reportError` の fatal 遷移を通さず、`errors$` への通知と `connect$` の error 終了のあと `state$` を `idle` に戻します。
+fatal / non-fatal / cancelled の判定は `reportError` 経由の `ERROR_SEVERITY` に従います。factory throw の `INVALID_*` code は `reportError` を通らず、呼び出し元に直接 throw されます。ポート選択キャンセル（`OPERATION_CANCELLED`）の severity は `'cancelled'` です。`reportError` が `errors$` に通知し、`connect$` は error 終了し、`state$` は `idle` に戻ります。`'error'` には入らず、ポートは close しません。
 
 ### 移行チェックリスト
 
