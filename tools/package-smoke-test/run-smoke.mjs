@@ -1,6 +1,14 @@
 /**
  * Install a local npm tarball into this fixture and verify consumer ESM + types.
  * Invoked by packages/web-serial-rxjs/scripts/verify-pack.mjs.
+ *
+ * Strict cases (Issue #652) compile the same consumer with skipLibCheck off.
+ * typeRoots is pinned to this fixture so hoisted workspace @types are not used.
+ * Without @types/w3c-web-serial, unresolved SerialPortInfo / SerialPortFilter
+ * is the expected result. With that package, tsc must succeed.
+ * The types entry is "w3c-web-serial" (the folder under typeRoots). The
+ * library tsconfig's "@types/w3c-web-serial" only resolves via a node_modules
+ * walk, which custom typeRoots disables.
  */
 
 import { copyFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
@@ -16,12 +24,29 @@ const installedPackageRoot = join(
   smokeRoot,
   'node_modules/@gurezo/web-serial-rxjs',
 );
+const webSerialTypesPackage = '@types/w3c-web-serial@1.0.9';
+const unresolvedWebSerialNames = ['SerialPortInfo', 'SerialPortFilter'];
 
 function run(command, args) {
   execFileSync(command, args, {
     cwd: smokeRoot,
     stdio: 'inherit',
   });
+}
+
+function runCaptured(command, args) {
+  try {
+    const stdout = execFileSync(command, args, {
+      cwd: smokeRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return { ok: true, output: stdout ?? '' };
+  } catch (error) {
+    const stdout = typeof error.stdout === 'string' ? error.stdout : '';
+    const stderr = typeof error.stderr === 'string' ? error.stderr : '';
+    return { ok: false, output: `${stdout}${stderr}` };
+  }
 }
 
 function resolvePackageImportEntry() {
@@ -36,6 +61,60 @@ function resolvePackageImportEntry() {
     );
   }
   return join(installedPackageRoot, importPath.replace(/^\.\//, ''));
+}
+
+function assertStrictTypecheckWithoutWebSerialTypes() {
+  const result = runCaptured('npx', [
+    '--no-install',
+    'tsc',
+    '--noEmit',
+    '--pretty',
+    'false',
+    '-p',
+    'tsconfig.strict-without-web-serial-types.json',
+  ]);
+
+  if (result.ok) {
+    throw new Error(
+      'Strict consumer typecheck without @types/w3c-web-serial succeeded. Update the expected-failure assertion in tools/package-smoke-test/run-smoke.mjs.',
+    );
+  }
+
+  const missing = unresolvedWebSerialNames.filter(
+    (name) => !result.output.includes(name),
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Strict consumer typecheck without Web Serial types failed, but output did not mention ${missing.join(', ')}:\n${result.output}`,
+    );
+  }
+
+  console.log(
+    'Verified strict consumer typecheck without @types/w3c-web-serial reports unresolved SerialPortInfo and SerialPortFilter.',
+  );
+}
+
+function assertStrictTypecheckWithWebSerialTypes() {
+  run('npm', [
+    'install',
+    '--no-save',
+    '--no-fund',
+    '--no-audit',
+    '--ignore-scripts',
+    webSerialTypesPackage,
+  ]);
+  run('npx', [
+    '--no-install',
+    'tsc',
+    '--noEmit',
+    '--pretty',
+    'false',
+    '-p',
+    'tsconfig.strict-with-web-serial-types.json',
+  ]);
+  console.log(
+    'Verified strict consumer typecheck with @types/w3c-web-serial.',
+  );
 }
 
 export async function runPackageSmoke(tarballPath) {
@@ -71,6 +150,9 @@ export async function runPackageSmoke(tarballPath) {
     console.log(
       'Verified package smoke fixture: tsc --noEmit and ESM imports succeeded.',
     );
+
+    assertStrictTypecheckWithoutWebSerialTypes();
+    assertStrictTypecheckWithWebSerialTypes();
   } finally {
     rmSync(packedTgz, { force: true });
     rmSync(join(smokeRoot, 'node_modules'), { recursive: true, force: true });
