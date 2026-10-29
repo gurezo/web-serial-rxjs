@@ -210,9 +210,13 @@ export interface SerialSession {
    *
    * Writes are serialized internally through a FIFO send queue so that
    * concurrent `send$` calls are delivered to the port in **call order**,
-   * regardless of how quickly each subscriber runs. String payloads are
-   * UTF-8 encoded via a shared `TextEncoder`; `Uint8Array` payloads are
-   * passed through unchanged. Write failures are normalized into
+   * regardless of how quickly each subscriber runs. The bytes are fixed when
+   * the Observable is subscribed, not when `send$()` is called. String
+   * payloads are UTF-8 encoded via a shared `TextEncoder` at that moment.
+   * `Uint8Array` payloads are copied then and those bytes are written
+   * unchanged. Mutating the caller's buffer after subscribe does not change
+   * a queued write. Each subscription snapshots independently. Write
+   * failures are normalized into
    * {@link SerialError} with {@link SerialErrorCode.WRITE_FAILED} and
    * multiplexed on {@link SerialSession.errors$} in addition to being
    * surfaced to the subscriber, so a single subscription is enough to
@@ -236,12 +240,14 @@ export interface SerialSession {
    * aborted. The next `send$` waits until it settles, so the writes do not
    * overlap.
    *
-   * @param data - Text (UTF-8 encoded) or raw bytes to send.
+   * @param data - Text (UTF-8 encoded at subscribe) or raw bytes copied at
+   *   subscribe.
    * @returns An Observable that completes when the payload is written.
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/627 | Issue #627}
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/628 | Issue #628}
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/654 | Issue #654}
    */
   send$(data: SerialPayload): Observable<void>;
 }

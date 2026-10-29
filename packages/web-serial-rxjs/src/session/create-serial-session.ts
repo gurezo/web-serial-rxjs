@@ -51,8 +51,9 @@ import {
  *   segments (`\n`, `\r\n`); a trailing line without a terminator is
  *   buffered. It is also not subscription-lazy relative to the pump.
  * - `send$` enqueues each payload on an internal FIFO queue so concurrent
- *   subscribers are written to the port in call order. String payloads are
- *   UTF-8 encoded through a shared `TextEncoder`.
+ *   subscribers are written to the port in call order. The bytes are fixed
+ *   when the Observable is subscribed: strings are UTF-8 encoded through a
+ *   shared `TextEncoder`, and `Uint8Array` values are copied.
  * - `errors$` multiplexes every {@link SerialError} produced by the
  *   session. Connect / read / close failures are treated as fatal and
  *   also drive `state$` to `'error'`; write failures are non-fatal and

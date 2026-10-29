@@ -15,7 +15,7 @@ This library is **UTF-8 text–first**. The internal read pump always decodes wi
 | Chunk-oriented string receive | `receive$` — **decoded chunks** (unframed text, not wire bytes) |
 | Newline-delimited string receive | `lines$` |
 | Terminal display with `\r` redraws | `receive$` / `terminalText$` |
-| Binary send | `send$(Uint8Array)` — bytes passed through unchanged |
+| Binary send | `send$(Uint8Array)` — bytes copied at subscribe and written unchanged |
 | Binary receive | **Not supported** — no `receiveBytes$` or raw `Uint8Array` receive stream |
 | Non-UTF-8 charsets (e.g. Shift_JIS) | **Not supported** |
 | Protocol framing (Modbus RTU, COBS, SLIP, custom binary frames) | **Application-side** — compose on decoded text or handle outside this library |
@@ -26,7 +26,7 @@ To choose among `receive$`, `lines$`, and `terminalText$` by use case, see [Choo
 
 In docs and JSDoc, **raw** means **unframed decoded text chunks** (not line-split; `\r` and other control characters preserved). It does **not** mean raw wire bytes or a `Uint8Array` stream.
 
-`send$(string)` encodes with a shared `TextEncoder` (UTF-8). `send$(Uint8Array)` writes the bytes as-is. Receive remains UTF-8 text only, so send/receive are **asymmetric** for binary payloads.
+`send$(string)` encodes with a shared `TextEncoder` (UTF-8) when subscribed. `send$(Uint8Array)` copies those bytes at subscribe and writes them unchanged. A later mutation of the caller's buffer does not change a queued write. Receive remains UTF-8 text only, so send/receive are **asymmetric** for binary payloads.
 
 ### Future binary receive (design notes only)
 
@@ -340,7 +340,7 @@ The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lo
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-Enqueues a payload for ordered transmission. Strings are UTF-8 encoded through a shared `TextEncoder`. `Uint8Array` values are written unchanged (binary **send** only — there is no matching binary receive API). Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. `disconnect$`, `dispose$`, and a `connect$` that is about to become `'connected'` drop sends that have not started. Those subscribers error with `PORT_NOT_OPEN`, and that failure is not emitted on `errors$`. The in-flight write is not aborted; the next `send$` waits for it, so the writes do not overlap. See [Supported data](#supported-data-text--binary--charset).
+Enqueues a payload for ordered transmission. The bytes are fixed when the Observable is subscribed, not when `send$()` is called. Strings are UTF-8 encoded through a shared `TextEncoder` at that moment. `Uint8Array` values are copied then and written unchanged (binary **send** only — there is no matching binary receive API). Mutating the caller's buffer after subscribe does not change a queued write. Each subscription snapshots independently. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. `disconnect$`, `dispose$`, and a `connect$` that is about to become `'connected'` drop sends that have not started. Those subscribers error with `PORT_NOT_OPEN`, and that failure is not emitted on `errors$`. The in-flight write is not aborted; the next `send$` waits for it, so the writes do not overlap. See [Supported data](#supported-data-text--binary--charset).
 
 ## SerialError / SerialErrorCode
 
