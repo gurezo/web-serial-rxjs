@@ -9,6 +9,7 @@ import type {
   TeardownResourcesOptions,
 } from './port-teardown';
 import {
+  isNotFoundDomException,
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
 } from '../normalize-serial-error';
@@ -281,25 +282,16 @@ export function createSessionLifecycle(
               return;
             }
 
-            const serialError = normalizeSerialError(error, {
-              fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
-              messagePrefix: 'Failed to open port',
-            });
-            // Picker cancel is NotFoundError before a port exists. reportError
-            // treats OPERATION_CANCELLED as fatal and would enter `error` plus
-            // teardown. Return to idle and keep the error on connect$ / errors$.
-            const userCancelledPicker =
-              selectedPort === null &&
-              serialError.code === SerialErrorCode.OPERATION_CANCELLED;
-
-            if (userCancelledPicker) {
-              if (!isDisposed()) {
-                errorsSubject.next(serialError);
-                if (controller.status === SerialSessionStatus.Connecting) {
-                  controller.transition(createIdleRuntime());
-                }
+            // Picker cancel is NotFoundError before a port exists.
+            // `cancelled` severity emits on errors$ and returns to idle.
+            if (selectedPort === null && isNotFoundDomException(error)) {
+              const reported = reportError(error, {
+                fallbackCode: SerialErrorCode.OPERATION_CANCELLED,
+                mapNotFoundError: true,
+              });
+              if (isCurrentAttempt()) {
+                subscriber.error(reported);
               }
-              subscriber.error(serialError);
               return;
             }
 
@@ -309,7 +301,7 @@ export function createSessionLifecycle(
             if (!isCurrentAttempt()) {
               return;
             }
-            const reported = reportError(serialError, {
+            const reported = reportError(error, {
               fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
               messagePrefix: 'Failed to open port',
             });

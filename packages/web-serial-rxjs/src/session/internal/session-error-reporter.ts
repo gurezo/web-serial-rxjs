@@ -6,8 +6,10 @@ import {
   normalizeSerialError,
   type NormalizeSerialErrorOptions,
 } from '../normalize-serial-error';
+import { SerialSessionStatus } from '../serial-session-state';
 import {
   createErrorRuntime,
+  createIdleRuntime,
   type SessionRuntime,
   type SessionRuntimeController,
 } from '../session-runtime';
@@ -39,6 +41,7 @@ export interface SessionErrorReporterDeps {
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/401 | Issue #401}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/650 | Issue #650}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/653 | Issue #653}
  */
 export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
   reportError: (
@@ -106,6 +109,8 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
    *    queue so pending writes fail fast, and tear down the live pump +
    *    port. The teardown promise is retained so a later `connect$` waits
    *    until `close()` settles. A rejection does not change state.
+   * 5. For `'cancelled'`, return `state$` from `'connecting'` to `'idle'`
+   *    without teardown. Other statuses are left unchanged.
    *
    * Returning the normalised error keeps call sites terse: they can hand
    * the result straight to `subscriber.error(...)` without re-normalising.
@@ -119,7 +124,8 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
       return serialError;
     }
     errorsSubject.next(serialError);
-    if (resolveErrorSeverity(serialError.code) === 'fatal') {
+    const severity = resolveErrorSeverity(serialError.code);
+    if (severity === 'fatal') {
       const resources = captureResources(controller.runtime);
       controller.transition(createErrorRuntime(serialError));
       trackFatalTeardown(
@@ -128,6 +134,11 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
           cancelInFlightConnect: false,
         }),
       );
+    } else if (
+      severity === 'cancelled' &&
+      controller.status === SerialSessionStatus.Connecting
+    ) {
+      controller.transition(createIdleRuntime());
     }
     return serialError;
   };

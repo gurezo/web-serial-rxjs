@@ -364,6 +364,32 @@ describe('createSerialSession', () => {
       expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
     });
 
+    it('maps NotFoundError from port.open to PORT_OPEN_FAILED and enters error', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      port.open.mockRejectedValueOnce(
+        new DOMException('missing', 'NotFoundError'),
+      );
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const errorsPromise = firstValueFrom(session.errors$);
+
+      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+        name: 'SerialError',
+        code: SerialErrorCode.PORT_OPEN_FAILED,
+      });
+
+      const emitted = await errorsPromise;
+      expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+      expect(emitted.message).toBe('Failed to open port: missing');
+      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: emitted,
+      });
+    });
+
     it('returns to idle when connect$ is unsubscribed before requestPort resolves', async () => {
       const { stream } = makeStream();
       const port = makeMockPort(stream);

@@ -17,15 +17,29 @@ describe('normalizeSerialError', () => {
     expect(normalized).toBe(original);
   });
 
-  it('maps DOMException(NotFoundError) to OPERATION_CANCELLED', () => {
+  it('maps DOMException(NotFoundError) to OPERATION_CANCELLED when picker mapping is opted in', () => {
     const dom = new DOMException('No port selected', 'NotFoundError');
 
     const normalized = normalizeSerialError(dom, {
       fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
+      mapNotFoundError: true,
     });
 
     expect(normalized).toBeInstanceOf(SerialError);
     expect(normalized.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
+    expect(normalized.context).toEqual({ cause: dom });
+  });
+
+  it('keeps the fallback code for NotFoundError unless picker mapping is opted in', () => {
+    const dom = new DOMException('missing', 'NotFoundError');
+
+    const normalized = normalizeSerialError(dom, {
+      fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
+      messagePrefix: 'Failed to open port',
+    });
+
+    expect(normalized.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+    expect(normalized.message).toBe('Failed to open port: missing');
     expect(normalized.context).toEqual({ cause: dom });
   });
 
