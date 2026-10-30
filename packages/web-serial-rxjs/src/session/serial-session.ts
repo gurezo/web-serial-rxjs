@@ -96,18 +96,37 @@ export interface SerialSession {
   /**
    * Permanently tear down the session and complete all observables.
    *
+   * `dispose$` is cold. Calling it only returns an Observable. The port is
+   * not released, and {@link state$} does not move to `'disposed'`, until
+   * that Observable is subscribed. Subscribe with `subscribe()`, or wait
+   * with an API that subscribes, such as `firstValueFrom`.
+   *
    * Unlike {@link disconnect$}, which returns the session to `'idle'` for
-   * reuse, `dispose$` closes any active connection, releases internal
-   * resources, emits `'disposed'` on {@link state$}, and completes every
-   * session stream. After disposal, {@link connect$} and {@link send$}
+   * reuse, a subscribed `dispose$` closes any active connection, releases
+   * internal resources, emits `'disposed'` on {@link state$}, and completes
+   * every session stream. After disposal, {@link connect$} and {@link send$}
    * fail with {@link SerialErrorCode.SESSION_DISPOSED}; create a new
    * session instead of reusing this instance.
    *
-   * Safe to call multiple times; subsequent calls complete immediately.
+   * Safe to subscribe more than once; later subscriptions complete
+   * immediately.
    *
    * @returns An Observable that completes when disposal has finished.
+   *   Nothing runs until it is subscribed.
+   *
+   * @example
+   * ```typescript
+   * // Does nothing: no port release and no 'disposed' transition.
+   * session.dispose$();
+   *
+   * // Tears the session down.
+   * session.dispose$().subscribe({
+   *   error: (error) => console.error(error),
+   * });
+   * ```
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/373 | Issue #373}
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/655 | Issue #655}
    */
   dispose$(): Observable<void>;
 
