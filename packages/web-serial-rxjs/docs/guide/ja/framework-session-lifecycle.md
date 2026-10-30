@@ -6,7 +6,7 @@ Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [
 
 ## disconnect$() と dispose$() の使い分け
 
-どちらも **cold Observable** です — 購読したときだけ実行されます。[クイックスタート – 命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行（cold-observable）) を参照してください。
+どちらも **cold Observable** です — 購読したときだけ実行されます。`dispose$()` を呼ぶだけではポートは解放されず、`'disposed'` にも遷移しません。[クイックスタート – 命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行（cold-observable）) と [subscribe しない cleanup](#dispose-without-subscribe) を参照してください。
 
 | メソッド | ポート / read pump | セッション再利用 | 全 Observable | 典型的なトリガー |
 | --- | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ function teardownSession(session: SerialSession, uiSub: Subscription): void {
 | `disconnect$()` | port と read pump | セッション再利用可 |
 | `dispose$()` | port、pump、全 session Observable | セッション終端 |
 
-stream から unsubscribe 済みでも、session 所有者の破棄時には必ず `dispose$()` を呼んでください。
+stream から unsubscribe 済みでも、session 所有者の破棄時には必ず `dispose$().subscribe()` を呼んでください。
 
 ## Framework 別パターン
 
@@ -170,10 +170,21 @@ function useSerialSession() {
 }
 ```
 
+<a id="dispose-without-subscribe"></a>
+
+`useEffect` の cleanup で `dispose$()` を呼ぶだけでは破棄されません。
+
+```typescript
+return () => {
+  // NG: Observable を返すだけで、ポートも状態も変わらない
+  session.dispose$();
+};
+```
+
 **注意:**
 
 - session を `useRef` に保持し、React StrictMode の二重マウント / アンマウントで effect setup と cleanup の間にインスタンスを失わないようにする。
-- 複合 `Subscription` を **`dispose$()` の前に** unsubscribe する。
+- 複合 `Subscription` を **`dispose$().subscribe()` の前に** unsubscribe する。
 - イベントハンドラからの `connect$()` / `disconnect$()` / `send$()` は one-shot `.subscribe()` — 追加 cleanup 不要。
 
 **Live example:** [React example app](../../examples/react/)
@@ -264,7 +275,7 @@ export function useSerialSession() {
 **注意:**
 
 - `readable` store は stop 関数で auto-unsubscribe できるが、`terminalText$` など長寿命の直接 subscription は `onDestroy` で明示 cleanup が必要。
-- store factory を呼んだ component 破棄時に `onDestroy` で `dispose$()` を呼ぶ。
+- store factory を呼んだ component 破棄時に `onDestroy` で `dispose$().subscribe()` を呼ぶ。
 
 **Live example:** [Svelte example app](../../examples/svelte/)
 
@@ -315,9 +326,9 @@ export class App {
 | --- | --- |
 | ユーザーが Disconnect をクリック? | `disconnect$().subscribe()` — session は再利用可 |
 | Component / ルートがアンマウント? | UI stream を unsubscribe してから `dispose$().subscribe()` |
-| ボーレート変更（新 session）? | 旧 session で `dispose$()`、その後 `createSerialSession()` |
+| ボーレート変更（新 session）? | 旧 session で `dispose$().subscribe()`、その後 `createSerialSession()` |
 | `dispose$` 後? | **新しい** session を作成 — 旧 session では再接続しない |
-| `takeUntil(destroy$)` だけで十分? | **いいえ** — session 所有者 teardown 時に `dispose$()` も呼ぶ |
+| `takeUntil(destroy$)` だけで十分? | **いいえ** — session 所有者 teardown 時に `dispose$().subscribe()` も呼ぶ |
 
 ## Example apps
 
