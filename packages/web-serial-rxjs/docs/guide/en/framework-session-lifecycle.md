@@ -6,7 +6,7 @@ Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [
 
 ## disconnect$() vs dispose$()
 
-Both methods are **cold Observables** — they run only when subscribed. See [Quick Start – Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables).
+Both methods are **cold Observables** — they run only when subscribed. Calling `dispose$()` alone does not release the port or move the session to `'disposed'`. See [Quick Start – Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables) and [cleanup that forgets to subscribe](#dispose-without-subscribe).
 
 | Method | Port / read pump | Session reuse | All observables | Typical trigger |
 | --- | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ That is **not** a substitute for `dispose$()`:
 | `disconnect$()` | Port and read pump | Session reusable |
 | `dispose$()` | Port, pump, and all session observables | Session terminal |
 
-Always call `dispose$()` when the session owner is destroyed, even if you already unsubscribed from streams.
+Always call `dispose$().subscribe()` when the session owner is destroyed, even if you already unsubscribed from streams.
 
 ## Framework patterns
 
@@ -170,10 +170,21 @@ function useSerialSession() {
 }
 ```
 
+<a id="dispose-without-subscribe"></a>
+
+Calling `dispose$()` in a `useEffect` cleanup does not tear the session down.
+
+```typescript
+return () => {
+  // NG: returns an Observable and changes neither the port nor the state
+  session.dispose$();
+};
+```
+
 **Notes:**
 
 - Store the session in a `useRef` so React StrictMode's double mount/unmount cycle does not lose the instance between effect setup and cleanup.
-- Unsubscribe the composite `Subscription` **before** calling `dispose$()`.
+- Unsubscribe the composite `Subscription` **before** `dispose$().subscribe()`.
 - `connect$()` / `disconnect$()` / `send$()` from event handlers are one-shot `.subscribe()` calls — no extra cleanup needed.
 
 **Live example:** [React example app](../../examples/react/)
@@ -264,7 +275,7 @@ export function useSerialSession() {
 **Notes:**
 
 - `readable` stores can auto-unsubscribe via their stop function, but long-lived direct subscriptions (for example `terminalText$`) still need explicit cleanup in `onDestroy`.
-- Call `dispose$()` in `onDestroy` when the component that invoked the store factory is destroyed.
+- Call `dispose$().subscribe()` in `onDestroy` when the component that invoked the store factory is destroyed.
 
 **Live example:** [Svelte example app](../../examples/svelte/)
 
@@ -315,9 +326,9 @@ export class App {
 | --- | --- |
 | User clicks Disconnect? | `disconnect$().subscribe()` — session stays reusable |
 | Component / route unmounts? | Unsubscribe UI streams, then `dispose$().subscribe()` |
-| Baud rate changes (new session)? | `dispose$()` on old session, then `createSerialSession()` |
+| Baud rate changes (new session)? | `dispose$().subscribe()` on the old session, then `createSerialSession()` |
 | After `dispose$`? | Create a **new** session — do not reconnect the old one |
-| `takeUntil(destroy$)` enough? | **No** — also call `dispose$()` on the session owner teardown |
+| `takeUntil(destroy$)` enough? | **No** — also call `dispose$().subscribe()` on session-owner teardown |
 
 ## Example apps
 
