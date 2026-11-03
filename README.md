@@ -31,10 +31,10 @@ A TypeScript library that wraps the Web Serial API with a minimal, session-orien
 
 ## Features
 
-- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$`
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (session-scoped errors), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$`
 - **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly. This library is **text-first**: binary receive and non-UTF-8 charsets are out of scope (binary **send** via `send$(Uint8Array)` is supported). See the [package README supported-data table](packages/web-serial-rxjs/README.md#supported-data-text--binary--charset) and [Guide concepts](packages/web-serial-rxjs/docs/guide/en/concepts.md#supported-data-text--binary--charset)
 - **Ordered send queue**: concurrent `send$` calls are serialised internally in call order, without the caller having to manage a writer
-- **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
+- **Exclusive error notification**: operation failures stay on the `connect$` / `send$` / `disconnect$` subscriber. Post-connect read-pump errors, unexpected disconnect, and `LINE_BUFFER_OVERFLOW` are emitted on `errors$`
 - **Explicit lifecycle**: `state$` emits a discriminated union with `status` (`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`) so UIs can narrow on `state.status` and access per-state data such as `state.portInfo`
 - **TypeScript support**: full TypeScript type definitions included
 - **Framework agnostic**: works with any JavaScript/TypeScript framework or vanilla JavaScript
@@ -132,6 +132,7 @@ Documentation is split into **Guide** (how to use; Japanese and English hand-wri
 | **[Bundle size and tree-shaking](packages/web-serial-rxjs/docs/guide/en/bundle-size.md)** | Library-only size snapshot and reproducible measurement. |
 | **[Verified environment listing criteria](packages/web-serial-rxjs/docs/guide/en/verified-environment.md)** | Minimum fields if hardware results are published (not a device catalog). |
 | **[API concepts and design notes](packages/web-serial-rxjs/docs/guide/en/concepts.md)** | Options, `SerialSessionState`, and `SerialError` details. |
+| **[v4 → v5 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v5.md)** | Breaking changes, starting with the error notification contract. |
 | **[v3 → v4 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v4.md)** | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |
 | **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |
@@ -159,6 +160,7 @@ Each example includes a README with setup and usage instructions.
 
 Upgrading from an older major version:
 
+- [v4 → v5 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v5.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v5.md)
 - [v3 → v4 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v4.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)
 - [v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)
 - [v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v2.md) · [日本語](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)

@@ -51,6 +51,7 @@ Support policy, release policy, and migration guides.
 | **[Bundler and framework compatibility](./bundler-compatibility.md)** | CI vs Examples; ESM / RxJS / types (no full bundler matrix) |
 | **[Bundle size and tree-shaking](./bundle-size.md)** | Library-only size snapshot and reproducible measurement |
 | **[Verified environment listing criteria](./verified-environment.md)** | Minimum verification fields for hardware results (no device catalog) |
+| **[v4 → v5 Migration](./migration-v5.md)** | v5 breaking changes, starting with the error notification contract |
 | **[v3 → v4 Migration](./migration-v4.md)** | Unified Phase 1+2 public API cleanup |
 | **[v2 → v3 Migration](./migration-v3.md)** | Steps to adopt v3 canonical API |
 | **[v1 → v2 Migration](./migration-v2.md)** | Replacements for removed v1 APIs |
@@ -67,7 +68,7 @@ Support policy, release policy, and migration guides.
 ## Canonical API highlights
 
 - **`state$`** — canonical lifecycle source. Branch on `state.status` with `SerialSessionStatus`; use `state.portInfo` when connected
-- **`errors$`** — canonical fatal / non-fatal error event channel. Branch with `SerialError.is(SerialErrorCode.*)`
+- **`errors$`** — post-connect read pump, unexpected disconnect, and `LINE_BUFFER_OVERFLOW`. Operation failures use each Observable's `error`
 - **`dispose$()`** — sole session teardown API (subscribe to run it)
 - **`isWebSerialSupported()`** — top-level sync feature detection (not a session method; not a support guarantee) — see [Browser support](./browser-support.md)
 - Phase 1+2 removals (`destroy$`, `isConnected$`, `portInfo$`, `getPortInfo()`, `getCurrentPort()`, `receiveReplay$`, `isBrowserSupported()`) are documented in [Migrating to v4](./migration-v4.md)

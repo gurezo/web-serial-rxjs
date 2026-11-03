@@ -93,6 +93,8 @@ Guide source files live under `guide/{en,ja}/`. Legacy flat Guide paths were rem
 | `MIGRATION_V3.ja.md` | `guide/ja/migration-v3.md` | |
 | `MIGRATION_V4.md` | `guide/en/migration-v4.md` | Added with v4; no legacy flat filename |
 | `MIGRATION_V4.ja.md` | `guide/ja/migration-v4.md` | Added with v4; no legacy flat filename |
+| `MIGRATION_V5.md` | `guide/en/migration-v5.md` | Added with v5; no legacy flat filename |
+| `MIGRATION_V5.ja.md` | `guide/ja/migration-v5.md` | Added with v5; no legacy flat filename |
 | `API_REFERENCE.md` | `guide/en/concepts.md` | Renamed; Guide supplement |
 | `API_REFERENCE.ja.md` | `guide/ja/concepts.md` | Renamed; Guide supplement |
 | `archive/` | `guide/en/archive/` / `guide/ja/archive/` | Preserved |

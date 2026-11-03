@@ -94,16 +94,20 @@ session.connect$().subscribe({
 
 **症状:** `Error.message` だけでは失敗の種類が分からない。
 
-**確認:** **`errors$`** を購読し、`error.is(SerialErrorCode.*)` で narrowing する。cause 付きコードは **`error.context.cause`** を読む。
+**確認:** 操作の結果は `connect$` / `send$` / `disconnect$` の `error` を見る。接続後の read pump、予期しない切断、`LINE_BUFFER_OVERFLOW` は **`errors$`** を見る。どちらも `error.is(SerialErrorCode.*)` で narrowing し、cause 付きコードは **`error.context.cause`** を読む。
 
 ```typescript
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
+session.connect$().subscribe({
+  error: (error) => {
+    if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
+      console.info('ポート選択がキャンセルされました');
+    }
+  },
+});
+
 session.errors$.subscribe((error) => {
-  if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
-    console.info('ポート選択がキャンセルされました');
-    return;
-  }
   if (error.is(SerialErrorCode.READ_FAILED)) {
     console.error('読み取り失敗:', error.context.cause);
     return;
@@ -112,7 +116,7 @@ session.errors$.subscribe((error) => {
 });
 ```
 
-`connect$().subscribe({ error })` や `send$().subscribe({ error })` の `error` も扱い、同じ `SerialError` が `errors$` に多重配信されます。
+同じ失敗は片方だけに出ます。操作の `error` を `errors$` が重ねて流すことはありません。
 
 **対処:** コードで分岐する。一覧は [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode)。次の操作は下記 [エラー Recovery Matrix](#エラー-recovery-matrix) を参照してください。
 
@@ -120,7 +124,7 @@ session.errors$.subscribe((error) => {
 
 Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#594](https://github.com/gurezo/web-serial-rxjs/issues/594) · Related: [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode) · [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) · [高度な使用方法 – 致命的エラー時の再接続](./advanced-usage.md#致命的エラー時の再接続) · [Framework 別 session ライフサイクル](./framework-session-lifecycle.md)
 
-`errors$`（および cold メソッドの `subscribe({ error })`）は**何が**失敗したかを示します。この Matrix は**次に何をすべきか**（接続維持 / 同一 session で再接続 / dispose して新規作成）を示します。
+`errors$` と cold メソッドの `subscribe({ error })` は、それぞれ別の失敗について**何が**起きたかを示します。この Matrix は**次に何をすべきか**（接続維持 / 同一 session で再接続 / dispose して新規作成）を示します。
 
 ライブラリは**自動再接続しません**。アプリ側の再試行ポリシーは RxJS の合成で実装してください — [タイムアウト・キャンセル・再試行](./timeout-cancel-retry.md) を参照。
 
@@ -163,7 +167,7 @@ flowchart TD
 | `READ_FAILED` | fatal | yes | ケーブル／デバイス／ドライバを確認して再接続する | yes | 再接続が続けて失敗する場合 |
 | `WRITE_FAILED` | non-fatal | yes | `state$` と `context.cause` を確認し、`'connected'` なら再送可否を判断する | 接続も落ちた場合のみ | no |
 | `CONNECTION_LOST` | fatal | yes | ケーブル／デバイスを確認して再接続する | yes | baud 変更や session 放棄時 |
-| `OPERATION_CANCELLED` | non-fatal | yes（手動） | ユーザーが picker を閉じた。`errors$` に流れ、`state$` は `idle`（`error` ではない）。自動 retry しない | yes（ユーザー操作） | no |
+| `OPERATION_CANCELLED` | non-fatal | yes（手動） | ユーザーが picker を閉じた。`connect$` が error 終了し、`errors$` には出ない。`state$` は `idle`（`error` ではない）。自動 retry しない | yes（ユーザー操作） | no |
 | `LINE_BUFFER_OVERFLOW` | non-fatal | yes | `lineBuffer.maxChars` を上げる、改行を確認する、または `receive$` で扱う。切断不要 | no（不要） | no |
 | `SESSION_DISPOSED` | fatal | no | インスタンスは終端 — 新しい `createSerialSession()` を作る | no | 既に dispose 済み。新規作成 |
 | `UNKNOWN` | fatal | maybe | `context.cause` を確認。まず再接続を試し、不明なら dispose + 新規 session | まず試す | 原因不明のとき |
@@ -177,8 +181,8 @@ flowchart TD
 ### 列の注記
 
 - **Severity `fatal`**: `reportError` 経由で `'error'` 側へ進み、ライブな port / read pump を teardown する。Dispose 列で別指定がなければ、**同一**インスタンスで `disconnect$`（必要なら）→ `connect$` で回復する。
-- **Severity `non-fatal`**: `errors$` にのみ多重配信。切断しない限り接続は続く。
-- **`OPERATION_CANCELLED`**: ポート選択のキャンセル。`errors$` に 1 回流れ、`connect$` は error 終了する。`state$` は `'idle'` に戻り、`'error'` には入らない。ポートは close しない。
+- **Severity `non-fatal`**: 接続は続く。`WRITE_FAILED` や `PORT_NOT_OPEN` は操作の subscriber にだけ出る。`LINE_BUFFER_OVERFLOW` は `errors$` に出る。
+- **`OPERATION_CANCELLED`**: ポート選択のキャンセル。`connect$` は error 終了し、`errors$` には出ない。`state$` は `'idle'` に戻り、`'error'` には入らない。ポートは close しない。
 - **Severity `throw（factory）`**: `createSerialSession()` から同期的に投げられる — `errors$` には流れない。
 - **Severity `reserved`**: `SerialErrorCode` オブジェクトには残るが、v4 実行時には到達しない。
 - **`dispose$` 後**はインスタンスを再利用しない — 必ず新規 session を作る（[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)）。

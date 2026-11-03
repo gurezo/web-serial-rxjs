@@ -145,7 +145,7 @@ if (!isWebSerialSupported()) {
 
 session.lines$.subscribe((line) => console.log('行:', line));
 
-// 本番では errors$ を購読して SerialError を扱うことを推奨します
+// 操作の失敗は各 Observable の error、セッション起因は errors$
 session.errors$.subscribe((err) => console.error('シリアルエラー:', err));
 
 session.connect$().subscribe({
@@ -175,22 +175,29 @@ session.state$.subscribe((state) => {
 });
 ```
 
-## エラーハンドリング（`errors$`）
+## エラーハンドリング
 
-**`errors$`** は接続・読み取り・書き込み・クローズで発生するすべての `SerialError` を流す **canonical error event channel** です。`connect$().subscribe({ error })` で受け取るエラーは `errors$` に流れるものと同一インスタンスです。
+失敗は 1 つのチャネルだけに出ます。
 
-- **fatal** — read pump の停止やポート teardown を伴う。`state$` が `{ status: 'error', error }` に遷移する
-- **non-fatal** — セッションは継続する（例: `WRITE_FAILED`、`LINE_BUFFER_OVERFLOW`）
+- **`connect$` / `send$` / `disconnect$`** — その購読の `error`。`errors$` には出ません。
+- **`errors$`** — 接続完了後の read pump、予期しない切断、`LINE_BUFFER_OVERFLOW`。
+- **fatal** — read pump の停止やポート teardown を伴う。`state$` が `{ status: 'error', error }` に遷移し、`error` はその `SerialError` と同一インスタンスです。
+- **non-fatal** — セッションは継続します（例: `WRITE_FAILED` は `send$`、`LINE_BUFFER_OVERFLOW` は `errors$`）。
 
 ```typescript
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
+session.send$('hello\n').subscribe({
+  error: (error) => {
+    if (error.is(SerialErrorCode.WRITE_FAILED)) {
+      console.warn('送信失敗（セッションは継続）:', error.context.cause);
+    }
+  },
+});
+
 session.errors$.subscribe((error) => {
   if (error.is(SerialErrorCode.READ_FAILED)) {
     console.error('読み取り失敗:', error.context.cause);
-  }
-  if (error.is(SerialErrorCode.WRITE_FAILED)) {
-    console.warn('送信失敗（セッションは継続）:', error.context.cause);
   }
 });
 ```
