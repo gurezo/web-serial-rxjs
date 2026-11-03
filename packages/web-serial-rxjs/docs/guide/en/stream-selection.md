@@ -23,7 +23,21 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | `lines$` | Complete lines framed with `\n`, `\r\n`, and lone interior `\r`. For logs, one-line replies, and parsers. |
 | `terminalText$` | Cumulative **display** text derived from `receive$`. Folds `\r` redraws; by default strips ANSI for plain-text UIs. Equivalent to `createTerminalBuffer(receive$).text$`. |
 
-All three are driven by the same `connect$` read pump. They are **not** subscription-lazy: late subscribers see only new data (and `terminalText$` is a cumulative view of what the buffer has folded so far after you subscribe to its shared replay).
+All three are driven by the same `connect$` read pump. The pump itself is **not** subscription-lazy. What a late subscriber receives depends on the stream:
+
+<a id="subscription-replay-contract"></a>
+
+## Subscription and replay contract
+
+Issue: [#634](https://github.com/gurezo/web-serial-rxjs/issues/634)
+
+| Stream | Temperature | Replay to a late subscriber | When the subscriber count is 0 | Reset |
+| --- | --- | --- | --- | --- |
+| `receive$` | Hot. The pump pushes with or without subscribers | None | Chunks that arrive in the gap are dropped | Completes on `dispose$` |
+| `lines$` | Hot | Emitted lines are not replayed | The incomplete tail stays in the session line buffer. That buffer does not follow the subscriber count | Disconnect and teardown drop the incomplete tail. Completes on `dispose$` |
+| `terminalText$` | Hot multicast only while at least one subscriber remains | The latest folded value, and only while another subscriber is still connected | Drops the folded state and the upstream `receive$` subscription. Chunks that arrive in the gap are not folded | When the subscriber count returns to 0. If `receive$` completes while subscribed, `terminalText$` completes too |
+
+`maxLines` / `maxChars` on `terminalText$` apply only while a subscription is active. If you keep the session and drop the last `terminalText$` subscription, the next subscription starts empty. To keep the display, hold that subscription outside the component, or keep the latest string in the app. A subscription that starts after `dispose$` with no subscriber left completes without replaying the previous text.
 
 ## Do not depend on chunk boundaries
 
@@ -64,9 +78,9 @@ Use **`terminalText$`** when you want a **single string** suitable for a termina
 
 - Folds carriage-return redraws (`\r`) while keeping normal newline behavior
 - By default strips ANSI escape sequences (`stripAnsi: true`); set `SerialSessionOptions.terminalBuffer.stripAnsi` to `false` to keep escapes in the display stream
-- Bounded by `terminalBuffer` (`maxLines` / `maxChars`; defaults 10,000 lines and 1,048,576 characters)
+- Bounded by `terminalBuffer` (`maxLines` / `maxChars`; defaults 10,000 lines and 1,048,576 characters). The limits apply only while a subscription is active
 
-Prefer `terminalText$` for display binding. Prefer `receive$` when you need the undecorated chunk stream (raw escapes, custom folding, or non-display consumers).
+Prefer `terminalText$` for display binding. Dropping the last subscription drops the display history. See [Subscription and replay contract](#subscription-replay-contract). Prefer `receive$` when you need the undecorated chunk stream (raw escapes, custom folding, or non-display consumers).
 
 ## Binary receive is not supported
 

@@ -197,6 +197,15 @@ export interface SerialSession {
    * directly without wrapping {@link createTerminalBuffer} in every consumer.
    * By default, retains at most 10,000 completed lines and 1,048,576
    * characters; configure via {@link SerialSessionOptions.terminalBuffer}.
+   * Those limits apply only while at least one subscriber remains.
+   *
+   * History is subscriber-scoped. While another subscriber is connected, a
+   * new subscriber receives the latest folded value. When the subscriber
+   * count returns to zero, the folded state is dropped and the next
+   * subscription starts empty. Chunks that arrive during the gap are not
+   * folded. {@link SerialSession.dispose$} completes an active subscription.
+   * A subscription that starts after dispose completes without replaying
+   * the previous text.
    *
    * Equivalent behavior:
    *

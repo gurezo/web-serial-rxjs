@@ -334,6 +334,8 @@ UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not l
 
 Terminal-display oriented cumulative text derived from `receive$`. Collapses `\r` redraws while keeping normal newline behavior. By default strips ANSI escape sequences for plain-text views (for example `<textarea>`). Raw escape codes remain available on `receive$`. Equivalent to `createTerminalBuffer(receive$, options.terminalBuffer).text$`. By default retains at most 10,000 completed lines and 1,048,576 characters; configure via `SerialSessionOptions.terminalBuffer` or pass `{ maxLines: 0, maxChars: 0 }` for unlimited growth.
 
+History belongs to the subscribers. The stream is shared only while at least one subscriber remains, and a subscriber that joins during that window receives only the latest value. When the last subscriber leaves, the folded state is dropped and the next subscription starts empty. Chunks that arrive during the gap are not folded. `dispose$` completes an active subscription. See [Subscription and replay contract](./stream-selection.md#subscription-replay-contract).
+
 ### `lines$: Observable<string>`
 
 The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lone interior `\r` (see library implementation). Trailing data without a line ending is buffered; incomplete tails are not emitted. By default the incomplete tail is capped at 1,048,576 characters via `SerialSessionOptions.lineBuffer`; overflow discards leading tail data and emits `LINE_BUFFER_OVERFLOW` on `errors$` without disconnecting. **Not subscription-lazy** with respect to the read pump, like `receive$`. Choose **`lines$`** for logs and parsers; for unframed terminal display where `\r` redraw semantics matter, subscribe to **`receive$`** instead.
