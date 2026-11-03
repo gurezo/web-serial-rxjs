@@ -227,6 +227,20 @@ describe('useSerialClient', () => {
     expect(api.receivedData.value).toBe('chunk-1chunk-2');
   });
 
+  it('should show connect$ failures without an errors$ emission', () => {
+    const { api } = mountHarness();
+    const failure = new webSerialRxjs.SerialError(
+      webSerialRxjs.SerialErrorCode.PORT_OPEN_FAILED,
+      'open failed',
+    );
+    latestMock().connect$.mockReturnValueOnce(throwError(() => failure));
+    api.connect$().subscribe({ error: () => undefined });
+    expect(api.errorMessage.value).toBe('open failed');
+    expect(api.errorCode.value).toBe(
+      webSerialRxjs.SerialErrorCode.PORT_OPEN_FAILED,
+    );
+  });
+
   it('should set errorMessage and errorCode from errors$ emissions', () => {
     const { api } = mountHarness();
     const mock = latestMock();

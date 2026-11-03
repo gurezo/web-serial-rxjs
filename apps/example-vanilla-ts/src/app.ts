@@ -1,5 +1,6 @@
 import {
   appendExampleLineEnding,
+  asExampleSerialError,
   createSerialSessionController,
   DEFAULT_EXAMPLE_LINE_ENDING,
   EXAMPLE_LINE_ENDING_OPTIONS,
@@ -230,8 +231,12 @@ export class App {
       receiveOutput.scrollTop = receiveOutput.scrollHeight;
     });
 
-    this.controller.errors$.subscribe((error) => {
-      const display = formatExampleSerialErrorDetail(error);
+    const showSerialError = (error: unknown): void => {
+      const serialError = asExampleSerialError(error);
+      if (!serialError) {
+        return;
+      }
+      const display = formatExampleSerialErrorDetail(serialError);
       this.latestError = display;
       renderErrorPanel();
       setStatus(
@@ -239,6 +244,10 @@ export class App {
         display.type,
         display.type === 'info' ? display.message : `エラー: ${display.message}`,
       );
+    };
+
+    this.controller.errors$.subscribe((error) => {
+      showSerialError(error);
       console.error('Serial port error:', error);
     });
 
@@ -247,11 +256,15 @@ export class App {
     fromEvent(connectBtn, 'click').subscribe(() => {
       const baudRate = parseInt(baudRateSelect.value, 10);
       receiveOutput.value = '';
-      this.controller.connect$(baudRate).subscribe({ error: () => void 0 });
+      this.controller.connect$(baudRate).subscribe({
+        error: (error: unknown) => showSerialError(error),
+      });
     });
 
     fromEvent(disconnectBtn, 'click').subscribe(() =>
-      this.controller.disconnect$().subscribe({ error: () => void 0 }),
+      this.controller.disconnect$().subscribe({
+        error: (error: unknown) => showSerialError(error),
+      }),
     );
 
     const send = () => {
@@ -260,7 +273,7 @@ export class App {
       const ending = lineEndingSelect.value as ExampleLineEnding;
       this.controller.send$(appendExampleLineEnding(text, ending)).subscribe({
         next: () => (sendInput.value = ''),
-        error: () => void 0,
+        error: (error: unknown) => showSerialError(error),
       });
     };
 

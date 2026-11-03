@@ -1,16 +1,11 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  linkedSignal,
-} from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, inject, linkedSignal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
   appendExampleLineEnding,
+  asExampleSerialError,
   DEFAULT_EXAMPLE_LINE_ENDING,
   EXAMPLE_LINE_ENDING_OPTIONS,
   formatExamplePortInfo,
@@ -129,11 +124,10 @@ export class App {
   });
 
   constructor() {
-    effect(() => {
-      const status = this.state().status;
+    this.serialService.state$.pipe(takeUntilDestroyed()).subscribe((state) => {
       if (
-        status === SerialSessionStatus.Connected ||
-        status === SerialSessionStatus.Idle
+        state.status === SerialSessionStatus.Connected ||
+        state.status === SerialSessionStatus.Idle
       ) {
         this.errorDetail.set(null);
       }
@@ -144,10 +138,19 @@ export class App {
     this.errorDetail.set(null);
   }
 
+  private showOperationError(error: unknown): void {
+    const serialError = asExampleSerialError(error);
+    if (!serialError) {
+      return;
+    }
+    this.errorDetail.set(formatExampleSerialErrorDetail(serialError));
+  }
+
   handleConnect(): void {
     this.resetTerminalView();
     this.serialService.connect$(this.baudRate).subscribe({
       error: (error: unknown) => {
+        this.showOperationError(error);
         console.error('接続エラー:', error);
       },
     });
@@ -156,6 +159,7 @@ export class App {
   handleDisconnect(): void {
     this.serialService.disconnect$().subscribe({
       error: (error: unknown) => {
+        this.showOperationError(error);
         console.error('切断エラー:', error);
       },
     });
@@ -173,6 +177,7 @@ export class App {
           this.sendInput = '';
         },
         error: (error: unknown) => {
+          this.showOperationError(error);
           console.error('送信エラー:', error);
         },
       });

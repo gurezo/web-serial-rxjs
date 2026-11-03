@@ -1,7 +1,7 @@
 import {
+  SerialError,
   SerialSessionStatus,
   type ConnectedSessionState,
-  type SerialError,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import {
@@ -137,6 +137,13 @@ function summarizeContext(context: unknown): string | null {
   }
 
   return parts.join(', ');
+}
+
+/**
+ * Returns `error` when it is a {@link SerialError} from an operation Observable.
+ */
+export function asExampleSerialError(error: unknown): SerialError | null {
+  return error instanceof SerialError ? error : null;
 }
 
 /**

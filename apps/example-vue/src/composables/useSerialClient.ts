@@ -1,4 +1,5 @@
 import {
+  asExampleSerialError,
   createSerialSessionController,
   formatExampleSerialErrorDetail,
   getExampleSupportStatus,
@@ -8,7 +9,7 @@ import {
   type SerialError,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { type Observable } from 'rxjs';
+import { tap, type Observable } from 'rxjs';
 import { onUnmounted, ref, type Ref } from 'vue';
 
 /** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続時は世代でリセット）。 */
@@ -73,13 +74,25 @@ export function useSerialClient(initialBaudRate = 9600): UseSerialClientReturn {
     errorContext.value = display.contextSummary;
   });
 
+  const showOperationError = (error: unknown): void => {
+    const serialError = asExampleSerialError(error);
+    if (!serialError) {
+      return;
+    }
+    const display = formatExampleSerialErrorDetail(serialError);
+    errorMessage.value = display.message;
+    errorType.value = display.type;
+    errorCode.value = display.code;
+    errorContext.value = display.contextSummary;
+  };
   const connect$ = (baudRate?: number): Observable<void> => {
     receivedData.value = '';
-    return controller.connect$(baudRate);
+    return controller.connect$(baudRate).pipe(tap({ error: showOperationError }));
   };
-  const disconnect$ = (): Observable<void> => controller.disconnect$();
+  const disconnect$ = (): Observable<void> =>
+    controller.disconnect$().pipe(tap({ error: showOperationError }));
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    controller.send$(data);
+    controller.send$(data).pipe(tap({ error: showOperationError }));
   const clearReceivedData = (): void => {
     controller.resetTerminalBuffer();
     receivedData.value = '';

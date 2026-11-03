@@ -1,4 +1,5 @@
 import {
+  asExampleSerialError,
   createSerialSessionController,
   formatExampleSerialErrorDetail,
   getExampleSupportStatus,
@@ -10,7 +11,7 @@ import {
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
 import { useEffect, useRef, useState } from 'react';
-import { type Observable, Subscription } from 'rxjs';
+import { tap, type Observable, Subscription } from 'rxjs';
 
 /** v2 `SerialSession` を薄くラップ。表示は `terminalText$`（再接続時は世代でリセット）。 */
 export interface UseSerialSessionReturn {
@@ -98,14 +99,31 @@ export function useSerialSession(
     };
   }, []);
 
+  const showOperationError = (error: unknown): void => {
+    const serialError = asExampleSerialError(error);
+    if (!serialError) {
+      return;
+    }
+    const display = formatExampleSerialErrorDetail(serialError);
+    setErrorMessage(display.message);
+    setErrorType(display.type);
+    setErrorCode(display.code);
+    setErrorContext(display.contextSummary);
+  };
   const connect$ = (baudRate?: number): Observable<void> => {
     setReceivedData('');
-    return (controllerRef.current as SerialSessionController).connect$(baudRate);
+    return (controllerRef.current as SerialSessionController)
+      .connect$(baudRate)
+      .pipe(tap({ error: showOperationError }));
   };
   const disconnect$ = (): Observable<void> =>
-    (controllerRef.current as SerialSessionController).disconnect$();
+    (controllerRef.current as SerialSessionController)
+      .disconnect$()
+      .pipe(tap({ error: showOperationError }));
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    (controllerRef.current as SerialSessionController).send$(data);
+    (controllerRef.current as SerialSessionController)
+      .send$(data)
+      .pipe(tap({ error: showOperationError }));
   const clearReceivedData = (): void => {
     (controllerRef.current as SerialSessionController).resetTerminalBuffer();
     setReceivedData('');
