@@ -93,6 +93,8 @@ Guide の source は `guide/{en,ja}/` に配置済み。legacy flat パスは #4
 | `MIGRATION_V3.ja.md` | `guide/ja/migration-v3.md` | |
 | `MIGRATION_V4.md` | `guide/en/migration-v4.md` | v4 で追加。legacy flat ファイル名なし |
 | `MIGRATION_V4.ja.md` | `guide/ja/migration-v4.md` | v4 で追加。legacy flat ファイル名なし |
+| `MIGRATION_V5.md` | `guide/en/migration-v5.md` | v5 で追加。legacy flat ファイル名なし |
+| `MIGRATION_V5.ja.md` | `guide/ja/migration-v5.md` | v5 で追加。legacy flat ファイル名なし |
 | `API_REFERENCE.md` | `guide/en/concepts.md` | リネーム。Guide 補足 |
 | `API_REFERENCE.ja.md` | `guide/ja/concepts.md` | リネーム。Guide 補足 |
 | `archive/` | `guide/en/archive/` / `guide/ja/archive/` | 現状維持 |

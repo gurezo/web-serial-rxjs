@@ -20,6 +20,7 @@ export {
   type ExampleUnsupportedReason,
 } from './example-requirements';
 export {
+  asExampleSerialError,
   formatExamplePortInfo,
   formatExampleSerialErrorDetail,
   formatExampleSessionStatus,

@@ -205,6 +205,20 @@ describe('useSerialSession', () => {
     expect(result.current.receivedData).toBe('');
   });
 
+  it('connect$ の失敗を errors$ なしで表示する', () => {
+    const { result } = renderHook(() => useSerialSession());
+    const failure = new SerialError(
+      SerialErrorCode.PORT_OPEN_FAILED,
+      'open failed',
+    );
+    act(() => {
+      latestMock().connect$.mockReturnValueOnce(throwError(() => failure));
+      result.current.connect$().subscribe({ error: () => undefined });
+    });
+    expect(result.current.errorMessage).toBe('open failed');
+    expect(result.current.errorCode).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+  });
+
   it('connect$ / disconnect$ / send$ は session の対応メソッドへ委譲する', () => {
     const { result } = renderHook(() => useSerialSession());
 

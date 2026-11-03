@@ -4,7 +4,7 @@
   <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs project icon" width="512" />
 </p>
 
-This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose among `receive$`, `lines$`, and `terminalText$` (see [stream selection](./stream-selection.md)). **`state$`** is the canonical lifecycle source; **`errors$`** is the canonical error event channel. For options, error codes, and formal type details, see [API Reference (TypeDoc)](modules.html).
+This page is the **mental model** for the public API: what each `SerialSession` surface does, how `SerialSessionState` maps to `state$`, and how to choose among `receive$`, `lines$`, and `terminalText$` (see [stream selection](./stream-selection.md)). **`state$`** is the canonical lifecycle source; **`errors$`** is the session-scoped error channel. Operation failures arrive on each Observable's `error`. For options, error codes, and formal type details, see [API Reference (TypeDoc)](modules.html).
 
 ## Table of Contents
 
@@ -22,6 +22,7 @@ Start here:
 - [Advanced Usage](./advanced-usage.md)
 - [API concepts and design notes](./concepts.md)
 - [Troubleshooting](./troubleshooting.md)
+- [v4 to v5 Migration Guide](./migration-v5.md)
 - [v3 to v4 Migration Guide](./migration-v4.md)
 - [v2 to v3 Migration Guide](./migration-v3.md)
 - [v1 to v2 Migration Guide](./migration-v2.md)
@@ -34,10 +35,10 @@ Standalone guides (HTML):
 
 ## Features
 
-- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (error event channel), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$`
+- **Session-oriented reactive API**: a single `SerialSession` exposes `state$` (canonical lifecycle discriminated union), `errors$` (session-scoped errors), `receive$`, `lines$`, and `connect$`, `disconnect$`, `dispose$`, and `send$`
 - **UTF-8 text stream**: `receive$` is already decoded with a streaming `TextDecoder`, so multi-byte characters split across chunks are joined correctly
 - **Ordered send queue**: concurrent `send$` calls are serialized internally in call order, without the caller having to manage a writer
-- **Unified error channel**: every I/O error is normalised into `SerialError` and multiplexed on `errors$`
+- **Exclusive error notification**: operation failures stay on the `connect$` / `send$` / `disconnect$` subscriber. Post-connect read-pump errors, unexpected disconnect, and `LINE_BUFFER_OVERFLOW` are emitted on `errors$`
 - **Explicit lifecycle**: `state$` emits a discriminated union with `status` (`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`) so UIs can narrow on `state.status` and access per-state data
 - **TypeScript support**: full TypeScript type definitions included
 - **Framework agnostic**: works with any JavaScript/TypeScript framework or vanilla JavaScript

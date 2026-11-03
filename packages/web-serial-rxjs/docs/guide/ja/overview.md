@@ -4,7 +4,7 @@
   <img src="../../../../../assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` / `lines$` / `terminalText$` の使い分け（[選び方](./stream-selection.md)）。**`state$`** が canonical lifecycle source、**`errors$`** が canonical error event channel です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](../../api/modules.html) を参照してください。
+このページは公開 API の**考え方**をまとめたものです。各 `SerialSession` 面の役割、`SerialSessionState` と `state$` の対応、`receive$` / `lines$` / `terminalText$` の使い分け（[選び方](./stream-selection.md)）。**`state$`** が canonical lifecycle source、**`errors$`** がセッション起因のエラーチャネルです。操作の失敗は各 Observable の `error` です。オプション、エラーコード、型の詳細は [API Reference（TypeDoc）](../../api/modules.html) を参照してください。
 
 ## 目次
 
@@ -22,16 +22,17 @@
 - [高度な使用方法](./advanced-usage.md)
 - [API の概念と設計メモ](./concepts.md)
 - [トラブルシューティング](./troubleshooting.md)
+- [v4 から v5 への移行ガイド](./migration-v5.md)
 - [v3 から v4 への移行ガイド](./migration-v4.md)
 - [v2 から v3 への移行ガイド](./migration-v3.md)
 - [v1 から v2 への移行ガイド](./migration-v2.md)
 
 ## 機能
 
-- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（error event channel）/ `receive$` / `lines$` と `connect$` / `disconnect$` / `dispose$` / `send$` を公開
+- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（セッション起因のエラー）/ `receive$` / `lines$` と `connect$` / `disconnect$` / `dispose$` / `send$` を公開
 - **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます
 - **順序保証された送信キュー**: 並行する `send$` 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます
-- **統一エラーチャネル**: すべての I/O エラーは `SerialError` に正規化され `errors$` に多重化されます
+- **排他的なエラー通知**: 操作の失敗は `connect$` / `send$` / `disconnect$` の subscriber だけ。接続後の read pump、予期しない切断、`LINE_BUFFER_OVERFLOW` は `errors$`
 - **明示的なライフサイクル**: `state$` は `status` を持つ discriminated union（`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`）を emit するので、`state.status` で narrowing できます
 - **TypeScript サポート**: 完全な TypeScript 型定義を同梱
 - **フレームワーク非依存**: 任意の JavaScript/TypeScript フレームワークまたはバニラ JavaScript で利用可能

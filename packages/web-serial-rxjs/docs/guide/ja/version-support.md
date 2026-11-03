@@ -20,7 +20,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 破壊的変更は **major** リリースでのみ公開します。
 
-採用者が移行すべき公開 API の変更を含む major では、本 Guide に **Migration Guide** を追加または更新します（例: [v3 → v4](./migration-v4.md)）。個別コミットよりこれらのページを優先してください。
+採用者が移行すべき公開 API の変更を含む major では、本 Guide に **Migration Guide** を追加または更新します（例: [v4 → v5](./migration-v5.md)）。個別コミットよりこれらのページを優先してください。
 
 ## Deprecated API
 
@@ -53,5 +53,5 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 - リポジトリ [SECURITY.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.ja.md) · [English](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.md)
 - リポジトリ [RELEASING.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.ja.md) · [English](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.md)
 - [ブラウザサポートと公式サポート方針](./browser-support.md)
-- [v3 → v4 Migration](./migration-v4.md) · [v2 → v3](./migration-v3.md) · [v1 → v2](./migration-v2.md)
+- [v4 → v5 Migration](./migration-v5.md) · [v3 → v4](./migration-v4.md) · [v2 → v3](./migration-v3.md) · [v1 → v2](./migration-v2.md)
 - リポジトリ [README – 開発とリリース戦略](https://github.com/gurezo/web-serial-rxjs/blob/main/README.ja.md#開発とリリース戦略)

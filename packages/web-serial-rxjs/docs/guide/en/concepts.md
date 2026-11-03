@@ -193,10 +193,10 @@ v3 exposes **`SerialSessionStatus`** as lifecycle string constants (e.g. `Serial
 - `{ status: 'connected', portInfo }` — port is open and the read pump is running.
 - `{ status: 'disconnecting' }` — `disconnect$` is in flight.
 - `{ status: 'unsupported' }` — `navigator.serial` was not available at session creation time.
-- `{ status: 'error', error }` — fatal failure; `error` is the same `SerialError` instance on `errors$`.
+- `{ status: 'error', error }` — fatal failure; `error` is that failure's `SerialError`. Operation failures are not also emitted on `errors$`.
 - `{ status: 'disposed' }` — session permanently torn down via `dispose$`.
 
-Cancelling the port picker (`OPERATION_CANCELLED`) does not enter `'error'`; `state$` returns to `'idle'`. `connect$` errors, and the same `SerialError` is emitted once on `errors$`.
+Cancelling the port picker (`OPERATION_CANCELLED`) does not enter `'error'`; `state$` returns to `'idle'`. `connect$` errors, and that `SerialError` is not emitted on `errors$`.
 
 Example:
 
@@ -306,7 +306,7 @@ This check is **not** a compatibility or official-support guarantee — see [Bro
 
 ### `connect$(): Observable<void>`
 
-Opens a user-selected serial port and starts the internal read pump. Completes on success; errors via `errors$` and the subscriber on failure. Transitions `idle → connecting → connected`. **Runs when subscribed.** Unsubscribing during `'connecting'` abandons that attempt. A port the abandoned attempt already opened is closed, and a later `connect$()` does not share its `requestPort` or `open`.
+Opens a user-selected serial port and starts the internal read pump. Completes on success; on failure the error goes to the subscriber only (not `errors$`). Transitions `idle → connecting → connected`. **Runs when subscribed.** Unsubscribing during `'connecting'` abandons that attempt. A port the abandoned attempt already opened is closed, and a later `connect$()` does not share its `requestPort` or `open`.
 
 ### `disconnect$(): Observable<void>`
 
@@ -324,7 +324,7 @@ Replays the current state on subscribe. Prefer driving your UI from this stream 
 
 ### `errors$: Observable<SerialError>`
 
-Primary error channel. Every connect / read / write / close failure is normalised to `SerialError` and pushed here. Fatal failures additionally drive `state$` to `{ status: 'error', error }` and tear down the live pump and port.
+Session-scoped error channel. It emits read-pump errors after the session is connected, an unexpected stream close while connected, and `LINE_BUFFER_OVERFLOW`. Failures of `connect$`, `send$`, and `disconnect$` go only to that subscriber and are not emitted here. A fatal failure still moves `state$` to `{ status: 'error', error }` and tears down the live pump and port, whether or not this stream emits it.
 
 ### `receive$: Observable<string>`
 
@@ -340,7 +340,7 @@ The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lo
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-Enqueues a payload for ordered transmission. The bytes are fixed when the Observable is subscribed, not when `send$()` is called. Strings are UTF-8 encoded through a shared `TextEncoder` at that moment. `Uint8Array` values are copied then and written unchanged (binary **send** only — there is no matching binary receive API). Mutating the caller's buffer after subscribe does not change a queued write. Each subscription snapshots independently. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED`, multiplexed on `errors$`, and surfaced to the subscriber. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. `disconnect$`, `dispose$`, and a `connect$` that is about to become `'connected'` drop sends that have not started. Those subscribers error with `PORT_NOT_OPEN`, and that failure is not emitted on `errors$`. The in-flight write is not aborted; the next `send$` waits for it, so the writes do not overlap. See [Supported data](#supported-data-text--binary--charset).
+Enqueues a payload for ordered transmission. The bytes are fixed when the Observable is subscribed, not when `send$()` is called. Strings are UTF-8 encoded through a shared `TextEncoder` at that moment. `Uint8Array` values are copied then and written unchanged (binary **send** only — there is no matching binary receive API). Mutating the caller's buffer after subscribe does not change a queued write. Each subscription snapshots independently. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED` and delivered to the subscriber only. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. That failure is not emitted on `errors$` either. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. `disconnect$`, `dispose$`, and a `connect$` that is about to become `'connected'` drop sends that have not started. Those subscribers error with `PORT_NOT_OPEN`, and that failure is not emitted on `errors$`. The in-flight write is not aborted; the next `send$` waits for it, so the writes do not overlap. See [Supported data](#supported-data-text--binary--charset).
 
 ## SerialError / SerialErrorCode
 

@@ -275,28 +275,36 @@ describe('createSerialSession', () => {
       }
     });
 
-    it('includes the same SerialError instance on error state and errors$', async () => {
+    it('includes the same SerialError instance on error state and connect$', async () => {
       const { stream } = makeStream();
       const port = makeMockPort(stream);
       port.open.mockRejectedValueOnce(new Error('cannot open'));
       installNavigator(port);
 
       const session = createSerialSession();
-      const errorsPromise = firstValueFrom(session.errors$);
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
 
-      await expect(firstValueFrom(session.connect$())).rejects.toBeInstanceOf(
-        SerialError,
+      const rejected = await firstValueFrom(session.connect$()).catch(
+        (error: unknown) => error,
       );
 
-      const emitted = await errorsPromise;
+      expect(rejected).toBeInstanceOf(SerialError);
+      expect(emissions).toEqual([]);
       const state = await firstValueFrom(session.state$);
-      expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
       expect(state.status).toBe(S.Error);
-      if (state.status === S.Error) {
-        expect(state.error).toBe(emitted);
+      if (
+        state.status === S.Error &&
+        rejected instanceof SerialError
+      ) {
+        expect(rejected.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+        expect(state.error).toBe(rejected);
       } else {
         throw new Error('expected error state');
       }
+      subscription.unsubscribe();
     });
   });
 
@@ -364,7 +372,7 @@ describe('createSerialSession', () => {
       expect(connectError).toMatchObject({
         code: SerialErrorCode.OPERATION_CANCELLED,
       });
-      expect(emissions).toEqual([connectError]);
+      expect(emissions).toEqual([]);
       expect(port.open).not.toHaveBeenCalled();
       expect(port.close).not.toHaveBeenCalled();
 
@@ -382,15 +390,18 @@ describe('createSerialSession', () => {
       installNavigator(port);
 
       const session = createSerialSession();
-      const errorsPromise = firstValueFrom(session.errors$);
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
 
       await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
         name: 'SerialError',
         code: SerialErrorCode.PORT_OPEN_FAILED,
       });
 
-      const emitted = await errorsPromise;
-      expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+      expect(emissions).toEqual([]);
+      subscription.unsubscribe();
     });
 
     it('maps NotFoundError from port.open to PORT_OPEN_FAILED and enters error', async () => {
@@ -402,21 +413,27 @@ describe('createSerialSession', () => {
       installNavigator(port);
 
       const session = createSerialSession();
-      const errorsPromise = firstValueFrom(session.errors$);
-
-      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
-        name: 'SerialError',
-        code: SerialErrorCode.PORT_OPEN_FAILED,
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
       });
 
-      const emitted = await errorsPromise;
-      expect(emitted.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
-      expect(emitted.message).toBe('Failed to open port: missing');
+      const rejected = await firstValueFrom(session.connect$()).catch(
+        (error: unknown) => error,
+      );
+
+      expect(rejected).toMatchObject({
+        name: 'SerialError',
+        code: SerialErrorCode.PORT_OPEN_FAILED,
+        message: 'Failed to open port: missing',
+      });
+      expect(emissions).toEqual([]);
       expect(port.close).toHaveBeenCalledTimes(1);
       expect(await firstValueFrom(session.state$)).toEqual({
         status: S.Error,
-        error: emitted,
+        error: rejected,
       });
+      subscription.unsubscribe();
     });
 
     it('returns to idle when connect$ is unsubscribed before requestPort resolves', async () => {
@@ -621,15 +638,18 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
       await firstValueFrom(session.connect$());
 
-      const errorsPromise = firstValueFrom(session.errors$);
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
       await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
         name: 'SerialError',
         code: SerialErrorCode.PORT_ALREADY_OPEN,
       });
 
-      const emitted = await errorsPromise;
-      expect(emitted.code).toBe(SerialErrorCode.PORT_ALREADY_OPEN);
+      expect(emissions).toEqual([]);
       expect(await firstValueFrom(session.state$)).toEqual(connectedState());
+      subscription.unsubscribe();
     });
 
     it('disconnect$ completes immediately when state is idle', async () => {
@@ -1407,7 +1427,7 @@ describe('createSerialSession', () => {
       ]);
     });
 
-    it('maps writer failures to WRITE_FAILED and emits them on errors$', async () => {
+    it('maps writer failures to WRITE_FAILED on the send$ subscriber only', async () => {
       const { stream } = makeStream();
       const writable = new WritableStream<Uint8Array>({
         write() {
@@ -1420,21 +1440,23 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
       await firstValueFrom(session.connect$());
 
-      const errorsPromise = firstValueFrom(session.errors$);
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
 
       await expect(firstValueFrom(session.send$('x'))).rejects.toMatchObject({
         name: 'SerialError',
         code: SerialErrorCode.WRITE_FAILED,
       });
 
-      const emitted = await errorsPromise;
-      expect(emitted).toBeInstanceOf(SerialError);
-      expect(emitted.code).toBe(SerialErrorCode.WRITE_FAILED);
+      expect(emissions).toEqual([]);
+      subscription.unsubscribe();
     });
   });
 
   describe('errors$ integration (#204)', () => {
-    it('emits the same SerialError instance on errors$ and to the connect$ subscriber', async () => {
+    it('delivers connect$ failures to the subscriber and not to errors$', async () => {
       const { stream } = makeStream();
       const port = makeMockPort(stream);
       port.open.mockRejectedValueOnce(new Error('cannot open'));
@@ -1452,13 +1474,12 @@ describe('createSerialSession', () => {
         );
 
         expect(rejection).toBeInstanceOf(SerialError);
-        expect(emissions).toHaveLength(1);
-        const [emission] = emissions;
-        expect(emission).toBeDefined();
-        expect(emission).toBe(rejection);
-        if (emission) {
-          expect(emission.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
-        }
+        expect(rejection.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
+        expect(emissions).toEqual([]);
+        expect(await firstValueFrom(session.state$)).toEqual({
+          status: S.Error,
+          error: rejection,
+        });
       } finally {
         subscription.unsubscribe();
       }
@@ -1484,7 +1505,7 @@ describe('createSerialSession', () => {
       expect(await firstValueFrom(session.state$)).toEqual(connectedState());
     });
 
-    it('routes close failures on disconnect$ to errors$ as CONNECTION_LOST and state -> error', async () => {
+    it('routes close failures on disconnect$ to the subscriber as CONNECTION_LOST and state -> error', async () => {
       const { stream } = makeStream();
       const close = vi.fn().mockRejectedValue(new Error('close failed'));
       const port = makeMockPort(stream, close);
@@ -1493,21 +1514,25 @@ describe('createSerialSession', () => {
       const session = createSerialSession();
       await firstValueFrom(session.connect$());
 
-      const errorsPromise = firstValueFrom(session.errors$);
+      const emissions: SerialError[] = [];
+      const subscription = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
 
-      await expect(
-        firstValueFrom(session.disconnect$()),
-      ).rejects.toMatchObject({
+      const rejected = await firstValueFrom(session.disconnect$()).catch(
+        (error: unknown) => error,
+      );
+
+      expect(rejected).toMatchObject({
         name: 'SerialError',
         code: SerialErrorCode.CONNECTION_LOST,
       });
-
-      const emitted = await errorsPromise;
-      expect(emitted.code).toBe(SerialErrorCode.CONNECTION_LOST);
+      expect(emissions).toEqual([]);
       expect(await firstValueFrom(session.state$)).toEqual({
         status: S.Error,
-        error: emitted,
+        error: rejected,
       });
+      subscription.unsubscribe();
     });
 
     it('forwards DOMException(NotFoundError) on requestPort as a single OPERATION_CANCELLED emission', async () => {
@@ -1527,18 +1552,14 @@ describe('createSerialSession', () => {
       });
 
       try {
-        await expect(
-          firstValueFrom(session.connect$()),
-        ).rejects.toMatchObject({
+        const rejected = await firstValueFrom(session.connect$()).catch(
+          (error: unknown) => error,
+        );
+
+        expect(rejected).toMatchObject({
           code: SerialErrorCode.OPERATION_CANCELLED,
         });
-
-        expect(emissions).toHaveLength(1);
-        const [emission] = emissions;
-        expect(emission).toBeDefined();
-        if (emission) {
-          expect(emission.code).toBe(SerialErrorCode.OPERATION_CANCELLED);
-        }
+        expect(emissions).toEqual([]);
         expect(await firstValueFrom(session.state$)).toEqual({
           status: S.Idle,
         });
@@ -1547,7 +1568,7 @@ describe('createSerialSession', () => {
       }
     });
 
-    it('multiplexes connect, pump, and write failures through the same errors$ channel', async () => {
+    it('publishes background pump errors on errors$ without operation failures', async () => {
       const { stream, controller } = makeStream();
       const writable = new WritableStream<Uint8Array>({
         write() {
@@ -1566,19 +1587,22 @@ describe('createSerialSession', () => {
       try {
         await firstValueFrom(session.connect$());
 
-        await expect(
-          firstValueFrom(session.send$('x')),
-        ).rejects.toMatchObject({
+        const writeError = await firstValueFrom(session.send$('x')).catch(
+          (error: unknown) => error,
+        );
+
+        expect(writeError).toMatchObject({
           code: SerialErrorCode.WRITE_FAILED,
         });
+        expect(emissions).toEqual([]);
 
         controller.error(new Error('device unplugged'));
         await flushMicrotasks();
 
         expect(emissions.map((error) => error.code)).toEqual([
-          SerialErrorCode.WRITE_FAILED,
           SerialErrorCode.READ_FAILED,
         ]);
+        expect(emissions).not.toContain(writeError);
       } finally {
         subscription.unsubscribe();
       }

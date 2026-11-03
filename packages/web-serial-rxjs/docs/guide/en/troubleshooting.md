@@ -94,16 +94,20 @@ session.connect$().subscribe({
 
 **Symptoms:** Failures are hard to classify from `Error.message` alone.
 
-**Check:** Subscribe to **`errors$`** and narrow with `error.is(SerialErrorCode.*)`. For cause-bearing codes, read **`error.context.cause`**.
+**Check:** Read operation results from the `error` callback of `connect$`, `send$`, or `disconnect$`. Read post-connect pump failures, unexpected disconnects, and `LINE_BUFFER_OVERFLOW` from **`errors$`**. Narrow either with `error.is(SerialErrorCode.*)`. For cause-bearing codes, read **`error.context.cause`**.
 
 ```typescript
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
+session.connect$().subscribe({
+  error: (error) => {
+    if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
+      console.info('User cancelled the port picker');
+    }
+  },
+});
+
 session.errors$.subscribe((error) => {
-  if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
-    console.info('User cancelled the port picker');
-    return;
-  }
   if (error.is(SerialErrorCode.READ_FAILED)) {
     console.error('Read failed:', error.context.cause);
     return;
@@ -112,7 +116,7 @@ session.errors$.subscribe((error) => {
 });
 ```
 
-Also handle `error` on `connect$().subscribe({ error })` and `send$().subscribe({ error })` — the same `SerialError` is multiplexed on `errors$`.
+One failure uses one channel. `errors$` does not repeat an operation error.
 
 **Fix:** Branch on codes; full tables live in [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode). Use the [Error Recovery Matrix](#error-recovery-matrix) below to decide the next action.
 
@@ -120,7 +124,7 @@ Also handle `error` on `connect$().subscribe({ error })` and `send$().subscribe(
 
 Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#594](https://github.com/gurezo/web-serial-rxjs/issues/594) · Related: [SerialError / SerialErrorCode](./concepts.md#serialerror-serialerrorcode) · [Timeout, cancel, and retry](./timeout-cancel-retry.md) · [Advanced Usage – Reconnect on fatal error](./advanced-usage.md#reconnect-on-fatal-error) · [Framework session lifecycle](./framework-session-lifecycle.md)
 
-`errors$` (and `subscribe({ error })` on cold methods) tells you **what** failed. This matrix tells you **what to do next**: stay connected, reconnect the same session, or dispose and create a new one.
+`errors$` and `subscribe({ error })` on cold methods tell you **what** failed, on different channels. This matrix tells you **what to do next**: stay connected, reconnect the same session, or dispose and create a new one.
 
 The library does **not** auto-reconnect. App-side retry policies belong in your RxJS composition — see [Timeout, cancel, and retry](./timeout-cancel-retry.md).
 
@@ -163,7 +167,7 @@ flowchart TD
 | `READ_FAILED` | fatal | yes | Check cable / device / drivers, then reconnect. | yes | if reconnect keeps failing |
 | `WRITE_FAILED` | non-fatal | yes | Inspect `state$` and `context.cause`; resend if still `'connected'`. | only if connection also drops | no |
 | `CONNECTION_LOST` | fatal | yes | Check cable / device, then reconnect. | yes | if you change baud rate or abandon session |
-| `OPERATION_CANCELLED` | non-fatal | yes (manual) | User closed the picker. Emitted on `errors$`; `state$` returns to `idle` (not `error`). Do not auto-retry. | yes (user gesture) | no |
+| `OPERATION_CANCELLED` | non-fatal | yes (manual) | User closed the picker. `connect$` errors and `errors$` stays silent. `state$` returns to `idle` (not `error`). Do not auto-retry. | yes (user gesture) | no |
 | `LINE_BUFFER_OVERFLOW` | non-fatal | yes | Raise `lineBuffer.maxChars`, ensure device line endings, or parse on `receive$`. Session stays connected. | no (not needed) | no |
 | `SESSION_DISPOSED` | fatal | no | Instance is dead — create a new `createSerialSession()`. | no | already disposed; create new |
 | `UNKNOWN` | fatal | maybe | Inspect `context.cause`. Prefer reconnect; if unclear, dispose and create a new session. | try first | if cause is unclear |
@@ -177,8 +181,8 @@ flowchart TD
 ### Column notes
 
 - **Severity `fatal`**: session reports via `reportError`, moves toward `'error'`, and tears down the live port / read pump. Recover with `disconnect$` (if needed) then `connect$` on the **same** instance unless Dispose says otherwise.
-- **Severity `non-fatal`**: multiplexed on `errors$` only; connection continues unless you choose to disconnect.
-- **`OPERATION_CANCELLED`**: port-picker cancel. Emitted once on `errors$`, and `connect$` errors. `state$` returns to `'idle'` and does not enter `'error'`. The port is not closed.
+- **Severity `non-fatal`**: the connection continues. `WRITE_FAILED` and `PORT_NOT_OPEN` go only to the operation subscriber. `LINE_BUFFER_OVERFLOW` is emitted on `errors$`.
+- **`OPERATION_CANCELLED`**: port-picker cancel. `connect$` errors and `errors$` does not emit. `state$` returns to `'idle'` and does not enter `'error'`. The port is not closed.
 - **Severity `throw (factory)`**: raised synchronously from `createSerialSession()` — not delivered on `errors$`.
 - **Severity `reserved`**: still present on the `SerialErrorCode` object but unreachable at runtime in v4.
 - After **`dispose$`**, never reuse the instance — always create a new session ([Framework session lifecycle](./framework-session-lifecycle.md)).

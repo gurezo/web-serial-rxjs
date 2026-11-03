@@ -161,6 +161,20 @@ describe('useSerialSession', () => {
     unsub();
   });
 
+  it('connect$ の失敗を errors$ なしで表示する', () => {
+    const s = useSerialSession();
+    const unsub = s.errorMessage.subscribe(() => void 0);
+    const failure = new webSerialRxjs.SerialError(
+      webSerialRxjs.SerialErrorCode.PORT_OPEN_FAILED,
+      'open failed',
+    );
+    latestMock().connect$.mockReturnValueOnce(throwError(() => failure));
+    s.connect$().subscribe({ error: () => undefined });
+    expect(get(s.errorMessage)).toBe('open failed');
+    expect(get(s.errorCode)).toBe(webSerialRxjs.SerialErrorCode.PORT_OPEN_FAILED);
+    unsub();
+  });
+
   it('errors$ の値が errorMessage / errorCode に反映される', () => {
     const s = useSerialSession();
     const unsub = s.errorMessage.subscribe(() => void 0);

@@ -16,7 +16,7 @@ import type { SerialSessionState } from './serial-session-state';
  *
  * The session is intentionally slim so that apps (Angular, Vue, React, etc.)
  * can drive their UI from `state$` (canonical lifecycle state) + `errors$`
- * (error event channel) + `receive$` + `terminalText$` + `lines$` and never
+ * (session-scoped errors) + `receive$` + `terminalText$` + `lines$` and never
  * have to rebuild BehaviorSubjects, manage a read loop, or serialize writes
  * themselves.
  *
@@ -64,11 +64,16 @@ export interface SerialSession {
    * Open a serial port and start the internal read pump.
    *
    * Returns an Observable that completes when the port is fully opened and
-   * the read pump is running. Subscribing to `receive$` before calling
-   * `connect$` is safe: emissions simply start after the pump is active.
-   * Unsubscribing during `'connecting'` abandons that attempt. A port the
-   * abandoned attempt already opened is closed, and a later `connect$()`
-   * does not share its `requestPort` or `open`.
+   * the read pump is running. Failures, including a port-picker cancel
+   * ({@link SerialErrorCode.OPERATION_CANCELLED}), are delivered only to
+   * this subscriber and are not mirrored on {@link errors$}. A fatal open
+   * or startup failure still moves `state$` to `'error'` with that same
+   * {@link SerialError}. A picker cancel returns `state$` to `'idle'`.
+   * Subscribing to `receive$` before calling `connect$` is safe: emissions
+   * simply start after the pump is active. Unsubscribing during
+   * `'connecting'` abandons that attempt. A port the abandoned attempt
+   * already opened is closed, and a later `connect$()` does not share its
+   * `requestPort` or `open`.
    *
    * @returns An Observable that completes on successful connection.
    */
@@ -85,7 +90,9 @@ export interface SerialSession {
    * before that completion. If `open()` has not started, including while
    * `requestPort()` is still pending, it completes without waiting.
    * `requestPort()` cannot be aborted, so an open port picker stays up and a
-   * port chosen afterward is not opened.
+   * port chosen afterward is not opened. Close failures are delivered only
+   * to this subscriber. A fatal close still moves `state$` to `'error'`
+   * with that same {@link SerialError}.
    *
    * @returns An Observable that completes when an opened port is fully
    *   closed. During `'connecting'`, before `open()` starts, it completes
@@ -142,25 +149,21 @@ export interface SerialSession {
   readonly state$: Observable<SerialSessionState>;
 
   /**
-   * Canonical fatal / non-fatal error channel.
+   * Session-scoped error channel.
    *
-   * All {@link SerialError} instances produced by the session (connect /
-   * read / write / close) are multiplexed here. This is the main channel,
-   * not a supplementary one.
+   * Emits {@link SerialError} for failures that are not the result of one
+   * `connect$`, `send$`, or `disconnect$` call: a read-pump error after
+   * the session is `'connected'`, an unexpected stream close while
+   * connected, and {@link SerialErrorCode.LINE_BUFFER_OVERFLOW}.
    *
-   * Every emission is the exact same instance that is also surfaced to
-   * the relevant call-site subscriber (for example `connect$().subscribe`
-   * receives the same `SerialError` that `errors$` emits for that
-   * failure), so a single subscription is enough to observe the full
-   * error history without double-normalisation.
-   *
-   * Fatal failures (connect / read / close) additionally drive `state$`
-   * to `'error'` and tear down the live pump + port; non-fatal failures
-   * (currently only `send$` write failures) are multiplexed here without
-   * mutating `state$`, on the assumption that a real connection loss is
-   * detected by the read pump on the next tick.
+   * Operation failures stay on that Observable's subscriber. They are not
+   * mirrored here. A fatal failure still places the same {@link SerialError}
+   * on `state$` when `status` is `'error'`, whether or not this stream
+   * emits it. Non-fatal session errors, such as line-buffer overflow, do
+   * not change `state$`.
    *
    * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/633 | Issue #633}
    */
   readonly errors$: Observable<SerialError>;
 
@@ -235,13 +238,11 @@ export interface SerialSession {
    * `Uint8Array` payloads are copied then and those bytes are written
    * unchanged. Mutating the caller's buffer after subscribe does not change
    * a queued write. Each subscription snapshots independently. Write
-   * failures are normalized into
-   * {@link SerialError} with {@link SerialErrorCode.WRITE_FAILED} and
-   * multiplexed on {@link SerialSession.errors$} in addition to being
-   * surfaced to the subscriber, so a single subscription is enough to
-   * observe every I/O error. Calling `send$` while the session is not in
-   * `'connected'` state fails fast with
-   * {@link SerialErrorCode.PORT_NOT_OPEN}.
+   * failures are normalized into {@link SerialError} with
+   * {@link SerialErrorCode.WRITE_FAILED} and delivered to the subscriber
+   * only. They are not emitted on {@link SerialSession.errors$}. Calling
+   * `send$` while the session is not in `'connected'` state fails fast
+   * with {@link SerialErrorCode.PORT_NOT_OPEN}, also only on the subscriber.
    *
    * The returned Observable completes once the enqueued payload has been
    * flushed to the underlying writer.

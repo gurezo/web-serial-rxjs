@@ -26,9 +26,10 @@ import {
  * This release wires the internal read pump (#202) and the internal send
  * queue (#203) into the session so that `connect$`, `disconnect$`,
  * `receive$`, and `send$` all operate end-to-end. Error handling is
- * centralised through a single `reportError` helper (#204) so every
- * failure path normalises through {@link normalizeSerialError} and emits
- * on the one `errors$` channel.
+ * centralised through a single `reportError` helper (#204, #633) so every
+ * failure path normalises through {@link normalizeSerialError}. Operation
+ * failures stay on the calling Observable. Session-scoped failures are
+ * published on `errors$`.
  *
  * Key behaviors:
  *
@@ -54,11 +55,12 @@ import {
  *   subscribers are written to the port in call order. The bytes are fixed
  *   when the Observable is subscribed: strings are UTF-8 encoded through a
  *   shared `TextEncoder`, and `Uint8Array` values are copied.
- * - `errors$` multiplexes every {@link SerialError} produced by the
- *   session. Connect / read / close failures are treated as fatal and
- *   also drive `state$` to `'error'`; write failures are non-fatal and
- *   do not mutate `state$` because a real connection loss will be
- *   observed by the read pump on the next tick anyway.
+ * - `errors$` publishes session-scoped failures: read-pump errors after
+ *   `'connected'`, an unexpected stream close while connected, and
+ *   `LINE_BUFFER_OVERFLOW`. `connect$` / `send$` / `disconnect$` failures
+ *   go only to that subscriber. Fatal failures still move `state$` to
+ *   `'error'` with the same {@link SerialError}. Write failures are
+ *   non-fatal and do not mutate `state$`.
  *
  * @param options - Session options. W3C connection fields (`baudRate`,
  *   `dataBits`, …) are passed to `port.open`. `filters` is forwarded to
@@ -72,6 +74,7 @@ import {
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/202 | Issue #202}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/203 | Issue #203}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/204 | Issue #204}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/633 | Issue #633}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/397 | Issue #397}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/399 | Issue #399}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/401 | Issue #401}
@@ -157,6 +160,7 @@ export function createSerialSession(
             throw reportError(error, {
               fallbackCode: SerialErrorCode.WRITE_FAILED,
               messagePrefix: 'Failed to write data',
+              emitOnErrors: false,
             });
           }
         });

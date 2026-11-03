@@ -193,10 +193,10 @@ v3 では **`SerialSessionStatus`** が lifecycle 文字列定数（例: `Serial
 - `{ status: 'connected', portInfo }` — ポートが開いており read pump が動作中。`portInfo` は `SerialPort.getInfo()` と同じ形。
 - `{ status: 'disconnecting' }` — `disconnect$` 実行中。
 - `{ status: 'unsupported' }` — `navigator.serial` が存在しない環境でセッションを生成した場合。
-- `{ status: 'error', error }` — 致命的な失敗。`error` は `errors$` に流れた `SerialError` と同一インスタンス。
+- `{ status: 'error', error }` — 致命的な失敗。`error` はその失敗の `SerialError` と同一インスタンス。操作の失敗では `errors$` には出ない。
 - `{ status: 'disposed' }` — `dispose$` によりセッションが永久破棄された。
 
-ポート選択ダイアログのキャンセル（`OPERATION_CANCELLED`）は `'error'` に入らず、`'idle'` に戻ります。`connect$` は error 終了し、同じ `SerialError` が `errors$` に 1 回流れます。
+ポート選択ダイアログのキャンセル（`OPERATION_CANCELLED`）は `'error'` に入らず、`'idle'` に戻ります。`connect$` は error 終了し、その `SerialError` は `errors$` には出ません。
 
 比較例:
 
@@ -306,7 +306,7 @@ createSerialUi(session);
 
 ### `connect$(): Observable<void>`
 
-ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時は subscriber と `errors$` の両方にエラーを流します。状態遷移は `idle → connecting → connected`。**購読により実行されます。** `'connecting'` 中にこの購読を解除すると、その試行は破棄されます。破棄された試行がすでにポートを開いていればそのポートは閉じ、次の `connect$()` とは `requestPort` も `open` も共有しません。
+ユーザーが選択したシリアルポートをオープンし、内部の read pump を起動します。成功時は complete し、失敗時はその subscriber にだけエラーを流します（`errors$` には出しません）。状態遷移は `idle → connecting → connected`。**購読により実行されます。** `'connecting'` 中にこの購読を解除すると、その試行は破棄されます。破棄された試行がすでにポートを開いていればそのポートは閉じ、次の `connect$()` とは `requestPort` も `open` も共有しません。
 
 ### `disconnect$(): Observable<void>`
 
@@ -324,7 +324,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `errors$: Observable<SerialError>`
 
-主エラーチャネル。接続・読み取り・書き込み・クローズで発生したすべての失敗が `SerialError` に正規化されて流れます。致命的な失敗は `state$` を `{ status: 'error', error }` に遷移させ、read pump とポートをテアダウンします。
+セッション起因のエラーチャネルです。接続完了後の read pump エラー、接続中の予期しない stream close、`LINE_BUFFER_OVERFLOW` が流れます。`connect$` / `send$` / `disconnect$` の失敗は各 subscriber だけに出て、ここには出ません。致命的な失敗は、このストリームに出るかどうかにかかわらず、`state$` を `{ status: 'error', error }` に遷移させ、read pump とポートをテアダウンします。
 
 ### `receive$: Observable<string>`
 
@@ -340,7 +340,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-ペイロードを送信キューに投入します。送るバイト列は `send$()` を呼んだ時点ではなく、Observable を購読した時点で決まります。文字列はその時点で共有 `TextEncoder` により UTF-8 エンコードされます。`Uint8Array` は購読時にコピーされ、そのバイト列が変換されずに書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。購読後に呼び出し元バッファを書き換えても、キュー待ちの送信内容は変わりません。同じ Observable を複数購読した場合は、購読ごとにスナップショットします。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber と `errors$` の両方に流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗します。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。`disconnect$`、`dispose$`、および `'connected'` へ進む `connect$` は、まだ書き込みが始まっていない送信を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、この失敗は `errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待つため、書き込みは並行しません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+ペイロードを送信キューに投入します。送るバイト列は `send$()` を呼んだ時点ではなく、Observable を購読した時点で決まります。文字列はその時点で共有 `TextEncoder` により UTF-8 エンコードされます。`Uint8Array` は購読時にコピーされ、そのバイト列が変換されずに書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。購読後に呼び出し元バッファを書き換えても、キュー待ちの送信内容は変わりません。同じ Observable を複数購読した場合は、購読ごとにスナップショットします。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber にだけ流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗し、この失敗も `errors$` には出ません。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。`disconnect$`、`dispose$`、および `'connected'` へ進む `connect$` は、まだ書き込みが始まっていない送信を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、この失敗は `errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待つため、書き込みは並行しません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ## SerialError / SerialErrorCode
 

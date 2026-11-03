@@ -145,7 +145,7 @@ if (!isWebSerialSupported()) {
 
 session.lines$.subscribe((line) => console.log('line:', line));
 
-// In production apps, subscribe to errors$ and handle SerialError
+// Operation failures use each Observable's error; session failures use errors$
 session.errors$.subscribe((err) => console.error('Serial error:', err));
 
 session.connect$().subscribe({
@@ -175,22 +175,29 @@ session.state$.subscribe((state) => {
 });
 ```
 
-## Error handling (`errors$`)
+## Error handling
 
-**`errors$`** is the **canonical error event channel** for all `SerialError` instances from connect, read, write, and close. Errors received via `connect$().subscribe({ error })` are the same instances emitted on `errors$`.
+Each failure is delivered on one channel.
 
-- **fatal** — stops the read pump and tears down the port; `state$` transitions to `{ status: 'error', error }`
-- **non-fatal** — session continues (e.g. `WRITE_FAILED`, `LINE_BUFFER_OVERFLOW`)
+- **`connect$` / `send$` / `disconnect$`** — that subscription's `error`. Not emitted on `errors$`.
+- **`errors$`** — read-pump errors after connect, unexpected disconnect, and `LINE_BUFFER_OVERFLOW`.
+- **fatal** — stops the read pump and tears down the port. `state$` becomes `{ status: 'error', error }` with that same `SerialError`.
+- **non-fatal** — the session continues (`WRITE_FAILED` on `send$`, `LINE_BUFFER_OVERFLOW` on `errors$`).
 
 ```typescript
 import { SerialErrorCode } from '@gurezo/web-serial-rxjs';
 
+session.send$('hello\n').subscribe({
+  error: (error) => {
+    if (error.is(SerialErrorCode.WRITE_FAILED)) {
+      console.warn('Write failed (session continues):', error.context.cause);
+    }
+  },
+});
+
 session.errors$.subscribe((error) => {
   if (error.is(SerialErrorCode.READ_FAILED)) {
     console.error('Read failed:', error.context.cause);
-  }
-  if (error.is(SerialErrorCode.WRITE_FAILED)) {
-    console.warn('Write failed (session continues):', error.context.cause);
   }
 });
 ```

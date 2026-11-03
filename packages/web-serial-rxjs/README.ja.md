@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/gurezo/web-serial-rxjs/main/packages/web-serial-rxjs/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-Web Serial API を最小限の Session 指向 RxJS 表面でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、`state$`（canonical lifecycle state）/ `errors$`（error event channel）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。read loop や送信キューの自前実装は不要です。
+Web Serial API を最小限の Session 指向 RxJS 表面でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、`state$`（canonical lifecycle state）/ `errors$`（セッション起因のエラー）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。read loop や送信キューの自前実装は不要です。
 
 **主対象は UTF-8 テキスト通信です。** 受信データは常にストリーミング UTF-8 `TextDecoder` でデコードされます。`receive$` が返すのは**デコード済みテキストチャンク**（行未分割）であり、ワイヤ上の生バイトではありません。バイナリ**送信**（`send$(Uint8Array)`）は対応しますが、バイナリ**受信**・UTF-8 以外の文字コード・プロトコルフレーミング（Modbus / COBS / SLIP など）は対象外です。詳細は下記の [対応範囲](#対応範囲テキスト--バイナリ--文字コード) と [API の概念](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
@@ -136,6 +136,7 @@ pnpm add rxjs
 | [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md) | 行フレーミング、擬似リクエスト/レス、リカバリ |
 | [トラブルシューティング](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md) | Web Serial / セッションのよくある問題と自己解決手順 |
 | [API の概念と設計メモ](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md) | オプション、`SerialError`、型の表形式補足 |
+| [v4 → v5 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md) | 破壊的変更。エラー通知契約から追記する |
 | [v3 → v4 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理） |
 | [v2 → v3 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v3.md) | `state$` discriminated union、`SerialSessionStatus`、`context.cause` |
 | [v1 → v2 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v2.md) | 廃止された v1 API の置き換え |

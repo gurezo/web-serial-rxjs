@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subject, of } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as webSerialRxjs from '@gurezo/web-serial-rxjs';
 import { App } from './app.js';
@@ -99,6 +99,35 @@ describe('App', () => {
     }
     app = null;
     container = null;
+  });
+
+  it('should show send$ failures in the error panel', () => {
+    app = new App();
+    const session = mockSessions[0];
+    if (!session) {
+      throw new Error('session was not created');
+    }
+    session.state$.next({
+      status: 'connected',
+      portInfo: { usbVendorId: 0x1a86, usbProductId: 0x7523 },
+    });
+    const failure = new webSerialRxjs.SerialError(
+      webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+      'write failed',
+    );
+    session.send$.mockReturnValue(throwError(() => failure));
+    const sendInput = document.getElementById('send-input');
+    if (!(sendInput instanceof HTMLInputElement)) {
+      throw new Error('send input missing');
+    }
+    sendInput.value = 'hello';
+    document.getElementById('send-btn')?.click();
+    expect(document.getElementById('session-error-message')?.textContent).toBe(
+      'write failed',
+    );
+    expect(document.getElementById('session-error-code')?.textContent).toBe(
+      webSerialRxjs.SerialErrorCode.WRITE_FAILED,
+    );
   });
 
   it('should create an App instance', () => {

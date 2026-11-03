@@ -6,7 +6,7 @@
   <img src="./assets/icon/web-serial-rxjs-icon.png" alt="web-serial-rxjs プロジェクトアイコン" width="512" />
 </p>
 
-Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、アプリケーション側は `state$`（canonical lifecycle state）/ `errors$`（error event channel）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
+Web Serial API を最小限の Session 指向 RxJS API でラップする TypeScript ライブラリです。公開 API は単一の `SerialSession` を提供し、アプリケーション側は `state$`（canonical lifecycle state）/ `errors$`（セッション起因のエラー）/ `receive$` / `lines$` を購読するだけで UI を駆動できます。BehaviorSubject による状態再構築・read loop・送信キューの自前実装は一切不要です。
 
 **主な対象読者:** この README は主に**ライブラリ利用者**向けです（インストール、接続、サンプル、Guide）。コントリビュータ・メンテナは [貢献](#貢献) および [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) から始めてください。短い [npm パッケージ README](packages/web-serial-rxjs/README.ja.md) は `@gurezo/web-serial-rxjs` と一緒に公開される利用者向け索引です。このリポジトリ README はモノレポのハブ（`apps/` のサンプル、貢献、開発ツール案内）です。
 
@@ -31,10 +31,10 @@ Web Serial API を最小限の Session 指向 RxJS API でラップする TypeSc
 
 ## 機能
 
-- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（error event channel）/ `receive$` / `lines$` と `connect$` / `disconnect$` / `dispose$` / `send$` を公開
+- **Session 指向のリアクティブ API**: 1 つの `SerialSession` が `state$`（canonical lifecycle discriminated union）/ `errors$`（セッション起因のエラー）/ `receive$` / `lines$` と `connect$` / `disconnect$` / `dispose$` / `send$` を公開
 - **UTF-8 テキストストリーム**: `receive$` は内部でストリーミング `TextDecoder` を用いてデコード済み。マルチバイト文字がチャンクにまたがっても正しく結合されます。本ライブラリは **テキスト中心**で、バイナリ受信・UTF-8 以外の文字コードは対象外です（バイナリ**送信**の `send$(Uint8Array)` は対応）。詳細は [パッケージ README の対応範囲表](packages/web-serial-rxjs/README.ja.md#対応範囲テキスト--バイナリ--文字コード) と [Guide の概念](packages/web-serial-rxjs/docs/guide/ja/concepts.md#対応範囲テキスト--バイナリ--文字コード) を参照してください
 - **順序保証された送信キュー**: 並行する `send$` 呼び出しも内部キューで FIFO 処理され、呼び出し順に書き込まれます
-- **統一エラーチャネル**: すべての I/O エラーは `SerialError` に正規化され `errors$` に多重化されます
+- **排他的なエラー通知**: 操作の失敗は `connect$` / `send$` / `disconnect$` の subscriber だけ。接続後の read pump、予期しない切断、`LINE_BUFFER_OVERFLOW` は `errors$`
 - **明示的なライフサイクル**: `state$` は `status` を持つ discriminated union（`idle` / `connecting` / `connected` / `disconnecting` / `unsupported` / `error` / `disposed`）を emit するので、`state.status` で narrowing し `state.portInfo` などにアクセスできます
 - **TypeScript サポート**: 完全な TypeScript 型定義を同梱
 - **フレームワーク非依存**: 任意の JavaScript/TypeScript フレームワークまたはバニラ JavaScript で利用可能
@@ -132,6 +132,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 | **[Bundle size と tree-shaking](packages/web-serial-rxjs/docs/guide/ja/bundle-size.md)** | library-only サイズのスナップショットと再現可能な測定。 |
 | **[Verified environment 掲載基準](packages/web-serial-rxjs/docs/guide/ja/verified-environment.md)** | 実機結果を掲載する場合の最低項目（デバイスカタログではない）。 |
 | **[API の概念と設計メモ](packages/web-serial-rxjs/docs/guide/ja/concepts.md)** | オプション、`SerialSessionState`、`SerialError` の表形式補足。 |
+| **[v4 → v5 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v5.md)** | 破壊的変更。エラー通知契約から追記する。 |
 | **[v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)** | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |
 | **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
 | **[v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)** | 削除された v1 API からの対応表。 |
@@ -159,6 +160,7 @@ Framework Examples は各スタックでの **`SerialSession` の配線方法**�
 
 旧メジャーバージョンからのアップグレード:
 
+- [v4 → v5 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v5.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v5.md)）
 - [v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v4.md)）
 - [v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)）
 - [v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)（[English](packages/web-serial-rxjs/docs/guide/en/migration-v2.md)）

@@ -20,7 +20,7 @@ Release mechanics (tag → CI → npm → GitHub Release) are described in the r
 
 Breaking changes ship in a **major** release only.
 
-When a major release changes public APIs that adopters must migrate, this Guide adds or updates a **Migration Guide** (for example [v3 → v4](./migration-v4.md)). Prefer those pages over reading every commit.
+When a major release changes public APIs that adopters must migrate, this Guide adds or updates a **Migration Guide** (for example [v4 → v5](./migration-v5.md)). Prefer those pages over reading every commit.
 
 ## Deprecated APIs
 
@@ -53,5 +53,5 @@ Browser / environment support (what we test) is separate from version support �
 - Repository [SECURITY.md](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.md) · [日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.ja.md)
 - Repository [RELEASING.md](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.md) · [日本語](https://github.com/gurezo/web-serial-rxjs/blob/main/RELEASING.ja.md)
 - [Browser support and support policy](./browser-support.md)
-- [v3 → v4 Migration](./migration-v4.md) · [v2 → v3](./migration-v3.md) · [v1 → v2](./migration-v2.md)
+- [v4 → v5 Migration](./migration-v5.md) · [v3 → v4](./migration-v4.md) · [v2 → v3](./migration-v3.md) · [v1 → v2](./migration-v2.md)
 - Repository [README – Development and Release Strategy](https://github.com/gurezo/web-serial-rxjs/blob/main/README.md#development-and-release-strategy)

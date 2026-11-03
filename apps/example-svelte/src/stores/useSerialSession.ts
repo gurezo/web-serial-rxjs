@@ -1,4 +1,5 @@
 import {
+  asExampleSerialError,
   createSerialSessionController,
   formatExampleSerialErrorDetail,
   getExampleSupportStatus,
@@ -8,7 +9,7 @@ import {
   type SerialError,
   type SerialSessionState,
 } from '@gurezo/web-serial-rxjs';
-import { type Observable, Subscription } from 'rxjs';
+import { tap, type Observable, Subscription } from 'rxjs';
 import { onDestroy } from 'svelte';
 import { derived, readable, writable, type Readable } from 'svelte/store';
 
@@ -98,15 +99,28 @@ export function useSerialSession(
     controller.dispose();
   });
 
-  const connect$ = (baudRate?: number): Observable<void> => {
-    receivedData.set('');
-    return controller.connect$(baudRate);
+  const showOperationError = (error: unknown): void => {
+    const serialError = asExampleSerialError(error);
+    if (!serialError) {
+      return;
+    }
+    const display = formatExampleSerialErrorDetail(serialError);
+    errorMessage.set(display.message);
+    errorType.set(display.type);
+    errorCode.set(display.code);
+    errorContext.set(display.contextSummary);
   };
 
-  const disconnect$ = (): Observable<void> => controller.disconnect$();
+  const connect$ = (baudRate?: number): Observable<void> => {
+    receivedData.set('');
+    return controller.connect$(baudRate).pipe(tap({ error: showOperationError }));
+  };
+
+  const disconnect$ = (): Observable<void> =>
+    controller.disconnect$().pipe(tap({ error: showOperationError }));
 
   const send$ = (data: string | Uint8Array): Observable<void> =>
-    controller.send$(data);
+    controller.send$(data).pipe(tap({ error: showOperationError }));
 
   const clearReceivedData = (): void => {
     controller.resetTerminalBuffer();

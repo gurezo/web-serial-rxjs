@@ -51,6 +51,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[Bundler / framework 互換性の検証方針](./bundler-compatibility.md)** | CI と Examples の区別、ESM / RxJS / 型（全 bundler matrix なし） |
 | **[Bundle size と tree-shaking](./bundle-size.md)** | library-only サイズのスナップショットと再現可能な測定 |
 | **[Verified environment 掲載基準](./verified-environment.md)** | 実機結果掲載時の最低検証項目（デバイスカタログなし） |
+| **[v4 → v5 マイグレーション](./migration-v5.md)** | v5 の破壊的変更。エラー通知契約から追記する |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |
 | **[v1 → v2 マイグレーション](./migration-v2.md)** | v1 廃止 API の置き換え |
@@ -67,7 +68,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 ## Canonical API の要点
 
 - **`state$`** — 接続ライフサイクルの canonical source。`state.status` と `SerialSessionStatus` で分岐し、connected 時は `state.portInfo` を利用する
-- **`errors$`** — fatal / non-fatal エラーの canonical event channel。`SerialError.is(SerialErrorCode.*)` で分岐する
+- **`errors$`** — 接続後の read pump、予期しない切断、`LINE_BUFFER_OVERFLOW`。操作の失敗は各 Observable の `error`
 - **`dispose$()`** — セッション破棄の唯一の API（購読により実行）
 - **`isWebSerialSupported()`** — トップレベルの同期 feature detection（セッションメソッドではない。サポート保証ではない）— [ブラウザサポート](./browser-support.md) を参照
 - Phase 1+2 で削除された API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）は [v4 への移行](./migration-v4.md) を参照

@@ -6,9 +6,12 @@ import { SerialErrorCode } from '../../errors/serial-error-code';
  *
  * - `'fatal'` drives `state$` into `'error'` and tears down the live
  *   session (pump stop + port close).
- * - `'non-fatal'` is multiplexed on `errors$` without mutating session state.
- * - `'cancelled'` is multiplexed on `errors$` and, while `'connecting'`,
- *   returns `state$` to `'idle'` without tearing down a port.
+ * - `'non-fatal'` does not mutate session state.
+ * - `'cancelled'`, while `'connecting'`, returns `state$` to `'idle'`
+ *   without tearing down a port.
+ *
+ * Whether the error is also published on `errors$` is chosen by the
+ * caller via `emitOnErrors`. Severity does not decide the channel.
  *
  * @internal
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/399 | Issue #399}

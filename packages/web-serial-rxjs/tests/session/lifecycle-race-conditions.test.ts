@@ -1229,15 +1229,23 @@ describe('lifecycle race conditions (#477)', () => {
       installNavigatorWithRequestPort(requestPort);
 
       const session = createSerialSession();
-      const errors = firstValueFrom(session.errors$);
+      const emissions: SerialError[] = [];
+      const errorsSub = session.errors$.subscribe((error) => {
+        emissions.push(error);
+      });
 
-      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+      const rejected = await firstValueFrom(session.connect$()).catch(
+        (error: unknown) => error,
+      );
+      expect(rejected).toMatchObject({
         code: SerialErrorCode.PORT_OPEN_FAILED,
       });
-      expect((await errors).code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
-      expect(await firstValueFrom(session.state$)).toEqual(
-        expect.objectContaining({ status: S.Error }),
-      );
+      expect(emissions).toEqual([]);
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Error,
+        error: rejected,
+      });
+      errorsSub.unsubscribe();
 
       await expect(firstValueFrom(session.connect$())).resolves.toBeUndefined();
       expect(await firstValueFrom(session.state$)).toEqual(connectedState());
@@ -1272,13 +1280,18 @@ describe('lifecycle race conditions (#477)', () => {
       const settled = await connectResult;
       await flushMicrotasks();
 
-      expect(emissions).toHaveLength(1);
-      const emitted = emissions[0];
-      expect(emitted?.code).toBe(SerialErrorCode.CONNECTION_LOST);
-      expect(settled).toEqual({ kind: 'error', error: emitted });
+      expect(emissions).toEqual([]);
+      expect(settled.kind).toBe('error');
+      if (settled.kind !== 'error') {
+        throw new Error('expected connect$ to fail');
+      }
+      expect(settled.error).toBeInstanceOf(SerialError);
+      expect(settled.error).toMatchObject({
+        code: SerialErrorCode.CONNECTION_LOST,
+      });
       expect(await firstValueFrom(session.state$)).toEqual({
         status: S.Error,
-        error: emitted,
+        error: settled.error,
       });
       expect(port.close).toHaveBeenCalledTimes(1);
       errorsSub.unsubscribe();
@@ -1340,7 +1353,7 @@ describe('lifecycle race conditions (#477)', () => {
         const reported = connectError.mock.calls[0]?.[0] as SerialError;
         expect(reported).toBeInstanceOf(SerialError);
         expect(reported.code).toBe(SerialErrorCode.UNKNOWN);
-        expect(emissions).toEqual([reported]);
+        expect(emissions).toEqual([]);
         expect(port.close).toHaveBeenCalledTimes(1);
         expect(await firstValueFrom(session.state$)).toEqual({
           status: S.Error,
@@ -1391,7 +1404,7 @@ describe('lifecycle race conditions (#477)', () => {
         const reported = connectError.mock.calls[0]?.[0] as SerialError;
         expect(reported).toBeInstanceOf(SerialError);
         expect(reported.code).toBe(SerialErrorCode.UNKNOWN);
-        expect(emissions).toEqual([reported]);
+        expect(emissions).toEqual([]);
         expect(order).toEqual(['stop', 'close']);
         expect(await firstValueFrom(session.state$)).toEqual({
           status: S.Error,
@@ -1428,7 +1441,7 @@ describe('lifecycle race conditions (#477)', () => {
         const reported = connectError.mock.calls[0]?.[0] as SerialError;
         expect(reported).toBeInstanceOf(SerialError);
         expect(reported.code).toBe(SerialErrorCode.UNKNOWN);
-        expect(emissions).toEqual([reported]);
+        expect(emissions).toEqual([]);
         expect(port.close).toHaveBeenCalledTimes(1);
         expect(await firstValueFrom(session.state$)).toEqual({
           status: S.Error,
