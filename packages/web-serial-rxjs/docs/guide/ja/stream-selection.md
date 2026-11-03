@@ -23,7 +23,21 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | `lines$` | `\n` / `\r\n` / 単独の interior `\r` で区切った**完成行**。ログ、1 行応答、パーサ向け。 |
 | `terminalText$` | `receive$` 由来の**表示用**累積テキスト。`\r` 再描画を畳み込み、既定ではプレーンテキスト UI 向けに ANSI を除去。`createTerminalBuffer(receive$).text$` と同等。 |
 
-3 つとも同じ `connect$` の read pump から駆動されます。**subscription-lazy ではありません**。遅れて購読した consumer は新しいデータのみを受け取ります（`terminalText$` は購読後に共有された累積表示を受け取ります）。
+3 つとも同じ `connect$` の read pump から駆動されます。pump 自体は **subscription-lazy ではありません**。遅れて購読した consumer が受け取るものは、ストリームごとに次の契約で決まります。
+
+<a id="subscription-replay-contract"></a>
+
+## 購読と replay の契約
+
+Issue: [#634](https://github.com/gurezo/web-serial-rxjs/issues/634)
+
+| ストリーム | 温度 | 遅延購読への replay | 購読者が 0 のとき | リセット |
+| --- | --- | --- | --- | --- |
+| `receive$` | hot。pump は購読がなくても push する | なし | その間のチャンクは捨てる | `dispose$` で complete |
+| `lines$` | hot | emit 済みの行は replay しない | 未完成 tail はセッションの line buffer に残る。購読者数とは無関係 | 切断と teardown で未完成 tail を捨てる。`dispose$` で complete |
+| `terminalText$` | 購読者が 1 人以上いるあいだだけ hot multicast | 他の購読者が残っているとき、折りたたみ済みの最新 1 件だけ | 折りたたみ状態と `receive$` への上流購読を捨てる。空白期間のチャンクは畳み込まない | 購読者が 0 になったとき。購読中に `receive$` が complete すれば `terminalText$` も complete する |
+
+`terminalText$` の `maxLines` / `maxChars` は、購読が続いているあいだの上限です。セッションを残したまま最後の購読を外すと、次の購読は空から始まります。表示を残すには、コンポーネントの外で購読を維持するか、利用者が最新文字列を保持してください。購読者がいないときに `dispose$` したあとの再購読は、古い文字列を出さず complete します。
 
 ## チャンク境界に依存しない
 
@@ -64,9 +78,9 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 - `\r` による再描画を畳み込みつつ、通常の改行挙動は維持する
 - 既定では ANSI エスケープを除去（`stripAnsi: true`）。表示ストリームにエスケープを残す場合は `SerialSessionOptions.terminalBuffer.stripAnsi` を `false` にする
-- `terminalBuffer` で上限（`maxLines` / `maxChars`。既定は 10,000 行・1,048,576 文字）
+- `terminalBuffer` で上限（`maxLines` / `maxChars`。既定は 10,000 行・1,048,576 文字）。上限は購読が続いているあいだだけ適用される
 
-表示バインドには `terminalText$` を優先します。装飾前のチャンク列（生のエスケープ、独自の畳み込み、非表示コンシューマ）が必要なときは `receive$` を使います。
+表示バインドには `terminalText$` を優先します。最後の購読を外すと表示履歴は残りません。詳細は [購読と replay の契約](#subscription-replay-contract) を参照してください。装飾前のチャンク列（生のエスケープ、独自の畳み込み、非表示コンシューマ）が必要なときは `receive$` を使います。
 
 ## バイナリ受信は未対応
 

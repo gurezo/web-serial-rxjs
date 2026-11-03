@@ -62,6 +62,8 @@ function teardownSession(session: SerialSession, uiSub: Subscription): void {
 
 ボタンハンドラからの `connect$()` / `send$()` / `disconnect$()` への one-shot 購読は通常 self-complete し、明示的 teardown は不要です。hot stream（`state$` / `lines$` など）への **長寿命** subscription は **必要**です。
 
+最後の `terminalText$` 購読を外すと、折りたたみ済みの表示履歴は捨てられます。セッションを残したままコンポーネントだけ再マウントすると、表示は空から始まります。残したい場合は、コンポーネントの外で `terminalText$` を購読し続けるか、最新文字列を利用者側で保持してください。契約は [購読と replay の契約](./stream-selection.md#subscription-replay-contract) を参照してください。
+
 ## subscription 解除と session dispose の違い
 
 [タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component-hook-破棄時のキャンセル) では `takeUntil(destroy$)` や `takeUntilDestroyed()` で UI への **イベント配信を止める**方法を示しています。

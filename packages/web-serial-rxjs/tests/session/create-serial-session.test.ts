@@ -1177,6 +1177,51 @@ describe('createSerialSession', () => {
 
       await expect(latest).resolves.toBe('f\nghij');
     });
+
+    it('issue #634: completes terminalText$ on dispose and does not replay history', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const values: string[] = [];
+      let completed = false;
+      const subscription = session.terminalText$.subscribe({
+        next: (text) => {
+          values.push(text);
+        },
+        complete: () => {
+          completed = true;
+        },
+      });
+
+      try {
+        await firstValueFrom(session.connect$());
+        controller.enqueue(new TextEncoder().encode('hello\n'));
+        await flushMicrotasks();
+        expect(values.at(-1)).toBe('hello\n');
+
+        await firstValueFrom(session.dispose$());
+        expect(completed).toBe(true);
+      } finally {
+        subscription.unsubscribe();
+      }
+
+      const lateValues: string[] = [];
+      let lateCompleted = false;
+      const late = session.terminalText$.subscribe({
+        next: (text) => {
+          lateValues.push(text);
+        },
+        complete: () => {
+          lateCompleted = true;
+        },
+      });
+      late.unsubscribe();
+
+      expect(lateValues).toEqual([]);
+      expect(lateCompleted).toBe(true);
+    });
   });
 
   describe('send$', () => {

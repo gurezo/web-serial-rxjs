@@ -62,6 +62,8 @@ function teardownSession(session: SerialSession, uiSub: Subscription): void {
 
 One-shot subscriptions to `connect$()`, `send$()`, or `disconnect$()` from button handlers usually complete on their own and do not need explicit teardown. Long-lived subscriptions to hot streams (`state$`, `lines$`, …) **do**.
 
+Unsubscribing the last `terminalText$` subscriber drops the folded display history. If the session outlives the component, a remount starts from an empty display. To keep it, hold the `terminalText$` subscription outside the component, or keep the latest string in the app. See [Subscription and replay contract](./stream-selection.md#subscription-replay-contract).
+
 ## Subscription cleanup vs session dispose
 
 [Timeout / cancel / retry – Cancel on Component / Hook teardown](./timeout-cancel-retry.md#cancel-on-component-hook-teardown) shows `takeUntil(destroy$)` and `takeUntilDestroyed()` to stop **delivering events** to your UI.

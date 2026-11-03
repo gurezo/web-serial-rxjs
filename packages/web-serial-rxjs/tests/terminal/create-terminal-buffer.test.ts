@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Subject, firstValueFrom } from 'rxjs';
+import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { createTerminalBuffer } from '../../src/terminal/create-terminal-buffer';
 
 function subscribeTerminalText(
@@ -324,5 +324,91 @@ describe('createTerminalBuffer', () => {
       receive$.next('plain\n');
       expect(last).toBe('plain\n');
     });
+  });
+});
+
+describe('issue #634: terminal text history is subscriber-scoped', () => {
+  it('replays the latest folded text to a subscriber that joins while another remains', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$);
+    const sub = text$.subscribe();
+    receive$.next('hello\n');
+
+    const joined: string[] = [];
+    const late = text$.subscribe((text) => {
+      joined.push(text);
+    });
+
+    expect(joined).toEqual(['hello\n']);
+    sub.unsubscribe();
+    late.unsubscribe();
+  });
+
+  it('drops folded history and gap chunks when the subscriber count returns to zero', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$);
+    const sub = text$.subscribe();
+    receive$.next('hello\n');
+    sub.unsubscribe();
+
+    receive$.next('gap\n');
+
+    const next: string[] = [];
+    const late = text$.subscribe((text) => {
+      next.push(text);
+    });
+    expect(next).toEqual([]);
+
+    receive$.next('after\n');
+    expect(next).toEqual(['after\n']);
+    late.unsubscribe();
+  });
+
+  it('releases the upstream subscription when the last subscriber unsubscribes', () => {
+    const receive$ = new Subject<string>();
+    let subscribers = 0;
+    const source = new Observable<string>((subscriber) => {
+      subscribers += 1;
+      const inner = receive$.subscribe(subscriber);
+      return () => {
+        subscribers -= 1;
+        inner.unsubscribe();
+      };
+    });
+    const { text$ } = createTerminalBuffer(source);
+
+    expect(subscribers).toBe(0);
+    const sub = text$.subscribe();
+    expect(subscribers).toBe(1);
+    receive$.next('hello\n');
+    sub.unsubscribe();
+    expect(subscribers).toBe(0);
+  });
+
+  it('completes a later subscription without replaying text after the source completes', () => {
+    const receive$ = new Subject<string>();
+    const { text$ } = createTerminalBuffer(receive$);
+    const seen: string[] = [];
+    const sub = text$.subscribe((text) => {
+      seen.push(text);
+    });
+    receive$.next('hello\n');
+    expect(seen).toEqual(['hello\n']);
+    sub.unsubscribe();
+    receive$.complete();
+
+    const late: string[] = [];
+    let completed = false;
+    text$.subscribe({
+      next: (text) => {
+        late.push(text);
+      },
+      complete: () => {
+        completed = true;
+      },
+    });
+
+    expect(late).toEqual([]);
+    expect(completed).toBe(true);
   });
 });

@@ -297,9 +297,18 @@ export function resolveTerminalBufferOptions(
  * By default, retains at most {@link DEFAULT_TERMINAL_BUFFER_OPTIONS.maxLines}
  * completed lines and {@link DEFAULT_TERMINAL_BUFFER_OPTIONS.maxChars} characters
  * so long-running sessions do not grow memory without bound. Pass `0` for either
- * limit to disable that constraint.
+ * limit to disable that constraint. Those limits apply only while at least one
+ * subscriber remains.
+ *
+ * Folded text is shared only while subscribers remain. A subscriber that joins
+ * during that window receives the latest value. When the subscriber count
+ * returns to zero, the folded state and the upstream subscription are dropped.
+ * The next subscription starts empty, and chunks that arrived during the gap
+ * are not folded. If the source completes, an active subscription completes.
+ * A later subscription completes without replaying the previous text.
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/370 | Issue #370}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/634 | Issue #634}
  */
 export function createTerminalBuffer(
   receive$: Observable<string>,
@@ -323,6 +332,7 @@ export function createTerminalBuffer(
     finalize(() => {
       parser.reset();
     }),
+    // #634: folded history lives only while subscribers remain.
     share({
       connector: () => new ReplaySubject<string>(1),
       resetOnRefCountZero: true,

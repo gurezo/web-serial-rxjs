@@ -334,6 +334,8 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 `receive$` 由来のターミナル表示向け累積テキスト。`\r` による再描画を畳み込みつつ、通常の改行挙動は維持します。既定ではプレーンテキスト表示（`<textarea>` など）向けに ANSI エスケープを除去します。生のエスケープは `receive$` で参照できます。`createTerminalBuffer(receive$, options.terminalBuffer).text$` と同等です。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持し、`SerialSessionOptions.terminalBuffer` で変更できます。無制限にしたい場合は `{ maxLines: 0, maxChars: 0 }` を指定してください。
 
+履歴は購読者の責務です。購読者が 1 人以上いるあいだだけ共有され、そのあいだに入った購読者は最新の 1 件だけを受け取ります。最後の購読者が外れると折りたたみ状態を捨て、次の購読は空から始まります。空白期間のチャンクは畳み込みません。購読中に `dispose$` すると complete します。比較は [購読と replay の契約](./stream-selection.md#subscription-replay-contract) を参照してください。
+
 ### `lines$: Observable<string>`
 
 `\n` / `\r\n` など（実装に従い単独の `\r` も扱い）を区切りとした**行単位**の文字列。行末の改行が揃うまで内部バッファに保持し、揃った行だけが emit されます。既定では未完成 tail は `SerialSessionOptions.lineBuffer` により最大 1,048,576 文字まで保持し、超過時は先頭を破棄して `LINE_BUFFER_OVERFLOW` を `errors$` に通知します（切断はしません）。read pump については `receive$` と同様に **subscription-lazy ではありません**。ログ・パーサ向けであり、`\r` をそのまま活かす未フレーミングのターミナル表示には **`receive$`** を使ってください。
