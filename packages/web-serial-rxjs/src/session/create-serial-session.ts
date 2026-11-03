@@ -157,6 +157,7 @@ export function createSerialSession(
             throw reportError(error, {
               fallbackCode: SerialErrorCode.WRITE_FAILED,
               messagePrefix: 'Failed to write data',
+              emitOnErrors: false,
             });
           }
         });

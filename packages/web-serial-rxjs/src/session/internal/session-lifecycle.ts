@@ -177,7 +177,10 @@ export function createSessionLifecycle(
             SerialErrorCode.BROWSER_NOT_SUPPORTED,
             'Web Serial API is not supported in this environment',
           ),
-          { fallbackCode: SerialErrorCode.BROWSER_NOT_SUPPORTED },
+          {
+            fallbackCode: SerialErrorCode.BROWSER_NOT_SUPPORTED,
+            emitOnErrors: false,
+          },
         );
         subscriber.error(error);
         return;
@@ -193,7 +196,10 @@ export function createSessionLifecycle(
             SerialErrorCode.PORT_ALREADY_OPEN,
             `Cannot connect while session state is '${current}'`,
           ),
-          { fallbackCode: SerialErrorCode.PORT_ALREADY_OPEN },
+          {
+            fallbackCode: SerialErrorCode.PORT_ALREADY_OPEN,
+            emitOnErrors: false,
+          },
         );
         subscriber.error(error);
         return;
@@ -280,11 +286,12 @@ export function createSessionLifecycle(
             }
 
             // Picker cancel is NotFoundError before a port exists.
-            // `cancelled` severity emits on errors$ and returns to idle.
+            // `cancelled` severity returns to idle. The error stays on connect$.
             if (selectedPort === null && isNotFoundDomException(error)) {
               const reported = reportError(error, {
                 fallbackCode: SerialErrorCode.OPERATION_CANCELLED,
                 mapNotFoundError: true,
+                emitOnErrors: false,
               });
               if (isCurrentAttempt()) {
                 subscriber.error(reported);
@@ -301,6 +308,7 @@ export function createSessionLifecycle(
             const reported = reportError(error, {
               fallbackCode: SerialErrorCode.PORT_OPEN_FAILED,
               messagePrefix: 'Failed to open port',
+              emitOnErrors: false,
             });
             if (isCurrentAttempt()) {
               subscriber.error(reported);
@@ -323,14 +331,16 @@ export function createSessionLifecycle(
             pump = createReadPump(selectedPort, {
               onChunk: receivePipeline.handleChunk,
               onError: (pumpError) => {
+                // A synchronous failure inside start() happens before connected
+                // and belongs to connect$. Later read errors run after
+                // transitioned is set and belong to errors$ only.
+                const duringConnect = !transitioned;
                 const reported = reportError(pumpError, {
                   fallbackCode: SerialErrorCode.READ_FAILED,
                   messagePrefix: 'Read pump failed',
+                  emitOnErrors: !duringConnect,
                 });
-                // A synchronous failure inside start() happens before connected.
-                // Later read errors run after transitioned is set and must not
-                // be delivered again on connect$.
-                if (!transitioned) {
+                if (duringConnect) {
                   startupError = reported;
                 }
               },
@@ -382,6 +392,7 @@ export function createSessionLifecycle(
             const reported = reportError(error, {
               fallbackCode: SerialErrorCode.UNKNOWN,
               messagePrefix: 'Unexpected connect failure',
+              emitOnErrors: false,
             });
             if (!isCurrentAttempt()) {
               return;
@@ -454,7 +465,10 @@ export function createSessionLifecycle(
             SerialErrorCode.PORT_NOT_OPEN,
             `Cannot disconnect while session state is '${runtime.status}'`,
           ),
-          { fallbackCode: SerialErrorCode.PORT_NOT_OPEN },
+          {
+            fallbackCode: SerialErrorCode.PORT_NOT_OPEN,
+            emitOnErrors: false,
+          },
         );
         subscriber.error(error);
         return;
@@ -471,6 +485,7 @@ export function createSessionLifecycle(
               throw reportError(error, {
                 fallbackCode: SerialErrorCode.CONNECTION_LOST,
                 messagePrefix: 'Failed to close port',
+                emitOnErrors: false,
               });
             },
           });
@@ -487,6 +502,7 @@ export function createSessionLifecycle(
           const serialError = reportError(error, {
             fallbackCode: SerialErrorCode.UNKNOWN,
             messagePrefix: 'Unexpected disconnect failure',
+            emitOnErrors: false,
           });
           subscriber.error(serialError);
         }
