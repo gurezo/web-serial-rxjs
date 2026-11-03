@@ -19,6 +19,25 @@ import type {
 } from './port-teardown';
 
 /**
+ * Options for {@link createSessionErrorReporter}'s `reportError`.
+ *
+ * Normalisation fields are forwarded to {@link normalizeSerialError}.
+ * `emitOnErrors` controls only whether the normalised error is published
+ * on `errors$`. Severity side effects run either way.
+ *
+ * @internal
+ */
+export interface ReportErrorOptions extends NormalizeSerialErrorOptions {
+  /**
+   * When `false`, skip `errors$` and return the normalised error for the
+   * operation subscriber. Severity side effects still run.
+   *
+   * Defaults to `true`.
+   */
+  emitOnErrors?: boolean;
+}
+
+/**
  * Dependencies for {@link createSessionErrorReporter}.
  *
  * @internal
@@ -46,7 +65,7 @@ export interface SessionErrorReporterDeps {
 export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
   reportError: (
     error: unknown,
-    options: NormalizeSerialErrorOptions,
+    options: ReportErrorOptions,
   ) => SerialError;
   createDisposedError: () => SerialError;
   /**
@@ -95,35 +114,40 @@ export function createSessionErrorReporter(deps: SessionErrorReporterDeps): {
   const whenFatalTeardownSettled = (): Promise<void> | null => pendingTeardown;
 
   /**
-   * Single entry point for every error that should reach `errors$`.
+   * Classify a failure, apply severity side effects, and optionally
+   * publish it on `errors$`.
    *
    * Responsibilities:
    *
    * 1. Normalise the input through {@link normalizeSerialError} so every
-   *    emission is a well-formed {@link SerialError}.
-   * 2. Multiplex the normalised error on `errors$`.
-   * 3. Resolve severity from the normalised {@link SerialError.code} via
+   *    result is a well-formed {@link SerialError}.
+   * 2. Resolve severity from the normalised {@link SerialError.code} via
    *    {@link resolveErrorSeverity} (see `ERROR_SEVERITY` in
    *    `error-severity.ts`).
-   * 4. For fatal severities, drive `state$` to `'error'`, clear the send
+   * 3. For fatal severities, drive `state$` to `'error'`, clear the send
    *    queue so pending writes fail fast, and tear down the live pump +
    *    port. The teardown promise is retained so a later `connect$` waits
    *    until `close()` settles. A rejection does not change state.
-   * 5. For `'cancelled'`, return `state$` from `'connecting'` to `'idle'`
+   * 4. For `'cancelled'`, return `state$` from `'connecting'` to `'idle'`
    *    without teardown. Other statuses are left unchanged.
+   * 5. Publish on `errors$` only when {@link ReportErrorOptions.emitOnErrors}
+   *    is not `false`. Publishing is independent of the side effects above.
    *
    * Returning the normalised error keeps call sites terse: they can hand
    * the result straight to `subscriber.error(...)` without re-normalising.
    */
   const reportError = (
     error: unknown,
-    options: NormalizeSerialErrorOptions,
+    options: ReportErrorOptions,
   ): SerialError => {
-    const serialError = normalizeSerialError(error, options);
+    const { emitOnErrors = true, ...normalizeOptions } = options;
+    const serialError = normalizeSerialError(error, normalizeOptions);
     if (isDisposed()) {
       return serialError;
     }
-    errorsSubject.next(serialError);
+    if (emitOnErrors) {
+      errorsSubject.next(serialError);
+    }
     const severity = resolveErrorSeverity(serialError.code);
     if (severity === 'fatal') {
       const resources = captureResources(controller.runtime);

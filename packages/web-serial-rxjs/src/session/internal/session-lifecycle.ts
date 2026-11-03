@@ -8,10 +8,10 @@ import type {
   SessionResources,
   TeardownResourcesOptions,
 } from './port-teardown';
+import type { ReportErrorOptions } from './session-error-reporter';
 import {
   isNotFoundDomException,
   normalizeSerialError,
-  type NormalizeSerialErrorOptions,
 } from '../normalize-serial-error';
 import { createReadPump, type ReadPump } from '../read-pump';
 import type { SendQueue } from '../send-queue';
@@ -46,10 +46,7 @@ export interface SessionLifecycleDeps {
     resources: SessionResources,
     options?: TeardownResourcesOptions,
   ) => Promise<void>;
-  reportError: (
-    error: unknown,
-    options: NormalizeSerialErrorOptions,
-  ) => SerialError;
+  reportError: (error: unknown, options: ReportErrorOptions) => SerialError;
   createDisposedError: () => SerialError;
   /**
    * In-flight fatal teardown, or `null` when the port is not being released.
