@@ -8,7 +8,6 @@
 
 /** Runtime values exported from the package root barrel / dist/index.d.ts. */
 export const CANONICAL_RUNTIME_EXPORTS = [
-  'assertNever',
   'createSerialSession',
   'createTerminalBuffer',
   'DEFAULT_LINE_BUFFER_OPTIONS',
