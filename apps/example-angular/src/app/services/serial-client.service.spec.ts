@@ -20,6 +20,7 @@ interface MockCore {
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
 }
 
@@ -32,11 +33,13 @@ const createMockCore = (): MockCore => {
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
+  const dispose = vi.fn(() => Promise.resolve());
   const send$ = vi.fn(() => of(undefined));
 
   const session: webSerialRxjs.SerialSession = {
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
     state$: stateSubject.asObservable(),
@@ -53,6 +56,7 @@ const createMockCore = (): MockCore => {
     errorsSubject,
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
   };
@@ -126,7 +130,7 @@ describe('SerialClientService', () => {
     const first = mockSessions[0];
     await firstValueFrom(service.connect$(115200));
     expect(first.connect$).not.toHaveBeenCalled();
-    expect(first.dispose$).toHaveBeenCalledTimes(1);
+    expect(first.dispose).toHaveBeenCalledTimes(1);
     expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(vi.mocked(webSerialRxjs.createSerialSession)).toHaveBeenLastCalledWith({
       baudRate: 115200,
@@ -191,6 +195,6 @@ describe('SerialClientService', () => {
 
   it('should dispose session on destroy', () => {
     service.ngOnDestroy();
-    expect(latestMock().dispose$).toHaveBeenCalledTimes(1);
+    expect(latestMock().dispose).toHaveBeenCalledTimes(1);
   });
 });
