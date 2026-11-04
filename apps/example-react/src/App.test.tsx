@@ -21,6 +21,7 @@ interface MockSession {
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
 }
 
@@ -32,11 +33,13 @@ const createMockSession = (): MockSession => {
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
+  const dispose = vi.fn(() => Promise.resolve());
   const send$ = vi.fn(() => of(undefined));
 
   const session: SerialSession = {
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
     state$: stateSubject.asObservable(),
@@ -54,6 +57,7 @@ const createMockSession = (): MockSession => {
     errorsSubject,
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
   };

@@ -26,6 +26,7 @@ interface MockCore {
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
 }
 
@@ -36,11 +37,13 @@ const createMockCore = (): MockCore => {
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
+  const dispose = vi.fn(() => Promise.resolve());
   const send$ = vi.fn(() => of(undefined));
 
   const session: SerialSession = {
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
     state$: stateSubject.asObservable(),
@@ -57,6 +60,7 @@ const createMockCore = (): MockCore => {
     errorsSubject,
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
   };
@@ -238,16 +242,17 @@ describe('useSerialSession', () => {
     expect(latestMock().disconnect$).toHaveBeenCalled();
   });
 
-  it('connect$(baudRate) で新しいボーレートの session を作成する', () => {
+  it('connect$(baudRate) で新しいボーレートの session を作成する', async () => {
     const { result } = renderHook(() => useSerialSession(9600));
     expect(mockCores).toHaveLength(1);
     const first = mockCores[0];
 
-    act(() => {
+    await act(async () => {
       result.current.connect$(115200).subscribe();
+      await Promise.resolve();
     });
     expect(first.connect$).not.toHaveBeenCalled();
-    expect(first.dispose$).toHaveBeenCalledTimes(1);
+    expect(first.dispose).toHaveBeenCalledTimes(1);
     expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(
       vi.mocked(webSerialRxjs.createSerialSession),
@@ -281,11 +286,11 @@ describe('useSerialSession', () => {
     expect(onError).toHaveBeenCalledWith(err);
   });
 
-  it('unmount 時に dispose$ を呼ぶ', () => {
+  it('unmount 時に dispose を呼ぶ', () => {
     const { unmount } = renderHook(() => useSerialSession());
     const mock = latestMock();
     unmount();
-    expect(mock.dispose$).toHaveBeenCalled();
+    expect(mock.dispose).toHaveBeenCalled();
   });
 
   it('StrictMode の二重マウントでも例外なくセッションを購読できる (issue #328)', () => {
