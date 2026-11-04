@@ -1,4 +1,5 @@
 import { SerialError } from '../../errors/serial-error';
+import type { SerialPortFilter } from '../../web-serial-types';
 import { SerialErrorCode } from '../../errors/serial-error-code';
 
 /**

@@ -5,6 +5,7 @@ import {
   type SerialPortBufferSize,
 } from '../internal/branded-numbers';
 import type { SerialConnectionOptions } from '../types';
+import type { SerialPortFilter } from '../web-serial-types';
 import {
   resolveTerminalBufferOptions,
   type ResolvedTerminalBufferOptions,

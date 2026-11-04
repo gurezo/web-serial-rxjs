@@ -1,4 +1,5 @@
 import type { SerialError } from '../errors/serial-error';
+import type { SerialPortInfo } from '../web-serial-types';
 
 /**
  * Canonical status literals for a {@link SerialSession} lifecycle.

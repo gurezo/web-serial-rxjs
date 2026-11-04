@@ -23,6 +23,9 @@
  * - {@link SerialSessionOptions} - factory options (connection + features)
  * - {@link SerialPayload} - payload accepted by {@link SerialSession.send$}
  * - {@link SerialConnectionOptions} - `port.open` connection parameters (excluding filters)
+ * - {@link SerialOptions} - packaged Web Serial connection dictionary
+ * - {@link SerialPortFilter} - packaged port-selection filter
+ * - {@link SerialPortInfo} - packaged connected port info
  * - {@link SerialSessionFeatureOptions} - library-specific session feature options
  * - {@link SerialSessionStatus} - lifecycle status literals for `state$.status`
  * - {@link SerialSessionState} - discriminated union emitted by `state$`
@@ -125,3 +128,4 @@ export { SerialErrorCode } from './errors/serial-error-code';
 
 export { createTerminalBuffer, DEFAULT_TERMINAL_BUFFER_OPTIONS } from './terminal/create-terminal-buffer';
 export type { TerminalBuffer, TerminalBufferOptions } from './terminal/create-terminal-buffer';
+export type { SerialOptions, SerialPortFilter, SerialPortInfo } from './web-serial-types';
