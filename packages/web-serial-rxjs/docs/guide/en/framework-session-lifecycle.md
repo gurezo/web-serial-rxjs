@@ -4,16 +4,20 @@ Each example app in this repository connects to a serial port, but **when to dis
 
 Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#593](https://github.com/gurezo/web-serial-rxjs/issues/593) · Related: [Quick Start – Disconnect / Dispose](./quick-start.md#dispose-resource-cleanup) · [Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables) · [API concepts – SerialSession](./concepts.md#serialsession) · [Timeout / cancel / retry – Component teardown](./timeout-cancel-retry.md#cancel-on-component-hook-teardown) · [Examples](../../examples/)
 
-## disconnect$() vs dispose$()
+## disconnect$() vs dispose()
 
-Both methods are **cold Observables** — they run only when subscribed. Calling `dispose$()` alone does not release the port or move the session to `'disposed'`. See [Quick Start – Running imperative methods (cold Observables)](./quick-start.md#running-imperative-methods-cold-observables) and [cleanup that forgets to subscribe](#dispose-without-subscribe).
+`disconnect$()` is a **cold Observable** — it runs only when subscribed. **`dispose()`** starts teardown immediately and resolves when the port and read pump are released. `state$` may emit `'disposed'` before that promise resolves. `port.close()` failures do not reject it.
+
+`dispose$()` remains as a deprecated cold Observable over the same teardown. Calling `dispose$()` alone does not release the port or move the session to `'disposed'`. See [cleanup that forgets to subscribe](#dispose-without-subscribe).
 
 | Method | Port / read pump | Session reuse | All observables | Typical trigger |
 | --- | --- | --- | --- | --- |
 | **`disconnect$()`** | Closed and stopped | **Yes** — returns to `idle` | Stay active | User clicks Disconnect; reconnect after error; temporary close |
-| **`dispose$()`** | Closed and stopped | **No** — terminal | **Completed** | Component / page teardown; baud-rate change (new session); app shutdown |
+| **`dispose()`** | Closed and stopped | **No** — terminal | **Completed** | Component / page teardown; baud-rate change (new session); app shutdown |
 
-For the formal API definitions, see [API concepts – SerialSession](./concepts.md#serialsession) (`disconnect$` / `dispose$` sections).
+During `'connecting'`, if `open()` has started, `dispose()` resolves only after that port is released. If `open()` has not started, including while `requestPort()` is pending, it resolves without waiting. The port picker is not dismissed, and a port selected afterward is not opened.
+
+For the formal API definitions, see [API concepts – SerialSession](./concepts.md#serialsession) (`disconnect$` / `dispose` sections).
 
 ### When to call disconnect$()
 
@@ -28,7 +32,7 @@ session.disconnect$().subscribe({
 });
 ```
 
-### When to call dispose$()
+### When to call dispose()
 
 - The owning component, hook, composable, or page is being destroyed.
 - You replace the session entirely (for example after a baud-rate change — dispose the old instance, then `createSerialSession()`).
@@ -36,27 +40,25 @@ session.disconnect$().subscribe({
 
 ```typescript
 // Terminal teardown — create a new session if you need serial again
-session.dispose$().subscribe({
-  error: (e) => console.error('Dispose error:', e),
-});
+await session.dispose();
 ```
 
-After `dispose$`, **do not** call `connect$()` on the same instance. Create a new `createSerialSession()`.
+After `dispose()`, **do not** call `connect$()` on the same instance. Create a new `createSerialSession()`.
 
 ## Recommended teardown order
 
 Apply this order in every framework's cleanup hook:
 
 1. **Unsubscribe UI subscriptions** — stop delivering `state$`, `lines$`, `terminalText$`, and `errors$` to your component.
-2. **`disconnect$()` is optional** before dispose — `dispose$()` already closes an active connection and stops the read pump.
-3. **Call `dispose$().subscribe()`** in the cleanup hook when the session owner is destroyed.
+2. **`disconnect$()` is optional** before dispose — `dispose()` already closes an active connection and stops the read pump.
+3. **Call `void session.dispose()`** in the cleanup hook when the session owner is destroyed.
 4. **Create a new session** if the user returns — never reuse a disposed instance.
 
 ```typescript
 // Generic cleanup sketch (adapt to your framework hook)
 function teardownSession(session: SerialSession, uiSub: Subscription): void {
   uiSub.unsubscribe();
-  session.dispose$().subscribe({ error: () => void 0 });
+  void session.dispose();
 }
 ```
 
@@ -68,19 +70,19 @@ Unsubscribing the last `terminalText$` subscriber drops the folded display histo
 
 [Timeout / cancel / retry – Cancel on Component / Hook teardown](./timeout-cancel-retry.md#cancel-on-component-hook-teardown) shows `takeUntil(destroy$)` and `takeUntilDestroyed()` to stop **delivering events** to your UI.
 
-That is **not** a substitute for `dispose$()`:
+That is **not** a substitute for `dispose()`:
 
 | Action | What it stops | Session port / pump |
 | --- | --- | --- |
 | `unsubscribe()` / `takeUntil` | UI callbacks | Still running if connected |
 | `disconnect$()` | Port and read pump | Session reusable |
-| `dispose$()` | Port, pump, and all session observables | Session terminal |
+| `dispose()` | Port, pump, and all session observables | Session terminal |
 
-Always call `dispose$().subscribe()` when the session owner is destroyed, even if you already unsubscribed from streams.
+Always call `void session.dispose()` when the session owner is destroyed, even if you already unsubscribed from streams.
 
 ## Framework patterns
 
-The [example apps](../../examples/) wrap `createSerialSession()` with a local `createSerialSessionController` helper (`@gurezo/examples-shared`, not published on npm). The patterns below apply whether you use that helper or hold a `SerialSession` directly — call `session.dispose$().subscribe()` instead of `controller.dispose()` when you do not use the helper.
+The [example apps](../../examples/) wrap `createSerialSession()` with a local `createSerialSessionController` helper (`@gurezo/examples-shared`, not published on npm). The patterns below apply whether you use that helper or hold a `SerialSession` directly — call `void session.dispose()` instead of `controller.dispose()` when you do not use the helper.
 
 ### Angular
 
@@ -109,7 +111,7 @@ export class SerialClientService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.session.dispose$().subscribe({ error: () => void 0 });
+    void this.session.dispose();
   }
 }
 ```
@@ -158,7 +160,7 @@ function useSerialSession() {
 
     return () => {
       sub.unsubscribe();
-      session.dispose$().subscribe({ error: () => void 0 });
+      void session.dispose();
       sessionRef.current = null;
     };
   }, []);
@@ -186,7 +188,7 @@ return () => {
 **Notes:**
 
 - Store the session in a `useRef` so React StrictMode's double mount/unmount cycle does not lose the instance between effect setup and cleanup.
-- Unsubscribe the composite `Subscription` **before** `dispose$().subscribe()`.
+- Unsubscribe the composite `Subscription` **before** `void session.dispose()`.
 - `connect$()` / `disconnect$()` / `send$()` from event handlers are one-shot `.subscribe()` calls — no extra cleanup needed.
 
 **Live example:** [React example app](../../examples/react/)
@@ -220,7 +222,7 @@ export function useSerialClient() {
     stateSub.unsubscribe();
     linesSub.unsubscribe();
     errorsSub.unsubscribe();
-    session.dispose$().subscribe({ error: () => void 0 });
+    void session.dispose();
   });
 
   return { isConnected, disconnect /* … */ };
@@ -262,7 +264,7 @@ export function useSerialSession() {
   onDestroy(() => {
     linesSub.unsubscribe();
     errorSub.unsubscribe();
-    session.dispose$().subscribe({ error: () => void 0 });
+    void session.dispose();
   });
 
   const disconnect = () =>
@@ -277,7 +279,7 @@ export function useSerialSession() {
 **Notes:**
 
 - `readable` stores can auto-unsubscribe via their stop function, but long-lived direct subscriptions (for example `terminalText$`) still need explicit cleanup in `onDestroy`.
-- Call `dispose$().subscribe()` in `onDestroy` when the component that invoked the store factory is destroyed.
+- Call `void session.dispose()` in `onDestroy` when the component that invoked the store factory is destroyed.
 
 **Live example:** [Svelte example app](../../examples/svelte/)
 
@@ -309,7 +311,7 @@ export class App {
 
   destroy(): void {
     this.sub.unsubscribe();
-    this.session.dispose$().subscribe({ error: () => void 0 });
+    void this.session.dispose();
   }
 }
 ```
@@ -327,10 +329,10 @@ export class App {
 | Question | Answer |
 | --- | --- |
 | User clicks Disconnect? | `disconnect$().subscribe()` — session stays reusable |
-| Component / route unmounts? | Unsubscribe UI streams, then `dispose$().subscribe()` |
-| Baud rate changes (new session)? | `dispose$().subscribe()` on the old session, then `createSerialSession()` |
-| After `dispose$`? | Create a **new** session — do not reconnect the old one |
-| `takeUntil(destroy$)` enough? | **No** — also call `dispose$().subscribe()` on session-owner teardown |
+| Component / route unmounts? | Unsubscribe UI streams, then `void session.dispose()` |
+| Baud rate changes (new session)? | `void session.dispose()` on the old session, then `createSerialSession()` |
+| After `dispose()`? | Create a **new** session — do not reconnect the old one |
+| `takeUntil(destroy$)` enough? | **No** — also call `void session.dispose()` on session-owner teardown |
 
 ## Example apps
 

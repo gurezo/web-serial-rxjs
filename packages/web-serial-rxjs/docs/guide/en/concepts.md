@@ -194,7 +194,7 @@ v3 exposes **`SerialSessionStatus`** as lifecycle string constants (e.g. `Serial
 - `{ status: 'disconnecting' }` — `disconnect$` is in flight.
 - `{ status: 'unsupported' }` — `navigator.serial` was not available at session creation time.
 - `{ status: 'error', error }` — fatal failure; `error` is that failure's `SerialError`. Operation failures are not also emitted on `errors$`.
-- `{ status: 'disposed' }` — session permanently torn down via `dispose$`.
+- `{ status: 'disposed' }` — session permanently torn down via `dispose()`. `'disposed'` can appear before `dispose()` resolves.
 
 Cancelling the port picker (`OPERATION_CANCELLED`) does not enter `'error'`; `state$` returns to `'idle'`. `connect$` errors, and that `SerialError` is not emitted on `errors$`.
 
@@ -241,6 +241,8 @@ See [Migrating to v3](./migration-v3.md) for the v2 string migration.
 interface SerialSession {
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
+  dispose(): Promise<void>;
+  /** @deprecated Cold wrapper around `dispose()`. Subscribe to run it. */
   dispose$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
@@ -310,13 +312,21 @@ Opens a user-selected serial port and starts the internal read pump. Completes o
 
 ### `disconnect$(): Observable<void>`
 
-Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` and returns to `'idle'` without reaching `'connected'`. If `open()` has started, it completes only after that port is released; `'idle'` may appear on `state$` first. If `open()` has not started, including while `requestPort()` is pending, it completes without waiting. The port picker is not dismissed by `disconnect$()`, and a port selected afterward is not opened. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose$` for permanent teardown. **Runs when subscribed.**
+Stops the read pump and closes the port. Safe to call when already idle or while a disconnect is already in progress. When called during `'connecting'`, cancels the in-flight `connect$()` and returns to `'idle'` without reaching `'connected'`. If `open()` has started, it completes only after that port is released; `'idle'` may appear on `state$` first. If `open()` has not started, including while `requestPort()` is pending, it completes without waiting. The port picker is not dismissed by `disconnect$()`, and a port selected afterward is not opened. Transitions `connected → disconnecting → idle`. When called from `'error'` it still tears the port down and returns to `idle`. The session remains reusable after `disconnect$`; use `dispose()` for permanent teardown. **Runs when subscribed.**
+
+### `dispose(): Promise<void>`
+
+Permanently tears down the session. Starts immediately. Resolves when the port and read pump are released. `state$` may emit `'disposed'` before that. `port.close()` failures are swallowed. An unexpected teardown failure rejects with `SerialError`.
+
+Closes any active connection, emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`). A second call returns the same promise and waits for the same release.
+
+During `'connecting'`, if `open()` has started, the promise resolves only after that port is released. If `open()` has not started, including while `requestPort()` is pending, it resolves without waiting. The port picker is not dismissed, and a port selected afterward is not opened.
+
+After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOSED`. `disconnect$` completes immediately. Create a new `SerialSession` instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).
 
 ### `dispose$(): Observable<void>`
 
-Permanently tears down the session. Closes any active connection (same port/pump cleanup as `disconnect$`), emits `'disposed'` on `state$`, and **completes every session observable** (`state$`, `errors$`, `receive$`, `lines$`, `terminalText$`). Safe to call multiple times; subsequent calls complete immediately. **Runs when subscribed.**
-
-After disposal, `connect$` and `send$` fail with `SerialErrorCode.SESSION_DISPOSED`. `disconnect$` completes immediately. Create a new `SerialSession` instead of reusing a disposed instance (for example when replacing a session after a baud-rate change).
+**Deprecated.** Cold compatibility wrapper around `dispose()`. Calling it only returns an Observable. Nothing runs, and `state$` does not move to `'disposed'`, until it is subscribed. A subscription joins the same teardown and completes when release finishes. Prefer `await session.dispose()`.
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -334,7 +344,7 @@ UTF-8 decoded text pushed by the internal read pump as **decoder chunks** (not l
 
 Terminal-display oriented cumulative text derived from `receive$`. Collapses `\r` redraws while keeping normal newline behavior. By default strips ANSI escape sequences for plain-text views (for example `<textarea>`). Raw escape codes remain available on `receive$`. Equivalent to `createTerminalBuffer(receive$, options.terminalBuffer).text$`. By default retains at most 10,000 completed lines and 1,048,576 characters; configure via `SerialSessionOptions.terminalBuffer` or pass `{ maxLines: 0, maxChars: 0 }` for unlimited growth.
 
-History belongs to the subscribers. The stream is shared only while at least one subscriber remains, and a subscriber that joins during that window receives only the latest value. When the last subscriber leaves, the folded state is dropped and the next subscription starts empty. Chunks that arrive during the gap are not folded. `dispose$` completes an active subscription. See [Subscription and replay contract](./stream-selection.md#subscription-replay-contract).
+History belongs to the subscribers. The stream is shared only while at least one subscriber remains, and a subscriber that joins during that window receives only the latest value. When the last subscriber leaves, the folded state is dropped and the next subscription starts empty. Chunks that arrive during the gap are not folded. `dispose()` completes an active subscription. See [Subscription and replay contract](./stream-selection.md#subscription-replay-contract).
 
 ### `lines$: Observable<string>`
 
@@ -342,7 +352,7 @@ The same UTF-8 stream split into **complete lines** using `\n`, `\r\n`, and a lo
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-Enqueues a payload for ordered transmission. The bytes are fixed when the Observable is subscribed, not when `send$()` is called. Strings are UTF-8 encoded through a shared `TextEncoder` at that moment. `Uint8Array` values are copied then and written unchanged (binary **send** only — there is no matching binary receive API). Mutating the caller's buffer after subscribe does not change a queued write. Each subscription snapshots independently. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED` and delivered to the subscriber only. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. That failure is not emitted on `errors$` either. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. `disconnect$`, `dispose$`, and a `connect$` that is about to become `'connected'` drop sends that have not started. Those subscribers error with `PORT_NOT_OPEN`, and that failure is not emitted on `errors$`. The in-flight write is not aborted; the next `send$` waits for it, so the writes do not overlap. See [Supported data](#supported-data-text--binary--charset).
+Enqueues a payload for ordered transmission. The bytes are fixed when the Observable is subscribed, not when `send$()` is called. Strings are UTF-8 encoded through a shared `TextEncoder` at that moment. `Uint8Array` values are copied then and written unchanged (binary **send** only — there is no matching binary receive API). Mutating the caller's buffer after subscribe does not change a queued write. Each subscription snapshots independently. Concurrent `send$` calls are serialised in call order by an internal FIFO queue. Write failures are normalised to `SerialError` with `SerialErrorCode.WRITE_FAILED` and delivered to the subscriber only. Calling `send$` while not `'connected'` fails fast with `SerialErrorCode.PORT_NOT_OPEN`. That failure is not emitted on `errors$` either. **Runs when subscribed.** Unsubscribing while a send is still queued (including via `takeUntil` or `timeout`) skips that write. Unsubscribing after `writer.write()` has started stops only `next` / `error` / `complete`; the in-flight write is not aborted. `disconnect$`, `dispose()`, and a `connect$` that is about to become `'connected'` drop sends that have not started. Those subscribers error with `PORT_NOT_OPEN`, and that failure is not emitted on `errors$`. The in-flight write is not aborted; the next `send$` waits for it, so the writes do not overlap. See [Supported data](#supported-data-text--binary--charset).
 
 ## SerialError / SerialErrorCode
 
@@ -397,7 +407,7 @@ Runtime emission coverage for the implemented codes is audited in [Migrating to 
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` was out of range at session creation. | `ValidationErrorContext` |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` was out of range at session creation. | `ValidationErrorContext` |
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
-| `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose$`.                       |
+| `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose()`.                      |
 | `UNKNOWN`                | Unclassified dispose, disconnect, or post-open `connect$` failure; see `context.cause`. |
 
 ### Reserved (not emitted in v4; scheduled for removal in a future major / v5+)

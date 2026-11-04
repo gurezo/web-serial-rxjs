@@ -1,8 +1,8 @@
 # v5 への移行
 
-このページは v5 の破壊的変更を集めます。後続の変更は節を足します。この節はエラー通知契約（[#633](https://github.com/gurezo/web-serial-rxjs/issues/633)）です。
+このページは v5 の契約変更を集めます。ここまでの節は、エラー通知契約（[#633](https://github.com/gurezo/web-serial-rxjs/issues/633)）とセッション破棄（[#655](https://github.com/gurezo/web-serial-rxjs/issues/655)）です。
 
-v4 までの `state$` と `SerialError` の形は変わりません。変わったのは、同じ失敗を `errors$` と操作 Observable の両方に出さなくなったことです。
+v4 までの `state$` と `SerialError` の形は変わりません。変わったのは、同じ失敗を `errors$` と操作 Observable の両方に出さなくなったことです。永久破棄は `dispose(): Promise<void>` を使います。`dispose$()` は残り、非推奨です。
 
 ## TL;DR
 
@@ -10,6 +10,7 @@ v4 までの `state$` と `SerialError` の形は変わりません。変わっ�
 - `errors$` に出るのは、接続完了後の read pump、接続中の予期しない切断、`LINE_BUFFER_OVERFLOW` だけです。
 - fatal のとき `state.error` はその `SerialError` と同一インスタンスです。`errors$` に出ていなくても載ります。
 - ポート選択のキャンセルは `connect$` が `OPERATION_CANCELLED` で error 終了します。`state$` は `'idle'` に戻ります。
+- 破棄は `await session.dispose()` を使います。呼び出した時点で始まり、ポートと read pump の解放で resolve します。`dispose$()` は非推奨の cold Observable のままです。購読しないと呼んでも何もしません。
 
 ## エラー通知
 
@@ -76,12 +77,45 @@ session.errors$.subscribe((error) => {
 | 接続完了後の read pump | `errors$` | `'error'` |
 | 接続中の予期しない stream close | `errors$` | `'error'` |
 | `LINE_BUFFER_OVERFLOW` | `errors$` | 変えない |
-| `dispose$` 後の `SESSION_DISPOSED` | その操作の `error` | すでに `'disposed'` |
+| `dispose()` 後の `SESSION_DISPOSED` | その操作の `error` | すでに `'disposed'` |
 
 切断で捨てられた未開始の `send$` は、pump の `READ_FAILED` とは別の `PORT_NOT_OPEN` です。`send$` の subscriber だけに出ます。
+
+## 破棄
+
+`dispose$()` は残します。非推奨です。推奨する破棄は `dispose()` です。
+
+### 以前（v4）
+
+```typescript
+session.dispose$().subscribe({ error: () => void 0 });
+```
+
+`dispose$()` を `subscribe()` せずに呼んでも、何も起きませんでした。
+
+### 以後（v5）
+
+```typescript
+await session.dispose();
+```
+
+`async` にできない cleanup hook では、`void session.dispose()` でも破棄は始まります。
+
+`dispose$()` を残す場合は、今までどおり購読します。購読は `dispose()` と同じ破棄に接続し、解放完了で complete します。
+
+### 完了条件
+
+- `dispose()` はポートと read pump の解放が終わると resolve します。`state$` の `'disposed'` はそれより先に出ることがあります。
+- `port.close()` の失敗では Promise は reject しません。想定外の teardown 失敗だけ `SerialError` で reject します。
+- 2 回目の `dispose()` も、後から購読した `dispose$()` も、進行中の同じ解放完了を待ちます。
+- `'connecting'` で `open()` 開始後は、`dispose()` も購読した `dispose$()` も、そのポートの解放が終わってから resolve します。`open()` 前（`requestPort()` 待ちを含む）は待たずに resolve します。ポート選択ダイアログは閉じず、その後に選ばれたポートは開きません。
+- `[Symbol.asyncDispose]` はこのリリースには含まれません。
 
 ## 関連
 
 - [クイックスタート – エラーハンドリング](./quick-start.md#エラーハンドリング)
+- [クイックスタート – 破棄](./quick-start.md#破棄する（リソース解放）)
+- [概念 – `dispose()`](./concepts.md#dispose-promisevoid)
 - [概念 – `errors$`](./concepts.md#errors-observableserialerror)
+- [Framework 別 session ライフサイクル](./framework-session-lifecycle.md)
 - [トラブルシューティング – Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix)

@@ -2,7 +2,7 @@
 
 **最短で**シリアルポートを開き、行単位で受信し、送信・切断するところまで進む手順です。`state$` / `errors$` / `receive$` / `lines$` と各メソッドの一覧は、先に [SerialSession の概要](./overview.md#serialsessionの全体像)を参照してください。
 
-標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す**未フレーミングの UTF-8 チャンク**（デコード済みテキスト。ワイヤ上の生バイトではない）です。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** の実行タイミングは [命令メソッドの実行（cold Observable）](#命令メソッドの実行cold-observable) を参照してください — 購読したときだけ実行されます。
+標準的な改行区切り（`\n` / `\r\n`）には **`lines$`** を使います。**`receive$`** はデコーダが返す**未フレーミングの UTF-8 チャンク**（デコード済みテキスト。ワイヤ上の生バイトではない）です。ライフサイクル UI には **`state$`** の `state.status` narrowing を優先してください。boolean だけ必要な場合は `state$` から derive してください。**`connect$()`**、**`send$()`**、**`disconnect$()`** の実行タイミングは [命令メソッドの実行（cold Observable）](#命令メソッドの実行cold-observable) を参照してください — 購読したときだけ実行されます。**`dispose()`** は呼び出した時点で破棄を始めます。非推奨の **`dispose$()`** は今までどおり cold です。
 
 `receive$` / `lines$` / `terminalText$` の選び方は [receive$ / lines$ / terminalText$ の選び方](./stream-selection.md) を参照してください。
 
@@ -39,7 +39,7 @@ pnpm add rxjs
 
 ## 命令メソッドの実行（cold Observable）
 
-**`connect$()`**、**`send$()`**、**`disconnect$()`**、**`dispose$()`** は **cold** な Observable を返します。呼び出すだけでは Observable が組み立てられるだけで、**subscribe されるまで処理は開始されません**（subscribe を伴うオペレータを使う場合も同様です）。
+**`connect$()`**、**`send$()`**、**`disconnect$()`** は **cold** な Observable を返します。呼び出すだけでは Observable が組み立てられるだけで、**subscribe されるまで処理は開始されません**（subscribe を伴うオペレータを使う場合も同様です）。**`dispose()`** は cold ではありません。呼び出した時点で破棄を始めます。非推奨の **`dispose$()`** は今までどおり cold です。
 
 **`state$`**、**`lines$`**、**`errors$`** などのセッションストリームとは異なります。それらは必要なタイミングで早めに購読し、命令的な操作は以下のメソッド経由で実行してください。
 
@@ -50,7 +50,7 @@ pnpm add rxjs
 session.connect$();
 session.send$('AT\r\n');
 session.disconnect$();
-session.dispose$();
+session.dispose$(); // 非推奨: 購読するまで何もしない
 ```
 
 ### パターン 1 — subscribe（fire-and-forget）
@@ -130,7 +130,7 @@ of(undefined).pipe(
 | `SerialSessionStatus.Disconnecting` | `'disconnecting'` | `disconnect$` 実行中。 |
 | `SerialSessionStatus.Unsupported` | `'unsupported'` | セッション生成時点で Web Serial が利用できない。 |
 | `SerialSessionStatus.Error` | `'error'` | 致命的な失敗（`error` 付き）。 |
-| `SerialSessionStatus.Disposed` | `'disposed'` | `dispose$` により永久破棄。すべての Observable が complete。 |
+| `SerialSessionStatus.Disposed` | `'disposed'` | `dispose()` により永久破棄。すべての Observable が complete。 |
 
 詳細は [概念と設計メモ](./concepts.md#serialsessionstate--serialsessionstatus) と [v3 移行ガイド](./migration-v3.md) を参照してください。
 
@@ -216,13 +216,13 @@ session.disconnect$().subscribe({
 
 ## 破棄する（リソース解放）
 
-baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose$` を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。
+baud rate 変更で session を作り替えるなど、セッション自体を完全に手放すときは `dispose()` を呼びます。アクティブな接続を閉じ、すべての Observable を complete します。Promise はポートと read pump の解放が終わると resolve します。`state$` の `'disposed'` は先に出ることがあります。
 
 ```typescript
-session.dispose$().subscribe({
-  error: (e) => console.error('破棄エラー:', e),
-});
+await session.dispose();
 ```
+
+`dispose$()` は非推奨の cold Observable として残します。残す場合は今までどおり購読してください。購読しない呼び出しは何もしません。
 
 破棄後は古いインスタンスを再利用せず、新しい `createSerialSession()` を作成してください。
 
