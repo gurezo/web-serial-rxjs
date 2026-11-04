@@ -95,8 +95,6 @@
  * ```
  */
 
-export { assertNever } from './internal/assert-never';
-
 export { createSerialSession, isWebSerialSupported, SerialSessionStatus, isConnectedSessionState, DEFAULT_LINE_BUFFER_OPTIONS, resolveSerialSessionOptions } from './session';
 export type {
   SerialSession,

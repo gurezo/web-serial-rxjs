@@ -197,6 +197,8 @@ session.errors$.subscribe((error) => {
 - `context.cause` の型は `unknown` です（JavaScript では `Error` 以外も throw 可能なため）。
 - 削除は将来の major（**v5 以降**）に延期されています。
 
+v5 で削除済みです。[v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api) を参照してください。
+
 ---
 
 ## 4. `destroy$()` の削除
@@ -420,6 +422,8 @@ public API contract として定義されている `SerialErrorCode` のうち�
 
 v3 で `@deprecated` 注記のみ付与し、**v4** でも runtime 値と export は維持しています。削除は将来の major（**v5 以降**）に延期されています。
 
+v5 で削除済みです。[v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api) を参照してください。
+
 ### Implemented code 一覧
 
 | Code | emit 箇所 | severity | `context` | テスト |
@@ -542,6 +546,8 @@ session.state$.subscribe((state: SerialSessionState) => {
 
 `assertNever` は **v4** でも引き続き public export から利用可能です。将来の major（**v5 以降**）で削除予定です。
 
+v5 で公開 export から削除済みです。[v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api) を参照してください。
+
 ---
 
 ## 10. Session options 型責務監査
@@ -588,5 +594,5 @@ SerialSessionOptions        = Partial<SerialConnectionOptions> & SerialSessionFe
 - [概念と設計メモ – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [概念と設計メモ – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
 - [概念と設計メモ – dispose$ / state$](./concepts.md#serialsession)
-- [概念と設計メモ – Deprecated exports](./concepts.md#deprecated-exports)
+- [v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api)
 - [概念と設計メモ – SerialSessionOptions](./concepts.md#serialsessionoptions)

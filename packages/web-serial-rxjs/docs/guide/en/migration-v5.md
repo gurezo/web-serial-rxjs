@@ -1,8 +1,8 @@
 # Migrating to v5
 
-This page collects v5 contract changes. Sections so far: the error notification contract ([#633](https://github.com/gurezo/web-serial-rxjs/issues/633)) and session disposal ([#655](https://github.com/gurezo/web-serial-rxjs/issues/655)).
+This page collects v5 contract changes. Sections so far: the error notification contract ([#633](https://github.com/gurezo/web-serial-rxjs/issues/633)), session disposal ([#655](https://github.com/gurezo/web-serial-rxjs/issues/655)), and removed deprecated APIs ([#658](https://github.com/gurezo/web-serial-rxjs/issues/658)).
 
-The shapes of `state$` and `SerialError` are unchanged from v4. What changed is that one failure is no longer emitted on both `errors$` and the operation Observable. Permanent teardown prefers `dispose(): Promise<void>`. `dispose$()` remains and is deprecated.
+The shape of `state$` is unchanged from v4. `SerialError` no longer takes a legacy cause argument or exposes `originalError`. `PORT_NOT_AVAILABLE`, `OPERATION_TIMEOUT`, and the public `assertNever` export are gone. One failure is no longer emitted on both `errors$` and the operation Observable. Permanent teardown prefers `dispose(): Promise<void>`. `dispose$()` remains and is deprecated.
 
 ## TL;DR
 
@@ -11,6 +11,7 @@ The shapes of `state$` and `SerialError` are unchanged from v4. What changed is 
 - On a fatal failure, `state.error` is that same `SerialError`, even when `errors$` does not emit it.
 - Cancelling the port picker makes `connect$` error with `OPERATION_CANCELLED`. `state$` returns to `'idle'`.
 - Prefer `await session.dispose()`. It starts immediately and resolves when the port and read pump are released. `dispose$()` stays as a deprecated cold Observable: subscribe it, or it does nothing.
+- `PORT_NOT_AVAILABLE`, `OPERATION_TIMEOUT`, public `assertNever`, `originalError`, and the legacy `SerialError` cause argument are removed. See [Removed deprecated APIs](#removed-deprecated-apis).
 
 ## Error notification
 
@@ -110,6 +111,81 @@ If you keep `dispose$()`, subscribe it. A subscription joins the same teardown a
 - A second `dispose()`, or a later `dispose$()` subscription, waits for the same in-flight release.
 - During `'connecting'`, if `open()` has started, both `dispose()` and a subscribed `dispose$()` resolve only after that port is released. If `open()` has not started, including while `requestPort()` is pending, they resolve without waiting. The port picker is not dismissed, and a port selected afterward is not opened.
 - `[Symbol.asyncDispose]` is not part of this release.
+
+## Removed deprecated APIs
+
+These v4 surfaces were deprecated and are removed ([#658](https://github.com/gurezo/web-serial-rxjs/issues/658)).
+
+### `PORT_NOT_AVAILABLE` and `OPERATION_TIMEOUT`
+
+They were never emitted. Delete branches that match them. Treat port acquisition failures as `PORT_OPEN_FAILED` or `OPERATION_CANCELLED`.
+
+#### Before (v4)
+
+```typescript
+if (error.is(SerialErrorCode.PORT_NOT_AVAILABLE)) {
+  showToast(error.message);
+}
+if (error.is(SerialErrorCode.OPERATION_TIMEOUT)) {
+  showToast(error.message);
+}
+```
+
+#### After (v5)
+
+```typescript
+if (error.is(SerialErrorCode.PORT_OPEN_FAILED)) {
+  showToast(error.message);
+}
+if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
+  return;
+}
+```
+
+### `assertNever`
+
+The helper stays inside the package. It is no longer a public export. Define a local helper, or cover every `state.status` with `SerialSessionStatus`.
+
+#### Before (v4)
+
+```typescript
+import { assertNever } from '@gurezo/web-serial-rxjs';
+
+assertNever(state);
+```
+
+#### After (v5)
+
+```typescript
+function assertNever(value: never): never {
+  throw new Error(`Unexpected value: ${String(value)}`);
+}
+```
+
+### `SerialError` cause argument and `originalError`
+
+The constructor is `(code, message, context?)`. Cause-bearing codes take `{ cause }` as that third argument. Read the underlying failure from `context.cause`.
+
+#### Before (v4)
+
+```typescript
+console.error(error.originalError);
+
+new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', cause);
+new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', undefined, {
+  cause,
+});
+```
+
+#### After (v5)
+
+```typescript
+if (error.is(SerialErrorCode.READ_FAILED)) {
+  console.error(error.context.cause);
+}
+
+new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', { cause });
+```
 
 ## Related
 

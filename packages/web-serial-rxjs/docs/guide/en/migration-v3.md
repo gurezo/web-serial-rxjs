@@ -197,6 +197,8 @@ session.errors$.subscribe((error) => {
 - `context.cause` is typed as `unknown` because JavaScript allows throwing non-`Error` values.
 - Removal is deferred to a future major (**v5+**).
 
+Removed in v5. See [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis).
+
 ---
 
 ## 4. `destroy$()` removal
@@ -420,6 +422,8 @@ Some members of the public `SerialErrorCode` contract were not emitted by the v3
 
 v3 added `@deprecated` annotations only; **v4** still retains the runtime values and exports. Removal is deferred to a future major (**v5+**).
 
+Removed in v5. See [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis).
+
 ### Implemented codes
 
 | Code | Emit location | severity | `context` | Tests |
@@ -542,6 +546,8 @@ session.state$.subscribe((state: SerialSessionState) => {
 
 `assertNever` remains available from the public export in **v4**. It is scheduled for removal in a future major (**v5+**).
 
+Removed from the public export in v5. See [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis).
+
 ---
 
 ## 10. Session options type responsibility audit
@@ -588,5 +594,5 @@ The `createSerialSession(options?)` signature and existing options object litera
 - [API Reference – SerialSessionState / SerialSessionStatus](./concepts.md#serialsessionstate--serialsessionstatus)
 - [API Reference – SerialError / SerialErrorCode](./concepts.md#serialerror--serialerrorcode)
 - [API Reference – dispose$ / state$](./concepts.md#serialsession)
-- [API Reference – Deprecated exports](./concepts.md#deprecated-exports)
+- [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis)
 - [API Reference – SerialSessionOptions](./concepts.md#serialsessionoptions)

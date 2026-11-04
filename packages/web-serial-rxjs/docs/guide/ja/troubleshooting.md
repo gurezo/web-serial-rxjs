@@ -175,8 +175,6 @@ flowchart TD
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | throw（factory） | yes | `terminalBuffer` を直して session を再生成する | n/a | 修正後に再生成 |
 | `INVALID_LINE_BUFFER_OPTIONS` | throw（factory） | yes | `lineBuffer` を直して session を再生成する | n/a | 修正後に再生成 |
 | `INVALID_CONNECTION_OPTIONS` | throw（factory） | yes | 接続オプション（例: `baudRate`）を直して再生成する | n/a | 修正後に再生成 |
-| `PORT_NOT_AVAILABLE` | reserved | n/a | **v4 では emit されない。** 取得失敗は `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` で扱う | — | — |
-| `OPERATION_TIMEOUT` | reserved | n/a | **v4 では emit されない。** コアの timeout API は未実装。アプリ側で合成する | — | — |
 
 ### 列の注記
 
@@ -184,7 +182,6 @@ flowchart TD
 - **Severity `non-fatal`**: 接続は続く。`WRITE_FAILED` や `PORT_NOT_OPEN` は操作の subscriber にだけ出る。`LINE_BUFFER_OVERFLOW` は `errors$` に出る。
 - **`OPERATION_CANCELLED`**: ポート選択のキャンセル。`connect$` は error 終了し、`errors$` には出ない。`state$` は `'idle'` に戻り、`'error'` には入らない。ポートは close しない。
 - **Severity `throw（factory）`**: `createSerialSession()` から同期的に投げられる — `errors$` には流れない。
-- **Severity `reserved`**: `SerialErrorCode` オブジェクトには残るが、v4 実行時には到達しない。
 - **`dispose$` 後**はインスタンスを再利用しない — 必ず新規 session を作る（[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)）。
 
 ## 報告時に必要な情報

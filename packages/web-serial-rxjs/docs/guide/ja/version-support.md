@@ -26,7 +26,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 - `@deprecated` 付きの API は、既存アプリが段階的に移行できるよう **現行 major** 内では利用可能です。
 - 削除は **将来の major**（現時点では **v5+**）に延期し、minor / patch では削除しません。
-- v4 における具体的な deprecated 面は [API の概念 – Deprecated exports](./concepts.md#deprecated-exports) と各 Migration Guide を参照してください。
+- v5 で削除した API は [v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api) にあります。`dispose$()` は非推奨のままです。
 
 ## サポート範囲（LTS なし）
 

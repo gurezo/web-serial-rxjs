@@ -211,7 +211,6 @@ function resolveConnectionOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_CONNECTION_OPTIONS,
       `Invalid baudRate: ${baudRate}. Must be a safe integer > 0.`,
-      undefined,
       {
         field: 'baudRate',
         value: baudRate,
@@ -224,7 +223,6 @@ function resolveConnectionOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_CONNECTION_OPTIONS,
       `Invalid bufferSize: ${bufferSize}. Must be a safe integer > 0.`,
-      undefined,
       {
         field: 'bufferSize',
         value: bufferSize,

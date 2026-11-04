@@ -83,7 +83,7 @@ describe('formatExampleSerialErrorDetail', () => {
     const error = new SerialError(
       SerialErrorCode.WRITE_FAILED,
       'write failed',
-      new Error('device busy'),
+      { cause: new Error('device busy') },
     );
 
     const detail = formatExampleSerialErrorDetail(error);
@@ -100,7 +100,6 @@ describe('formatExampleSerialErrorDetail', () => {
     const error = new SerialError(
       SerialErrorCode.LINE_BUFFER_OVERFLOW,
       'overflow',
-      undefined,
       { maxChars: 4096 },
     );
 

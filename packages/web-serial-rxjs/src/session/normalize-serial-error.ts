@@ -108,7 +108,6 @@ export function normalizeSerialError(
     return new SerialError(
       SerialErrorCode.OPERATION_CANCELLED,
       'Port selection was cancelled by the user',
-      undefined,
       { cause: error },
     );
   }
@@ -117,7 +116,6 @@ export function normalizeSerialError(
   return new SerialError(
     options.fallbackCode,
     `${prefix}: ${cause.message}`,
-    undefined,
     { cause },
   );
 }

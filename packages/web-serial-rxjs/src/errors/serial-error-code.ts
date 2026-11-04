@@ -37,22 +37,6 @@ export const SerialErrorCode = {
   BROWSER_NOT_SUPPORTED: 'BROWSER_NOT_SUPPORTED',
 
   /**
-   * Serial port is not available.
-   *
-   * **Reserved — not emitted in v4.** The current implementation uses only
-   * `navigator.serial.requestPort`; there is no `getPorts` API path. Still
-   * present in v4 (deprecated); scheduled for removal in a future major (v5+).
-   *
-   * **Suggested action**: Handle port acquisition failures with
-   * {@link SerialErrorCode.PORT_OPEN_FAILED} or
-   * {@link SerialErrorCode.OPERATION_CANCELLED} instead.
-   *
-   * @deprecated Not emitted at runtime in v4. Will be removed in a future major (v5+).
-   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
-   */
-  PORT_NOT_AVAILABLE: 'PORT_NOT_AVAILABLE',
-
-  /**
    * Failed to open the serial port.
    *
    * Emitted on `connect$` when `port.open()` rejects.
@@ -134,18 +118,6 @@ export const SerialErrorCode = {
    * to inform the user that port selection was cancelled.
    */
   OPERATION_CANCELLED: 'OPERATION_CANCELLED',
-
-  /**
-   * Operation timed out before completion.
-   *
-   * **Reserved — not emitted in v4.** No timeout / prompt detection /
-   * transaction API exists yet. Still present in v4 (deprecated); scheduled for
-   * removal in a future major (v5+) unless a future API adopts this code.
-   *
-   * @deprecated Not emitted at runtime in v4. Will be removed in a future major (v5+).
-   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/438 | Issue #438}
-   */
-  OPERATION_TIMEOUT: 'OPERATION_TIMEOUT',
 
   /**
    * Internal line buffer exceeded its configured size limit.

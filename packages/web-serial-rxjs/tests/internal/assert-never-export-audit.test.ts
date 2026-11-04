@@ -6,7 +6,7 @@ import * as publicApi from '../../src/index';
 
 /**
  * Regression guard for the assertNever public export audit (Issue #440).
- * Keep in sync with MIGRATION_V3 §9 and concepts.md Deprecated exports.
+ * The public re-export was removed in v5 (Issue #658). The helper stays internal.
  */
 const CANONICAL_PUBLIC_EXPORTS = [
   'createSerialSession',
@@ -17,31 +17,31 @@ const CANONICAL_PUBLIC_EXPORTS = [
   'SerialSessionStatus',
 ] as const;
 
-const DEPRECATED_PUBLIC_EXPORTS = ['assertNever'] as const;
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const packageSrcRoot = join(__dirname, '../../src');
+const publicIndexSource = readFileSync(join(packageSrcRoot, 'index.ts'), 'utf8');
 const assertNeverSource = readFileSync(
-  join(__dirname, '../../src/internal/assert-never.ts'),
+  join(packageSrcRoot, 'internal/assert-never.ts'),
   'utf8',
 );
 
 describe('assertNever public export audit (#440)', () => {
-  it('retains assertNever on the public barrel as a v4 deprecated export', () => {
-    expect(publicApi.assertNever).toBeTypeOf('function');
+  it('does not export assertNever from the public barrel', () => {
+    expect('assertNever' in publicApi).toBe(false);
+    expect(publicIndexSource).not.toMatch(/\bassertNever\b/);
   });
 
-  it('marks assertNever as deprecated in source JSDoc', () => {
-    expect(assertNeverSource).toContain('@deprecated');
+  it('keeps the internal helper without a public deprecation note', () => {
     expect(assertNeverSource).toContain('@internal');
+    expect(assertNeverSource).not.toContain('@deprecated');
+    expect(assertNeverSource).toContain('export function assertNever');
   });
 
-  it('excludes assertNever from the canonical public API list', () => {
+  it('keeps assertNever off the canonical public API list', () => {
     for (const name of CANONICAL_PUBLIC_EXPORTS) {
       expect(name in publicApi).toBe(true);
-      expect(DEPRECATED_PUBLIC_EXPORTS).not.toContain(name);
     }
-    expect(DEPRECATED_PUBLIC_EXPORTS).toContain('assertNever');
     expect(CANONICAL_PUBLIC_EXPORTS).not.toContain('assertNever');
   });
 });

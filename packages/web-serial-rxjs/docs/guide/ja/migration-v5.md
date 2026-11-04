@@ -1,8 +1,8 @@
 # v5 への移行
 
-このページは v5 の契約変更を集めます。ここまでの節は、エラー通知契約（[#633](https://github.com/gurezo/web-serial-rxjs/issues/633)）とセッション破棄（[#655](https://github.com/gurezo/web-serial-rxjs/issues/655)）です。
+このページは v5 の契約変更を集めます。ここまでの節は、エラー通知契約（[#633](https://github.com/gurezo/web-serial-rxjs/issues/633)）、セッション破棄（[#655](https://github.com/gurezo/web-serial-rxjs/issues/655)）、削除した deprecated API（[#658](https://github.com/gurezo/web-serial-rxjs/issues/658)）です。
 
-v4 までの `state$` と `SerialError` の形は変わりません。変わったのは、同じ失敗を `errors$` と操作 Observable の両方に出さなくなったことです。永久破棄は `dispose(): Promise<void>` を使います。`dispose$()` は残り、非推奨です。
+`state$` の形は v4 のままです。`SerialError` は旧 cause 引数と `originalError` を持ちません。`PORT_NOT_AVAILABLE`、`OPERATION_TIMEOUT`、公開 `assertNever` はありません。同じ失敗を `errors$` と操作 Observable の両方には出しません。永久破棄は `dispose(): Promise<void>` を使います。`dispose$()` は残り、非推奨です。
 
 ## TL;DR
 
@@ -11,6 +11,7 @@ v4 までの `state$` と `SerialError` の形は変わりません。変わっ�
 - fatal のとき `state.error` はその `SerialError` と同一インスタンスです。`errors$` に出ていなくても載ります。
 - ポート選択のキャンセルは `connect$` が `OPERATION_CANCELLED` で error 終了します。`state$` は `'idle'` に戻ります。
 - 破棄は `await session.dispose()` を使います。呼び出した時点で始まり、ポートと read pump の解放で resolve します。`dispose$()` は非推奨の cold Observable のままです。購読しないと呼んでも何もしません。
+- `PORT_NOT_AVAILABLE`、`OPERATION_TIMEOUT`、公開 `assertNever`、`originalError`、`SerialError` の旧 cause 引数は削除しました。[削除した deprecated API](#削除した-deprecated-api) を参照してください。
 
 ## エラー通知
 
@@ -110,6 +111,81 @@ await session.dispose();
 - 2 回目の `dispose()` も、後から購読した `dispose$()` も、進行中の同じ解放完了を待ちます。
 - `'connecting'` で `open()` 開始後は、`dispose()` も購読した `dispose$()` も、そのポートの解放が終わってから resolve します。`open()` 前（`requestPort()` 待ちを含む）は待たずに resolve します。ポート選択ダイアログは閉じず、その後に選ばれたポートは開きません。
 - `[Symbol.asyncDispose]` はこのリリースには含まれません。
+
+## 削除した deprecated API
+
+v4 で非推奨だった次の面を削除しました（[#658](https://github.com/gurezo/web-serial-rxjs/issues/658)）。
+
+### `PORT_NOT_AVAILABLE` と `OPERATION_TIMEOUT`
+
+実行時には出ていませんでした。これらに分岐している処理は削除します。ポート取得の失敗は `PORT_OPEN_FAILED` または `OPERATION_CANCELLED` で扱います。
+
+#### 以前（v4）
+
+```typescript
+if (error.is(SerialErrorCode.PORT_NOT_AVAILABLE)) {
+  showToast(error.message);
+}
+if (error.is(SerialErrorCode.OPERATION_TIMEOUT)) {
+  showToast(error.message);
+}
+```
+
+#### 以後（v5）
+
+```typescript
+if (error.is(SerialErrorCode.PORT_OPEN_FAILED)) {
+  showToast(error.message);
+}
+if (error.is(SerialErrorCode.OPERATION_CANCELLED)) {
+  return;
+}
+```
+
+### `assertNever`
+
+helper はパッケージ内部に残します。公開 export ではありません。ローカル helper を定義するか、`SerialSessionStatus` で `state.status` を網羅します。
+
+#### 以前（v4）
+
+```typescript
+import { assertNever } from '@gurezo/web-serial-rxjs';
+
+assertNever(state);
+```
+
+#### 以後（v5）
+
+```typescript
+function assertNever(value: never): never {
+  throw new Error(`Unexpected value: ${String(value)}`);
+}
+```
+
+### `SerialError` の cause 引数と `originalError`
+
+コンストラクタは `(code, message, context?)` です。cause 系 code は第 3 引数に `{ cause }` を渡します。原因は `context.cause` から読みます。
+
+#### 以前（v4）
+
+```typescript
+console.error(error.originalError);
+
+new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', cause);
+new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', undefined, {
+  cause,
+});
+```
+
+#### 以後（v5）
+
+```typescript
+if (error.is(SerialErrorCode.READ_FAILED)) {
+  console.error(error.context.cause);
+}
+
+new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', { cause });
+```
 
 ## 関連
 

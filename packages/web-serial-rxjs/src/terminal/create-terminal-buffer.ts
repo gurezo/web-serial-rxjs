@@ -260,7 +260,6 @@ export function resolveTerminalBufferOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
       `Invalid terminalBuffer.maxLines: ${maxLines}. Must be a safe integer >= 0.`,
-      undefined,
       {
         field: 'terminalBuffer.maxLines',
         value: maxLines,
@@ -273,7 +272,6 @@ export function resolveTerminalBufferOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS,
       `Invalid terminalBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
-      undefined,
       {
         field: 'terminalBuffer.maxChars',
         value: maxChars,

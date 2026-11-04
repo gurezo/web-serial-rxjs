@@ -61,24 +61,6 @@ import {
 } from '@gurezo/web-serial-rxjs';
 ```
 
-## Deprecated exports
-
-The following remain available from the public export in **v4** but are not part of the canonical API. They are **deprecated** and scheduled for removal in a future major (**v5+**). See [Migrating to v3 – §9 `assertNever` public export audit](./migration-v3.md#9-public-export-audit) for the audit history. APIs already removed in v4 (`destroy$`, `isConnected$`, `portInfo$`, `getPortInfo()`, `getCurrentPort()`, `receiveReplay$`, `isBrowserSupported()`, …) are documented in [Migrating to v4](./migration-v4.md).
-
-| Export | Status | Migration |
-| --- | --- | --- |
-| `assertNever` | `@deprecated` in v4 | Define a local helper in application code, or use `switch (state.status)` with `SerialSessionStatus` |
-
-```typescript
-// Deprecated (still available in v4 but triggers warnings)
-import { assertNever } from '@gurezo/web-serial-rxjs';
-
-// Recommended: local helper
-function assertNever(value: never): never {
-  throw new Error(`Unexpected value: ${String(value)}`);
-}
-```
-
 ## createSerialSession(options?)
 
 Factory that returns a new `SerialSession`. Safe to call when `navigator.serial` is unavailable; in that case `state$` is seeded with `{ status: 'unsupported' }` and `connect$` rejects with `SerialErrorCode.BROWSER_NOT_SUPPORTED`.
@@ -360,7 +342,7 @@ Enqueues a payload for ordered transmission. The bytes are fixed when the Observ
 
 For recommended next actions after each code (reconnect vs dispose), see [Troubleshooting – Error Recovery Matrix](./troubleshooting.md#error-recovery-matrix).
 
-For cause-bearing error codes, **`context.cause`** (`unknown`) is the canonical source for the underlying failure. `originalError` remains in **v4** for backward compatibility but is **deprecated** and scheduled for removal in a future major (**v5+**). See [Migrating to v3 – originalError deprecation](./migration-v3.md#3-originalerror-deprecation).
+For cause-bearing error codes, **`context.cause`** (`unknown`) is the source for the underlying failure. The v4 `originalError` property and legacy constructor cause argument are removed; see [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis).
 
 ```typescript
 session.errors$.subscribe((error) => {
@@ -380,7 +362,7 @@ try {
 
 The same union is available as a **const object** `SerialErrorCode` (e.g. `SerialErrorCode.READ_FAILED` is `'READ_FAILED'`) for IDE completion and to avoid string typos. String literals stay valid for types and runtime comparisons. See [Migrating to v3](./migration-v3.md) for the enum-to-const declaration change.
 
-Runtime emission coverage for the implemented codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit). Receive-replay codes were removed in [Migrating to v4 – Phase 2](./migration-v4.md#phase-2-api-removals).
+Runtime emission coverage for the implemented codes is audited in [Migrating to v3 §8](./migration-v3.md#8-serialerrorcode-runtime-emission-audit). Receive-replay codes were removed in [Migrating to v4 – Phase 2](./migration-v4.md#phase-2-api-removals). Reserved codes `PORT_NOT_AVAILABLE` and `OPERATION_TIMEOUT` were removed in [Migrating to v5](./migration-v5.md#removed-deprecated-apis).
 
 | Code                     | `context` shape | When it is emitted                                                  |
 | ------------------------ | --------------- | ------------------------------------------------------------------- |
@@ -391,7 +373,7 @@ Runtime emission coverage for the implemented codes is audited in [Migrating to 
 
 `ValidationErrorContext` is `{ field: string; value: unknown; constraint: ValidationErrorConstraint; filterIndex?: number }`. `message` stays human-readable; use `context` for programmatic handling.
 
-### Implemented (emitted in v4)
+### Emitted
 
 | Code                     | When it is emitted                                                  |
 | ------------------------ | ------------------------------------------------------------------- |
@@ -409,10 +391,3 @@ Runtime emission coverage for the implemented codes is audited in [Migrating to 
 | `OPERATION_CANCELLED`    | User cancelled the port picker.                                     |
 | `SESSION_DISPOSED`       | `connect$` or `send$` called after `dispose()`.                      |
 | `UNKNOWN`                | Unclassified dispose, disconnect, or post-open `connect$` failure; see `context.cause`. |
-
-### Reserved (not emitted in v4; scheduled for removal in a future major / v5+)
-
-| Code                     | Notes                                                               |
-| ------------------------ | ------------------------------------------------------------------- |
-| `PORT_NOT_AVAILABLE`     | **Deprecated.** Unreachable without a `getPorts` API. Use `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` for port acquisition failures. |
-| `OPERATION_TIMEOUT`      | **Deprecated.** Unreachable without a timeout / transaction API.    |

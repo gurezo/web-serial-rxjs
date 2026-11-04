@@ -66,7 +66,6 @@ const REMOVED_SESSION_APIS = [
  * Intentional API additions must update this list explicitly.
  */
 const CANONICAL_RUNTIME_EXPORTS = [
-  'assertNever',
   'createSerialSession',
   'createTerminalBuffer',
   'DEFAULT_LINE_BUFFER_OPTIONS',

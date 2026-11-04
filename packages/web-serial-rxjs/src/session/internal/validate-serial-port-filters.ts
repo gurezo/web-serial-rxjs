@@ -27,7 +27,6 @@ export function validateSerialPortFilters(
       throw new SerialError(
         SerialErrorCode.INVALID_FILTER_OPTIONS,
         'Filter must have at least usbVendorId or usbProductId',
-        undefined,
         {
           field: 'filters',
           value: filter,
@@ -46,7 +45,6 @@ export function validateSerialPortFilters(
         throw new SerialError(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
           `Invalid usbVendorId: ${filter.usbVendorId}. Must be an integer between 0 and 65535.`,
-          undefined,
           {
             field: 'usbVendorId',
             value: filter.usbVendorId,
@@ -66,7 +64,6 @@ export function validateSerialPortFilters(
         throw new SerialError(
           SerialErrorCode.INVALID_FILTER_OPTIONS,
           `Invalid usbProductId: ${filter.usbProductId}. Must be an integer between 0 and 65535.`,
-          undefined,
           {
             field: 'usbProductId',
             value: filter.usbProductId,
