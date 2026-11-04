@@ -4,7 +4,6 @@ import { SerialErrorCode } from '../../src/errors/serial-error-code';
 describe('SerialErrorCode', () => {
   it('should have all expected error codes', () => {
     expect(SerialErrorCode.BROWSER_NOT_SUPPORTED).toBe('BROWSER_NOT_SUPPORTED');
-    expect(SerialErrorCode.PORT_NOT_AVAILABLE).toBe('PORT_NOT_AVAILABLE');
     expect(SerialErrorCode.PORT_OPEN_FAILED).toBe('PORT_OPEN_FAILED');
     expect(SerialErrorCode.PORT_ALREADY_OPEN).toBe('PORT_ALREADY_OPEN');
     expect(SerialErrorCode.PORT_NOT_OPEN).toBe('PORT_NOT_OPEN');
@@ -15,7 +14,6 @@ describe('SerialErrorCode', () => {
       'INVALID_FILTER_OPTIONS',
     );
     expect(SerialErrorCode.OPERATION_CANCELLED).toBe('OPERATION_CANCELLED');
-    expect(SerialErrorCode.OPERATION_TIMEOUT).toBe('OPERATION_TIMEOUT');
     expect(SerialErrorCode.LINE_BUFFER_OVERFLOW).toBe('LINE_BUFFER_OVERFLOW');
     expect(SerialErrorCode.INVALID_TERMINAL_BUFFER_OPTIONS).toBe(
       'INVALID_TERMINAL_BUFFER_OPTIONS',
@@ -32,7 +30,7 @@ describe('SerialErrorCode', () => {
 
   it('should be a const object with string values', () => {
     const codes = Object.values(SerialErrorCode);
-    expect(codes.length).toBe(17);
+    expect(codes.length).toBe(15);
     codes.forEach((code) => {
       expect(typeof code).toBe('string');
       expect(code.length).toBeGreaterThan(0);

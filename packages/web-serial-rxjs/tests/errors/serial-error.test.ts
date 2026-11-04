@@ -5,15 +5,15 @@ describe('SerialError', () => {
   describe('constructor', () => {
     it('should create an error with code and message', () => {
       const error = new SerialError(
-        SerialErrorCode.PORT_NOT_AVAILABLE,
-        'Port is not available',
+        SerialErrorCode.PORT_NOT_OPEN,
+        'Port is not open',
       );
 
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(SerialError);
       expect(error.name).toBe('SerialError');
-      expect(error.code).toBe(SerialErrorCode.PORT_NOT_AVAILABLE);
-      expect(error.message).toBe('Port is not available');
+      expect(error.code).toBe(SerialErrorCode.PORT_NOT_OPEN);
+      expect(error.message).toBe('Port is not open');
       expect(error.context).toBeUndefined();
     });
 

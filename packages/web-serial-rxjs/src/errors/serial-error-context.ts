@@ -36,7 +36,6 @@ export type ValidationErrorContext = {
  */
 export interface SerialErrorContextMap {
   [SerialErrorCode.BROWSER_NOT_SUPPORTED]: undefined;
-  [SerialErrorCode.PORT_NOT_AVAILABLE]: SerialErrorCauseContext;
   [SerialErrorCode.PORT_OPEN_FAILED]: SerialErrorCauseContext;
   [SerialErrorCode.PORT_ALREADY_OPEN]: undefined;
   [SerialErrorCode.PORT_NOT_OPEN]: undefined;
@@ -45,7 +44,6 @@ export interface SerialErrorContextMap {
   [SerialErrorCode.CONNECTION_LOST]: SerialErrorCauseContext;
   [SerialErrorCode.INVALID_FILTER_OPTIONS]: ValidationErrorContext;
   [SerialErrorCode.OPERATION_CANCELLED]: SerialErrorCauseContext;
-  [SerialErrorCode.OPERATION_TIMEOUT]: undefined;
   [SerialErrorCode.LINE_BUFFER_OVERFLOW]: {
     readonly maxChars: number;
   };
@@ -57,7 +55,6 @@ export interface SerialErrorContextMap {
 }
 
 const CAUSE_CONTEXT_CODES = new Set<SerialErrorCode>([
-  SerialErrorCode.PORT_NOT_AVAILABLE,
   SerialErrorCode.PORT_OPEN_FAILED,
   SerialErrorCode.READ_FAILED,
   SerialErrorCode.WRITE_FAILED,

@@ -3,7 +3,8 @@ import { SerialErrorCode } from '../../src/errors/serial-error-code';
 
 /**
  * Regression guard for the SerialErrorCode emission audit (Issue #438).
- * Keep in sync with MIGRATION_V3 §8 and concepts.md SerialError / SerialErrorCode.
+ * Reserved codes removed in v5 (Issue #658) must stay off the public object.
+ * Keep in sync with concepts.md SerialError / SerialErrorCode.
  */
 const IMPLEMENTED_CODES = [
   SerialErrorCode.BROWSER_NOT_SUPPORTED,
@@ -23,31 +24,28 @@ const IMPLEMENTED_CODES = [
   SerialErrorCode.UNKNOWN,
 ] as const;
 
-const RESERVED_CODES = [
-  SerialErrorCode.PORT_NOT_AVAILABLE,
-  SerialErrorCode.OPERATION_TIMEOUT,
+const REMOVED_RESERVED_CODES = [
+  'PORT_NOT_AVAILABLE',
+  'OPERATION_TIMEOUT',
 ] as const;
 
 describe('SerialErrorCode emission audit (#438)', () => {
-  it('defines exactly 17 codes', () => {
-    expect(Object.values(SerialErrorCode)).toHaveLength(17);
+  it('defines exactly 15 codes', () => {
+    expect(Object.values(SerialErrorCode)).toHaveLength(15);
   });
 
-  it('classifies every code as implemented or reserved', () => {
-    const classified = new Set<string>([
-      ...IMPLEMENTED_CODES,
-      ...RESERVED_CODES,
-    ]);
-    expect(classified.size).toBe(17);
+  it('classifies every code as implemented', () => {
+    const classified = new Set<string>(IMPLEMENTED_CODES);
+    expect(classified.size).toBe(15);
     for (const code of Object.values(SerialErrorCode)) {
       expect(classified.has(code)).toBe(true);
     }
   });
 
-  it('marks reserved codes as not emitted at runtime in v4', () => {
-    expect(RESERVED_CODES).toEqual([
-      SerialErrorCode.PORT_NOT_AVAILABLE,
-      SerialErrorCode.OPERATION_TIMEOUT,
-    ]);
+  it('does not export reserved codes removed in v5', () => {
+    const codes = SerialErrorCode as Record<string, string>;
+    for (const code of REMOVED_RESERVED_CODES) {
+      expect(codes[code]).toBeUndefined();
+    }
   });
 });
