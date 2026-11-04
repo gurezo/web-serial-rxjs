@@ -1,3 +1,5 @@
+import type { SerialOptions } from './web-serial-types';
+
 /**
  * Payload accepted by {@link SerialSession.send$}.
  *

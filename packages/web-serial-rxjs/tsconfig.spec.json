@@ -7,7 +7,8 @@
       "vitest/importMeta",
       "vite/client",
       "node",
-      "vitest"
+      "vitest",
+      "@types/w3c-web-serial"
     ]
   },
   "include": [
@@ -23,6 +24,7 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "tests/session/web-serial-types-assignability.test.ts"
   ]
 }

@@ -23,7 +23,7 @@ These are the conditions adopters should treat as the baseline:
 | **Import** | Use ESM `import` from `@gurezo/web-serial-rxjs` in an environment that resolves the package `exports` map. |
 | **RxJS** | **Peer dependency** `rxjs` **`^7.8.0`**. Install it in your app; it is not bundled into this package. |
 | **TypeScript** | TypeScript is **not** a peer dependency. The package ships `.d.ts` for TypeScript consumers. We do **not** pin a minimum TypeScript version as a product guarantee; use a TypeScript release that can consume the published declarations. JavaScript consumers can ignore the types. |
-| **Web Serial types** | Public declarations use ambient names such as `SerialPortInfo` and `SerialPortFilter`. They are not bundled. With `skipLibCheck: false`, install `@types/w3c-web-serial` and include it in the compilation. If `compilerOptions.types` is set, add `w3c-web-serial` to that list. Bundling these types is planned for v5. |
+| **Web Serial types** | `SerialOptions`, `SerialPortInfo`, and `SerialPortFilter` are exported by this package. `skipLibCheck: false` does not require `@types/w3c-web-serial`. If you still install it, the packaged dictionaries stay assignable to the globals and do not merge with them. The `SerialPort` class is not exported. See [Migrating to v5 – Web Serial types](./migration-v5.md#web-serial-types). |
 
 Browser / Web Serial availability is separate — see [Browser support and support policy](./browser-support.md).
 
