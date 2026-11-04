@@ -35,7 +35,7 @@ Web Serial API を最小限の Session 指向 RxJS 表面でラップする Type
 
 ## 接続状態（ライフサイクル UI）
 
-ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose$()`** を使用します（購読により実行されます）。詳細は [v4 への移行](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) を参照してください。
+ライフサイクル UI には **`state$`** の `state.status` narrowing を canonical API として使用してください。boolean だけ必要な場合は `state$` から derive してください。セッション破棄には **`dispose()`** を使います（呼び出した時点で始まり、ポート解放で resolve します）。非推奨の **`dispose$()`** は購読するまで実行されません。詳細は [v5 への移行](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md) を参照してください。
 
 ## 接続中のポート情報（デバイス識別）
 

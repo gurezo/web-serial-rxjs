@@ -14,7 +14,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | --- | --- |
 | **[概要](./overview.md)** | 公開面の早見表、機能概要、最小サンプル |
 | **[クイックスタート](./quick-start.md)** | インストールから切断までの基本フロー |
-| **[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)** | framework 別の `disconnect$` / `dispose$` タイミングと subscription 解除 |
+| **[Framework 別 session ライフサイクル](./framework-session-lifecycle.md)** | framework 別の `disconnect$` / `dispose()` タイミングと subscription 解除 |
 
 ## How-to
 
@@ -51,7 +51,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[Bundler / framework 互換性の検証方針](./bundler-compatibility.md)** | CI と Examples の区別、ESM / RxJS / 型（全 bundler matrix なし） |
 | **[Bundle size と tree-shaking](./bundle-size.md)** | library-only サイズのスナップショットと再現可能な測定 |
 | **[Verified environment 掲載基準](./verified-environment.md)** | 実機結果掲載時の最低検証項目（デバイスカタログなし） |
-| **[v4 → v5 マイグレーション](./migration-v5.md)** | v5 の破壊的変更。エラー通知契約から追記する |
+| **[v4 → v5 マイグレーション](./migration-v5.md)** | v5 の契約変更。エラー通知と `dispose()` |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |
 | **[v1 → v2 マイグレーション](./migration-v2.md)** | v1 廃止 API の置き換え |
@@ -69,6 +69,6 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 
 - **`state$`** — 接続ライフサイクルの canonical source。`state.status` と `SerialSessionStatus` で分岐し、connected 時は `state.portInfo` を利用する
 - **`errors$`** — 接続後の read pump、予期しない切断、`LINE_BUFFER_OVERFLOW`。操作の失敗は各 Observable の `error`
-- **`dispose$()`** — セッション破棄の唯一の API（購読により実行）
+- **`dispose()`** — セッション破棄。呼び出した時点で始まり、ポートと read pump の解放で resolve する。非推奨の `dispose$()` は購読するまで実行されない
 - **`isWebSerialSupported()`** — トップレベルの同期 feature detection（セッションメソッドではない。サポート保証ではない）— [ブラウザサポート](./browser-support.md) を参照
 - Phase 1+2 で削除された API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()`）は [v4 への移行](./migration-v4.md) を参照

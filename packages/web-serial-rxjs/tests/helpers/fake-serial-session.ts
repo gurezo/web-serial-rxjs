@@ -143,6 +143,10 @@ export function createFakeSerialSession(): FakeSerialSessionHandle {
         return of(undefined);
       }),
 
+    dispose: async (): Promise<void> => {
+      stateSubject.next({ status: SerialSessionStatus.Disposed });
+    },
+
     dispose$: (): Observable<void> =>
       defer(() => {
         stateSubject.next({ status: SerialSessionStatus.Disposed });

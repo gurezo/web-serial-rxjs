@@ -203,6 +203,7 @@ describe('createSerialSession', () => {
 
       expect(typeof session.connect$).toBe('function');
       expect(typeof session.disconnect$).toBe('function');
+      expect(typeof session.dispose).toBe('function');
       expect(typeof session.dispose$).toBe('function');
       expect(typeof session.send$).toBe('function');
       expect(session.state$).toBeDefined();
@@ -1780,6 +1781,103 @@ describe('createSerialSession', () => {
       await firstValueFrom(session.dispose$());
 
       await expect(firstValueFrom(session.disconnect$())).resolves.toBeUndefined();
+    });
+  });
+
+  describe('dispose()', () => {
+    it('transitions idle -> disposed and completes state$', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (globalThis as any).navigator = { serial: {} };
+
+      const session = createSerialSession();
+      const states = lastValueFrom(session.state$.pipe(toArray()));
+
+      await session.dispose();
+
+      await expect(states).resolves.toEqual([
+        { status: S.Idle },
+        { status: S.Disposed },
+      ]);
+    });
+
+    it('closes the port and completes streams when connected', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      const states = lastValueFrom(session.state$.pipe(toArray()));
+      const errors = lastValueFrom(session.errors$.pipe(toArray()));
+      const receive = lastValueFrom(session.receive$.pipe(toArray()));
+      const lines = lastValueFrom(session.lines$.pipe(toArray()));
+
+      await session.dispose();
+
+      expect(port.close).toHaveBeenCalledTimes(1);
+      await expect(states).resolves.toEqual([
+        connectedState(),
+        { status: S.Disposed },
+      ]);
+      await expect(errors).resolves.toEqual([]);
+      await expect(receive).resolves.toEqual([]);
+      await expect(lines).resolves.toEqual([]);
+    });
+
+    it('disposes from error state', async () => {
+      const { stream, controller } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+      controller.error(new Error('device unplugged'));
+      await flushMicrotasks();
+      const errorState = await firstValueFrom(session.state$);
+      expect(errorState.status).toBe(S.Error);
+
+      const states = lastValueFrom(session.state$.pipe(toArray()));
+      await session.dispose();
+
+      await expect(states).resolves.toEqual(
+        expect.arrayContaining([
+          { status: S.Error, error: expect.any(SerialError) },
+          { status: S.Disposed },
+        ]),
+      );
+    });
+
+    it('is idempotent', async () => {
+      const session = createSerialSession();
+
+      await session.dispose();
+      await expect(session.dispose()).resolves.toBeUndefined();
+    });
+
+    it('rejects connect$ and send$ after dispose with SESSION_DISPOSED', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await session.dispose();
+
+      await expect(firstValueFrom(session.connect$())).rejects.toMatchObject({
+        code: SerialErrorCode.SESSION_DISPOSED,
+      });
+      await expect(firstValueFrom(session.send$('x'))).rejects.toMatchObject({
+        code: SerialErrorCode.SESSION_DISPOSED,
+      });
+    });
+
+    it('completes disconnect$ immediately after dispose', async () => {
+      const session = createSerialSession();
+      await session.dispose();
+
+      await expect(
+        firstValueFrom(session.disconnect$()),
+      ).resolves.toBeUndefined();
     });
   });
 });

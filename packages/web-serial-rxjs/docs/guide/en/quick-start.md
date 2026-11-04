@@ -2,7 +2,7 @@
 
 This is the **shortest path** to opening a serial port, receiving **newline-delimited lines**, sending data, and closing the port. For the full map of `state$`, `errors$`, `receive$`, `lines$`, and the imperative methods, read [SerialSession overview](./overview.md#serialsession-at-a-glance) first.
 
-Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the unframed UTF-8 decoder chunk stream (decoded text, not wire bytes) when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. For **`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`**, see [Running imperative methods (cold Observables)](#running-imperative-methods-cold-observables) — they run only when subscribed.
+Use **`lines$`** for standard newline-framed text (`\n`, `\r\n`). **`receive$`** is the unframed UTF-8 decoder chunk stream (decoded text, not wire bytes) when you need custom framing (see [Advanced Usage](./advanced-usage.md#line-framing)). Prefer **`state$`** with `state.status` narrowing for lifecycle UI. Derive a connected boolean from `state$` when you only need a flag. For **`connect$()`**, **`send$()`**, and **`disconnect$()`**, see [Running imperative methods (cold Observables)](#running-imperative-methods-cold-observables) — they run only when subscribed. **`dispose()`** starts teardown immediately. Deprecated **`dispose$()`** is still cold.
 
 Choosing among `receive$`, `lines$`, and `terminalText$`: see [Choosing receive$ / lines$ / terminalText$](./stream-selection.md).
 
@@ -39,7 +39,7 @@ For browser **API availability** vs this project's **official support** (and unt
 
 ## Running imperative methods (cold Observables)
 
-**`connect$()`**, **`send$()`**, **`disconnect$()`**, and **`dispose$()`** return **cold** Observables. Calling them only builds the Observable — **nothing runs until you subscribe** (or use an operator that subscribes for you).
+**`connect$()`**, **`send$()`**, and **`disconnect$()`** return **cold** Observables. Calling them only builds the Observable — **nothing runs until you subscribe** (or use an operator that subscribes for you). **`dispose()`** is not cold: it starts teardown immediately. Deprecated **`dispose$()`** is still cold.
 
 This is different from **`state$`**, **`lines$`**, **`errors$`**, and other session streams: subscribe to those as early as you need their emissions, then trigger imperative work through the methods below.
 
@@ -50,7 +50,7 @@ This is different from **`state$`**, **`lines$`**, **`errors$`**, and other sess
 session.connect$();
 session.send$('AT\r\n');
 session.disconnect$();
-session.dispose$();
+session.dispose$(); // deprecated: still does nothing until subscribed
 ```
 
 ### Pattern 1 — subscribe (fire-and-forget)
@@ -130,7 +130,7 @@ For richer pipelines (request/response, timeouts, retry), see [Advanced Usage](.
 | `SerialSessionStatus.Disconnecting` | `'disconnecting'` | `disconnect$` in progress. |
 | `SerialSessionStatus.Unsupported` | `'unsupported'` | Web Serial unavailable at session creation. |
 | `SerialSessionStatus.Error` | `'error'` | Fatal failure (`error` included). |
-| `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose$`. |
+| `SerialSessionStatus.Disposed` | `'disposed'` | Session permanently torn down via `dispose()`. |
 
 Details: [API concepts and design notes](./concepts.md#serialsessionstate--serialsessionstatus) and [Migrating to v3](./migration-v3.md).
 
@@ -216,13 +216,13 @@ session.disconnect$().subscribe({
 
 ## Dispose (resource cleanup)
 
-Call `dispose$` when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables.
+Call `dispose()` when you are done with the session entirely—for example before replacing it after a baud-rate change. This closes any active connection and completes all observables. The promise resolves when the port and read pump are released. `state$` may emit `'disposed'` first.
 
 ```typescript
-session.dispose$().subscribe({
-  error: (e) => console.error('Dispose error:', e),
-});
+await session.dispose();
 ```
+
+`dispose$()` remains as a deprecated cold Observable. Subscribe to it if you keep that call. Calling it without a subscription does nothing.
 
 After disposal, create a new `createSerialSession()` instance instead of reusing the old one.
 

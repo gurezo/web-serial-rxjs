@@ -194,7 +194,7 @@ v3 では **`SerialSessionStatus`** が lifecycle 文字列定数（例: `Serial
 - `{ status: 'disconnecting' }` — `disconnect$` 実行中。
 - `{ status: 'unsupported' }` — `navigator.serial` が存在しない環境でセッションを生成した場合。
 - `{ status: 'error', error }` — 致命的な失敗。`error` はその失敗の `SerialError` と同一インスタンス。操作の失敗では `errors$` には出ない。
-- `{ status: 'disposed' }` — `dispose$` によりセッションが永久破棄された。
+- `{ status: 'disposed' }` — `dispose()` によりセッションが永久破棄された。`'disposed'` は `dispose()` の resolve より先に出ることがある。
 
 ポート選択ダイアログのキャンセル（`OPERATION_CANCELLED`）は `'error'` に入らず、`'idle'` に戻ります。`connect$` は error 終了し、その `SerialError` は `errors$` には出ません。
 
@@ -241,6 +241,8 @@ v2 からの移行は [v3 移行ガイド](./migration-v3.md) を参照してく
 interface SerialSession {
   connect$(): Observable<void>;
   disconnect$(): Observable<void>;
+  dispose(): Promise<void>;
+  /** @deprecated `dispose()` の cold な互換ラッパー。購読すると実行される。 */
   dispose$(): Observable<void>;
 
   readonly state$: Observable<SerialSessionState>;
@@ -310,13 +312,21 @@ createSerialUi(session);
 
 ### `disconnect$(): Observable<void>`
 
-read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。`'connecting'` 中に呼ぶと、進行中の `connect$()` をキャンセルして `'connected'` にせず `'idle'` に戻します。`open()` 開始後は、そのポートの解放が終わってから complete します。`state$` の `'idle'` は complete より先に出ることがあります。`open()` 前（`requestPort()` 待ちを含む）は待たずに complete します。ポート選択ダイアログは `disconnect$()` では閉じず、その後に選ばれたポートは開きません。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose$` を使います。**購読により実行されます。**
+read pump を停止してポートを閉じます。すでに idle の場合もそのまま complete します。`'connecting'` 中に呼ぶと、進行中の `connect$()` をキャンセルして `'connected'` にせず `'idle'` に戻します。`open()` 開始後は、そのポートの解放が終わってから complete します。`state$` の `'idle'` は complete より先に出ることがあります。`open()` 前（`requestPort()` 待ちを含む）は待たずに complete します。ポート選択ダイアログは `disconnect$()` では閉じず、その後に選ばれたポートは開きません。状態遷移は `connected → disconnecting → idle`。`'error'` からも呼べて、ポートをテアダウンして `idle` に戻します。`disconnect$` 後もセッションは再利用可能です。永久破棄には `dispose()` を使います。**購読により実行されます。**
+
+### `dispose(): Promise<void>`
+
+セッションを永久破棄します。呼び出した時点で始まり、ポートと read pump の解放が終わると resolve します。`state$` の `'disposed'` は resolve より先に出ることがあります。`port.close()` の失敗では reject しません。想定外の teardown 失敗だけ `SerialError` で reject します。
+
+アクティブな接続があればポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`）を complete します。2 回目以降は同じ Promise を返し、同じ解放完了を待ちます。
+
+`'connecting'` で `open()` 開始後は、そのポートの解放が終わってから resolve します。`open()` 前（`requestPort()` 待ちを含む）は待たずに resolve します。ポート選択ダイアログは閉じず、その後に選ばれたポートは開きません。
+
+dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で失敗します。`disconnect$` は即 complete します。baud rate 変更時の session 作り替えなどでは、破棄したインスタンスを再利用せず新しい `SerialSession` を作成してください。
 
 ### `dispose$(): Observable<void>`
 
-セッションを永久破棄します。アクティブな接続があれば `disconnect$` と同様にポートと read pump を teardown し、`state$` に `'disposed'` を emit したうえで、すべてのセッション Observable（`state$`、`errors$`、`receive$`、`lines$`、`terminalText$`）を complete します。複数回呼んでも安全で、2 回目以降は即 complete します。**購読により実行されます。**
-
-dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で失敗します。`disconnect$` は即 complete します。baud rate 変更時の session 作り替えなどでは、破棄したインスタンスを再利用せず新しい `SerialSession` を作成してください。
+**非推奨。** `dispose()` の cold な互換ラッパーです。呼ぶだけでは Observable を返すだけで、購読するまでポートは解放されず `'disposed'` にも遷移しません。購読すると同じ破棄に接続し、解放完了で complete します。`await session.dispose()` を使ってください。
 
 ### `state$: Observable<SerialSessionState>`
 
@@ -334,7 +344,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 `receive$` 由来のターミナル表示向け累積テキスト。`\r` による再描画を畳み込みつつ、通常の改行挙動は維持します。既定ではプレーンテキスト表示（`<textarea>` など）向けに ANSI エスケープを除去します。生のエスケープは `receive$` で参照できます。`createTerminalBuffer(receive$, options.terminalBuffer).text$` と同等です。既定では完了行 10,000 行・文字数 1,048,576 文字まで保持し、`SerialSessionOptions.terminalBuffer` で変更できます。無制限にしたい場合は `{ maxLines: 0, maxChars: 0 }` を指定してください。
 
-履歴は購読者の責務です。購読者が 1 人以上いるあいだだけ共有され、そのあいだに入った購読者は最新の 1 件だけを受け取ります。最後の購読者が外れると折りたたみ状態を捨て、次の購読は空から始まります。空白期間のチャンクは畳み込みません。購読中に `dispose$` すると complete します。比較は [購読と replay の契約](./stream-selection.md#subscription-replay-contract) を参照してください。
+履歴は購読者の責務です。購読者が 1 人以上いるあいだだけ共有され、そのあいだに入った購読者は最新の 1 件だけを受け取ります。最後の購読者が外れると折りたたみ状態を捨て、次の購読は空から始まります。空白期間のチャンクは畳み込みません。購読中に `dispose()` すると complete します。比較は [購読と replay の契約](./stream-selection.md#subscription-replay-contract) を参照してください。
 
 ### `lines$: Observable<string>`
 
@@ -342,7 +352,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 ### `send$(data: string | Uint8Array): Observable<void>`
 
-ペイロードを送信キューに投入します。送るバイト列は `send$()` を呼んだ時点ではなく、Observable を購読した時点で決まります。文字列はその時点で共有 `TextEncoder` により UTF-8 エンコードされます。`Uint8Array` は購読時にコピーされ、そのバイト列が変換されずに書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。購読後に呼び出し元バッファを書き換えても、キュー待ちの送信内容は変わりません。同じ Observable を複数購読した場合は、購読ごとにスナップショットします。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber にだけ流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗し、この失敗も `errors$` には出ません。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。`disconnect$`、`dispose$`、および `'connected'` へ進む `connect$` は、まだ書き込みが始まっていない送信を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、この失敗は `errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待つため、書き込みは並行しません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
+ペイロードを送信キューに投入します。送るバイト列は `send$()` を呼んだ時点ではなく、Observable を購読した時点で決まります。文字列はその時点で共有 `TextEncoder` により UTF-8 エンコードされます。`Uint8Array` は購読時にコピーされ、そのバイト列が変換されずに書き込まれます（バイナリ**送信**のみ — 対応するバイナリ受信 API はありません）。購読後に呼び出し元バッファを書き換えても、キュー待ちの送信内容は変わりません。同じ Observable を複数購読した場合は、購読ごとにスナップショットします。並行する `send$` 呼び出しは内部 FIFO キューで呼び出し順に直列化されます。書き込み失敗は `SerialErrorCode.WRITE_FAILED` の `SerialError` に正規化され、subscriber にだけ流れます。`'connected'` 以外の状態で呼ぶと、`SerialErrorCode.PORT_NOT_OPEN` で即失敗し、この失敗も `errors$` には出ません。**購読により実行されます。**待機中に unsubscribe（`takeUntil` や `timeout` を含む）した送信は書き込まれません。すでに `writer.write()` が始まっている送信は、`next` / `error` / `complete` だけが止まり、書き込みの中断は保証されません。`disconnect$`、`dispose()`、および `'connected'` へ進む `connect$` は、まだ書き込みが始まっていない送信を破棄します。その subscriber は `PORT_NOT_OPEN` で失敗し、この失敗は `errors$` には出ません。実行中の write は中断されず、次の `send$` はその完了を待つため、書き込みは並行しません。詳細は [対応範囲](#対応範囲テキスト--バイナリ--文字コード) を参照してください。
 
 ## SerialError / SerialErrorCode
 
@@ -397,7 +407,7 @@ try {
 | `INVALID_LINE_BUFFER_OPTIONS` | `lineBuffer.maxChars` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `INVALID_CONNECTION_OPTIONS` | `baudRate` が範囲外（セッション生成時） | `ValidationErrorContext` |
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
-| `SESSION_DISPOSED`       | `dispose$` 後に `connect$` または `send$` を呼んだ                 |
+| `SESSION_DISPOSED`       | `dispose()` 後に `connect$` または `send$` を呼んだ                |
 | `UNKNOWN`                | dispose / disconnect、および open 成功後の `connect$` の分類不能 fallback。`context.cause` を確認 |
 
 ### Reserved（v4 では emit されない・将来の major / v5 以降で削除予定）

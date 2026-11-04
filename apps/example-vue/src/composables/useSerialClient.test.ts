@@ -24,6 +24,7 @@ interface MockCore {
   connect$: ReturnType<typeof vi.fn>;
   disconnect$: ReturnType<typeof vi.fn>;
   dispose$: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
   send$: ReturnType<typeof vi.fn>;
 }
 
@@ -34,11 +35,13 @@ const createMockCore = (): MockCore => {
   const connect$ = vi.fn(() => of(undefined));
   const disconnect$ = vi.fn(() => of(undefined));
   const dispose$ = vi.fn(() => of(undefined));
+  const dispose = vi.fn(() => Promise.resolve());
   const send$ = vi.fn(() => of(undefined));
 
   const session: SerialSession = {
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
     state$: stateSubject.asObservable(),
@@ -55,6 +58,7 @@ const createMockCore = (): MockCore => {
     errorsSubject,
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     send$,
   };
@@ -180,13 +184,14 @@ describe('useSerialClient', () => {
     expect(latestMock().connect$).toHaveBeenCalledTimes(1);
   });
 
-  it('should recreate session when baud rate changes', () => {
+  it('should recreate session when baud rate changes', async () => {
     const { api } = mountHarness();
     const first = mockCores[0];
     api.connect$(115200).subscribe();
+    await Promise.resolve();
 
     expect(first.connect$).not.toHaveBeenCalled();
-    expect(first.dispose$).toHaveBeenCalledTimes(1);
+    expect(first.dispose).toHaveBeenCalledTimes(1);
     expect(latestMock().connect$).toHaveBeenCalledWith();
     expect(
       vi.mocked(webSerialRxjs.createSerialSession),
@@ -302,6 +307,6 @@ describe('useSerialClient', () => {
 
     wrapper.unmount();
 
-    expect(mock.dispose$).toHaveBeenCalledTimes(1);
+    expect(mock.dispose).toHaveBeenCalledTimes(1);
   });
 });

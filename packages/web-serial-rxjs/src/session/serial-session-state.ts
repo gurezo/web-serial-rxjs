@@ -13,7 +13,7 @@ import type { SerialError } from '../errors/serial-error';
  *                                \-> error
  * (any)  -> unsupported   (when Web Serial API is unavailable)
  * (any)  -> error         (when an unrecoverable failure occurs)
- * (any)  -> disposed      (when dispose$ completes)
+ * (any)  -> disposed      (when dispose() or a subscribed dispose$ starts)
  * ```
  *
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/406 | Issue #406}

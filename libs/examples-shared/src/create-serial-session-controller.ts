@@ -11,6 +11,7 @@ import {
   BehaviorSubject,
   combineLatest,
   distinctUntilChanged,
+  from,
   type Observable,
   ReplaySubject,
   shareReplay,
@@ -82,9 +83,9 @@ export function createSerialSessionController(
       currentBaudRate = baudRate;
       currentSession = createSerialSession({ baudRate });
       sessions$.next(currentSession);
-      return previousSession
-        .dispose$()
-        .pipe(switchMap(() => currentSession.connect$()));
+      return from(previousSession.dispose()).pipe(
+        switchMap(() => currentSession.connect$()),
+      );
     }
     return currentSession.connect$();
   };
@@ -97,7 +98,7 @@ export function createSerialSessionController(
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
-    currentSession.dispose$().subscribe({ error: () => void 0 });
+    void currentSession.dispose();
     sessions$.complete();
     terminalBufferEpoch$.complete();
   };

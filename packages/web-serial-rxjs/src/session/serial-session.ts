@@ -21,7 +21,8 @@ import type { SerialSessionState } from './serial-session-state';
  * themselves.
  *
  * All imperative Web Serial work (open / read loop / write / close) is
- * encapsulated by the implementation. Only Observables are exposed.
+ * encapsulated by the implementation. Streams stay Observables. One-shot
+ * teardown is {@link SerialSession.dispose}.
  *
  * @example
  * ```typescript
@@ -103,20 +104,54 @@ export interface SerialSession {
   /**
    * Permanently tear down the session and complete all observables.
    *
-   * `dispose$` is cold. Calling it only returns an Observable. The port is
-   * not released, and {@link state$} does not move to `'disposed'`, until
-   * that Observable is subscribed. Subscribe with `subscribe()`, or wait
-   * with an API that subscribes, such as `firstValueFrom`.
+   * Starts immediately. Resolves when the port and read pump are released.
+   * {@link state$} may emit `'disposed'` before that. `port.close()`
+   * failures are swallowed, matching a subscribed {@link dispose$}. An
+   * unexpected teardown failure rejects with {@link SerialError}.
+   *
+   * A second call returns the same promise, including while release is
+   * still in progress. Subscribing to {@link dispose$} joins that same
+   * teardown.
+   *
+   * During `'connecting'`, if `open()` has started, this promise resolves
+   * only after that port is released. If `open()` has not started,
+   * including while `requestPort()` is pending, it resolves without
+   * waiting. The port picker is not dismissed, and a port selected
+   * afterward is not opened.
    *
    * Unlike {@link disconnect$}, which returns the session to `'idle'` for
-   * reuse, a subscribed `dispose$` closes any active connection, releases
-   * internal resources, emits `'disposed'` on {@link state$}, and completes
-   * every session stream. After disposal, {@link connect$} and {@link send$}
+   * reuse, `dispose` closes any active connection, releases internal
+   * resources, emits `'disposed'` on {@link state$}, and completes every
+   * session stream. After disposal, {@link connect$} and {@link send$}
    * fail with {@link SerialErrorCode.SESSION_DISPOSED}; create a new
    * session instead of reusing this instance.
    *
-   * Safe to subscribe more than once; later subscriptions complete
-   * immediately.
+   * @returns A promise that resolves when release has finished.
+   *
+   * @example
+   * ```typescript
+   * await session.dispose();
+   * ```
+   *
+   * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/655 | Issue #655}
+   */
+  dispose(): Promise<void>;
+
+  /**
+   * Permanently tear down the session and complete all observables.
+   *
+   * @deprecated Use {@link SerialSession.dispose}. `dispose$` stays as a
+   * cold compatibility API and is not removed in this release.
+   *
+   * Calling it only returns an Observable. The port is not released, and
+   * {@link state$} does not move to `'disposed'`, until that Observable is
+   * subscribed. Subscribe with `subscribe()`, or wait with an API that
+   * subscribes, such as `firstValueFrom`.
+   *
+   * A subscription starts the same teardown as {@link SerialSession.dispose}
+   * and completes when that release finishes. A later subscription waits
+   * for the same in-flight teardown. An unexpected failure errors this
+   * subscriber with the same {@link SerialError} that rejects `dispose()`.
    *
    * @returns An Observable that completes when disposal has finished.
    *   Nothing runs until it is subscribed.
@@ -126,7 +161,7 @@ export interface SerialSession {
    * // Does nothing: no port release and no 'disposed' transition.
    * session.dispose$();
    *
-   * // Tears the session down.
+   * // Tears the session down. Prefer `await session.dispose()`.
    * session.dispose$().subscribe({
    *   error: (error) => console.error(error),
    * });
@@ -262,7 +297,7 @@ export interface SerialSession {
    * not aborted. `takeUntil` and `timeout` follow the same rule because
    * they unsubscribe.
    *
-   * `disconnect$`, `dispose$`, and a `connect$` that is about to become
+   * `disconnect$`, `dispose`, `dispose$`, and a `connect$` that is about to become
    * `'connected'` drop sends that have not started. Those subscribers error
    * with {@link SerialErrorCode.PORT_NOT_OPEN}, and that failure is not
    * emitted on {@link SerialSession.errors$}. The in-flight write is not

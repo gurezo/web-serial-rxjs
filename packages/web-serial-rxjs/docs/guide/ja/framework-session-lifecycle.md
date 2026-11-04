@@ -4,16 +4,20 @@
 
 Parent: [#585](https://github.com/gurezo/web-serial-rxjs/issues/585) · Issue: [#593](https://github.com/gurezo/web-serial-rxjs/issues/593) · Related: [クイックスタート – 切断 / 破棄](./quick-start.md#破棄する（リソース解放）) · [命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行（cold-observable）) · [API の概念 – SerialSession](./concepts.md#serialsession) · [タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component-hook-破棄時のキャンセル) · [Examples](../../examples/)
 
-## disconnect$() と dispose$() の使い分け
+## disconnect$() と dispose() の使い分け
 
-どちらも **cold Observable** です — 購読したときだけ実行されます。`dispose$()` を呼ぶだけではポートは解放されず、`'disposed'` にも遷移しません。[クイックスタート – 命令メソッドの実行（cold Observable）](./quick-start.md#命令メソッドの実行（cold-observable）) と [subscribe しない cleanup](#dispose-without-subscribe) を参照してください。
+`disconnect$()` は **cold Observable** です。購読したときだけ実行されます。**`dispose()`** は呼び出した時点で破棄を始め、ポートと read pump の解放が終わると resolve します。`state$` の `'disposed'` は resolve より先に出ることがあります。`port.close()` の失敗では reject しません。
+
+`dispose$()` は同じ破棄を行う非推奨の cold Observable として残します。`dispose$()` を呼ぶだけではポートは解放されず、`'disposed'` にも遷移しません。[subscribe しない cleanup](#dispose-without-subscribe) を参照してください。
 
 | メソッド | ポート / read pump | セッション再利用 | 全 Observable | 典型的なトリガー |
 | --- | --- | --- | --- | --- |
 | **`disconnect$()`** | 閉じて停止 | **可** — `idle` に戻る | 継続 | ユーザーが切断; エラー後の再接続前; 一時的なクローズ |
-| **`dispose$()`** | 閉じて停止 | **不可** — 終端 | **complete** | コンポーネント / ページ破棄; ボーレート変更（新 session）; アプリ終了 |
+| **`dispose()`** | 閉じて停止 | **不可** — 終端 | **complete** | コンポーネント / ページ破棄; ボーレート変更（新 session）; アプリ終了 |
 
-正式な API 定義は [API の概念 – SerialSession](./concepts.md#serialsession)（`disconnect$` / `dispose$` セクション）を参照してください。
+`'connecting'` で `open()` 開始後は、そのポートの解放が終わってから `dispose()` が resolve します。`open()` 前（`requestPort()` 待ちを含む）は待たずに resolve します。ポート選択ダイアログは閉じず、その後に選ばれたポートは開きません。
+
+正式な API 定義は [API の概念 – SerialSession](./concepts.md#serialsession)（`disconnect$` / `dispose` セクション）を参照してください。
 
 ### disconnect$() を呼ぶタイミング
 
@@ -28,7 +32,7 @@ session.disconnect$().subscribe({
 });
 ```
 
-### dispose$() を呼ぶタイミング
+### dispose() を呼ぶタイミング
 
 - session を所有するコンポーネント、hook、composable、ページが破棄される。
 - session を丸ごと作り替える（ボーレート変更後 — 旧インスタンスを dispose してから `createSerialSession()`）。
@@ -36,27 +40,25 @@ session.disconnect$().subscribe({
 
 ```typescript
 // 終端 teardown — 再度 serial が必要なら新しい session を作る
-session.dispose$().subscribe({
-  error: (e) => console.error('Dispose error:', e),
-});
+await session.dispose();
 ```
 
-`dispose$` 後は **同じインスタンス**で `connect$()` を呼ばないでください。新しい `createSerialSession()` を作成します。
+`dispose()` 後は **同じインスタンス**で `connect$()` を呼ばないでください。新しい `createSerialSession()` を作成します。
 
 ## 推奨 teardown 順序
 
 すべての framework の cleanup hook で次の順序を適用してください。
 
 1. **UI 向け subscription を解除** — `state$` / `lines$` / `terminalText$` / `errors$` をコンポーネントへ配信しない。
-2. **dispose 前の `disconnect$()` は任意** — `dispose$()` がアクティブな接続を閉じ、read pump を停止する。
-3. **session 所有者の破棄時に cleanup hook で `dispose$().subscribe()` を呼ぶ**。
+2. **dispose 前の `disconnect$()` は任意** — `dispose()` がアクティブな接続を閉じ、read pump を停止する。
+3. **session 所有者の破棄時に cleanup hook で `void session.dispose()` を呼ぶ**。
 4. **ユーザーが戻ってきたら新しい session を作成** — dispose 済みインスタンスを再利用しない。
 
 ```typescript
 // 汎用 cleanup スケッチ（framework の hook に合わせて適用）
 function teardownSession(session: SerialSession, uiSub: Subscription): void {
   uiSub.unsubscribe();
-  session.dispose$().subscribe({ error: () => void 0 });
+  void session.dispose();
 }
 ```
 
@@ -68,19 +70,19 @@ function teardownSession(session: SerialSession, uiSub: Subscription): void {
 
 [タイムアウト・キャンセル・再試行 – Component / Hook 破棄時のキャンセル](./timeout-cancel-retry.md#component-hook-破棄時のキャンセル) では `takeUntil(destroy$)` や `takeUntilDestroyed()` で UI への **イベント配信を止める**方法を示しています。
 
-これは `dispose$()` の **代替ではありません**:
+これは `dispose()` の **代替ではありません**:
 
 | 操作 | 止めるもの | セッションの port / pump |
 | --- | --- | --- |
 | `unsubscribe()` / `takeUntil` | UI コールバック | 接続中なら動作し続ける |
 | `disconnect$()` | port と read pump | セッション再利用可 |
-| `dispose$()` | port、pump、全 session Observable | セッション終端 |
+| `dispose()` | port、pump、全 session Observable | セッション終端 |
 
-stream から unsubscribe 済みでも、session 所有者の破棄時には必ず `dispose$().subscribe()` を呼んでください。
+stream から unsubscribe 済みでも、session 所有者の破棄時には必ず `void session.dispose()` を呼んでください。
 
 ## Framework 別パターン
 
-[Example アプリ](../../examples/) は `createSerialSession()` をローカルヘルパー `createSerialSessionController`（`@gurezo/examples-shared`、npm 非公開）でラップしています。以下のパターンはヘルパー有無に関わらず適用できます — ヘルパーを使わない場合は `controller.dispose()` の代わりに `session.dispose$().subscribe()` を呼びます。
+[Example アプリ](../../examples/) は `createSerialSession()` をローカルヘルパー `createSerialSessionController`（`@gurezo/examples-shared`、npm 非公開）でラップしています。以下のパターンはヘルパー有無に関わらず適用できます — ヘルパーを使わない場合は `controller.dispose()` の代わりに `void session.dispose()` を呼びます。
 
 ### Angular
 
@@ -109,7 +111,7 @@ export class SerialClientService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.session.dispose$().subscribe({ error: () => void 0 });
+    void this.session.dispose();
   }
 }
 ```
@@ -158,7 +160,7 @@ function useSerialSession() {
 
     return () => {
       sub.unsubscribe();
-      session.dispose$().subscribe({ error: () => void 0 });
+      void session.dispose();
       sessionRef.current = null;
     };
   }, []);
@@ -186,7 +188,7 @@ return () => {
 **注意:**
 
 - session を `useRef` に保持し、React StrictMode の二重マウント / アンマウントで effect setup と cleanup の間にインスタンスを失わないようにする。
-- 複合 `Subscription` を **`dispose$().subscribe()` の前に** unsubscribe する。
+- 複合 `Subscription` を **`void session.dispose()` の前に** unsubscribe する。
 - イベントハンドラからの `connect$()` / `disconnect$()` / `send$()` は one-shot `.subscribe()` — 追加 cleanup 不要。
 
 **Live example:** [React example app](../../examples/react/)
@@ -220,7 +222,7 @@ export function useSerialClient() {
     stateSub.unsubscribe();
     linesSub.unsubscribe();
     errorsSub.unsubscribe();
-    session.dispose$().subscribe({ error: () => void 0 });
+    void session.dispose();
   });
 
   return { isConnected, disconnect /* … */ };
@@ -262,7 +264,7 @@ export function useSerialSession() {
   onDestroy(() => {
     linesSub.unsubscribe();
     errorSub.unsubscribe();
-    session.dispose$().subscribe({ error: () => void 0 });
+    void session.dispose();
   });
 
   const disconnect = () =>
@@ -277,7 +279,7 @@ export function useSerialSession() {
 **注意:**
 
 - `readable` store は stop 関数で auto-unsubscribe できるが、`terminalText$` など長寿命の直接 subscription は `onDestroy` で明示 cleanup が必要。
-- store factory を呼んだ component 破棄時に `onDestroy` で `dispose$().subscribe()` を呼ぶ。
+- store factory を呼んだ component 破棄時に `onDestroy` で `void session.dispose()` を呼ぶ。
 
 **Live example:** [Svelte example app](../../examples/svelte/)
 
@@ -309,7 +311,7 @@ export class App {
 
   destroy(): void {
     this.sub.unsubscribe();
-    this.session.dispose$().subscribe({ error: () => void 0 });
+    void this.session.dispose();
   }
 }
 ```
@@ -327,10 +329,10 @@ export class App {
 | 質問 | 答え |
 | --- | --- |
 | ユーザーが Disconnect をクリック? | `disconnect$().subscribe()` — session は再利用可 |
-| Component / ルートがアンマウント? | UI stream を unsubscribe してから `dispose$().subscribe()` |
-| ボーレート変更（新 session）? | 旧 session で `dispose$().subscribe()`、その後 `createSerialSession()` |
-| `dispose$` 後? | **新しい** session を作成 — 旧 session では再接続しない |
-| `takeUntil(destroy$)` だけで十分? | **いいえ** — session 所有者 teardown 時に `dispose$().subscribe()` も呼ぶ |
+| Component / ルートがアンマウント? | UI stream を unsubscribe してから `void session.dispose()` |
+| ボーレート変更（新 session）? | 旧 session で `void session.dispose()`、その後 `createSerialSession()` |
+| `dispose()` 後? | **新しい** session を作成 — 旧 session では再接続しない |
+| `takeUntil(destroy$)` だけで十分? | **いいえ** — session 所有者 teardown 時に `void session.dispose()` も呼ぶ |
 
 ## Example apps
 

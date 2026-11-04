@@ -44,6 +44,11 @@ import {
  *   already be `idle` before that completion. While `requestPort()` is still
  *   pending it completes without waiting, because the picker cannot be
  *   aborted and no port is held yet.
+ * - `dispose()` starts permanent teardown immediately and resolves when
+ *   the port and read pump are released. `state$` may emit `'disposed'`
+ *   first. During `connecting`, it waits for an in-flight `open()` to
+ *   release the port and does not wait for `requestPort()`. `dispose$()`
+ *   is a cold compatibility wrapper around that same teardown.
  * - `receive$` emits UTF-8 decoded text chunks pushed by the pump. It is
  *   **not** subscription-lazy - the pump is started by `connect$` and
  *   decoded text is multicast to all subscribers; late subscribers see only
@@ -78,6 +83,7 @@ import {
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/397 | Issue #397}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/399 | Issue #399}
  * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/401 | Issue #401}
+ * @see {@link https://github.com/gurezo/web-serial-rxjs/issues/655 | Issue #655}
  */
 export function createSerialSession(
   options?: SerialSessionOptions,
@@ -143,6 +149,7 @@ export function createSerialSession(
   return {
     connect$: lifecycle.connect$,
     disconnect$: lifecycle.disconnect$,
+    dispose: lifecycle.dispose,
     dispose$: lifecycle.dispose$,
     send$(data: SerialPayload): Observable<void> {
       if (isDisposed()) {

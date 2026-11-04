@@ -35,7 +35,7 @@ Where `navigator.serial` exists, this library can talk to the Web Serial API. Ty
 
 ## Connection state (lifecycle UI)
 
-Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. Session teardown uses **`dispose$()`** (subscribe to run it). See [Migrating to v4](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v4.md).
+Prefer **`state$`** with `state.status` narrowing as the canonical API for lifecycle UI. Derive a boolean from `state$` when you only need a connected flag. Session teardown uses **`dispose()`** (it starts immediately and resolves when the port is released). Deprecated **`dispose$()`** stays cold until subscribed. See [Migrating to v5](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v5.md).
 
 ## Port info (device identification)
 

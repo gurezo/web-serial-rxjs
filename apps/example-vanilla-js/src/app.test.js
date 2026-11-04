@@ -11,6 +11,7 @@ const createMockSession = () => {
     connect$: vi.fn(() => of(undefined)),
     disconnect$: vi.fn(() => of(undefined)),
     dispose$: vi.fn(() => of(undefined)),
+    dispose: vi.fn(() => Promise.resolve()),
     send$: vi.fn(() => of(undefined)),
     state$,
     receive$,
@@ -144,13 +145,14 @@ describe('App', () => {
     expect(document.getElementById('receive-output')).not.toBeNull();
   });
 
-  it('should dispose previous session when baud rate changes on connect', () => {
+  it('should dispose previous session when baud rate changes on connect', async () => {
     app = new App();
     const first = mockSessions[0];
     const connectBtn = document.getElementById('connect-btn');
     connectBtn.click();
+    await Promise.resolve();
 
-    expect(first.dispose$).toHaveBeenCalledTimes(1);
+    expect(first.dispose).toHaveBeenCalledTimes(1);
     expect(first.connect$).not.toHaveBeenCalled();
     expect(mockSessions).toHaveLength(2);
     expect(mockSessions[1].connect$).toHaveBeenCalledTimes(1);
