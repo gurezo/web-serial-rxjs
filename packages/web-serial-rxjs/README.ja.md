@@ -136,7 +136,7 @@ pnpm add rxjs
 | [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md) | 行フレーミング、擬似リクエスト/レス、リカバリ |
 | [トラブルシューティング](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md) | Web Serial / セッションのよくある問題と自己解決手順 |
 | [API の概念と設計メモ](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md) | オプション、`SerialError`、型の表形式補足 |
-| [v4 → v5 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md) | 破壊的変更。エラー通知契約から追記する |
+| [v4 → v5 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md) | 破壊的変更。エラー通知、`dispose()`、削除した deprecated API |
 | [v3 → v4 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理） |
 | [v2 → v3 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v3.md) | `state$` discriminated union、`SerialSessionStatus`、`context.cause` |
 | [v1 → v2 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v2.md) | 廃止された v1 API の置き換え |

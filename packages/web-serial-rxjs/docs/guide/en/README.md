@@ -51,7 +51,7 @@ Support policy, release policy, and migration guides.
 | **[Bundler and framework compatibility](./bundler-compatibility.md)** | CI vs Examples; ESM / RxJS / types (no full bundler matrix) |
 | **[Bundle size and tree-shaking](./bundle-size.md)** | Library-only size snapshot and reproducible measurement |
 | **[Verified environment listing criteria](./verified-environment.md)** | Minimum verification fields for hardware results (no device catalog) |
-| **[v4 → v5 Migration](./migration-v5.md)** | v5 contract changes: error notification and `dispose()` |
+| **[v4 → v5 Migration](./migration-v5.md)** | v5 contract changes: error notification, `dispose()`, removed deprecated APIs |
 | **[v3 → v4 Migration](./migration-v4.md)** | Unified Phase 1+2 public API cleanup |
 | **[v2 → v3 Migration](./migration-v3.md)** | Steps to adopt v3 canonical API |
 | **[v1 → v2 Migration](./migration-v2.md)** | Replacements for removed v1 APIs |

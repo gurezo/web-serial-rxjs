@@ -175,8 +175,6 @@ flowchart TD
 | `INVALID_TERMINAL_BUFFER_OPTIONS` | throw (factory) | yes | Fix `terminalBuffer` and recreate the session. | n/a | recreate with fixed options |
 | `INVALID_LINE_BUFFER_OPTIONS` | throw (factory) | yes | Fix `lineBuffer` and recreate the session. | n/a | recreate with fixed options |
 | `INVALID_CONNECTION_OPTIONS` | throw (factory) | yes | Fix connection options (e.g. `baudRate`) and recreate the session. | n/a | recreate with fixed options |
-| `PORT_NOT_AVAILABLE` | reserved | n/a | **Not emitted in v4.** Handle acquisition failures as `PORT_OPEN_FAILED` / `OPERATION_CANCELLED`. | — | — |
-| `OPERATION_TIMEOUT` | reserved | n/a | **Not emitted in v4.** No core timeout API yet; compose timeouts in the app. | — | — |
 
 ### Column notes
 
@@ -184,7 +182,6 @@ flowchart TD
 - **Severity `non-fatal`**: the connection continues. `WRITE_FAILED` and `PORT_NOT_OPEN` go only to the operation subscriber. `LINE_BUFFER_OVERFLOW` is emitted on `errors$`.
 - **`OPERATION_CANCELLED`**: port-picker cancel. `connect$` errors and `errors$` does not emit. `state$` returns to `'idle'` and does not enter `'error'`. The port is not closed.
 - **Severity `throw (factory)`**: raised synchronously from `createSerialSession()` — not delivered on `errors$`.
-- **Severity `reserved`**: still present on the `SerialErrorCode` object but unreachable at runtime in v4.
 - After **`dispose$`**, never reuse the instance — always create a new session ([Framework session lifecycle](./framework-session-lifecycle.md)).
 
 ## What to include when reporting

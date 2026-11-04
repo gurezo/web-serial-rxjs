@@ -132,7 +132,7 @@ npm の [`@gurezo/web-serial-rxjs` README](packages/web-serial-rxjs/README.ja.md
 | **[Bundle size と tree-shaking](packages/web-serial-rxjs/docs/guide/ja/bundle-size.md)** | library-only サイズのスナップショットと再現可能な測定。 |
 | **[Verified environment 掲載基準](packages/web-serial-rxjs/docs/guide/ja/verified-environment.md)** | 実機結果を掲載する場合の最低項目（デバイスカタログではない）。 |
 | **[API の概念と設計メモ](packages/web-serial-rxjs/docs/guide/ja/concepts.md)** | オプション、`SerialSessionState`、`SerialError` の表形式補足。 |
-| **[v4 → v5 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v5.md)** | 破壊的変更。エラー通知契約から追記する。 |
+| **[v4 → v5 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v5.md)** | 破壊的変更。エラー通知、`dispose()`、削除した deprecated API。 |
 | **[v3 → v4 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v4.md)** | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理）。 |
 | **[v2 → v3 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v3.md)** | `state$` discriminated union、`SerialSessionStatus`、`context.cause`。 |
 | **[v1 → v2 マイグレーション](packages/web-serial-rxjs/docs/guide/ja/migration-v2.md)** | 削除された v1 API からの対応表。 |

@@ -51,7 +51,7 @@ canonical なドキュメント構成は [ARCHITECTURE.ja.md](https://github.com
 | **[Bundler / framework 互換性の検証方針](./bundler-compatibility.md)** | CI と Examples の区別、ESM / RxJS / 型（全 bundler matrix なし） |
 | **[Bundle size と tree-shaking](./bundle-size.md)** | library-only サイズのスナップショットと再現可能な測定 |
 | **[Verified environment 掲載基準](./verified-environment.md)** | 実機結果掲載時の最低検証項目（デバイスカタログなし） |
-| **[v4 → v5 マイグレーション](./migration-v5.md)** | v5 の契約変更。エラー通知と `dispose()` |
+| **[v4 → v5 マイグレーション](./migration-v5.md)** | v5 の契約変更。エラー通知、`dispose()`、削除した deprecated API |
 | **[v3 → v4 マイグレーション](./migration-v4.md)** | Phase 1+2 公開 API 整理の統合ガイド |
 | **[v2 → v3 マイグレーション](./migration-v3.md)** | v3 canonical API への移行手順 |
 | **[v1 → v2 マイグレーション](./migration-v2.md)** | v1 廃止 API の置き換え |

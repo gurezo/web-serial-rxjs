@@ -61,24 +61,6 @@ import {
 } from '@gurezo/web-serial-rxjs';
 ```
 
-## Deprecated exports
-
-以下は **v4** でも引き続き public export から利用できますが、canonical API ではありません。**非推奨**であり、将来の major（**v5 以降**）で削除予定です。監査の経緯は [v3 への移行 – §9 `assertNever` public export 監査](./migration-v3.md#9-public-export-監査) を参照してください。v4 で既に削除された API（`destroy$`、`isConnected$`、`portInfo$`、`getPortInfo()`、`getCurrentPort()`、`receiveReplay$`、`isBrowserSupported()` など）は [v4 への移行](./migration-v4.md) を参照してください。
-
-| Export | 状態 | 移行先 |
-| --- | --- | --- |
-| `assertNever` | v4 で `@deprecated` | アプリケーション側でローカル helper を定義するか、`switch (state.status)` + `SerialSessionStatus` を使用する |
-
-```typescript
-// 非推奨（v4 でも利用可能だが警告が出る）
-import { assertNever } from '@gurezo/web-serial-rxjs';
-
-// 推奨: ローカル helper
-function assertNever(value: never): never {
-  throw new Error(`Unexpected value: ${String(value)}`);
-}
-```
-
 ## createSerialSession(options?)
 
 `SerialSession` を返すファクトリ。`navigator.serial` が存在しない環境でも安全に呼び出せます。その場合 `state$` の初期値は `{ status: 'unsupported' }` となり、`connect$` は `SerialErrorCode.BROWSER_NOT_SUPPORTED` で失敗します。
@@ -360,7 +342,7 @@ dispose 後の `connect$` と `send$` は `SerialErrorCode.SESSION_DISPOSED` で
 
 各 code の推奨次アクション（再接続 vs dispose）は [トラブルシューティング – エラー Recovery Matrix](./troubleshooting.md#エラー-recovery-matrix) を参照してください。
 
-cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの canonical source です。`originalError` は後方互換のため **v4** にも残っていますが **非推奨** で、将来の major（**v5 以降**）で削除予定です。詳細は [v3 移行ガイド – originalError の非推奨化](./migration-v3.md#3-originalerror-の非推奨化) を参照してください。
+cause 系 error code では **`context.cause`**（`unknown`）が原因エラーの参照先です。v4 の `originalError` とコンストラクタの旧 cause 引数は削除しました。[v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api) を参照してください。
 
 ```typescript
 session.errors$.subscribe((error) => {
@@ -380,7 +362,7 @@ try {
 
 上記と同じ文字列のユニオン型に加え、**定数オブジェクト** `SerialErrorCode`（例: `SerialErrorCode.READ_FAILED` は `'READ_FAILED'`）が export され、補完やタイポ防止に使えます。従来どおり文字列リテラルで型注釈・比較しても問題ありません。enum から const object への宣言変更は [v3 移行ガイド](./migration-v3.md) を参照してください。
 
-実装済み code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。receive-replay 関連 code は [v4 への移行 – Phase 2](./migration-v4.md#phase-2-api-削除) で削除されました。
+実装済み code の runtime emission coverage は [v3 移行ガイド §8](./migration-v3.md#8-serialerrorcode-runtime-emission-監査) で監査済みです。receive-replay 関連 code は [v4 への移行 – Phase 2](./migration-v4.md#phase-2-api-削除) で削除されました。予約 code の `PORT_NOT_AVAILABLE` と `OPERATION_TIMEOUT` は [v5 への移行](./migration-v5.md#削除した-deprecated-api) で削除しました。
 
 | Code                     | `context` の形 | emit されるタイミング                                              |
 | ------------------------ | -------------- | ------------------------------------------------------------------ |
@@ -391,7 +373,7 @@ try {
 
 `ValidationErrorContext` は `{ field: string; value: unknown; constraint: ValidationErrorConstraint; filterIndex?: number }` です。`message` は人間向け、`context` はプログラム向けの metadata として利用してください。
 
-### Implemented（v4 で emit される）
+### emit される code
 
 | Code                     | emit されるタイミング                                              |
 | ------------------------ | ------------------------------------------------------------------ |
@@ -409,10 +391,3 @@ try {
 | `OPERATION_CANCELLED`    | ユーザーがポート選択ダイアログをキャンセル                         |
 | `SESSION_DISPOSED`       | `dispose()` 後に `connect$` または `send$` を呼んだ                |
 | `UNKNOWN`                | dispose / disconnect、および open 成功後の `connect$` の分類不能 fallback。`context.cause` を確認 |
-
-### Reserved（v4 では emit されない・将来の major / v5 以降で削除予定）
-
-| Code                     | 備考                                                               |
-| ------------------------ | ------------------------------------------------------------------ |
-| `PORT_NOT_AVAILABLE`     | **非推奨。** `getPorts` 系 API 未実装のため到達不能。ポート取得失敗は `PORT_OPEN_FAILED` / `OPERATION_CANCELLED` を使用 |
-| `OPERATION_TIMEOUT`      | **非推奨。** timeout / transaction API 未実装のため到達不能        |

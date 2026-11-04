@@ -132,7 +132,7 @@ Documentation is split into **Guide** (how to use; Japanese and English hand-wri
 | **[Bundle size and tree-shaking](packages/web-serial-rxjs/docs/guide/en/bundle-size.md)** | Library-only size snapshot and reproducible measurement. |
 | **[Verified environment listing criteria](packages/web-serial-rxjs/docs/guide/en/verified-environment.md)** | Minimum fields if hardware results are published (not a device catalog). |
 | **[API concepts and design notes](packages/web-serial-rxjs/docs/guide/en/concepts.md)** | Options, `SerialSessionState`, and `SerialError` details. |
-| **[v4 → v5 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v5.md)** | Breaking changes, starting with the error notification contract. |
+| **[v4 → v5 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v5.md)** | Breaking changes: error notification, `dispose()`, removed deprecated APIs. |
 | **[v3 → v4 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v4.md)** | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup). |
 | **[v2 → v3 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v3.md)** | `state$` discriminated union, `SerialSessionStatus`, and `context.cause`. |
 | **[v1 → v2 Migration Guide](packages/web-serial-rxjs/docs/guide/en/migration-v2.md)** | Replacing the removed v1 `SerialClient` / `ShellClient` API. |

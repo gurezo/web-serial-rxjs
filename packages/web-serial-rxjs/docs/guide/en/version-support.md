@@ -26,7 +26,7 @@ When a major release changes public APIs that adopters must migrate, this Guide 
 
 - APIs marked `@deprecated` remain available within the **current major** so existing apps can migrate gradually.
 - Removal is deferred to a **future major** (today: **v5+**), not a minor or patch.
-- Concrete deprecated surfaces in v4 are listed in [API concepts – Deprecated exports](./concepts.md#deprecated-exports) and the relevant Migration Guides.
+- APIs removed in v5 are listed in [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis). `dispose$()` remains deprecated.
 
 ## Support window (no LTS)
 
