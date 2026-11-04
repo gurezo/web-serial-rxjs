@@ -40,6 +40,7 @@ const PUBLIC_SURFACE_SOURCES = [
 const CANONICAL_SESSION_KEYS = [
   'connect$',
   'disconnect$',
+  'dispose',
   'dispose$',
   'errors$',
   'lines$',

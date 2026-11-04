@@ -196,10 +196,10 @@ export const SerialErrorCode = {
    * Session has been disposed and can no longer be used.
    *
    * This error occurs when calling {@link SerialSession.connect$} or
-   * {@link SerialSession.send$} after {@link SerialSession.dispose$} has
-   * completed. Create a new session instead of reusing a disposed instance.
+   * {@link SerialSession.send$} after {@link SerialSession.dispose} has
+   * settled. Create a new session instead of reusing a disposed instance.
    *
-   * **Suggested action**: Call {@link SerialSession.dispose$} only when
+   * **Suggested action**: Call {@link SerialSession.dispose} only when
    * permanently tearing down a session, then create a new one if needed.
    */
   SESSION_DISPOSED: 'SESSION_DISPOSED',

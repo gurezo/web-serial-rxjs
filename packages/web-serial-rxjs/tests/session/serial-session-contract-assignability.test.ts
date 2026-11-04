@@ -37,6 +37,7 @@ function createMinimalFakeSerialSession(
     lines$: EMPTY,
     connect$: () => EMPTY,
     disconnect$: () => EMPTY,
+    dispose: async () => undefined,
     dispose$: () => EMPTY,
     send$: (_data: SerialPayload) => EMPTY,
     ...overrides,
@@ -58,6 +59,7 @@ describe('SerialSession contract assignability (Issue #536)', () => {
     expect(session).toBe(fake);
     expect(typeof session.connect$).toBe('function');
     expect(typeof session.disconnect$).toBe('function');
+    expect(typeof session.dispose).toBe('function');
     expect(typeof session.dispose$).toBe('function');
     expect(typeof session.send$).toBe('function');
     expect(session.state$).toBeDefined();

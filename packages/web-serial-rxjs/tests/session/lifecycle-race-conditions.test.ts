@@ -1535,4 +1535,130 @@ describe('lifecycle race conditions (#477)', () => {
       }
     });
   });
+
+  describe('dispose() completion (#655)', () => {
+    it('resolves dispose() only after close when open() has started', async () => {
+      const { stream } = makeStream();
+      const openGate = createDeferred<void>();
+      const closeGate = createDeferred<void>();
+      const close = vi.fn().mockReturnValue(closeGate.promise);
+      const port = makeMockPort(stream, close);
+      port.open.mockReturnValue(openGate.promise);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      const connectSub = session.connect$().subscribe({
+        error: () => undefined,
+      });
+      await firstValueFrom(
+        session.state$.pipe(
+          filter((state) => state.status === S.Connecting),
+          take(1),
+        ),
+      );
+      await flushMicrotasks();
+      expect(port.open).toHaveBeenCalledTimes(1);
+
+      let settled = false;
+      const disposeDone = session.dispose().then(() => {
+        settled = true;
+      });
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Disposed,
+      });
+      expect(settled).toBe(false);
+      expect(port.close).not.toHaveBeenCalled();
+
+      openGate.resolve();
+      await flushMicrotasks();
+      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(settled).toBe(false);
+
+      closeGate.resolve();
+      await disposeDone;
+      expect(settled).toBe(true);
+      connectSub.unsubscribe();
+    });
+
+    it('resolves dispose() without waiting for requestPort and does not open the port', async () => {
+      const { stream } = makeStream();
+      const port = makeMockPort(stream);
+      const requestPortGate = createDeferred<MockPort>();
+      const requestPort = vi.fn().mockReturnValue(requestPortGate.promise);
+      installNavigatorWithRequestPort(requestPort);
+
+      const session = createSerialSession();
+      const connectSub = session.connect$().subscribe({
+        error: () => undefined,
+      });
+      await firstValueFrom(
+        session.state$.pipe(
+          filter((state) => state.status === S.Connecting),
+          take(1),
+        ),
+      );
+
+      const states: SerialSessionState[] = [];
+      const stateSub = session.state$.subscribe((state) => {
+        states.push(state);
+      });
+      await expect(session.dispose()).resolves.toBeUndefined();
+      expect(states.at(-1)).toEqual({ status: S.Disposed });
+      expect(port.open).not.toHaveBeenCalled();
+
+      requestPortGate.resolve(port);
+      await flushMicrotasks();
+      expect(port.open).not.toHaveBeenCalled();
+      expect(port.close).not.toHaveBeenCalled();
+      stateSub.unsubscribe();
+      connectSub.unsubscribe();
+    });
+
+    it('shares one close between dispose() and a subscribed dispose$', async () => {
+      const { stream } = makeStream();
+      const closeGate = createDeferred<void>();
+      const close = vi.fn().mockReturnValue(closeGate.promise);
+      const port = makeMockPort(stream, close);
+      installNavigator(port);
+
+      const session = createSerialSession();
+      await firstValueFrom(session.connect$());
+
+      let disposeSettled = false;
+      let dispose$Settled = false;
+      const disposeDone = session.dispose().then(() => {
+        disposeSettled = true;
+      });
+      const dispose$Done = firstValueFrom(session.dispose$()).then(() => {
+        dispose$Settled = true;
+      });
+      await flushMicrotasks();
+
+      expect(disposeSettled).toBe(false);
+      expect(dispose$Settled).toBe(false);
+      expect(port.close).toHaveBeenCalledTimes(1);
+      expect(await firstValueFrom(session.state$)).toEqual({
+        status: S.Disposed,
+      });
+
+      closeGate.resolve();
+      await Promise.all([disposeDone, dispose$Done]);
+      expect(disposeSettled).toBe(true);
+      expect(dispose$Settled).toBe(true);
+      expect(port.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not dispose when dispose$() is not subscribed', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing: Mock navigator
+      (globalThis as any).navigator = { serial: {} };
+
+      const session = createSerialSession();
+      session.dispose$();
+      await flushMicrotasks();
+
+      expect(await firstValueFrom(session.state$)).toEqual({ status: S.Idle });
+    });
+  });
 });

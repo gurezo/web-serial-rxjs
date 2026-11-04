@@ -1,4 +1,4 @@
-import { Observable, type Subject } from 'rxjs';
+import { defer, from, Observable, type Subject } from 'rxjs';
 import { SerialError } from '../../errors/serial-error';
 import { SerialErrorCode } from '../../errors/serial-error-code';
 import { buildRequestOptions } from './build-request-options';
@@ -64,6 +64,7 @@ export interface SessionLifecycleDeps {
 export interface SessionLifecycle {
   connect$: () => Observable<void>;
   disconnect$: () => Observable<void>;
+  dispose: () => Promise<void>;
   dispose$: () => Observable<void>;
   writeToPort: (payload: Uint8Array) => Promise<void>;
 }
@@ -96,35 +97,50 @@ export function createSessionLifecycle(
     receivePipeline.complete();
   };
 
-  const dispose$ = (): Observable<void> =>
-    new Observable<void>((subscriber) => {
+  // Set only in the turn that calls open(). disconnect$ and dispose wait on
+  // it so completion means the opened port has been released. requestPort()
+  // is excluded: it cannot be aborted and may never settle, and no port is
+  // held until open().
+  let pendingOpenRelease: Promise<void> | null = null;
+  let disposal: Promise<void> | null = null;
+
+  const dispose = (): Promise<void> => {
+    if (disposal) {
+      return disposal;
+    }
+
+    disposal = (async (): Promise<void> => {
       if (isDisposed()) {
-        subscriber.next();
-        subscriber.complete();
         return;
       }
 
       const snapshot = controller.runtime;
+      const openRelease =
+        snapshot.status === SerialSessionStatus.Connecting
+          ? pendingOpenRelease
+          : null;
       const resources = captureResources(snapshot);
       controller.transition(createDisposedRuntime());
 
-      const run = async (): Promise<void> => {
-        try {
-          await teardownResources(resources, { closeMode: 'safe' });
-          completeSubjects();
-          subscriber.next();
-          subscriber.complete();
-        } catch (error) {
-          const serialError = normalizeSerialError(error, {
-            fallbackCode: SerialErrorCode.UNKNOWN,
-            messagePrefix: 'Unexpected dispose failure',
-          });
-          subscriber.error(serialError);
+      try {
+        resources.cancelConnect?.();
+        if (openRelease) {
+          await openRelease;
         }
-      };
+        await teardownResources(resources, { closeMode: 'safe' });
+        completeSubjects();
+      } catch (error) {
+        throw normalizeSerialError(error, {
+          fallbackCode: SerialErrorCode.UNKNOWN,
+          messagePrefix: 'Unexpected dispose failure',
+        });
+      }
+    })();
 
-      void run();
-    });
+    return disposal;
+  };
+
+  const dispose$ = (): Observable<void> => defer(() => from(dispose()));
 
   const writeToPort = async (payload: Uint8Array): Promise<void> => {
     const runtime = controller.runtime;
@@ -158,11 +174,6 @@ export function createSessionLifecycle(
   // starts in the subscribe turn.
   let connectGeneration = 0;
   let connectInFlight: Promise<void> | null = null;
-  // Set only in the turn that calls open(). disconnect$ waits on it so
-  // completion means the opened port has been released. requestPort() is
-  // excluded: it cannot be aborted and may never settle, and no port is
-  // held until open().
-  let pendingOpenRelease: Promise<void> | null = null;
 
   const connect$ = (): Observable<void> =>
     new Observable<void>((subscriber) => {
@@ -514,6 +525,7 @@ export function createSessionLifecycle(
   return {
     connect$,
     disconnect$,
+    dispose,
     dispose$,
     writeToPort,
   };
