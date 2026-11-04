@@ -1,6 +1,5 @@
 import { SerialErrorCode } from './serial-error-code';
 import {
-  isCauseContextCode,
   type SerialErrorCauseContext,
   type SerialErrorContextMap,
   type ValidationErrorConstraint,
@@ -31,7 +30,7 @@ const ErrorWithCaptureStackTrace = Error as typeof Error &
  *
  * This error class extends the standard Error class and includes additional information
  * about the type of error that occurred. It provides an error code for programmatic
- * error handling and may include the original error that caused the failure.
+ * error handling and structured {@link SerialError.context | context} for that code.
  *
  * @example
  * ```typescript
@@ -73,59 +72,22 @@ export class SerialError<
   public readonly context: SerialErrorContextMap[TCode];
 
   /**
-   * The original error that caused this SerialError, if available.
-   *
-   * This property contains the underlying error (e.g., DOMException, TypeError)
-   * that was wrapped in this SerialError. It may be undefined if no original error exists.
-   *
-   * @deprecated Prefer {@link context} for cause-bearing codes. Still present in
-   *   v4 for backward compatibility and kept in sync when a cause is provided.
-   *   Removal is deferred to a future major (v5+).
-   */
-  public readonly originalError?: Error;
-
-  /**
    * Creates a new SerialError instance.
    *
    * @param code - The error code identifying the type of error
    * @param message - A human-readable error message
-   * @param originalError - The original error that caused this SerialError, if any.
-   *   @deprecated Prefer passing `{ cause }` via {@link context}. Still accepted
-   *   in v4 for backward compatibility; when omitted, cause-bearing codes derive
-   *   `{ cause }` from this argument. Removal is deferred to a future major (v5+).
    * @param context - Structured metadata for the error code. For cause-bearing
-   *   codes, pass `{ cause }` here. When omitted, cause-bearing codes derive
-   *   `{ cause }` from the legacy {@link originalError} argument.
+   *   codes, pass `{ cause }` here.
    */
   constructor(
     code: TCode,
     message: string,
-    originalError?: Error,
     context?: SerialErrorContextMap[TCode],
   ) {
     super(message);
     this.name = 'SerialError';
     this.code = code;
-
-    if (context !== undefined) {
-      this.context = context;
-    } else if (
-      originalError !== undefined &&
-      isCauseContextCode(code)
-    ) {
-      this.context = { cause: originalError } as SerialErrorContextMap[TCode];
-    } else {
-      this.context = undefined as SerialErrorContextMap[TCode];
-    }
-
-    if (originalError !== undefined) {
-      this.originalError = originalError;
-    } else if (isCauseContextCode(code) && this.context !== undefined) {
-      const causeContext = this.context as SerialErrorCauseContext;
-      if (causeContext.cause instanceof Error) {
-        this.originalError = causeContext.cause;
-      }
-    }
+    this.context = context as SerialErrorContextMap[TCode];
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (ErrorWithCaptureStackTrace.captureStackTrace) {

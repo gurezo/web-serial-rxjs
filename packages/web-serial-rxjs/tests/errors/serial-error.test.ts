@@ -22,26 +22,22 @@ describe('SerialError', () => {
       const error = new SerialError(
         SerialErrorCode.READ_FAILED,
         'Failed to read',
-        undefined,
         { cause },
       );
 
       expect(error.code).toBe(SerialErrorCode.READ_FAILED);
       expect(error.message).toBe('Failed to read');
       expect(error.context).toEqual({ cause });
-      expect(error.originalError).toBe(cause);
     });
 
     it('should accept explicit structured context without cause', () => {
       const error = new SerialError(
         SerialErrorCode.LINE_BUFFER_OVERFLOW,
         'Line buffer overflow',
-        undefined,
         { maxChars: 128 },
       );
 
       expect(error.context).toEqual({ maxChars: 128 });
-      expect(error.originalError).toBeUndefined();
     });
 
     it('should have correct error name', () => {
@@ -58,36 +54,6 @@ describe('SerialError', () => {
         expect(error.stack).toBeDefined();
         expect(error.stack).toContain('SerialError');
       }
-    });
-  });
-
-  describe('backward compatibility', () => {
-    it('should derive cause context from legacy originalError constructor argument', () => {
-      const originalError = new Error('Original error');
-      const error = new SerialError(
-        SerialErrorCode.READ_FAILED,
-        'Failed to read',
-        originalError,
-      );
-
-      expect(error.code).toBe(SerialErrorCode.READ_FAILED);
-      expect(error.message).toBe('Failed to read');
-      expect(error.context).toEqual({ cause: originalError });
-      expect(error.originalError).toBe(originalError);
-    });
-
-    it('should preserve legacy originalError information for Error causes', () => {
-      const originalError = new TypeError('Type error');
-      const error = new SerialError(
-        SerialErrorCode.WRITE_FAILED,
-        'Write failed',
-        originalError,
-      );
-
-      expect(error.context).toEqual({ cause: originalError });
-      expect(error.originalError).toBe(originalError);
-      expect(error.originalError?.message).toBe('Type error');
-      expect(error.originalError).toBeInstanceOf(TypeError);
     });
   });
 
@@ -114,7 +80,6 @@ describe('SerialError', () => {
       const error = new SerialError(
         SerialErrorCode.LINE_BUFFER_OVERFLOW,
         'Line buffer overflow',
-        undefined,
         { maxChars: 64 },
       );
 
@@ -130,7 +95,6 @@ describe('SerialError', () => {
       const error = new SerialError(
         SerialErrorCode.INVALID_CONNECTION_OPTIONS,
         'Invalid baudRate: 0. Must be a safe integer > 0.',
-        undefined,
         {
           field: 'baudRate',
           value: 0,

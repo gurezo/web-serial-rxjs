@@ -54,7 +54,6 @@ describe('normalizeSerialError', () => {
     expect(normalized.code).toBe(SerialErrorCode.PORT_OPEN_FAILED);
     expect(normalized.message).toBe('Failed to open port: cannot open');
     expect(normalized.context).toEqual({ cause });
-    expect(normalized.originalError).toBe(cause);
   });
 
   it('wraps non-Error values into Error causes on context.cause', () => {
@@ -67,7 +66,6 @@ describe('normalizeSerialError', () => {
     expect(normalized.message).toBe('Failed to write data: string failure');
     expect(normalized.context?.cause).toBeInstanceOf(Error);
     expect((normalized.context?.cause as Error).message).toBe('string failure');
-    expect(normalized.originalError?.message).toBe('string failure');
   });
 
   it('uses the default message prefix when one is not provided', () => {

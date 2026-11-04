@@ -53,25 +53,3 @@ export interface SerialErrorContextMap {
   [SerialErrorCode.SESSION_DISPOSED]: undefined;
   [SerialErrorCode.UNKNOWN]: SerialErrorCauseContext;
 }
-
-const CAUSE_CONTEXT_CODES = new Set<SerialErrorCode>([
-  SerialErrorCode.PORT_OPEN_FAILED,
-  SerialErrorCode.READ_FAILED,
-  SerialErrorCode.WRITE_FAILED,
-  SerialErrorCode.CONNECTION_LOST,
-  SerialErrorCode.OPERATION_CANCELLED,
-  SerialErrorCode.UNKNOWN,
-]);
-
-/**
- * @internal
- */
-export function isCauseContextCode(
-  code: SerialErrorCode,
-): code is keyof {
-  [K in keyof SerialErrorContextMap as SerialErrorContextMap[K] extends SerialErrorCauseContext
-    ? K
-    : never]: SerialErrorContextMap[K];
-} {
-  return CAUSE_CONTEXT_CODES.has(code);
-}

@@ -55,7 +55,6 @@ export function resolveLineBufferOptions(
     throw new SerialError(
       SerialErrorCode.INVALID_LINE_BUFFER_OPTIONS,
       `Invalid lineBuffer.maxChars: ${maxChars}. Must be a safe integer >= 0.`,
-      undefined,
       {
         field: 'lineBuffer.maxChars',
         value: maxChars,

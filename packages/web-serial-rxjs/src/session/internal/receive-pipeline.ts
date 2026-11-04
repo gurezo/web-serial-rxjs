@@ -64,7 +64,6 @@ export function createReceivePipeline(
         new SerialError(
           SerialErrorCode.LINE_BUFFER_OVERFLOW,
           'Line buffer exceeded maxChars; leading data was discarded',
-          undefined,
           { maxChars: resolvedOptions.lineBuffer.maxChars },
         ),
       );
