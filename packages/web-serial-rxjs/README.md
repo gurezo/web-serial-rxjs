@@ -112,7 +112,7 @@ The package is **ESM-only** (`import` via `package.json` `exports`).
 
 ### Web Serial types
 
-Published `.d.ts` files refer to Web Serial globals such as `SerialPortInfo` and `SerialPortFilter`. Those types are not bundled. TypeScript projects that check dependencies with `skipLibCheck: false` must install `@types/w3c-web-serial` and include it in the compilation. If `compilerOptions.types` is set, add `w3c-web-serial` to that list. Bundling these types with the package is planned for v5.
+`SerialOptions`, `SerialPortInfo`, and `SerialPortFilter` are exported from this package. Published `.d.ts` files use those exports, so a TypeScript project can compile this package with `skipLibCheck: false` without installing `@types/w3c-web-serial`. Installing that package is still fine: the exported dictionaries stay assignable to the globals and do not merge with them. The `SerialPort` class is not exported. See [Migrating to v5 – Web Serial types](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v5.md#web-serial-types).
 
 ## Where to go next
 
@@ -135,7 +135,7 @@ Published `.d.ts` files refer to Web Serial globals such as `SerialPortInfo` and
 | [Advanced Usage](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/advanced-usage.md) | Line framing, request/response-style flows, recovery |
 | [Troubleshooting](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/troubleshooting.md) | Common Web Serial / session problems and self-help checks |
 | [API concepts and design notes](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/concepts.md) | `SerialSessionOptions`, `SerialError`, and formal details |
-| [v4 → v5 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v5.md) | Breaking changes: error notification, `dispose()`, removed deprecated APIs |
+| [v4 → v5 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v5.md) | Breaking changes: error notification, `dispose()`, removed deprecated APIs, packaged Web Serial types |
 | [v3 → v4 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v4.md) | Phase 1+2 removals (`receiveReplay$`, `isBrowserSupported()`, options cleanup) |
 | [v2 → v3 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v3.md) | `state$` discriminated union, `SerialSessionStatus`, `context.cause` |
 | [v1 → v2 migration](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/en/migration-v2.md) | Replacing the removed v1 `SerialClient` / `ShellClient` API |

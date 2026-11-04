@@ -112,7 +112,7 @@ pnpm add rxjs
 
 ### Web Serial の型
 
-公開 `.d.ts` は `SerialPortInfo` や `SerialPortFilter` などの Web Serial グローバル型を参照します。これらの型は同梱していません。`skipLibCheck: false` で依存の型を検査する TypeScript プロジェクトでは、`@types/w3c-web-serial` をインストールし、コンパイルに含めてください。`compilerOptions.types` を指定している場合は、その配列に `w3c-web-serial` を追加します。これらの型をパッケージへ同梱するのは v5 で予定しています。
+`SerialOptions`、`SerialPortInfo`、`SerialPortFilter` はこのパッケージが export します。公開 `.d.ts` はその export を使うので、`skipLibCheck: false` でも `@types/w3c-web-serial` なしでこのパッケージをコンパイルできます。その型パッケージを入れたままでも構いません。export した辞書型はグローバルへ代入でき、グローバルとはマージしません。`SerialPort` クラスは公開しません。詳細は [v5 への移行 – Web Serial の型](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md#web-serial-の型) を参照してください。
 
 ## 次に読むもの
 
@@ -136,7 +136,7 @@ pnpm add rxjs
 | [高度な使用方法](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/advanced-usage.md) | 行フレーミング、擬似リクエスト/レス、リカバリ |
 | [トラブルシューティング](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/troubleshooting.md) | Web Serial / セッションのよくある問題と自己解決手順 |
 | [API の概念と設計メモ](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/concepts.md) | オプション、`SerialError`、型の表形式補足 |
-| [v4 → v5 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md) | 破壊的変更。エラー通知、`dispose()`、削除した deprecated API |
+| [v4 → v5 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v5.md) | 破壊的変更。エラー通知、`dispose()`、削除した deprecated API、同梱した Web Serial の型 |
 | [v3 → v4 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v4.md) | Phase 1+2 の削除（`receiveReplay$`、`isBrowserSupported()`、オプション整理） |
 | [v2 → v3 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v3.md) | `state$` discriminated union、`SerialSessionStatus`、`context.cause` |
 | [v1 → v2 マイグレーション](https://github.com/gurezo/web-serial-rxjs/blob/main/packages/web-serial-rxjs/docs/guide/ja/migration-v2.md) | 廃止された v1 API の置き換え |

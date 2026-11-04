@@ -1,6 +1,6 @@
 # v5 への移行
 
-このページは v5 の契約変更を集めます。ここまでの節は、エラー通知契約（[#633](https://github.com/gurezo/web-serial-rxjs/issues/633)）、セッション破棄（[#655](https://github.com/gurezo/web-serial-rxjs/issues/655)）、削除した deprecated API（[#658](https://github.com/gurezo/web-serial-rxjs/issues/658)）です。
+このページは v5 の契約変更を集めます。ここまでの節は、エラー通知契約（[#633](https://github.com/gurezo/web-serial-rxjs/issues/633)）、セッション破棄（[#655](https://github.com/gurezo/web-serial-rxjs/issues/655)）、削除した deprecated API（[#658](https://github.com/gurezo/web-serial-rxjs/issues/658)）、同梱した Web Serial の型（[#659](https://github.com/gurezo/web-serial-rxjs/issues/659)）です。
 
 `state$` の形は v4 のままです。`SerialError` は旧 cause 引数と `originalError` を持ちません。`PORT_NOT_AVAILABLE`、`OPERATION_TIMEOUT`、公開 `assertNever` はありません。同じ失敗を `errors$` と操作 Observable の両方には出しません。永久破棄は `dispose(): Promise<void>` を使います。`dispose$()` は残り、非推奨です。
 
@@ -12,6 +12,7 @@
 - ポート選択のキャンセルは `connect$` が `OPERATION_CANCELLED` で error 終了します。`state$` は `'idle'` に戻ります。
 - 破棄は `await session.dispose()` を使います。呼び出した時点で始まり、ポートと read pump の解放で resolve します。`dispose$()` は非推奨の cold Observable のままです。購読しないと呼んでも何もしません。
 - `PORT_NOT_AVAILABLE`、`OPERATION_TIMEOUT`、公開 `assertNever`、`originalError`、`SerialError` の旧 cause 引数は削除しました。[削除した deprecated API](#削除した-deprecated-api) を参照してください。
+- `SerialOptions`、`SerialPortInfo`、`SerialPortFilter` はこのパッケージが export します。`skipLibCheck: false` でこのパッケージをコンパイルするのに `@types/w3c-web-serial` は不要です。[Web Serial の型](#web-serial-の型) を参照してください。
 
 ## エラー通知
 
@@ -186,6 +187,30 @@ if (error.is(SerialErrorCode.READ_FAILED)) {
 
 new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', { cause });
 ```
+
+## Web Serial の型
+
+公開宣言は `SerialOptions`、`SerialPortInfo`、`SerialPortFilter` を名前で参照します。v4 ではこれらはアンビエントなグローバルでした。v5 ではこのパッケージの export です（[#659](https://github.com/gurezo/web-serial-rxjs/issues/659)）。接続・送信・切断の動作は変わりません。`SerialPort` クラスは引き続き公開しません。
+
+### 以前（v4）
+
+`skipLibCheck: false` のプロジェクトは `@types/w3c-web-serial` をインストールし、コンパイルに含める必要がありました。`compilerOptions.types` を指定している場合は、その配列に `w3c-web-serial` が必要でした。
+
+`portInfo` と `filters` がグローバルを指していたため、`interface SerialPortInfo` を augmentation すると `state.portInfo` の型も変わりました。
+
+### 以後（v5）
+
+```typescript
+import type {
+  SerialOptions,
+  SerialPortFilter,
+  SerialPortInfo,
+} from '@gurezo/web-serial-rxjs';
+```
+
+`@types/w3c-web-serial` は任意です。入れていても入れていなくても、strict な型検査は通ります。両方あるとき、同梱した辞書型はグローバルへ代入できます。グローバルとはマージしません。将来の TypeScript DOM lib が Web Serial を持っても、同じです。
+
+グローバルな `interface SerialPortInfo` の augmentation は、`state.portInfo` と `filters` には出ません。追加フィールドは自分の型に持ってください。`state.portInfo` をグローバルの `SerialPortInfo` として型付けした値へ代入することはできます。
 
 ## 関連
 

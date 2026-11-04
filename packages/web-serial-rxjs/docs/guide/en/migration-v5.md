@@ -1,6 +1,6 @@
 # Migrating to v5
 
-This page collects v5 contract changes. Sections so far: the error notification contract ([#633](https://github.com/gurezo/web-serial-rxjs/issues/633)), session disposal ([#655](https://github.com/gurezo/web-serial-rxjs/issues/655)), and removed deprecated APIs ([#658](https://github.com/gurezo/web-serial-rxjs/issues/658)).
+This page collects v5 contract changes. Sections so far: the error notification contract ([#633](https://github.com/gurezo/web-serial-rxjs/issues/633)), session disposal ([#655](https://github.com/gurezo/web-serial-rxjs/issues/655)), removed deprecated APIs ([#658](https://github.com/gurezo/web-serial-rxjs/issues/658)), and packaged Web Serial types ([#659](https://github.com/gurezo/web-serial-rxjs/issues/659)).
 
 The shape of `state$` is unchanged from v4. `SerialError` no longer takes a legacy cause argument or exposes `originalError`. `PORT_NOT_AVAILABLE`, `OPERATION_TIMEOUT`, and the public `assertNever` export are gone. One failure is no longer emitted on both `errors$` and the operation Observable. Permanent teardown prefers `dispose(): Promise<void>`. `dispose$()` remains and is deprecated.
 
@@ -12,6 +12,7 @@ The shape of `state$` is unchanged from v4. `SerialError` no longer takes a lega
 - Cancelling the port picker makes `connect$` error with `OPERATION_CANCELLED`. `state$` returns to `'idle'`.
 - Prefer `await session.dispose()`. It starts immediately and resolves when the port and read pump are released. `dispose$()` stays as a deprecated cold Observable: subscribe it, or it does nothing.
 - `PORT_NOT_AVAILABLE`, `OPERATION_TIMEOUT`, public `assertNever`, `originalError`, and the legacy `SerialError` cause argument are removed. See [Removed deprecated APIs](#removed-deprecated-apis).
+- `SerialOptions`, `SerialPortInfo`, and `SerialPortFilter` are exported by this package. Compiling the package with `skipLibCheck: false` no longer requires `@types/w3c-web-serial`. See [Web Serial types](#web-serial-types).
 
 ## Error notification
 
@@ -186,6 +187,30 @@ if (error.is(SerialErrorCode.READ_FAILED)) {
 
 new SerialError(SerialErrorCode.READ_FAILED, 'Failed to read', { cause });
 ```
+
+## Web Serial types
+
+Published declarations name `SerialOptions`, `SerialPortInfo`, and `SerialPortFilter`. In v4 those names were ambient globals. In v5 they are exports of this package ([#659](https://github.com/gurezo/web-serial-rxjs/issues/659)). Connect, send, and disconnect behavior is unchanged. The `SerialPort` class is still not exported.
+
+### Before (v4)
+
+A project with `skipLibCheck: false` had to install `@types/w3c-web-serial` and include it in the compilation. If `compilerOptions.types` was set, `w3c-web-serial` had to be in that list.
+
+Because `portInfo` and `filters` referred to the globals, augmenting `interface SerialPortInfo` changed the type of `state.portInfo`.
+
+### After (v5)
+
+```typescript
+import type {
+  SerialOptions,
+  SerialPortFilter,
+  SerialPortInfo,
+} from '@gurezo/web-serial-rxjs';
+```
+
+`@types/w3c-web-serial` is optional. Strict typecheck succeeds with or without it. When both are present, the packaged dictionaries stay assignable to the globals. They do not merge with them, or with Web Serial types that a future TypeScript DOM lib may add.
+
+A global `interface SerialPortInfo` augmentation no longer appears on `state.portInfo` or `filters`. Keep extra fields on your own type. You can still assign `state.portInfo` to a value typed as the global `SerialPortInfo`.
 
 ## Related
 
