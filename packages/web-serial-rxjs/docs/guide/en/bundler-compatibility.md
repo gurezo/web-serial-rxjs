@@ -19,7 +19,7 @@ These are the conditions adopters should treat as the baseline:
 
 | Requirement | Policy |
 | --- | --- |
-| **Module format** | The package is **ESM-only**. `package.json` `exports` expose `import` → `dist/index.mjs` and `types` → `dist/index.d.ts`. There is no `require` / CommonJS export condition. |
+| **Module format** | The package is **ESM-only**. `package.json` `exports` expose `types` → `dist/index.d.ts`, `import` → `dist/index.mjs`, and `default` → the same `dist/index.mjs` for resolvers that do not apply the `import` condition. There is no `require` condition and no CommonJS build. `require()` / CommonJS consumers are unsupported. |
 | **Import** | Use ESM `import` from `@gurezo/web-serial-rxjs` in an environment that resolves the package `exports` map. |
 | **RxJS** | **Peer dependency** `rxjs` **`^7.8.0`**. Install it in your app; it is not bundled into this package. |
 | **TypeScript** | TypeScript is **not** a peer dependency. The package ships `.d.ts` for TypeScript consumers. We do **not** pin a minimum TypeScript version as a product guarantee; use a TypeScript release that can consume the published declarations. JavaScript consumers can ignore the types. |
@@ -37,7 +37,7 @@ On pull requests to `main`, [CI](https://github.com/gurezo/web-serial-rxjs/blob/
 | **`nx run-many --target=lint --all`** | Lint across workspace projects |
 | **`nx run-many --target=build --all`** | Build the library and all Example apps |
 | **`web-serial-rxjs:verify-dist`** | Post-build `dist/` artifacts and public API allowlist |
-| **`web-serial-rxjs:verify-pack`** | npm pack contents, package metadata, and consumer ESM / types smoke where configured |
+| **`web-serial-rxjs:verify-pack`** | npm pack contents, package metadata, and a packed-tarball consumer smoke: Node ESM bare import, TypeScript `moduleResolution` `bundler` and `node16`, Vite, and webpack (default conditions and a fallback that omits `import`). `require()` is rejected. This checks resolution regression for those setups, not every bundler version. |
 | **Tests** | Workspace test suite |
 
 CI proves that **this monorepo’s current toolchain** builds. It does **not** mean every bundler version in the ecosystem is certified.
