@@ -262,4 +262,21 @@ describe('v4 public API boundary audit (#489) — package exports', () => {
       './package.json',
     ]);
   });
+
+  it('exposes an ESM-only root entry with a default fallback (#656)', () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(packageRoot, 'package.json'), 'utf8'),
+    ) as {
+      exports?: Record<string, Record<string, string> | string>;
+    };
+    const root = packageJson.exports?.['.'];
+
+    expect(root).toEqual({
+      types: './dist/index.d.ts',
+      import: './dist/index.mjs',
+      default: './dist/index.mjs',
+    });
+    expect(Object.keys(root ?? {})).toEqual(['types', 'import', 'default']);
+    expect(root).not.toHaveProperty('require');
+  });
 });
