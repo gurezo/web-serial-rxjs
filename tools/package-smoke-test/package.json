@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "version": "0.0.0",
-  "description": "Consumer smoke fixture for npm pack verification (Issue #543). Not part of the pnpm workspace.",
+  "description": "Consumer smoke fixture for npm pack verification (Issue #543) and ESM resolution (Issue #656). Not part of the pnpm workspace.",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
@@ -12,6 +12,8 @@
     "rxjs": "^7.8.0"
   },
   "devDependencies": {
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.0",
+    "vite": "8.3.5",
+    "webpack": "5.112.2"
   }
 }

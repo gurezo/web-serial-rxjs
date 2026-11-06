@@ -10,12 +10,18 @@
  * The types entry is "w3c-web-serial" (the folder under typeRoots). The
  * library tsconfig's "@types/w3c-web-serial" only resolves via a node_modules
  * walk, which custom typeRoots disables.
+ *
+ * ESM consumer resolution (Issue #656) runs after install and before the
+ * strict typechecks. It imports the packed package by bare specifier from
+ * Node, typechecks with moduleResolution bundler and node16, and bundles
+ * with Vite and webpack. Webpack is also run without the `import` condition
+ * so the `default` export target is required. CommonJS require() must fail.
  */
 
+import { spawnSync, execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,6 +69,59 @@ function assertStrictTypecheckWithoutWebSerialTypes() {
   );
 }
 
+function assertConsumerTypecheck(project, label) {
+  run('npx', [
+    '--no-install',
+    'tsc',
+    '--noEmit',
+    '--pretty',
+    'false',
+    '-p',
+    project,
+  ]);
+  console.log(`Verified consumer typecheck with ${label}.`);
+}
+
+function assertNodeEsmResolution() {
+  run(process.execPath, ['src/assert-node-resolve.mjs']);
+  run(process.execPath, ['src/consumer.mjs']);
+  console.log('Verified Node ESM bare import of the packed package.');
+}
+
+function assertBundler(mode) {
+  run(process.execPath, ['build-consumer.mjs', mode]);
+}
+
+function assertCjsRequireFails() {
+  // Node 22+ can load ESM through require() unless this flag is set.
+  // The package has no CJS build; this locks that rejection.
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--no-experimental-require-module',
+      '--input-type=commonjs',
+      '-e',
+      "require('@gurezo/web-serial-rxjs')",
+    ],
+    {
+      cwd: smokeRoot,
+      encoding: 'utf8',
+    },
+  );
+  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+  if (result.status === 0) {
+    throw new Error(
+      'CommonJS require() of @gurezo/web-serial-rxjs succeeded; the package must stay ESM-only.',
+    );
+  }
+  if (!/ERR_REQUIRE_ESM|ERR_PACKAGE_PATH_NOT_EXPORTED/.test(output)) {
+    throw new Error(
+      `CommonJS require() failed without an expected ESM rejection:\n${output}`,
+    );
+  }
+  console.log('Verified CommonJS require() is rejected.');
+}
+
 function assertStrictTypecheckWithWebSerialTypes() {
   run('npm', [
     'install',
@@ -96,7 +155,13 @@ export async function runPackageSmoke(tarballPath) {
   copyFileSync(tarballPath, packedTgz);
 
   try {
-    run('npm', ['install', '--no-fund', '--no-audit', '--ignore-scripts']);
+    run('npm', [
+      'install',
+      '--include=dev',
+      '--no-fund',
+      '--no-audit',
+      '--ignore-scripts',
+    ]);
     run('npx', ['--no-install', 'tsc', '--noEmit', '-p', 'tsconfig.json']);
 
     const packageEntry = resolvePackageImportEntry();
@@ -104,20 +169,16 @@ export async function runPackageSmoke(tarballPath) {
       throw new Error(`Package import entry missing: ${packageEntry}`);
     }
 
-    const mod = await import(pathToFileURL(packageEntry).href);
-    const required = [
-      'createSerialSession',
-      'isWebSerialSupported',
-      'SerialSessionStatus',
-    ];
-    for (const name of required) {
-      if (!(name in mod)) {
-        throw new Error(`ESM import missing export: ${name}`);
-      }
-    }
+    assertNodeEsmResolution();
+    assertConsumerTypecheck('tsconfig.bundler.json', 'moduleResolution bundler');
+    assertConsumerTypecheck('tsconfig.node16.json', 'moduleResolution node16');
+    assertBundler('vite');
+    assertBundler('webpack');
+    assertBundler('webpack-default');
+    assertCjsRequireFails();
 
     console.log(
-      'Verified package smoke fixture: tsc --noEmit and ESM imports succeeded.',
+      'Verified package smoke fixture: tsc --noEmit and ESM consumer resolution succeeded.',
     );
 
     assertStrictTypecheckWithoutWebSerialTypes();
@@ -126,5 +187,6 @@ export async function runPackageSmoke(tarballPath) {
     rmSync(packedTgz, { force: true });
     rmSync(join(smokeRoot, 'node_modules'), { recursive: true, force: true });
     rmSync(join(smokeRoot, 'package-lock.json'), { force: true });
+    rmSync(join(smokeRoot, '.smoke-out'), { recursive: true, force: true });
   }
 }
