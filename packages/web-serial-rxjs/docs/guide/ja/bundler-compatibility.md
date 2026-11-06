@@ -19,7 +19,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 | 要件 | 方針 |
 | --- | --- |
-| **モジュール形式** | パッケージは **ESM のみ**。`package.json` の `exports` は `import` → `dist/index.mjs` と `types` → `dist/index.d.ts` を公開します。`require` / CommonJS の export 条件はありません。 |
+| **モジュール形式** | パッケージは **ESM のみ**。`package.json` の `exports` は `types` → `dist/index.d.ts`、`import` → `dist/index.mjs`、および `import` 条件を使わない解決器向けの `default` → 同じ `dist/index.mjs` を公開します。`require` 条件と CommonJS ビルドはありません。`require()` / CommonJS consumer は非対応です。 |
 | **Import** | パッケージの `exports` マップを解決できる環境で、`@gurezo/web-serial-rxjs` を ESM `import` してください。 |
 | **RxJS** | **peer dependency** として `rxjs` **`^7.8.0`** が必要です。アプリ側でインストールしてください（本パッケージには同梱しません）。 |
 | **TypeScript** | TypeScript は **peer dependency ではありません**。TypeScript 利用者向けに `.d.ts` を同梱します。製品として TypeScript の最低バージョンを保証はしません。公開宣言を消費できる TypeScript を使ってください。JavaScript 利用者は型を無視できます。 |
@@ -37,7 +37,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 | **`nx run-many --target=lint --all`** | ワークスペース全体の lint |
 | **`nx run-many --target=build --all`** | ライブラリとすべての Example アプリの build |
 | **`web-serial-rxjs:verify-dist`** | ビルド後の `dist/` と公開 API allowlist |
-| **`web-serial-rxjs:verify-pack`** | npm pack 内容、package metadata、設定済みの場合は消費者向け ESM / 型 smoke |
+| **`web-serial-rxjs:verify-pack`** | npm pack 内容、package metadata、および packed tarball の消費者 smoke。Node ESM の bare import、TypeScript の `moduleResolution` `bundler` と `node16`、Vite、webpack（既定条件と、`import` を外した `default` フォールバック）。`require()` は拒否されます。これはそれらの環境での解決の回帰防止であり、あらゆる bundler 版のサポート matrix ではありません。 |
 | **Tests** | ワークスペースのテスト |
 
 CI が示すのは、**このモノレポの現行ツールチェーンで build できること**です。エコシステム上のすべての bundler 版を認証したという意味ではありません。

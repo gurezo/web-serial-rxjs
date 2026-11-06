@@ -104,7 +104,7 @@ Once you push the tag, GitHub Actions automatically:
 | Command | What it checks |
 | --- | --- |
 | `pnpm exec nx run web-serial-rxjs:verify-dist` | Post-build `dist/` artifacts and public API surface |
-| `pnpm exec nx run web-serial-rxjs:verify-pack` | Packed npm tarball: required files, forbidden paths, `homepage` / `repository` / `bugs`, README removed-API wording, major links, local consumer import/types smoke (`tools/package-smoke-test`). The smoke typechecks with `strict` and `skipLibCheck: false`. Both the case with `@types/w3c-web-serial` and the case without it must succeed. The with-types case also assigns packaged dictionaries to the ambient globals. |
+| `pnpm exec nx run web-serial-rxjs:verify-pack` | Packed npm tarball: required files, forbidden paths, `homepage` / `repository` / `bugs`, README removed-API wording, major links, local consumer import/types smoke (`tools/package-smoke-test`). The smoke typechecks with `strict` and `skipLibCheck: false`. Both the case with `@types/w3c-web-serial` and the case without it must succeed. The with-types case also assigns packaged dictionaries to the ambient globals. It also resolves the packed package from Node ESM, TypeScript `moduleResolution` `bundler` and `node16`, Vite, and webpack (including a fallback that omits the `import` condition). CommonJS `require()` is rejected. |
 
 Automated **post-publish** smoke against the live npm registry is intentionally out of scope; use the manual install check in Step 5 after each release.
 
