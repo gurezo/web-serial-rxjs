@@ -8,10 +8,10 @@ Security fixes are considered only for the latest major release line.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 4.x     | :white_check_mark: |
-| < 4     | :x:                |
+| 5.x     | :white_check_mark: |
+| < 5     | :x:                |
 
-Older major versions (`3.x`, `2.x`, `1.x`) are not supported for security updates. Please upgrade to the latest `4.x` release when possible.
+Older major versions (`4.x`, `3.x`, `2.x`, `1.x`) are not supported for security updates. Please upgrade to the latest `5.x` release when possible.
 
 For SemVer bumps, deprecation policy, and the non-LTS support window, see the Guide: [Version support and release policy](packages/web-serial-rxjs/docs/guide/en/version-support.md) ([日本語](packages/web-serial-rxjs/docs/guide/ja/version-support.md)).
 

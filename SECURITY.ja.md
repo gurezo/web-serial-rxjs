@@ -8,10 +8,10 @@ English: [SECURITY.md](SECURITY.md)
 
 | バージョン | 対応               |
 | ---------- | ------------------ |
-| 4.x        | :white_check_mark: |
-| < 4        | :x:                |
+| 5.x        | :white_check_mark: |
+| < 5        | :x:                |
 
-古いメジャーバージョン（`3.x`、`2.x`、`1.x`）はセキュリティ更新の対象外です。可能な場合は最新の `4.x` へアップグレードしてください。
+古いメジャーバージョン（`4.x`、`3.x`、`2.x`、`1.x`）はセキュリティ更新の対象外です。可能な場合は最新の `5.x` へアップグレードしてください。
 
 SemVer の上げ方、非推奨方針、LTS なしのサポート範囲は Guide の [バージョンサポートとリリース方針](packages/web-serial-rxjs/docs/guide/ja/version-support.md)（[English](packages/web-serial-rxjs/docs/guide/en/version-support.md)）を参照してください。
 
