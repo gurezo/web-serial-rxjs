@@ -25,7 +25,7 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 ## Deprecated API
 
 - `@deprecated` 付きの API は、既存アプリが段階的に移行できるよう **現行 major** 内では利用可能です。
-- 削除は **将来の major**（現時点では **v5+**）に延期し、minor / patch では削除しません。
+- 削除は **将来の major**（現時点では **v6+**）に延期し、minor / patch では削除しません。
 - v5 で削除した API は [v5 への移行 – 削除した deprecated API](./migration-v5.md#削除した-deprecated-api) にあります。`dispose$()` は非推奨のままです。
 
 ## サポート範囲（LTS なし）
@@ -34,8 +34,8 @@ Parent: [#555](https://github.com/gurezo/web-serial-rxjs/issues/555) · Issue: [
 
 | 関心事 | 方針 |
 | --- | --- |
-| **セキュリティ修正** | **最新 major** 系列のみ対象（現在は **4.x**）。[SECURITY.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.ja.md) を参照。 |
-| **バグ修正** | 既定では現行 major 向けに `main` へ取り込みます。可能な場合は最新の `4.x` へアップグレードしてください。 |
+| **セキュリティ修正** | **最新 major** 系列のみ対象（現在は **5.x**）。[SECURITY.ja.md](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.ja.md) を参照。 |
+| **バグ修正** | 既定では現行 major 向けに `main` へ取り込みます。可能な場合は最新の `5.x` へアップグレードしてください。 |
 | **過去 major への backport** | **約束しません**。`release/v*` 保守ブランチがある場合のみ、**best-effort** で hotfix する場合があります（[CONTRIBUTING.ja.md – 保守ブランチからのリリース](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.ja.md#保守ブランチからのリリース)）。そのようなブランチが無ければ、古い major への追加修正はありません。 |
 
 ブラウザ / 環境のサポート（動作確認の範囲）はバージョンサポートとは別です — [ブラウザサポートと公式サポート方針](./browser-support.md) を参照してください。

@@ -25,7 +25,7 @@ When a major release changes public APIs that adopters must migrate, this Guide 
 ## Deprecated APIs
 
 - APIs marked `@deprecated` remain available within the **current major** so existing apps can migrate gradually.
-- Removal is deferred to a **future major** (today: **v5+**), not a minor or patch.
+- Removal is deferred to a **future major** (today: **v6+**), not a minor or patch.
 - APIs removed in v5 are listed in [Migrating to v5 – Removed deprecated APIs](./migration-v5.md#removed-deprecated-apis). `dispose$()` remains deprecated.
 
 ## Support window (no LTS)
@@ -34,8 +34,8 @@ This project does **not** promise LTS or multi-year support for older majors.
 
 | Concern | Policy |
 | --- | --- |
-| **Security fixes** | Considered only for the **latest major** line (currently **4.x**). See [SECURITY.md](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.md). |
-| **Bug fixes** | Land on `main` for the current major by default. Upgrade to the latest `4.x` when possible. |
+| **Security fixes** | Considered only for the **latest major** line (currently **5.x**). See [SECURITY.md](https://github.com/gurezo/web-serial-rxjs/blob/main/SECURITY.md). |
+| **Bug fixes** | Land on `main` for the current major by default. Upgrade to the latest `5.x` when possible. |
 | **Backports to past majors** | **Not promised.** If a `release/v*` maintenance branch exists, hotfixes may be applied on a **best-effort** basis (see [CONTRIBUTING.md – Release from Maintenance Branches](https://github.com/gurezo/web-serial-rxjs/blob/main/CONTRIBUTING.md#release-from-maintenance-branches)). Absence of such a branch means older majors receive no further fixes. |
 
 Browser / environment support (what we test) is separate from version support — see [Browser support and support policy](./browser-support.md).
